@@ -1,0 +1,66 @@
+name:               hyperbole
+version:            0.1.0
+synopsis:           ...
+homepage:           https://github.com/seanhess/hyperbole
+github:             seanhess/hyperbole
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             Sean Hess
+maintainer:         seanhess@gmail.com
+category:           Web
+description:        ...
+
+extra-doc-files:
+  - README.md
+  - CHANGELOG.md
+
+language: GHC2021
+
+ghc-options:
+  - -Wall
+  - -fdefer-typed-holes
+
+default-extensions:
+  - OverloadedStrings
+  - OverloadedRecordDot
+  - DuplicateRecordFields
+  - NoFieldSelectors
+  - TypeFamilies
+  - DataKinds
+  - DerivingStrategies
+  - DeriveAnyClass
+
+dependencies:
+  - base >=4.16 && <5
+  - bytestring >= 0.11 && <0.13
+  - containers >= 0.6 && <1
+  - casing > 0.1.3.0 && <0.2
+  - effectful >= 2.3 && <2.4
+  - text >= 1.2 && <3
+  - string-interpolate >= 0.3.2 && <0.4
+  - file-embed >= 0.0.10 && <0.1
+  - http-api-data >= 0.6 && < 0.7
+  - http-types >= 0.12.3 && < 0.13
+  - wai >= 3.2.3 && < 3.3
+  - warp >= 3.3.30 && < 3.4
+  - web-view >= 0.2.3 && < 0.3
+  - string-conversions
+  - wai-websockets
+
+library:
+  source-dirs: src
+
+executables:
+  example:
+    main:                Main.hs
+    source-dirs:         example
+    dependencies:
+    - hyperbole
+    - wai-middleware-static
+
+tests:
+  tests:
+    main:                Tests.hs
+    source-dirs:         test
+
+

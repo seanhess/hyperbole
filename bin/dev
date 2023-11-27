@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Kill any background jobs when this script is killed
+cleanup() {
+    # kill all processes whose parent is this process
+    pkill -P $$
+}
+
+for sig in INT QUIT HUP TERM; do
+  trap "
+    cleanup
+    trap - $sig EXIT
+    kill -s $sig "'"$$"' "$sig"
+done
+trap cleanup EXIT
+
+
+# client-side files
+(cd client && npx webpack -w &)
+
+# Recompile package.yaml on changes
+watchexec -e hs,yaml hpack &
+
+# Autoreload on save. Show errors and warnings
+# run even if warnings
+ghcid --command "cabal repl example" -T Main.main -W
