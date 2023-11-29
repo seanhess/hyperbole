@@ -28,18 +28,8 @@ page = do
 
 action :: (Hyperbole :> es) => Main -> Action -> Eff es (View Main ())
 action _ Submit = do
-  n <- parseForm nameField
-  a <- parseForm ageField
-  pure $ userView (User n a)
-
-formView :: View Main ()
-formView = do
-  form' Submit (gap 10 . pad 10) $ do
-    el h1 "Sign Up"
-
-    input' nameField id
-    input' ageField id
-    submit id "Submit"
+  u <- parseUser
+  pure $ userView u
 
 userView :: User -> View Main ()
 userView user = do
@@ -52,18 +42,27 @@ btn = bg Primary . hover (bg PrimaryLight) . color White . pad 10
 h1 :: Mod
 h1 = bold . fontSize 32
 
-data UserInput f = UserInput
-  { name :: f Text
-  , age :: f Integer
-  }
-
 nameField :: Field Text
 nameField = Field "name"
 
 ageField :: Field Int
 ageField = Field "age"
 
--- There's no way to go from this to labels...............  Boo...
+parseUser :: (Hyperbole :> es) => Eff es User
+parseUser = do
+  n <- parseForm nameField
+  a <- parseForm ageField
+  pure $ User n a
+
+formView :: View Main ()
+formView = do
+  form' Submit (gap 10 . pad 10) $ do
+    el h1 "Sign Up"
+
+    input' nameField id
+    input' ageField id
+    submit id "Submit"
+
 data User = User
   { name :: Text
   , age :: Int
