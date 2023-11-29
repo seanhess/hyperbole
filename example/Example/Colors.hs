@@ -1,6 +1,6 @@
 module Example.Colors where
 
-import Web.View
+import Web.Hyperbole
 
 data AppColor
   = White
@@ -16,7 +16,6 @@ data AppColor
   | Secondary
   | SecondaryLight
   deriving (Show)
-
 
 instance ToColor AppColor where
   colorValue White = "#FFF"

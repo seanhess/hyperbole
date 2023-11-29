@@ -9,7 +9,6 @@ import Example.Effects.Debug
 import Example.Effects.Users (User (..), Users)
 import Example.Effects.Users qualified as Users
 import Web.Hyperbole
-import Web.View hiding (button, form)
 
 page :: forall es. (Hyperbole :> es, Users :> es, Debug :> es) => Page es ()
 page = do

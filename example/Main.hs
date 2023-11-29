@@ -18,7 +18,7 @@ import Effectful.State.Static.Local
 import Example.Contacts qualified as Contacts
 import Example.Effects.Debug
 import Example.Effects.Users as Users
-import Example.Layout qualified as Layout
+import Example.Forms qualified as Forms
 import Example.Transitions qualified as Transitions
 import GHC.Generics (Generic)
 import Network.HTTP.Types (Method, QueryItem, methodPost, status200, status404)
@@ -27,7 +27,6 @@ import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Web.Hyperbole
-import Web.View
 
 main :: IO ()
 main = do
@@ -41,9 +40,8 @@ data AppRoute
   = Main
   | Hello Hello
   | Contacts
-  | Layout
   | Transitions
-  | Echo
+  | Forms
   deriving (Show, Generic, Eq, Route)
 
 data Hello
@@ -51,25 +49,20 @@ data Hello
   deriving (Show, Generic, Eq, Route)
 
 app :: UserStore -> Application
-app users = waiApplication document (runUsersIO users . runHyperbole . runDebugIO . router)
+app users = waiApplication toDocument (runUsersIO users . runHyperbole . runDebugIO . router)
  where
   router :: (Hyperbole :> es, Users :> es, Debug :> es) => AppRoute -> Eff es ()
   router (Hello h) = page $ hello h
-  router Echo = page $ load $ do
-    f <- formData
-    pure $ col id $ do
-      el id "ECHO:"
-      text $ cs $ show f
   router Contacts = page Contacts.page
-  router Layout = page Layout.page
   router Transitions = page Transitions.page
+  router Forms = page Forms.page
   router Main = view $ do
     col (gap 10 . pad 10) $ do
       el (bold . fontSize 32) "Examples"
       link (Hello (Greet "World")) id "Hello World"
       link Contacts id "Contacts"
-      link Layout id "Layout"
       link Transitions id "Transitions"
+      link Forms id "Forms"
 
   -- example sub-router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es ()
@@ -79,8 +72,9 @@ app users = waiApplication document (runUsersIO users . runHyperbole . runDebugI
         text "Greetings, "
         text s
 
-  document :: BL.ByteString -> BL.ByteString
-  document cnt =
+  -- Use the embedded version for real applications (see below). The link to /hyperbole.js here is just to make local development easier
+  toDocument :: BL.ByteString -> BL.ByteString
+  toDocument cnt =
     [i|<html>
       <head>
         <title>Hyperbole Examples</title>
@@ -90,8 +84,8 @@ app users = waiApplication document (runUsersIO users . runHyperbole . runDebugI
       <body>#{cnt}</body>
     </html>|]
 
--- document :: BL.ByteString -> BL.ByteString
--- document cnt =
+-- toDocument :: BL.ByteString -> BL.ByteString
+-- toDocument cnt =
 --   [i|<html>
 --     <head>
 --       <title>Hyperbole Examples</title>

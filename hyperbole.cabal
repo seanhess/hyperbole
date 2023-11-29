@@ -33,6 +33,7 @@ library
       Web.Hyperbole.Effect
       Web.Hyperbole.Embed
       Web.Hyperbole.HyperView
+      Web.Hyperbole.Input
       Web.Hyperbole.Route
   other-modules:
       Paths_hyperbole
@@ -65,7 +66,7 @@ library
     , wai >=3.2.3 && <3.3
     , wai-websockets
     , warp >=3.3.30 && <3.4
-    , web-view >=0.2.3 && <0.3
+    , web-view >=0.3 && <=0.4
   default-language: GHC2021
 
 executable example
@@ -76,7 +77,7 @@ executable example
       Example.Contacts
       Example.Effects.Debug
       Example.Effects.Users
-      Example.Layout
+      Example.Forms
       Example.Transitions
       Paths_hyperbole
   autogen-modules:
@@ -110,7 +111,7 @@ executable example
     , wai-middleware-static
     , wai-websockets
     , warp >=3.3.30 && <3.4
-    , web-view >=0.2.3 && <0.3
+    , web-view >=0.3 && <=0.4
   default-language: GHC2021
 
 test-suite tests
@@ -148,5 +149,5 @@ test-suite tests
     , wai >=3.2.3 && <3.3
     , wai-websockets
     , warp >=3.3.30 && <3.4
-    , web-view >=0.2.3 && <0.3
+    , web-view >=0.3 && <=0.4
   default-language: GHC2021

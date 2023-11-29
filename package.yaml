@@ -43,7 +43,7 @@ dependencies:
   - http-types >= 0.12.3 && < 0.13
   - wai >= 3.2.3 && < 3.3
   - warp >= 3.3.30 && < 3.4
-  - web-view >= 0.2.3 && < 0.3
+  - web-view >= 0.3 && <=0.4
   - string-conversions
   - wai-websockets
 
