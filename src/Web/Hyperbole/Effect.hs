@@ -22,6 +22,7 @@ import Web.View
 
 data Hyperbole :: Effect where
   GetForm :: Hyperbole m Form
+  ParseForm :: (Form.FromForm a) => Hyperbole m a
   GetEvent :: (HyperView action id) => Hyperbole m (Maybe (Event action id))
   RespondView :: View () () -> Hyperbole m ()
   HyperError :: HyperError -> Hyperbole m a
@@ -44,6 +45,7 @@ runHyperbole = interpret $ \_ -> \case
     send $ ResBody ContentHtml bd
     Wai.continue
   GetForm -> Wai.formData
+  ParseForm -> Wai.parseFormData
   HyperError NotFound -> send $ Interrupt Wai.NotFound
   HyperError (ParseError e) -> send $ Interrupt $ Wai.ParseError e
   GetEvent -> do
@@ -66,6 +68,9 @@ runHyperbole = interpret $ \_ -> \case
 
 formData :: (Hyperbole :> es) => Eff es Form
 formData = send GetForm
+
+parseFormData :: (Hyperbole :> es, Form.FromForm a) => Eff es a
+parseFormData = send ParseForm
 
 -- | Read a required form parameter
 param :: (Hyperbole :> es, Param a) => Text -> Form -> Eff es a

@@ -2,11 +2,11 @@ module Example.Forms where
 
 import Data.Functor.Identity (Identity)
 import Data.Kind (Type)
-import Data.Proxy (Proxy (..))
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Effectful
 import Example.Colors
-import GHC.TypeLits (KnownSymbol, Symbol)
+import GHC.Generics (Generic)
+import Web.FormUrlEncoded (FromForm (..))
 import Web.Hyperbole
 import Web.Hyperbole.Input
 
@@ -28,13 +28,14 @@ page = do
 
 action :: (Hyperbole :> es) => Main -> Action -> Eff es (View Main ())
 action _ Submit = do
-  u <- parseUser
+  u <- parseForm @UserForm
   pure $ userView u
 
-userView :: User -> View Main ()
+userView :: UserForm Identity -> View Main ()
 userView user = do
   el_ "User View"
-  el_ $ text user.name
+  el_ $ text user.namez
+  el_ $ text $ pack (show (user.age + 1))
 
 btn :: Mod
 btn = bg Primary . hover (bg PrimaryLight) . color White . pad 10
@@ -42,28 +43,20 @@ btn = bg Primary . hover (bg PrimaryLight) . color White . pad 10
 h1 :: Mod
 h1 = bold . fontSize 32
 
-nameField :: Field Text
-nameField = Field "name"
-
-ageField :: Field Int
-ageField = Field "age"
-
-parseUser :: (Hyperbole :> es) => Eff es User
-parseUser = do
-  n <- parseForm nameField
-  a <- parseForm ageField
-  pure $ User n a
-
 formView :: View Main ()
 formView = do
-  form' Submit (gap 10 . pad 10) $ do
+  form' @UserForm Submit (gap 10 . pad 10) $ \f -> do
     el h1 "Sign Up"
 
-    input' nameField id
-    input' ageField id
+    input' f.namez (border 1)
+    input' f.age (border 1)
+
     submit id "Submit"
 
-data User = User
-  { name :: Text
-  , age :: Int
+data UserForm a = UserForm
+  { namez :: Field a Text
+  , age :: Field a Int
   }
+  deriving (Generic)
+instance FromForm (UserForm Identity)
+instance Form UserForm
