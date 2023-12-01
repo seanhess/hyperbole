@@ -9,6 +9,7 @@ import Data.Text
 import Effectful
 import Effectful.Dispatch.Dynamic
 import GHC.Generics
+import Text.Casing (kebab)
 import Web.Hyperbole.Effect
 
 -- import Web.FormUrlEncoded (FromForm (..))
@@ -20,21 +21,51 @@ import Web.Internal.FormUrlEncoded (GFromForm, defaultFormOptions, genericFromFo
 
 data FormField = FormField
 
+-- | TODO: there are many more of these: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
+data FieldInput
+  = NewPassword
+  | CurrentPassword
+  | Username
+  | Email
+  | Number
+  | Text
+  | Name
+  | OneTimeCode
+  | Organization
+  | StreetAddress
+  | Country
+  | CountryName
+  | PostalCode
+  | Search
+  deriving (Show)
+
 data Label a
+
+-- autocomplete="new-password"
 
 -- newtype Label a = Label Text
 --   deriving newtype (IsString)
 
 -- something need to carry the field name in it
-input' :: Text -> Mod -> View (form Label) ()
-input' n f = tag "input" (f . name n) none
+input' :: FieldInput -> Text -> Mod -> View id ()
+input' fi n f = tag "input" (f . name n . att "type" (typ fi) . att "autocomplete" (auto fi)) none
+ where
+  typ NewPassword = "password"
+  typ CurrentPassword = "password"
+  typ Number = "number"
+  typ Email = "email"
+  typ Search = "search"
+  typ _ = "text"
 
-form' :: forall form action id. (Form form, HyperView action id) => action -> Mod -> (form Label -> View (form Label) ()) -> View id ()
+  auto :: FieldInput -> Text
+  auto = pack . kebab . show
+
+form' :: forall form action id. (Form form, HyperView action id) => action -> Mod -> (form Label -> View id ()) -> View id ()
 form' a f fcnt = do
   vid <- context
   let frm = formLabels :: form Label
   let cnt = fcnt frm
-  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext frm cnt
+  tag "form" (onSubmit a . dataTarget vid . f . flexCol) cnt
 
 parseForm :: forall form es. (Form form, Hyperbole :> es) => Eff es (form Identity)
 parseForm = do

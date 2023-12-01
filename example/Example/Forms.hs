@@ -15,6 +15,7 @@ data Main = Main
 
 data Action
   = Submit
+  | Cancel
   deriving (Show, Read, Param)
 
 -- need to be able to set bg color of page, sure
@@ -30,6 +31,8 @@ action :: (Hyperbole :> es) => Main -> Action -> Eff es (View Main ())
 action _ Submit = do
   u <- parseForm @UserForm
   pure $ userView u
+action _ Cancel = do
+  pure $ el_ "Cancelled"
 
 userView :: UserForm Identity -> View Main ()
 userView user = do
@@ -51,12 +54,14 @@ formView = do
     el h1 "Sign Up?"
 
     -- TODO: limit certain form inputs to certain types
-    input' f.username (inp . placeholder "username")
-    input' f.age (inp . placeholder "age")
-    input' f.password1 (inp . placeholder "repeat password")
-    input' f.password2 (inp . placeholder "repeat password")
+    -- TODO: labels
+    input' Username f.username (inp . placeholder "username")
+    input' Number f.age (inp . placeholder "age")
+    input' NewPassword f.password1 (inp . placeholder "password")
+    input' NewPassword f.password2 (inp . placeholder "repeat password")
 
     submit id "Submit"
+    button Cancel id "Cancel"
  where
   placeholder = att "placeholder"
   inp = border 1 . pad 8
