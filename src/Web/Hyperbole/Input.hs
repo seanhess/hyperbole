@@ -7,12 +7,18 @@ import Data.Kind (Type)
 import Data.String (IsString)
 import Data.Text
 import Effectful
+import Effectful.Dispatch.Dynamic
 import GHC.Generics
-import Web.FormUrlEncoded (FromForm (..))
+import Web.Hyperbole.Effect
+
+-- import Web.FormUrlEncoded (FromForm (..))
 import Web.FormUrlEncoded qualified as FE
 import Web.Hyperbole
+import Web.Internal.FormUrlEncoded (GFromForm, defaultFormOptions, genericFromForm)
 
 -- data Form a = Form
+
+data FormField = FormField
 
 data Label a
 
@@ -30,13 +36,21 @@ form' a f fcnt = do
   let cnt = fcnt frm
   tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext frm cnt
 
-parseForm :: (FromForm (form Identity), Hyperbole :> es) => Eff es (form Identity)
-parseForm = parseFormData
+parseForm :: forall form es. (Form form, Hyperbole :> es) => Eff es (form Identity)
+parseForm = do
+  (f :: FE.Form) <- formData
+  let ef = fromForm f :: Either Text (form Identity)
+  either (send . HyperError . ParseError) pure ef
 
+-- TODO: rewrite some of this to not depend on Web.Internal?
 class Form (form :: (Type -> Type) -> Type) where
   formLabels :: form Label
   default formLabels :: (Generic (form Label), GFormLabels (Rep (form Label))) => form Label
   formLabels = to gFormLabels
+
+  fromForm :: FE.Form -> Either Text (form Identity)
+  default fromForm :: (Generic (form Identity), GFromForm (form Identity) (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
+  fromForm = genericFromForm defaultFormOptions
 
 type family Field (context :: Type -> Type) a
 type instance Field Identity a = a

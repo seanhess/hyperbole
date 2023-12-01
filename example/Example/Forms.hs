@@ -34,8 +34,10 @@ action _ Submit = do
 userView :: UserForm Identity -> View Main ()
 userView user = do
   el_ "User View"
-  el_ $ text user.namez
-  el_ $ text $ pack (show (user.age + 1))
+  el_ $ text user.username
+  el_ $ text $ pack (show user.age)
+  el_ $ text user.password1
+  el_ $ text user.password2
 
 btn :: Mod
 btn = bg Primary . hover (bg PrimaryLight) . color White . pad 10
@@ -46,17 +48,23 @@ h1 = bold . fontSize 32
 formView :: View Main ()
 formView = do
   form' @UserForm Submit (gap 10 . pad 10) $ \f -> do
-    el h1 "Sign Up"
+    el h1 "Sign Up?"
 
-    input' f.namez (border 1)
-    input' f.age (border 1)
+    -- TODO: limit certain form inputs to certain types
+    input' f.username (inp . placeholder "username")
+    input' f.age (inp . placeholder "age")
+    input' f.password1 (inp . placeholder "repeat password")
+    input' f.password2 (inp . placeholder "repeat password")
 
     submit id "Submit"
+ where
+  placeholder = att "placeholder"
+  inp = border 1 . pad 8
 
 data UserForm a = UserForm
-  { namez :: Field a Text
-  , age :: Field a Int
+  { username :: Field a Text
+  , age :: Field a Integer
+  , password1 :: Field a Text
+  , password2 :: Field a Text
   }
-  deriving (Generic)
-instance FromForm (UserForm Identity)
-instance Form UserForm
+  deriving (Generic, Form)
