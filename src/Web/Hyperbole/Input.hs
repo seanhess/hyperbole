@@ -1,10 +1,10 @@
+{-# LANGUAGE DatatypeContexts #-}
 {-# LANGUAGE DefaultSignatures #-}
 
 module Web.Hyperbole.Input where
 
 import Data.Functor.Identity (Identity)
 import Data.Kind (Type)
-import Data.String (IsString)
 import Data.Text
 import Effectful
 import Effectful.Dispatch.Dynamic
@@ -19,7 +19,15 @@ import Web.Internal.FormUrlEncoded (GFromForm, defaultFormOptions, genericFromFo
 
 -- data Form a = Form
 
-data FormField = FormField
+newtype FormInput f id = FormInput id
+  deriving newtype (Show)
+
+instance (Param id, Show id) => Param (FormInput f id) where
+  parseParam t = FormInput <$> parseParam t
+  toParam (FormInput i) = toParam i
+
+instance (HyperView id, Show id) => HyperView (FormInput f id) where
+  type Action (FormInput f id) = Action id
 
 -- | TODO: there are many more of these: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
 data FieldInput
@@ -47,7 +55,7 @@ data Label a
 --   deriving newtype (IsString)
 
 -- something need to carry the field name in it
-input' :: FieldInput -> Text -> Mod -> View id ()
+input' :: FieldInput -> Text -> Mod -> View (FormInput f id) ()
 input' fi n f = tag "input" (f . name n . att "type" (typ fi) . att "autocomplete" (auto fi)) none
  where
   typ NewPassword = "password"
@@ -60,12 +68,12 @@ input' fi n f = tag "input" (f . name n . att "type" (typ fi) . att "autocomplet
   auto :: FieldInput -> Text
   auto = pack . kebab . show
 
-form' :: forall form action id. (Form form, HyperView action id) => action -> Mod -> (form Label -> View id ()) -> View id ()
+form' :: forall form id. (Form form, HyperView id) => Action id -> Mod -> (form Label -> View (FormInput form id) ()) -> View id ()
 form' a f fcnt = do
   vid <- context
   let frm = formLabels :: form Label
   let cnt = fcnt frm
-  tag "form" (onSubmit a . dataTarget vid . f . flexCol) cnt
+  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormInput vid) cnt
 
 parseForm :: forall form es. (Form form, Hyperbole :> es) => Eff es (form Identity)
 parseForm = do

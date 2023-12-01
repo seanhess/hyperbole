@@ -4,15 +4,6 @@ import Effectful
 import Example.Colors
 import Web.Hyperbole
 
-data Contents = Contents
-  deriving (Show, Read, Param, HyperView Action)
-
-data Action
-  = Expand
-  | Collapse
-  deriving (Show, Read, Param)
-
--- need to be able to set bg color of page, sure
 page :: (Hyperbole :> es) => Page es ()
 page = do
   hyper content
@@ -21,7 +12,18 @@ page = do
     pure $ row (pad 20) $ do
       viewId Contents viewSmall
 
-content :: (Hyperbole :> es) => Contents -> Action -> Eff es (View Contents ())
+data Contents = Contents
+  deriving (Show, Read, Param)
+
+data ContentsAction
+  = Expand
+  | Collapse
+  deriving (Show, Read, Param)
+
+instance HyperView Contents where
+  type Action Contents = ContentsAction
+
+content :: (Hyperbole :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
 content _ Expand = do
   pure viewBig
 content _ Collapse = do

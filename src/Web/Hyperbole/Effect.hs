@@ -23,7 +23,7 @@ import Web.View
 data Hyperbole :: Effect where
   GetForm :: Hyperbole m Form
   ParseForm :: (Form.FromForm a) => Hyperbole m a
-  GetEvent :: (HyperView action id) => Hyperbole m (Maybe (Event action id))
+  GetEvent :: (HyperView id) => Hyperbole m (Maybe (Event (Action id) id))
   RespondView :: View () () -> Hyperbole m ()
   HyperError :: HyperError -> Hyperbole m a
 
@@ -105,8 +105,8 @@ load run = Page $ do
 
 -- | Handle a HyperView. If the event matches our handler, respond with the fragment
 hyper ::
-  (Hyperbole :> es, HyperView action id) =>
-  (id -> action -> Eff es (View id ())) ->
+  (Hyperbole :> es, HyperView id) =>
+  (id -> Action id -> Eff es (View id ())) ->
   Page es ()
 hyper run = Page $ do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
