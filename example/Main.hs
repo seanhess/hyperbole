@@ -15,7 +15,8 @@ import Data.Text.Lazy.Encoding qualified as L
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.State.Static.Local
-import Example.Contacts qualified as Contacts
+
+-- import Example.Contacts qualified as Contacts
 import Example.Effects.Debug
 import Example.Effects.Users as Users
 import Example.Forms qualified as Forms
@@ -28,6 +29,7 @@ import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Web.Hyperbole
 
+
 main :: IO ()
 main = do
   putStrLn "Starting Examples on http://localhost:3003"
@@ -36,31 +38,34 @@ main = do
     $ staticPolicy (addBase "client/dist")
     $ app users
 
+
 data AppRoute
   = Main
   | Hello Hello
-  | Contacts
-  | Transitions
+  | -- | Contacts
+    Transitions
   | Forms
   deriving (Show, Generic, Eq, Route)
+
 
 data Hello
   = Greet Text
   deriving (Show, Generic, Eq, Route)
+
 
 app :: UserStore -> Application
 app users = waiApplication toDocument (runUsersIO users . runHyperbole . runDebugIO . router)
  where
   router :: (Hyperbole :> es, Users :> es, Debug :> es) => AppRoute -> Eff es ()
   router (Hello h) = page $ hello h
-  router Contacts = page Contacts.page
+  -- router Contacts = page Contacts.page
   router Transitions = page Transitions.page
   router Forms = page Forms.page
   router Main = view $ do
     col (gap 10 . pad 10) $ do
       el (bold . fontSize 32) "Examples"
       link (Hello (Greet "World")) id "Hello World"
-      link Contacts id "Contacts"
+      -- link Contacts id "Contacts"
       link Transitions id "Transitions"
       link Forms id "Forms"
 

@@ -20,6 +20,7 @@ import Web.FormUrlEncoded qualified as Form
 import Web.Hyperbole.HyperView
 import Web.View
 
+
 data Hyperbole :: Effect where
   GetForm :: Hyperbole m Form
   ParseForm :: (Form.FromForm a) => Hyperbole m a
@@ -27,17 +28,20 @@ data Hyperbole :: Effect where
   RespondView :: View () () -> Hyperbole m ()
   HyperError :: HyperError -> Hyperbole m a
 
+
 type instance DispatchOf Hyperbole = 'Dynamic
+
 
 data Event act id = Event
   { viewId :: id
   , action :: act
   }
 
-runHyperbole ::
-  (Wai :> es) =>
-  Eff (Hyperbole : es) a ->
-  Eff es a
+
+runHyperbole
+  :: (Wai :> es)
+  => Eff (Hyperbole : es) a
+  -> Eff es a
 runHyperbole = interpret $ \_ -> \case
   RespondView vw -> do
     let bd = renderLazyByteString vw
@@ -66,11 +70,14 @@ runHyperbole = interpret $ \_ -> \case
       <$> lookupParam "id" q
       <*> lookupParam "action" q
 
+
 formData :: (Hyperbole :> es) => Eff es Form
 formData = send GetForm
 
+
 parseFormData :: (Hyperbole :> es, Form.FromForm a) => Eff es a
 parseFormData = send ParseForm
+
 
 -- | Read a required form parameter
 param :: (Hyperbole :> es, Param a) => Text -> Form -> Eff es a
@@ -80,34 +87,40 @@ param p f = do
     t <- Form.lookupUnique p f
     maybe (Left [i|could not parseParam: '#{t}'|]) pure $ parseParam t
 
+
 notFound :: (Hyperbole :> es) => Eff es a
 notFound = send (HyperError NotFound)
+
 
 -- | Set the response to the view. Note that `page` already expects a view to be returned from the effect
 view :: (Hyperbole :> es) => View () () -> Eff es ()
 view = send . RespondView
 
+
 data HyperError
   = NotFound
   | ParseError Text
 
+
 newtype Page es a = Page (Eff es a)
   deriving newtype (Applicative, Monad, Functor)
 
+
 -- | Load the entire page when no HyperViews match
-load ::
-  (Hyperbole :> es) =>
-  Eff es (View () ()) ->
-  Page es ()
+load
+  :: (Hyperbole :> es)
+  => Eff es (View () ())
+  -> Page es ()
 load run = Page $ do
   vw <- run
   view vw
 
+
 -- | Handle a HyperView. If the event matches our handler, respond with the fragment
-hyper ::
-  (Hyperbole :> es, HyperView id) =>
-  (id -> Action id -> Eff es (View id ())) ->
-  Page es ()
+hyper
+  :: (Hyperbole :> es, HyperView id)
+  => (id -> Action id -> Eff es (View id ()))
+  -> Page es ()
 hyper run = Page $ do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
   mev <- send GetEvent
@@ -117,8 +130,9 @@ hyper run = Page $ do
       view $ viewId event.viewId vw
     _ -> pure ()
 
-page ::
-  (Hyperbole :> es) =>
-  Page es () ->
-  Eff es ()
+
+page
+  :: (Hyperbole :> es)
+  => Page es ()
+  -> Eff es ()
 page (Page eff) = eff
