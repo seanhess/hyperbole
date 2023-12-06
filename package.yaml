@@ -1,5 +1,5 @@
 name:               hyperbole
-version:            0.1.0
+version:            0.2.0
 synopsis:           ...
 homepage:           https://github.com/seanhess/hyperbole
 github:             seanhess/hyperbole
@@ -44,8 +44,8 @@ dependencies:
   - wai >= 3.2.3 && < 3.3
   - warp >= 3.3.30 && < 3.4
   - web-view >= 0.3 && <=0.4
-  - string-conversions
-  - wai-websockets
+  - string-conversions >= 0.4 && <= 0.5
+  # - wai-websockets
 
 library:
   source-dirs: src

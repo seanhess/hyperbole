@@ -18,5 +18,5 @@ import Web.Hyperbole.Embed (scriptEmbed)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Input
 import Web.Hyperbole.Route
-import Web.View hiding (button, form, input, link)
+import Web.View hiding (button, form, input, label, link)
 

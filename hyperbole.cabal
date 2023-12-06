@@ -1,11 +1,11 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.3.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           hyperbole
-version:        0.1.0
+version:        0.2.0
 synopsis:       ...
 description:    ...
 category:       Web
@@ -60,11 +60,10 @@ library
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
     , http-types >=0.12.3 && <0.13
-    , string-conversions
+    , string-conversions >=0.4 && <=0.5
     , string-interpolate >=0.3.2 && <0.4
     , text >=1.2 && <3
     , wai >=3.2.3 && <3.3
-    , wai-websockets
     , warp >=3.3.30 && <3.4
     , web-view >=0.3 && <=0.4
   default-language: GHC2021
@@ -104,12 +103,11 @@ executable example
     , http-api-data ==0.6.*
     , http-types >=0.12.3 && <0.13
     , hyperbole
-    , string-conversions
+    , string-conversions >=0.4 && <=0.5
     , string-interpolate >=0.3.2 && <0.4
     , text >=1.2 && <3
     , wai >=3.2.3 && <3.3
     , wai-middleware-static
-    , wai-websockets
     , warp >=3.3.30 && <3.4
     , web-view >=0.3 && <=0.4
   default-language: GHC2021
@@ -143,11 +141,10 @@ test-suite tests
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
     , http-types >=0.12.3 && <0.13
-    , string-conversions
+    , string-conversions >=0.4 && <=0.5
     , string-interpolate >=0.3.2 && <0.4
     , text >=1.2 && <3
     , wai >=3.2.3 && <3.3
-    , wai-websockets
     , warp >=3.3.30 && <3.4
     , web-view >=0.3 && <=0.4
   default-language: GHC2021

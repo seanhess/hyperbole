@@ -37,7 +37,7 @@ data FieldInput
   | Username
   | Email
   | Number
-  | Text
+  | TextInput
   | Name
   | OneTimeCode
   | Organization
@@ -52,8 +52,24 @@ data FieldInput
 data Label a
 
 
-input :: FieldInput -> Mod -> Text -> View (FormFields f id) ()
-input fi f n = tag "input" (f . name n . att "type" (typ fi) . att "autocomplete" (auto fi)) none
+data Input a = Input
+
+
+newtype InputName = InputName Text
+
+
+field :: Mod -> View (Input id) () -> View (FormFields form id) ()
+field f cnt =
+  tag "label" (f . flexCol)
+    $ addContext Input cnt
+
+
+label :: Text -> View (Input id) ()
+label = text
+
+
+input :: FieldInput -> Mod -> InputName -> View (Input id) ()
+input fi f (InputName n) = tag "input" (f . name n . att "type" (typ fi) . att "autocomplete" (auto fi)) none
  where
   typ NewPassword = "password"
   typ CurrentPassword = "password"
@@ -77,7 +93,7 @@ form a f fcnt = do
   onSubmit = att "data-on-submit" . toParam
 
 
-submit :: Mod -> View c () -> View c ()
+submit :: Mod -> View (FormFields form id) () -> View (FormFields form id) ()
 submit f = tag "button" (att "type" "submit" . f)
 
 
@@ -101,7 +117,7 @@ class Form (form :: (Type -> Type) -> Type) where
 
 type family Field (context :: Type -> Type) a
 type instance Field Identity a = a
-type instance Field Label a = Text
+type instance Field Label a = InputName
 
 
 -- | Automatically derive labels from form field names
@@ -117,8 +133,8 @@ instance (GFormLabels f, GFormLabels g) => GFormLabels (f :*: g) where
   gFormLabels = gFormLabels :*: gFormLabels
 
 
-instance (Selector s) => GFormLabels (M1 S s (K1 R Text)) where
-  gFormLabels = M1 . K1 $ pack (selName (undefined :: M1 S s (K1 R Text) p))
+instance (Selector s) => GFormLabels (M1 S s (K1 R InputName)) where
+  gFormLabels = M1 . K1 $ InputName $ pack (selName (undefined :: M1 S s (K1 R Text) p))
 
 
 instance (GFormLabels f) => GFormLabels (M1 D d f) where

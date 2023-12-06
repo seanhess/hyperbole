@@ -53,13 +53,21 @@ formView = do
   form @UserForm Submit (gap 10 . pad 10) $ \f -> do
     el h1 "Sign Up"
 
-    -- TODO: labels are required: `field`
-    -- WARNING: there's no way to know you've implemented all the fields. Need better error reporting
-    -- or we need to provide a record TO form, with each field filled in, but that messes with layout... so... no thanks
-    input Username (inp . placeholder "username") f.username
-    input Number (inp . placeholder "age") f.age
-    input NewPassword (inp . placeholder "repeat password") f.password1
-    input NewPassword (inp . placeholder "repeat password") f.password2
+    field id $ do
+      label "Username"
+      input Username (inp . placeholder "username") f.username
+
+    field id $ do
+      label "Age"
+      input Number (inp . placeholder "age") f.age
+
+    field id $ do
+      label "Password"
+      input NewPassword (inp . placeholder "password") f.password1
+
+    field id $ do
+      label "Repeat Password"
+      input NewPassword (inp . placeholder "repeat password") f.password2
 
     submit id "Submit"
     button Cancel id "Cancel"
