@@ -61,10 +61,10 @@ allContactsView fil us = do
   row (gap 10) $ do
     button (Reload Nothing) (bg GrayLight) "Reload"
 
-    dropdown Reload (== fil) $ do
-      option Nothing id ""
-      option (Just Active) id "Active!"
-      option (Just Inactive) id "Inactive"
+    dropdown Reload (== fil) id $ do
+      option Nothing ""
+      option (Just Active) "Active!"
+      option (Just Inactive) "Inactive"
 
     target (Contact 2) $ button Edit (bg GrayLight) "Edit 2"
 

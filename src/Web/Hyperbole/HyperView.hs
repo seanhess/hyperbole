@@ -47,23 +47,23 @@ dropdown
   :: (HyperView id)
   => (opt -> action)
   -> (opt -> Bool)
+  -> Mod
   -> View (Option opt id action) ()
   -> View id ()
-dropdown toAction isSel options = do
+dropdown toAction isSel f options = do
   c <- context
-  tag "select" (att "data-on-change" "" . dataTarget c) $ do
+  tag "select" (att "data-on-change" "" . dataTarget c . f) $ do
     addContext (Option toAction isSel) options
 
 
 option
   :: (HyperView id, Eq opt)
   => opt
-  -> Mod
   -> View (Option opt id (Action id)) ()
   -> View (Option opt id (Action id)) ()
-option opt f cnt = do
+option opt cnt = do
   os <- context
-  tag "option" (att "value" (toParam (os.toAction opt)) . selected (os.selected opt) . f) cnt
+  tag "option" (att "value" (toParam (os.toAction opt)) . selected (os.selected opt)) cnt
 
 
 selected :: Bool -> Mod

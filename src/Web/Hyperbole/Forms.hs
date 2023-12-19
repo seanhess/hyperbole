@@ -1,6 +1,6 @@
 {-# LANGUAGE DefaultSignatures #-}
 
-module Web.Hyperbole.Input where
+module Web.Hyperbole.Forms where
 
 import Data.Functor.Identity (Identity)
 import Data.Kind (Type)
