@@ -15,10 +15,6 @@ import  { listenChange, listenClick, listenFormSubmit } from './events'
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
 console.log("Hyperbole 0.1.4")
 
-// const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-// const address = `${protocol}//${window.location.host}`
-// const socket = new WebSocket(address)
-//
 
 let rootStyles: HTMLStyleElement;
 
@@ -121,21 +117,32 @@ document.addEventListener("DOMContentLoaded", init)
 
 
 
-// socket.addEventListener('open', (event) => {
-//   console.log("Opened")
-// })
-//
-// socket.addEventListener('error', (event) => {
-//   console.log("Error")
-// })
-//
-// socket.addEventListener('message', (event) => {
-//   console.log("message", event.data)
-//   let {command, data} = parseCommand(event.data)
-//   console.log("CMD", command)
-//   console.log("DATA", data)
-// })
-//
+console.log("CONNECTING", window.location)
+const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const address = `${protocol}//${window.location.host}${window.location.pathname}`
+const socket = new WebSocket(address)
+
+socket.addEventListener('open', (event) => {
+  console.log("Opened", event, socket)
+
+  socket.send("Hello")
+})
+
+socket.addEventListener('error', (event) => {
+  console.log("Error", event)
+})
+
+socket.addEventListener('close', (event) => {
+  console.log("Closed", event)
+})
+
+socket.addEventListener('message', (event) => {
+  console.log("message", event.data)
+  // let {command, data} = parseCommand(event.data)
+  // console.log("CMD", command)
+  // console.log("DATA", data)
+})
+
 // socket.addEventListener('close', (event) => {
 //   console.log("close")
 // })

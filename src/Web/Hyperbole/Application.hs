@@ -1,8 +1,12 @@
 module Web.Hyperbole.Application
   ( waiApplication
+  -- , webSocketApplication
+  , application
+  , websocketsOr
   , Wai
   ) where
 
+import Control.Monad (forever)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as L
 import Data.String.Conversions (cs)
@@ -11,6 +15,8 @@ import Effectful.Wai
 import Network.HTTP.Types (status200, status301, status400, status404)
 import Network.HTTP.Types.Header (HeaderName)
 import Network.Wai
+import Network.Wai.Handler.WebSockets (websocketsOr)
+import Network.WebSockets
 import Web.Hyperbole.Route
 import Web.View.Types (Url (..))
 
@@ -55,18 +61,26 @@ waiApplication toDoc actions request respond = do
     sendResponse resp
 
 
-{- | Run both the http and ws application
 application :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff [Wai, IOE] ()) -> Application
 application toDoc actions =
-  websocketsOr connectionOptions (socketApplication talk)
-    $ httpApplication toDoc actions
--}
+  websocketsOr opts server
+    $ waiApplication toDoc actions
+ where
+  opts = defaultConnectionOptions
 
--- talk :: (Socket :> es) => Eff es ()
--- talk = do
---   msg :: Text <- receiveData
---
---   -- HANDLE ACTION?
---   -- SEND VIEW (possibly multiple times). Need to run action...
---
---   sendCommand $ Render [Text $ "Updated: " <> msg]
+  server :: PendingConnection -> IO ()
+  server p = do
+    print @String "CONNECTION"
+    conn <- acceptRequest p
+    sendTextData @L.ByteString conn "WELCOME"
+    forever $ do
+      t <- receiveTextData conn
+      print $ "REceived: " <> t
+      sendTextData conn $ "Received: " <> t
+
+  receiveTextData :: Connection -> IO L.ByteString
+  receiveTextData conn = do
+    msg <- receiveDataMessage conn
+    case msg of
+      Text bs _ -> pure bs
+      Binary bs -> fail $ "Received unexpected binary data: " <> show (L.length bs)

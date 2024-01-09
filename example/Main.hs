@@ -54,7 +54,7 @@ data Hello
 
 
 app :: UserStore -> Application
-app users = waiApplication toDocument (runUsersIO users . runHyperbole . runDebugIO . router)
+app users = application toDocument (runUsersIO users . runHyperbole . runDebugIO . router)
  where
   router :: (Hyperbole :> es, Users :> es, Debug :> es) => AppRoute -> Eff es ()
   router (Hello h) = page $ hello h
