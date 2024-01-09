@@ -28,7 +28,6 @@ source-repository head
 
 library
   exposed-modules:
-      Effectful.Sockets
       Effectful.Wai
       Web.Hyperbole
       Web.Hyperbole.Application
@@ -37,6 +36,7 @@ library
       Web.Hyperbole.Forms
       Web.Hyperbole.HyperView
       Web.Hyperbole.Route
+      Web.Hyperbole.Socket
   other-modules:
       Paths_hyperbole
   autogen-modules:

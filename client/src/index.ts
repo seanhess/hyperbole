@@ -1,13 +1,13 @@
 import { render, patch, create } from "omdomdom/lib/omdomdom.es.js"
-
-
+import { SocketConnection } from './sockets'
+import  { listenChange, listenClick, listenFormSubmit } from './events'
+import  { actionMessage, ActionMessage } from './action'
 
 
 // import { listenEvents } from './events';
 // import { WEBSOCKET_ADDRESS, Messages } from './Messages'
 // import { INIT_PAGE, INIT_STATE, State, Class } from './types';
 // import { fromVDOM, VDOM } from './vdom'
-import  { listenChange, listenClick, listenFormSubmit } from './events'
 
 
 // const CONTENT_ID = "yeti-root-content"
@@ -34,17 +34,14 @@ listenChange(async function(target:HTMLElement, action:string) {
   runAction(target, action)
 })
 
-async function sendAction(id:string, action:string, form?:FormData) {
-  let url = new URL(window.location.href)
-  url.searchParams.append("id", id)
-  url.searchParams.append("action", action)
+async function sendAction(msg:ActionMessage) {
 
-  console.log("ACTION", url.toString())
+  console.log("ACTION", msg.url.toString())
 
-  let res = await fetch(url, {
+  let res = await fetch(msg.url, {
     method: "POST",
     headers: { 'Accept': 'text/html', 'Content-Type': 'application/x-www-form-urlencoded'},
-    body: toSearch(form)
+    body: msg.form
   })
 
   return res.text()
@@ -57,7 +54,12 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
     target.classList.add("hyp-loading")
   }, 200)
 
-  let ret = await sendAction(target.id, action, form)
+  let msg = actionMessage(target.id, action, form)
+
+  let woot = await sock.sendAction(msg)
+  console.log("SENT", woot)
+
+  let ret = await sendAction(msg)
   let res = parseResponse(ret)
 
   // First, update the stylesheet
@@ -73,17 +75,6 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   target.classList.remove("hyp-loading")
 }
 
-function toSearch(form?:FormData):URLSearchParams | undefined {
-  if (!form) return undefined
-    
-  const params = new URLSearchParams()
-
-  form.forEach((value, key) => {
-    params.append(key, value as string)
-  })
-
-  return params
-}
 
 function addCSS(text:string) {
   let rules = text.split("\n")
@@ -116,52 +107,10 @@ function init() {
 document.addEventListener("DOMContentLoaded", init)
 
 
+const sock = new SocketConnection()
+sock.connect()
 
-console.log("CONNECTING", window.location)
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const address = `${protocol}//${window.location.host}${window.location.pathname}`
-const socket = new WebSocket(address)
 
-socket.addEventListener('open', (event) => {
-  console.log("Opened", event, socket)
-
-  socket.send("Hello")
-})
-
-socket.addEventListener('error', (event) => {
-  console.log("Error", event)
-})
-
-socket.addEventListener('close', (event) => {
-  console.log("Closed", event)
-})
-
-socket.addEventListener('message', (event) => {
-  console.log("message", event.data)
-  // let {command, data} = parseCommand(event.data)
-  // console.log("CMD", command)
-  // console.log("DATA", data)
-})
-
-// socket.addEventListener('close', (event) => {
-//   console.log("close")
-// })
-//
-// type Command<T> = {
-//   command: string,
-//   data: T
-// }
-//
-// function parseCommand<T>(message:string): Command<T> {
-//   const match = message.match(/^(\w+)\s+(.*)$/)
-//
-//   if (!match) console.error("Could not parse command: ", message)
-//
-//   return {
-//     command: match[1],
-//     data: JSON.parse(match[2])
-//   }
-// }
 
 
 type VNode = {

@@ -16,8 +16,9 @@ import Network.HTTP.Types (status200, status301, status400, status404)
 import Network.HTTP.Types.Header (HeaderName)
 import Network.Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
-import Network.WebSockets
+import Network.WebSockets (defaultConnectionOptions)
 import Web.Hyperbole.Route
+import Web.Hyperbole.Socket
 import Web.View.Types (Url (..))
 
 
@@ -63,24 +64,28 @@ waiApplication toDoc actions request respond = do
 
 application :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff [Wai, IOE] ()) -> Application
 application toDoc actions =
-  websocketsOr opts server
+  websocketsOr opts (socketApplication talk)
     $ waiApplication toDoc actions
  where
   opts = defaultConnectionOptions
 
-  server :: PendingConnection -> IO ()
-  server p = do
-    print @String "CONNECTION"
-    conn <- acceptRequest p
-    sendTextData @L.ByteString conn "WELCOME"
-    forever $ do
-      t <- receiveTextData conn
-      print $ "REceived: " <> t
-      sendTextData conn $ "Received: " <> t
+  talk :: (Socket :> es, IOE :> es) => Eff es ()
+  talk = do
+    liftIO $ print @String "TALK"
+    t <- receiveData
+    liftIO $ print $ "Received: " <> t
+    sendMessage $ "Received: " <> t
 
-  receiveTextData :: Connection -> IO L.ByteString
-  receiveTextData conn = do
-    msg <- receiveDataMessage conn
-    case msg of
-      Text bs _ -> pure bs
-      Binary bs -> fail $ "Received unexpected binary data: " <> show (L.length bs)
+
+-- receiveTextData :: Connection -> IO L.ByteString
+-- receiveTextData conn = do
+--   msg <- receiveDataMessage conn
+--   case msg of
+--     Text bs _ -> pure bs
+--     Binary bs -> fail $ "Received unexpected binary data: " <> show (L.length bs)
+--
+-- sendCommand :: Command -> IO ()
+-- sendCommand Command = sendTextData conn
+
+data Command
+  = Hello
