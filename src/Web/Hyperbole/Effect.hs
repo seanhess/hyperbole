@@ -1,34 +1,36 @@
-{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module Web.Hyperbole.Effect where
 
 import Control.Monad (join)
-import Data.ByteString
+import Data.ByteString qualified as BS
+import Data.ByteString.Lazy qualified as BL
 import Data.String.Conversions
-import Data.String.Interpolate (i)
 import Data.Text
 import Effectful
 import Effectful.Dispatch.Dynamic
-import Effectful.Wai (ContentType (..), Wai (..))
-import Effectful.Wai qualified as Wai
+import Effectful.Error.Static
+import Effectful.Reader.Static
 import Network.HTTP.Types (Query)
-import Network.Wai
-import Web.FormUrlEncoded (Form)
-import Web.FormUrlEncoded qualified as Form
+import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.Socket
 import Web.View
+
+
+data Request = Request
+  { path :: [Text]
+  , query :: Query
+  , body :: BL.ByteString
+  }
 
 
 data Hyperbole :: Effect where
   GetForm :: Hyperbole m Form
-  ParseForm :: (Form.FromForm a) => Hyperbole m a
   GetEvent :: (HyperView id) => Hyperbole m (Maybe (Event (Action id) id))
-  RespondView :: View () () -> Hyperbole m ()
-  HyperError :: HyperError -> Hyperbole m a
+  Respond :: Response -> Hyperbole m a
 
+
+-- ParseError :: HyperError -> Hyperbole m a
 
 type instance DispatchOf Hyperbole = 'Dynamic
 
@@ -39,36 +41,63 @@ data Event act id = Event
   }
 
 
-runHyperboleSocket
-  :: (Socket :> es)
-  => Eff (Hyperbole : es) a
-  -> Eff es a
-runHyperboleSocket = _
+-- TODO: need a run function that expects a handler and gives an error if not!
+runHyperbole
+  :: (IOE :> es)
+  => Request
+  -> Eff (Hyperbole : es) ()
+  -> Eff es Response
+runHyperbole req eff = do
+  resp <- runHyperbole' req eff
+  case resp of
+    Left r -> pure r
+    Right _ -> pure ErrNoHandler
 
 
-runHyperboleWai
-  :: (Wai :> es)
-  => Eff (Hyperbole : es) a
-  -> Eff es a
-runHyperboleWai = interpret $ \_ -> \case
-  RespondView vw -> do
-    let bd = renderLazyByteString vw
-    send $ ResHeader "Content-Type" "text/html"
-    send $ ResBody ContentHtml bd
-    Wai.continue
-  GetForm -> Wai.formData
-  ParseForm -> Wai.parseFormData
-  HyperError NotFound -> send $ Interrupt Wai.NotFound
-  HyperError (ParseError e) -> send $ Interrupt $ Wai.ParseError e
-  GetEvent -> do
-    q <- fmap queryString <$> send $ Wai.Request
+-- 1. Create a Request
+-- 2. Handle the Response/NotFound
+-- 3. If they forgot to specify a `load` you'll get a notFound. because that's the default
+-- load does call the thing
+runHyperbole'
+  :: (IOE :> es)
+  => Request
+  -> Eff (Hyperbole : es) a
+  -> Eff es (Either Response a)
+runHyperbole' req = reinterpret runLocal $ \_ -> \case
+  GetForm -> getForm
+  GetEvent -> getEvent
+  Respond r -> respond r
+ where
+  respond :: (Error Response :> es) => Response -> Eff es a
+  respond = throwError
+
+  runLocal =
+    runErrorNoCallStack @Response
+      . runReader req
+
+  getForm :: (Reader Request :> es, Error Response :> es) => Eff es Form
+  getForm = do
+    bd <- asks @Request (.body)
+    let ef = urlDecodeForm bd
+    either (respond . ErrParse) pure ef
+
+  -- parseForm :: (FromForm a, Reader Request :> es, Error Response :> es) => Eff es a
+  -- parseForm = do
+  --   bd <- asks @Request (.body)
+  --   let ef = urlDecodeForm bd
+  --   fm <- either (respond . ErrParse) pure ef
+  --   either (respond . ErrParse) pure $ fromForm fm
+
+  getEvent :: (Reader Request :> es, HyperView id) => Eff es (Maybe (Event (Action id) id))
+  getEvent = do
+    q <- asks @Request (.query)
     pure $ do
       Event ti ta <- lookupEvent q
       vid <- parseParam ti
       act <- parseParam ta
       pure $ Event vid act
- where
-  lookupParam :: ByteString -> Query -> Maybe Text
+
+  lookupParam :: BS.ByteString -> Query -> Maybe Text
   lookupParam p q =
     fmap cs <$> join $ lookup p q
 
@@ -83,31 +112,24 @@ formData :: (Hyperbole :> es) => Eff es Form
 formData = send GetForm
 
 
-parseFormData :: (Hyperbole :> es, Form.FromForm a) => Eff es a
-parseFormData = send ParseForm
-
-
--- | Read a required form parameter
-param :: (Hyperbole :> es, Param a) => Text -> Form -> Eff es a
-param p f = do
-  -- param is required
-  either (send . HyperError . ParseError) pure $ do
-    t <- Form.lookupUnique p f
-    maybe (Left [i|could not parseParam: '#{t}'|]) pure $ parseParam t
-
-
 notFound :: (Hyperbole :> es) => Eff es a
-notFound = send (HyperError NotFound)
+notFound = send $ Respond NotFound
+
+
+parseError :: (Hyperbole :> es) => Text -> Eff es a
+parseError e = send $ Respond $ ErrParse e
 
 
 -- | Set the response to the view. Note that `page` already expects a view to be returned from the effect
 view :: (Hyperbole :> es) => View () () -> Eff es ()
-view = send . RespondView
+view vw = send $ Respond $ Response vw
 
 
-data HyperError
-  = NotFound
-  | ParseError Text
+data Response
+  = ErrParse Text
+  | ErrNoHandler
+  | Response (View () ())
+  | NotFound
 
 
 newtype Page es a = Page (Eff es a)

@@ -3,94 +3,111 @@ module Web.Hyperbole.Application
   -- , webSocketApplication
   , application
   , websocketsOr
-  , Wai
   ) where
 
 import Control.Monad (forever)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as L
 import Data.String.Conversions (cs)
+import Data.Text (Text)
 import Effectful
-import Effectful.Wai
-import Network.HTTP.Types (status200, status301, status400, status404)
+import Network.HTTP.Types (Method, status200, status400, status404)
 import Network.HTTP.Types.Header (HeaderName)
-import Network.Wai
+import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
-import Network.WebSockets (defaultConnectionOptions)
-import Web.Hyperbole.Effect (Hyperbole, runHyperboleWai)
+import Network.WebSockets (Connection, PendingConnection, defaultConnectionOptions)
+import Network.WebSockets qualified as WS
+import Web.Hyperbole.Effect
 import Web.Hyperbole.Route
-import Web.Hyperbole.Socket
-import Web.View.Types (Url (..))
+import Web.View (renderLazyByteString)
 
 
-waiApplication :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff es ()) -> Application
+waiApplication :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff '[Hyperbole, IOE] ()) -> Wai.Application
 waiApplication toDoc actions request respond = do
-  -- let (method, paths, query) = (requestMethod req, pathInfo req, queryString req)
-  case findRoute (pathInfo request) of
-    Nothing -> respond $ responseLBS status404 [contentType ContentText] "Not Found"
+  req <- toRequest request
+  case findRoute req.path of
+    -- Nothing -> respond $ responseLBS status404 [contentType ContentText] "Not Found"
+    Nothing -> respond $ Wai.responseLBS status404 [] "Not Found"
     Just rt -> do
-      res <- runEff . runWai request . runHyperboleWai $ actions rt
-      case res of
-        Left err -> interrupt err
-        Right resp -> sendResponse resp
+      res <- runEff . runHyperbole req $ actions rt
+      sendResponse res
  where
+  -- TODO: build this functionality into the main effect handler?
   findRoute [] = Just defRoute
   findRoute ps = matchRoute (Path True ps)
 
+  toRequest req = do
+    bd <- liftIO $ Wai.consumeRequestBodyLazy req
+    pure
+      $ Request
+        { body = bd
+        , path = Wai.pathInfo req
+        , query = Wai.queryString req
+        }
+
   -- convert to document if GET. Subsequent POST requests will only include fragments
+  addDocument :: Method -> L.ByteString -> L.ByteString
   addDocument "GET" bd = toDoc bd
   addDocument _ bd = bd
 
-  contentType :: ContentType -> (HeaderName, ByteString)
-  contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
-  contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
-
-  sendResponse :: Handler -> IO ResponseReceived
-  sendResponse resp = do
-    let headers = contentType resp.contentType : resp.headers
-        respBody = addDocument (requestMethod request) resp.body
-    respond $ responseLBS status200 headers respBody
-
-  interrupt NotFound =
-    respond $ responseLBS status404 [contentType ContentText] "Not Found"
-  interrupt (ParseError e) = do
-    -- TODO: logging!
+  -- TODO: logging!
+  sendResponse :: Response -> IO Wai.ResponseReceived
+  sendResponse (ErrParse e) = do
     putStrLn $ "Parse Error: " <> cs e
-    respond $ responseLBS status400 [contentType ContentText] $ "Parse Error: " <> cs e
-  interrupt (Redirect (Url u)) =
-    respond $ responseLBS status301 [("Location", cs u)] ""
-  interrupt (RespondNow resp) = do
-    sendResponse resp
+    respond $ Wai.responseLBS status400 [contentType ContentText] $ "Parse Error: " <> cs e
+  sendResponse ErrNoHandler = do
+    putStrLn "No Handler Found"
+    respond $ Wai.responseLBS status400 [contentType ContentText] "No Handler Found"
+  sendResponse (Response vw) = do
+    -- let headers = contentType resp.contentType : resp.headers
+    let headers = [contentType ContentHtml]
+        respBody = addDocument (Wai.requestMethod request) (renderLazyByteString vw)
+    respond $ Wai.responseLBS status200 headers respBody
 
 
-application :: (Route route, Hyperbole :> es) => (L.ByteString -> L.ByteString) -> (route -> Eff es ()) -> Application
+data ContentType
+  = ContentHtml
+  | ContentText
+
+
+contentType :: ContentType -> (HeaderName, ByteString)
+contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
+contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
+
+
+-- interrupt NotFound =
+--   respond $ responseLBS status404 [contentType ContentText] "Not Found"
+-- interrupt (ParseError e) = do
+-- -- interrupt (Redirect (Url u)) =
+-- --   respond $ responseLBS status301 [("Location", cs u)] ""
+-- interrupt (RespondNow resp) = do
+--   sendResponse resp
+
+application :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff '[Hyperbole, IOE] ()) -> Wai.Application
 application toDoc actions =
-  websocketsOr opts (runSocketApp $ talk)
+  websocketsOr opts socketApp
     $ waiApplication toDoc actions
  where
   opts = defaultConnectionOptions
 
-  talk :: (Socket :> es, IOE :> es, Hyperbole :> es) => Eff es ()
-  talk = do
-    liftIO $ print @String "TALK"
-    t <- receiveData
-    liftIO $ print $ "Received: " <> t
-    sendMessage $ "Received: " <> t
+  socketApp :: PendingConnection -> IO ()
+  socketApp pending = do
+    conn <- WS.acceptRequest pending
+    -- WS.sendTextData conn ("HELLO CLIENT" :: Text)
+    forever $ talk conn
 
-
--- but.... it's not a request response thing...
--- we need to know how to map the route function to something that can produce output
--- maybe we need something lower-level
--- a call/response cycle for each?
--- we need to abstract it, using only ONE effect, or an IO function
--- then map to that one
--- I would LOVE to be able to write my code in an abstraction, but .... might be hard
--- I need a common abstraction.... the read/write loop. Look at wai?
--- they need to be able to handle errors, etc
--- Wai is the wrong name for it. Modify wai to be both!
--- Request?
-runToSockets :: (Hyperbole :> es, Route route) => (route -> Eff es ()) -> IO ()
-runToSockets = undefined
+  talk :: Connection -> IO ()
+  talk conn = do
+    -- 1. Receive data
+    -- 2. Parse Request
+    -- 3. Send Response
+    print @String "TALK"
+    (t :: Text) <- receive
+    print $ "Received: " <> t
+    send $ "Received: " <> t
+   where
+    receive = WS.receiveData conn
+    send = WS.sendTextData conn
 
 -- receiveTextData :: Connection -> IO L.ByteString
 -- receiveTextData conn = do

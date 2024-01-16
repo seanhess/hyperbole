@@ -28,7 +28,6 @@ source-repository head
 
 library
   exposed-modules:
-      Effectful.Wai
       Web.Hyperbole
       Web.Hyperbole.Application
       Web.Hyperbole.Effect

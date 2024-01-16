@@ -101,7 +101,7 @@ parseForm :: forall form es. (Form form, Hyperbole :> es) => Eff es (form Identi
 parseForm = do
   (f :: FE.Form) <- formData
   let ef = fromForm f :: Either Text (form Identity)
-  either (send . HyperError . ParseError) pure ef
+  either parseError pure ef
 
 
 class Form (form :: (Type -> Type) -> Type) where
