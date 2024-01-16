@@ -22,6 +22,7 @@ data Request = Request
   , query :: Query
   , body :: BL.ByteString
   }
+  deriving (Show)
 
 
 data Hyperbole :: Effect where
