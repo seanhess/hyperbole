@@ -18,6 +18,7 @@ import Network.Wai
 import Web.FormUrlEncoded (Form)
 import Web.FormUrlEncoded qualified as Form
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.Socket
 import Web.View
 
 
@@ -38,11 +39,18 @@ data Event act id = Event
   }
 
 
-runHyperbole
+runHyperboleSocket
+  :: (Socket :> es)
+  => Eff (Hyperbole : es) a
+  -> Eff es a
+runHyperboleSocket = _
+
+
+runHyperboleWai
   :: (Wai :> es)
   => Eff (Hyperbole : es) a
   -> Eff es a
-runHyperbole = interpret $ \_ -> \case
+runHyperboleWai = interpret $ \_ -> \case
   RespondView vw -> do
     let bd = renderLazyByteString vw
     send $ ResHeader "Content-Type" "text/html"

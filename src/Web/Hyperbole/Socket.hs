@@ -14,10 +14,6 @@ import Network.WebSockets (Connection, ConnectionOptions, ServerApp, WebSocketsD
 import Network.WebSockets qualified as WS
 
 
--- data Command
---   = Render [Content]
---   | Test Text
-
 data Socket :: Effect where
   SendMessage :: BL.ByteString -> Socket m ()
   ReceiveData :: (WebSocketsData a) => Socket m a
@@ -25,9 +21,6 @@ data Socket :: Effect where
 
 type instance DispatchOf Socket = 'Dynamic
 
-
--- we should assume a connection here?
--- Accept :: PendingConnection -> Sockets m Connection
 
 data Client = Client
   { count :: Int
@@ -43,8 +36,8 @@ connectionOptions :: ConnectionOptions
 connectionOptions = WS.defaultConnectionOptions
 
 
-socketApplication :: Eff [Socket, IOE] () -> ServerApp
-socketApplication talk pending = do
+runSocketApp :: Eff [Socket, IOE] () -> ServerApp
+runSocketApp talk pending = do
   conn <- WS.acceptRequest pending
   -- WS.sendTextData conn ("HELLO CLIENT" :: Text)
   let client = Client 0 []
