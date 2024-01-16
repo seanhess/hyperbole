@@ -42,10 +42,8 @@ data Event act id = Event
   }
 
 
--- TODO: need a run function that expects a handler and gives an error if not!
 runHyperbole
-  :: (IOE :> es)
-  => Request
+  :: Request
   -> Eff (Hyperbole : es) ()
   -> Eff es Response
 runHyperbole req eff = do
@@ -55,13 +53,8 @@ runHyperbole req eff = do
     Right _ -> pure ErrNoHandler
 
 
--- 1. Create a Request
--- 2. Handle the Response/NotFound
--- 3. If they forgot to specify a `load` you'll get a notFound. because that's the default
--- load does call the thing
 runHyperbole'
-  :: (IOE :> es)
-  => Request
+  :: Request
   -> Eff (Hyperbole : es) a
   -> Eff es (Either Response a)
 runHyperbole' req = reinterpret runLocal $ \_ -> \case
@@ -81,13 +74,6 @@ runHyperbole' req = reinterpret runLocal $ \_ -> \case
     bd <- asks @Request (.body)
     let ef = urlDecodeForm bd
     either (respond . ErrParse) pure ef
-
-  -- parseForm :: (FromForm a, Reader Request :> es, Error Response :> es) => Eff es a
-  -- parseForm = do
-  --   bd <- asks @Request (.body)
-  --   let ef = urlDecodeForm bd
-  --   fm <- either (respond . ErrParse) pure ef
-  --   either (respond . ErrParse) pure $ fromForm fm
 
   getEvent :: (Reader Request :> es, HyperView id) => Eff es (Maybe (Event (Action id) id))
   getEvent = do

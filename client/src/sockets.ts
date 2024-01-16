@@ -38,10 +38,7 @@ export class SocketConnection {
 
   async sendAction(action:ActionMessage):Promise<string> {
     console.log("SOCKET sendAction", action)
-    let msg = action.url.pathname + action.url.search
-    if (action.form) {
-      msg += "\n" + action.form
-    }
+    let msg = [action.url.pathname, action.url.search, action.form].join("\n")
     return await this.fetch(msg)
   }
 

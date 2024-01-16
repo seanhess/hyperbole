@@ -29,8 +29,7 @@ waiApplication :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> E
 waiApplication toDoc actions request respond = do
   req <- toRequest request
   case findRoute req.path of
-    -- Nothing -> respond $ responseLBS status404 [contentType ContentText] "Not Found"
-    Nothing -> respond $ Wai.responseLBS status404 [] "Not Found"
+    Nothing -> sendResponse NotFound
     Just rt -> do
       res <- runEff . runHyperbole req $ actions rt
       sendResponse res
@@ -62,6 +61,8 @@ waiApplication toDoc actions request respond = do
     let headers = [contentType ContentHtml]
         respBody = addDocument (Wai.requestMethod request) (renderLazyByteString vw)
     respond $ Wai.responseLBS status200 headers respBody
+  sendResponse NotFound = do
+    respond $ Wai.responseLBS status404 [contentType ContentText] "Not Found"
 
 
 data ContentType
@@ -74,7 +75,7 @@ contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
 contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
 
 
--- TODO: build this functionality into the main effect handler?
+findRoute :: (Route a) => [Text] -> Maybe a
 findRoute [] = Just defRoute
 findRoute ps = matchRoute (Path True ps)
 
@@ -118,10 +119,10 @@ application toDoc actions =
           liftIO $ runEff . runHyperbole req $ actions rt
 
     case res of
-      Right (ErrParse t) -> sendError t
+      Right (Response vw) -> sendView vw
+      Right (ErrParse t) -> sendError $ "ErrParse " <> t
       Right ErrNoHandler -> sendError @Text "ErrNoHandler"
       Right NotFound -> sendError @Text "NotFound"
-      Right (Response vw) -> sendView vw
       Left err -> sendError err
 
     pure ()
@@ -145,21 +146,18 @@ application toDoc actions =
 
     parseMessage :: Text -> Either SocketError Request
     parseMessage t = do
-      (url, body) <- messageParts t
-      (path, query) <- urlParts url
+      (path, query, body) <- messageParts t
       pure $ Request path query (cs body)
 
-    messageParts :: Text -> Either SocketError (Text, Text)
+    messageParts :: Text -> Either SocketError ([Text], Query, Text)
     messageParts t = do
       case T.splitOn "\n" t of
-        [url, body] -> pure (url, body)
+        [url, q, body] -> pure (paths url, query q, body)
+        [url, q] -> pure (paths url, query q, "")
         _ -> Left $ InvalidMessage t
-
-    urlParts :: Text -> Either SocketError ([Text], Query)
-    urlParts t = do
-      case T.splitOn "?" t of
-        [path, query] -> pure (T.splitOn "/" path, parseQuery (cs query))
-        _ -> Left $ InvalidMessage t
+     where
+      paths p = filter (/= "") $ T.splitOn "/" p
+      query q = parseQuery (cs q)
 
     sendView :: View () () -> IO ()
     sendView vw = WS.sendTextData conn $ renderLazyByteString vw

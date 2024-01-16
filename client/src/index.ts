@@ -35,17 +35,27 @@ listenChange(async function(target:HTMLElement, action:string) {
 })
 
 async function sendAction(msg:ActionMessage) {
+  async function sendActionHttp(msg:ActionMessage) {
+    console.log("ACTION", msg.url.toString())
 
-  console.log("ACTION", msg.url.toString())
+    let res = await fetch(msg.url, {
+      method: "POST",
+      headers: { 'Accept': 'text/html', 'Content-Type': 'application/x-www-form-urlencoded'},
+      body: msg.form
+    })
 
-  let res = await fetch(msg.url, {
-    method: "POST",
-    headers: { 'Accept': 'text/html', 'Content-Type': 'application/x-www-form-urlencoded'},
-    body: msg.form
-  })
+    return res.text()
+  }
 
-  return res.text()
+  if (sock.isConnected) {
+    return sock.sendAction(msg)
+  }
+  else {
+    return sendActionHttp(msg)
+  }
 }
+
+
 
 async function runAction(target:HTMLElement, action:string, form?:FormData) {
 
@@ -55,9 +65,6 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   }, 200)
 
   let msg = actionMessage(target.id, action, form)
-
-  let woot = await sock.sendAction(msg)
-  console.log("SENT", woot)
 
   let ret = await sendAction(msg)
   let res = parseResponse(ret)
