@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           hyperbole
-version:        0.1.2
+version:        0.2.0
 synopsis:       Web Framework inspired by HTMX
 description:    Web Framework inspired by HTMX.
 category:       Web
@@ -35,7 +35,6 @@ library
       Web.Hyperbole.Forms
       Web.Hyperbole.HyperView
       Web.Hyperbole.Route
-      Web.Hyperbole.Socket
   other-modules:
       Paths_hyperbole
   autogen-modules:
@@ -55,21 +54,21 @@ library
   build-depends:
       base >=4.16 && <5
     , bytestring >=0.11 && <0.13
-    , casing >0.1.3.0 && <0.2
+    , casing >0.1 && <0.2
     , containers >=0.6 && <1
     , effectful >=2.3 && <3
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
-    , http-types >=0.12.3 && <0.13
-    , network
-    , string-conversions >=0.4 && <=0.5
-    , string-interpolate >=0.3.2 && <0.4
+    , http-types ==0.12.*
+    , network >=3.1 && <4
+    , string-conversions ==0.4.*
+    , string-interpolate ==0.3.*
     , text >=1.2 && <3
-    , wai >=3.2.3 && <3.3
-    , wai-websockets
-    , warp >=3.3.30 && <3.4
+    , wai >=3.2 && <4
+    , wai-websockets >=3.0 && <4
+    , warp >=3.3 && <4
     , web-view >=0.3 && <=0.4
-    , websockets
+    , websockets >=0.12 && <0.14
   default-language: GHC2021
 
 executable example
@@ -100,21 +99,21 @@ executable example
   build-depends:
       base >=4.16 && <5
     , bytestring >=0.11 && <0.13
-    , casing >0.1.3.0 && <0.2
+    , casing >0.1 && <0.2
     , containers >=0.6 && <1
     , effectful >=2.3 && <3
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
-    , http-types >=0.12.3 && <0.13
+    , http-types ==0.12.*
     , hyperbole
-    , network
-    , string-conversions >=0.4 && <=0.5
-    , string-interpolate >=0.3.2 && <0.4
+    , network >=3.1 && <4
+    , string-conversions ==0.4.*
+    , string-interpolate ==0.3.*
     , text >=1.2 && <3
-    , wai >=3.2.3 && <3.3
+    , wai >=3.2 && <4
     , wai-middleware-static >=0.9 && <=0.10
-    , wai-websockets
-    , warp >=3.3.30 && <3.4
+    , wai-websockets >=3.0 && <4
+    , warp >=3.3 && <4
     , web-view >=0.3 && <=0.4
-    , websockets
+    , websockets >=0.12 && <0.14
   default-language: GHC2021

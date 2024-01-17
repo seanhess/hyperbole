@@ -27,6 +27,7 @@ export class SocketConnection {
       this.socket.removeEventListener('error', onConnectError)
     })
 
+    // TODO: Don't reconnet if the socket server is OFF, only if we've successfully connected once
     sock.addEventListener('close', (event) => {
       this.isConnected = false
       console.log("Closed", event)

@@ -1,4 +1,4 @@
-import { render, patch, create } from "omdomdom/lib/omdomdom.es.js"
+import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
 import  { listenChange, listenClick, listenFormSubmit } from './events'
 import  { actionMessage, ActionMessage } from './action'
@@ -13,7 +13,7 @@ import  { actionMessage, ActionMessage } from './action'
 // const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole 0.1.4")
+console.log("Hyperbole 0.2.0")
 
 
 let rootStyles: HTMLStyleElement;
@@ -36,7 +36,7 @@ listenChange(async function(target:HTMLElement, action:string) {
 
 async function sendAction(msg:ActionMessage) {
   async function sendActionHttp(msg:ActionMessage) {
-    console.log("ACTION", msg.url.toString())
+    console.log("HTTP sendAction", msg.url.toString())
 
     let res = await fetch(msg.url, {
       method: "POST",
