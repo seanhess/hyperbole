@@ -14,6 +14,7 @@ import Effectful.Reader.Static
 import Network.HTTP.Types (Query)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.Route
 import Web.View
 
 
@@ -23,6 +24,23 @@ data Request = Request
   , body :: BL.ByteString
   }
   deriving (Show)
+
+
+data Response
+  = ErrParse Text
+  | ErrNoHandler
+  | Response (View () ())
+  | NotFound
+
+
+newtype Page es a = Page (Eff es a)
+  deriving newtype (Applicative, Monad, Functor)
+
+
+data Event act id = Event
+  { viewId :: id
+  , action :: act
+  }
 
 
 data Hyperbole :: Effect where
@@ -36,31 +54,35 @@ data Hyperbole :: Effect where
 type instance DispatchOf Hyperbole = 'Dynamic
 
 
-data Event act id = Event
-  { viewId :: id
-  , action :: act
-  }
+runHyperboleRoute
+  :: (Route route)
+  => Request
+  -> (route -> Eff (Hyperbole : es) ())
+  -> Eff es Response
+runHyperboleRoute req actions = do
+  case findRoute req.path of
+    Nothing -> pure NotFound
+    Just rt -> do
+      er <- runHyperbole req (actions rt)
+      case er of
+        Left r -> pure r
+        Right _ -> pure ErrNoHandler
 
+
+-- resp <- runHyperbole' req eff
+-- case resp of
+--   Left r -> pure r
+--   Right _ -> pure ErrNoHandler
 
 runHyperbole
   :: Request
-  -> Eff (Hyperbole : es) ()
-  -> Eff es Response
-runHyperbole req eff = do
-  resp <- runHyperbole' req eff
-  case resp of
-    Left r -> pure r
-    Right _ -> pure ErrNoHandler
-
-
-runHyperbole'
-  :: Request
   -> Eff (Hyperbole : es) a
   -> Eff es (Either Response a)
-runHyperbole' req = reinterpret runLocal $ \_ -> \case
-  GetForm -> getForm
-  GetEvent -> getEvent
-  Respond r -> respond r
+runHyperbole req =
+  reinterpret runLocal $ \_ -> \case
+    GetForm -> getForm
+    GetEvent -> getEvent
+    Respond r -> respond r
  where
   respond :: (Error Response :> es) => Response -> Eff es a
   respond = throwError
@@ -112,17 +134,6 @@ view :: (Hyperbole :> es) => View () () -> Eff es ()
 view vw = send $ Respond $ Response vw
 
 
-data Response
-  = ErrParse Text
-  | ErrNoHandler
-  | Response (View () ())
-  | NotFound
-
-
-newtype Page es a = Page (Eff es a)
-  deriving newtype (Applicative, Monad, Functor)
-
-
 -- | Load the entire page when no HyperViews match
 load
   :: (Hyperbole :> es)
@@ -153,3 +164,8 @@ page
   => Page es ()
   -> Eff es ()
 page (Page eff) = eff
+
+
+findRoute :: (Route a) => [Text] -> Maybe a
+findRoute [] = Just defRoute
+findRoute ps = matchRoute (Path True ps)

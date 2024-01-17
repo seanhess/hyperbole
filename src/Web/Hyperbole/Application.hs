@@ -25,44 +25,50 @@ import Web.Hyperbole.Route
 import Web.View (View, renderLazyByteString)
 
 
+{- | Start both a websockets and a WAI server. Wai app serves initial pages, and attempt to process actions via sockets
+  If the socket connection is unavailable, will fall back to the WAI app to process actions
+-}
+application :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff '[Hyperbole, IOE] ()) -> Wai.Application
+application toDoc actions =
+  websocketsOr
+    defaultConnectionOptions
+    (socketApplication actions)
+    (waiApplication toDoc actions)
+
+
 waiApplication :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff '[Hyperbole, IOE] ()) -> Wai.Application
 waiApplication toDoc actions request respond = do
-  req <- toRequest request
-  case findRoute req.path of
-    Nothing -> sendResponse NotFound
-    Just rt -> do
-      res <- runEff . runHyperbole req $ actions rt
-      sendResponse res
+  req <- fromWaiRequest request
+  res <- runEff $ runHyperboleRoute req actions
+  sendResponse res
  where
-  toRequest req = do
-    bd <- liftIO $ Wai.consumeRequestBodyLazy req
-    pure
-      $ Request
-        { body = bd
-        , path = Wai.pathInfo req
-        , query = Wai.queryString req
-        }
+  fromWaiRequest wr = do
+    bd <- liftIO $ Wai.consumeRequestBodyLazy wr
+    pure $ Request (Wai.pathInfo wr) (Wai.queryString wr) bd
+
+  -- TODO: logging?
+  sendResponse :: Response -> IO Wai.ResponseReceived
+  sendResponse (ErrParse e) = respBadRequest ("Parse Error: " <> cs e)
+  sendResponse ErrNoHandler = respBadRequest "No Handler Found"
+  sendResponse NotFound = respNotFound
+  sendResponse (Response vw) = do
+    let body = addDocument (Wai.requestMethod request) (renderLazyByteString vw)
+    respHtml body
+
+  respBadRequest e =
+    respond $ Wai.responseLBS status400 [contentType ContentText] e
+
+  respNotFound =
+    respond $ Wai.responseLBS status404 [contentType ContentText] "Not Found"
+
+  respHtml body = do
+    let headers = [contentType ContentHtml]
+    respond $ Wai.responseLBS status200 headers body
 
   -- convert to document if GET. Subsequent POST requests will only include fragments
   addDocument :: Method -> L.ByteString -> L.ByteString
   addDocument "GET" bd = toDoc bd
   addDocument _ bd = bd
-
-  -- TODO: logging!
-  sendResponse :: Response -> IO Wai.ResponseReceived
-  sendResponse (ErrParse e) = do
-    putStrLn $ "Parse Error: " <> cs e
-    respond $ Wai.responseLBS status400 [contentType ContentText] $ "Parse Error: " <> cs e
-  sendResponse ErrNoHandler = do
-    putStrLn "No Handler Found"
-    respond $ Wai.responseLBS status400 [contentType ContentText] "No Handler Found"
-  sendResponse (Response vw) = do
-    -- let headers = contentType resp.contentType : resp.headers
-    let headers = [contentType ContentHtml]
-        respBody = addDocument (Wai.requestMethod request) (renderLazyByteString vw)
-    respond $ Wai.responseLBS status200 headers respBody
-  sendResponse NotFound = do
-    respond $ Wai.responseLBS status404 [contentType ContentText] "Not Found"
 
 
 data ContentType
@@ -75,48 +81,19 @@ contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
 contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
 
 
-findRoute :: (Route a) => [Text] -> Maybe a
-findRoute [] = Just defRoute
-findRoute ps = matchRoute (Path True ps)
-
-
--- interrupt NotFound =
---   respond $ responseLBS status404 [contentType ContentText] "Not Found"
--- interrupt (ParseError e) = do
--- -- interrupt (Redirect (Url u)) =
--- --   respond $ responseLBS status301 [("Location", cs u)] ""
--- interrupt (RespondNow resp) = do
---   sendResponse resp
-
-application :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff '[Hyperbole, IOE] ()) -> Wai.Application
-application toDoc actions =
-  websocketsOr opts socketApp
-    $ waiApplication toDoc actions
+socketApplication :: (Route route) => (route -> Eff '[Hyperbole, IOE] ()) -> PendingConnection -> IO ()
+socketApplication actions pending = do
+  conn <- WS.acceptRequest pending
+  -- WS.sendTextData conn ("HELLO CLIENT" :: Text)
+  forever $ talk conn
  where
-  opts = defaultConnectionOptions
-
-  socketApp :: PendingConnection -> IO ()
-  socketApp pending = do
-    conn <- WS.acceptRequest pending
-    -- WS.sendTextData conn ("HELLO CLIENT" :: Text)
-    forever $ talk conn
-
   talk :: Connection -> IO ()
   talk conn = do
-    -- 1. Receive data
-    -- 2. Parse Request
-    -- 3. Send Response
-    -- need to route as well!
     res <- runSocket $ do
       liftIO $ print @String "TALK"
       req <- request
-      liftIO $ print req
-
-      case findRoute req.path of
-        Nothing -> throwError RouteNotFound
-        Just rt -> do
-          -- I'm already in the other effect stack, but we can run IO anywhere!
-          liftIO $ runEff . runHyperbole req $ actions rt
+      liftIO $ print (req.path, req.query, req.body)
+      liftIO $ runEff $ runHyperboleRoute req actions
 
     case res of
       Right (Response vw) -> sendView vw
@@ -124,11 +101,7 @@ application toDoc actions =
       Right ErrNoHandler -> sendError @Text "ErrNoHandler"
       Right NotFound -> sendError @Text "NotFound"
       Left err -> sendError err
-
-    pure ()
    where
-    -- run everything in Error String
-
     runSocket :: Eff '[Error SocketError, Reader Connection, IOE] Response -> IO (Either SocketError Response)
     runSocket = runEff . runReader conn . runErrorNoCallStack @SocketError
 
@@ -168,5 +141,4 @@ application toDoc actions =
 
 data SocketError
   = InvalidMessage Text
-  | RouteNotFound
   deriving (Show, Eq)
