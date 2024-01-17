@@ -51,6 +51,12 @@ class Route a where
   defRoute = to genFirst
 
 
+-- | Use the default route if it's empty
+findRoute :: (Route a) => [Text] -> Maybe a
+findRoute [] = Just defRoute
+findRoute ps = matchRoute (Path True ps)
+
+
 pathUrl :: Path -> Url
 pathUrl (Path True ss) = Url $ "/" <> intercalate "/" ss
 pathUrl (Path False ss) = Url $ intercalate "/" ss

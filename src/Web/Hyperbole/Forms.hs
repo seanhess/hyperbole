@@ -6,7 +6,6 @@ import Data.Functor.Identity (Identity)
 import Data.Kind (Type)
 import Data.Text
 import Effectful
-import Effectful.Dispatch.Dynamic
 import GHC.Generics
 import Text.Casing (kebab)
 import Web.FormUrlEncoded qualified as FE

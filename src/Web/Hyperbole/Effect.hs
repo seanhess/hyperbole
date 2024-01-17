@@ -69,11 +69,6 @@ runHyperboleRoute req actions = do
         Right _ -> pure ErrNoHandler
 
 
--- resp <- runHyperbole' req eff
--- case resp of
---   Left r -> pure r
---   Right _ -> pure ErrNoHandler
-
 runHyperbole
   :: Request
   -> Eff (Hyperbole : es) a
@@ -164,8 +159,3 @@ page
   => Page es ()
   -> Eff es ()
 page (Page eff) = eff
-
-
-findRoute :: (Route a) => [Text] -> Maybe a
-findRoute [] = Just defRoute
-findRoute ps = matchRoute (Path True ps)

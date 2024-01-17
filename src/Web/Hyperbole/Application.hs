@@ -84,13 +84,11 @@ contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
 socketApplication :: (Route route) => (route -> Eff '[Hyperbole, IOE] ()) -> PendingConnection -> IO ()
 socketApplication actions pending = do
   conn <- WS.acceptRequest pending
-  -- WS.sendTextData conn ("HELLO CLIENT" :: Text)
   forever $ talk conn
  where
   talk :: Connection -> IO ()
   talk conn = do
     res <- runSocket $ do
-      liftIO $ print @String "TALK"
       req <- request
       liftIO $ print (req.path, req.query, req.body)
       liftIO $ runEff $ runHyperboleRoute req actions
