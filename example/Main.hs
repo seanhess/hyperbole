@@ -16,7 +16,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.State.Static.Local
 import Example.Contacts qualified as Contacts
-import Example.Effects.Debug
+import Example.Effects.Debug as Debug
 import Example.Effects.Users as Users
 import Example.Forms qualified as Forms
 import Example.Transitions qualified as Transitions
@@ -34,9 +34,9 @@ main :: IO ()
 main = do
   putStrLn "Starting Examples on http://localhost:3003"
   users <- initUsers
-  Warp.run 3003
-    $ staticPolicy (addBase "client/dist")
-    $ app users
+  Warp.run 3003 $
+    staticPolicy (addBase "client/dist") $
+      app users
 
 
 data AppRoute
@@ -61,13 +61,16 @@ app users = application toDocument (runUsersIO users . runDebugIO . router)
   router Contacts = page Contacts.page
   router Transitions = page Transitions.page
   router Forms = page Forms.page
-  router Main = view $ do
-    col (gap 10 . pad 10) $ do
-      el (bold . fontSize 32) "Examples"
-      link (Hello (Greet "World")) id "Hello World"
-      link Contacts id "Contacts"
-      link Transitions id "Transitions"
-      link Forms id "Forms"
+  router Main = do
+    ps <- queryParams
+    Debug.dump "Query Params" ps
+    view $ do
+      col (gap 10 . pad 10) $ do
+        el (bold . fontSize 32) "Examples"
+        link (Hello (Greet "World")) id "Hello World"
+        link Contacts id "Contacts"
+        link Transitions id "Transitions"
+        link Forms id "Forms"
 
   -- example sub-router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es ()

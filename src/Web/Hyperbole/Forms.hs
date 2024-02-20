@@ -59,8 +59,8 @@ newtype InputName = InputName Text
 
 field :: Mod -> View (Input id) () -> View (FormFields form id) ()
 field f cnt =
-  tag "label" (f . flexCol)
-    $ addContext Input cnt
+  tag "label" (f . flexCol) $
+    addContext Input cnt
 
 
 label :: Text -> View (Input id) ()
@@ -98,7 +98,7 @@ submit f = tag "button" (att "type" "submit" . f)
 
 parseForm :: forall form es. (Form form, Hyperbole :> es) => Eff es (form Identity)
 parseForm = do
-  (f :: FE.Form) <- formData
+  f <- formData
   let ef = fromForm f :: Either Text (form Identity)
   either parseError pure ef
 

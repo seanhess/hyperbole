@@ -44,7 +44,8 @@ data Event act id = Event
 
 
 data Hyperbole :: Effect where
-  GetForm :: Hyperbole m Form
+  QueryParams :: Hyperbole m Query
+  FormData :: Hyperbole m Form
   GetEvent :: (HyperView id) => Hyperbole m (Maybe (Event (Action id) id))
   Respond :: Response -> Hyperbole m a
 
@@ -75,7 +76,8 @@ runHyperbole
   -> Eff es (Either Response a)
 runHyperbole req =
   reinterpret runLocal $ \_ -> \case
-    GetForm -> getForm
+    QueryParams -> getQuery
+    FormData -> getForm
     GetEvent -> getEvent
     Respond r -> respond r
  where
@@ -86,10 +88,14 @@ runHyperbole req =
     runErrorNoCallStack @Response
       . runReader req
 
+  getQuery :: (Reader Request :> es, Error Response :> es) => Eff es Query
+  getQuery = do
+    asks @Request (.query)
+
   getForm :: (Reader Request :> es, Error Response :> es) => Eff es Form
   getForm = do
-    bd <- asks @Request (.body)
-    let ef = urlDecodeForm bd
+    b <- asks @Request (.body)
+    let ef = urlDecodeForm b
     either (respond . ErrParse) pure ef
 
   getEvent :: (Reader Request :> es, HyperView id) => Eff es (Maybe (Event (Action id) id))
@@ -112,8 +118,12 @@ runHyperbole req =
       <*> lookupParam "action" q
 
 
+queryParams :: (Hyperbole :> es) => Eff es Query
+queryParams = send QueryParams
+
+
 formData :: (Hyperbole :> es) => Eff es Form
-formData = send GetForm
+formData = send FormData
 
 
 notFound :: (Hyperbole :> es) => Eff es a
