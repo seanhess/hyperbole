@@ -28,7 +28,7 @@ import Web.View (View, renderLazyByteString)
 {- | Start both a websockets and a WAI server. Wai app serves initial pages, and attempt to process actions via sockets
   If the socket connection is unavailable, will fall back to the WAI app to process actions
 -}
-application :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff '[Hyperbole, IOE] ()) -> Wai.Application
+application :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff '[Hyperbole, IOE] Response) -> Wai.Application
 application toDoc actions =
   websocketsOr
     defaultConnectionOptions
@@ -36,7 +36,7 @@ application toDoc actions =
     (waiApplication toDoc actions)
 
 
-waiApplication :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff '[Hyperbole, IOE] ()) -> Wai.Application
+waiApplication :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff '[Hyperbole, IOE] Response) -> Wai.Application
 waiApplication toDoc actions request respond = do
   req <- fromWaiRequest request
   res <- runEff $ runHyperboleRoute req actions
@@ -48,18 +48,15 @@ waiApplication toDoc actions request respond = do
 
   -- TODO: logging?
   sendResponse :: Response -> IO Wai.ResponseReceived
-  sendResponse (ErrParse e) = respBadRequest ("Parse Error: " <> cs e)
-  sendResponse ErrNoHandler = respBadRequest "No Handler Found"
-  sendResponse NotFound = respNotFound
-  sendResponse (Response vw) = do
-    let body = addDocument (Wai.requestMethod request) (renderLazyByteString vw)
-    respHtml body
+  sendResponse (ErrParse e) = respError status400 ("Parse Error: " <> cs e)
+  sendResponse (ErrParam e) = respError status400 $ "ErrParam: " <> cs e
+  sendResponse NotFound = respError status404 "Not Found"
+  sendResponse (Response vw) =
+    respHtml $
+      addDocument (Wai.requestMethod request) (renderLazyByteString vw)
 
-  respBadRequest e =
-    respond $ Wai.responseLBS status400 [contentType ContentText] e
-
-  respNotFound =
-    respond $ Wai.responseLBS status404 [contentType ContentText] "Not Found"
+  respError s e =
+    respond $ Wai.responseLBS s [contentType ContentText] e
 
   respHtml body = do
     let headers = [contentType ContentHtml]
@@ -81,7 +78,7 @@ contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
 contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
 
 
-socketApplication :: (Route route) => (route -> Eff '[Hyperbole, IOE] ()) -> PendingConnection -> IO ()
+socketApplication :: (Route route) => (route -> Eff '[Hyperbole, IOE] Response) -> PendingConnection -> IO ()
 socketApplication actions pending = do
   conn <- WS.acceptRequest pending
   forever $ talk conn
@@ -95,8 +92,8 @@ socketApplication actions pending = do
 
     case res of
       Right (Response vw) -> sendView vw
-      Right (ErrParse t) -> sendError $ "ErrParse " <> t
-      Right ErrNoHandler -> sendError @Text "ErrNoHandler"
+      Right (ErrParse t) -> sendError $ "ErrParse: " <> t
+      Right (ErrParam t) -> sendError $ "ErrParam: " <> t
       Right NotFound -> sendError @Text "NotFound"
       Left err -> sendError err
    where

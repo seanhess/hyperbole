@@ -13,7 +13,7 @@ import GHC.Generics (Generic)
 import Web.Hyperbole
 
 
-page :: forall es. (Hyperbole :> es, Users :> es, Debug :> es) => Page es ()
+page :: forall es. (Hyperbole :> es, Users :> es, Debug :> es) => Page es Response
 page = do
   hyper contacts
   hyper contact

@@ -44,6 +44,7 @@ data AppRoute
   | Hello Hello
   | Contacts
   | Transitions
+  | Query
   | Forms
   deriving (Show, Generic, Eq, Route)
 
@@ -56,11 +57,16 @@ data Hello
 app :: UserStore -> Application
 app users = application toDocument (runUsersIO users . runDebugIO . router)
  where
-  router :: (Hyperbole :> es, Users :> es, Debug :> es) => AppRoute -> Eff es ()
+  router :: (Hyperbole :> es, Users :> es, Debug :> es) => AppRoute -> Eff es Response
   router (Hello h) = page $ hello h
   router Contacts = page Contacts.page
   router Transitions = page Transitions.page
   router Forms = page Forms.page
+  router Query = do
+    p <- queryParam "key"
+    view $ do
+      text "test: "
+      text p
   router Main = do
     ps <- queryParams
     Debug.dump "Query Params" ps
@@ -71,9 +77,10 @@ app users = application toDocument (runUsersIO users . runDebugIO . router)
         link Contacts id "Contacts"
         link Transitions id "Transitions"
         link Forms id "Forms"
+        tag "a" (att "href" "/query?key=value") "Query Params"
 
   -- example sub-router
-  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es ()
+  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es Response
   hello (Greet s) = load $ do
     pure $ do
       el (pad 10 . gap 10) $ do

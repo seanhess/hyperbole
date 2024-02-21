@@ -3,16 +3,20 @@
 module Web.Hyperbole.Effect where
 
 import Control.Monad (join)
+import Data.Bifunctor (first)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
+import Data.List qualified as List
 import Data.String.Conversions
 import Data.Text
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.Reader.Static
 import Network.HTTP.Types (Query)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
+import Web.HttpApiData (FromHttpApiData, parseQueryParam)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Route
 import Web.View
@@ -28,7 +32,7 @@ data Request = Request
 
 data Response
   = ErrParse Text
-  | ErrNoHandler
+  | ErrParam Text
   | Response (View () ())
   | NotFound
 
@@ -45,9 +49,10 @@ data Event act id = Event
 
 data Hyperbole :: Effect where
   QueryParams :: Hyperbole m Query
+  QueryParam :: (FromHttpApiData a) => Text -> Hyperbole m a
   FormData :: Hyperbole m Form
   GetEvent :: (HyperView id) => Hyperbole m (Maybe (Event (Action id) id))
-  Respond :: Response -> Hyperbole m a
+  RespondEarly :: Response -> Hyperbole m a
 
 
 -- ParseError :: HyperError -> Hyperbole m a
@@ -58,16 +63,14 @@ type instance DispatchOf Hyperbole = 'Dynamic
 runHyperboleRoute
   :: (Route route)
   => Request
-  -> (route -> Eff (Hyperbole : es) ())
+  -> (route -> Eff (Hyperbole : es) Response)
   -> Eff es Response
 runHyperboleRoute req actions = do
   case findRoute req.path of
     Nothing -> pure NotFound
     Just rt -> do
       er <- runHyperbole req (actions rt)
-      case er of
-        Left r -> pure r
-        Right _ -> pure ErrNoHandler
+      either pure pure er
 
 
 runHyperbole
@@ -77,9 +80,10 @@ runHyperbole
 runHyperbole req =
   reinterpret runLocal $ \_ -> \case
     QueryParams -> getQuery
+    QueryParam p -> getParam p
     FormData -> getForm
     GetEvent -> getEvent
-    Respond r -> respond r
+    RespondEarly r -> respond r
  where
   respond :: (Error Response :> es) => Response -> Eff es a
   respond = throwError
@@ -91,6 +95,18 @@ runHyperbole req =
   getQuery :: (Reader Request :> es, Error Response :> es) => Eff es Query
   getQuery = do
     asks @Request (.query)
+
+  getParam :: forall es a. (Reader Request :> es, Error Response :> es, FromHttpApiData a) => Text -> Eff es a
+  getParam p = do
+    (q :: Query) <- asks @Request (.query)
+    either throwError pure $ do
+      mv <- require $ List.lookup (encodeUtf8 p) q
+      v <- require mv
+      first ErrParam $ parseQueryParam (decodeUtf8 v)
+   where
+    require :: Maybe x -> Either Response x
+    require Nothing = Left $ ErrParam $ "Missing: " <> p
+    require (Just a) = pure a
 
   getForm :: (Reader Request :> es, Error Response :> es) => Eff es Form
   getForm = do
@@ -122,28 +138,32 @@ queryParams :: (Hyperbole :> es) => Eff es Query
 queryParams = send QueryParams
 
 
+queryParam :: (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es a
+queryParam = send . QueryParam
+
+
 formData :: (Hyperbole :> es) => Eff es Form
 formData = send FormData
 
 
 notFound :: (Hyperbole :> es) => Eff es a
-notFound = send $ Respond NotFound
+notFound = send $ RespondEarly NotFound
 
 
 parseError :: (Hyperbole :> es) => Text -> Eff es a
-parseError e = send $ Respond $ ErrParse e
+parseError e = send $ RespondEarly $ ErrParse e
 
 
 -- | Set the response to the view. Note that `page` already expects a view to be returned from the effect
-view :: (Hyperbole :> es) => View () () -> Eff es ()
-view vw = send $ Respond $ Response vw
+view :: (Hyperbole :> es) => View () () -> Eff es Response
+view vw = pure $ Response vw
 
 
 -- | Load the entire page when no HyperViews match
 load
   :: (Hyperbole :> es)
   => Eff es (View () ())
-  -> Page es ()
+  -> Page es Response
 load run = Page $ do
   vw <- run
   view vw
@@ -160,12 +180,12 @@ hyper run = Page $ do
   case mev of
     Just event -> do
       vw <- run event.viewId event.action
-      view $ viewId event.viewId vw
+      send $ RespondEarly $ Response $ viewId event.viewId vw
     _ -> pure ()
 
 
 page
   :: (Hyperbole :> es)
-  => Page es ()
-  -> Eff es ()
+  => Page es Response
+  -> Eff es Response
 page (Page eff) = eff

@@ -8,7 +8,7 @@ import GHC.Generics (Generic)
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Page es ()
+page :: (Hyperbole :> es) => Page es Response
 page = do
   hyper action
 
