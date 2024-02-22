@@ -14,7 +14,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.Reader.Static
-import Network.HTTP.Types (Query)
+import Network.HTTP.Types (Method, Query)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, parseQueryParam)
 import Web.Hyperbole.HyperView
@@ -26,6 +26,7 @@ data Request = Request
   { path :: [Text]
   , query :: Query
   , body :: BL.ByteString
+  , method :: Maybe Method
   }
   deriving (Show)
 
@@ -51,6 +52,7 @@ data Hyperbole :: Effect where
   QueryParams :: Hyperbole m Query
   QueryParam :: (FromHttpApiData a) => Text -> Hyperbole m a
   FormData :: Hyperbole m Form
+  ReqPath :: Hyperbole m [Text]
   GetEvent :: (HyperView id) => Hyperbole m (Maybe (Event (Action id) id))
   RespondEarly :: Response -> Hyperbole m a
 
@@ -60,18 +62,28 @@ data Hyperbole :: Effect where
 type instance DispatchOf Hyperbole = 'Dynamic
 
 
-runHyperboleRoute
-  :: (Route route)
-  => Request
-  -> (route -> Eff (Hyperbole : es) Response)
-  -> Eff es Response
-runHyperboleRoute req actions = do
-  case findRoute req.path of
-    Nothing -> pure NotFound
-    Just rt -> do
-      er <- runHyperbole req (actions rt)
-      either pure pure er
+-- runHyperboleRoute
+--   :: (Route route)
+--   => Request
+--   -> (route -> Eff (Hyperbole : es) Response)
+--   -> Eff es Response
+-- runHyperboleRoute req actions = do
+--   case findRoute req.path of
+--     Nothing -> pure NotFound
+--     Just rt -> do
+--       er <- runHyperbole req (actions rt)
+--       either pure pure er
 
+routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
+routeRequest actions = do
+  path <- send ReqPath
+  case findRoute path of
+    Nothing -> pure NotFound
+    Just rt -> actions rt
+
+
+-- er <- runHyperbole req (actions rt)
+-- either pure pure er
 
 runHyperbole
   :: Request
@@ -82,6 +94,7 @@ runHyperbole req =
     QueryParams -> getQuery
     QueryParam p -> getParam p
     FormData -> getForm
+    ReqPath -> pure req.path
     GetEvent -> getEvent
     RespondEarly r -> respond r
  where

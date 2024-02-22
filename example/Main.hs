@@ -14,6 +14,7 @@ import Data.Text.Lazy qualified as L
 import Data.Text.Lazy.Encoding qualified as L
 import Effectful
 import Effectful.Dispatch.Dynamic
+import Effectful.Reader.Static
 import Effectful.State.Static.Local
 import Example.Contacts qualified as Contacts
 import Example.Effects.Debug as Debug
@@ -22,9 +23,10 @@ import Example.Forms qualified as Forms
 import Example.Transitions qualified as Transitions
 import GHC.Generics (Generic)
 import Network.HTTP.Types (Method, QueryItem, methodPost, status200, status404)
-import Network.Wai ()
+import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
+import Network.WebSockets (Connection, PendingConnection, acceptRequest, defaultConnectionOptions)
 import Web.Hyperbole
 
 
@@ -55,8 +57,26 @@ data Hello
 
 
 app :: UserStore -> Application
-app users = application toDocument (runUsersIO users . runDebugIO . router)
+app users = do
+  websocketsOr defaultConnectionOptions socketApp webApp
  where
+  webApp :: Application
+  webApp request respond' = do
+    req <- fromWaiRequest request
+    let handle :: Eff '[Hyperbole, IOE] Response = runApp $ routeRequest router
+    res <- runEff $ waiApplication toDocument handle req :: IO Wai.Response
+    respond' res
+
+  socketApp :: PendingConnection -> IO ()
+  socketApp pend = do
+    conn <- acceptRequest pend
+    -- let handle :: Eff '[Hyperbole, IOE] Response = runApp $ runReader conn $ routeRequest router
+    forever $ do
+      let eff :: Eff '[Hyperbole, Reader Connection, IOE] Response = runUsersIO users $ runDebugIO $ routeRequest router
+      runEff $ runReader conn $ talk eff
+
+  runApp = runUsersIO users . runDebugIO
+
   router :: (Hyperbole :> es, Users :> es, Debug :> es) => AppRoute -> Eff es Response
   router (Hello h) = page $ hello h
   router Contacts = page Contacts.page

@@ -5,6 +5,7 @@ import Example.Colors
 import Web.Hyperbole
 
 
+-- this is already running in a different context
 page :: (Hyperbole :> es) => Page es Response
 page = do
   hyper content
