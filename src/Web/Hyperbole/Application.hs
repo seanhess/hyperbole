@@ -5,6 +5,7 @@ module Web.Hyperbole.Application
   , websocketsOr
   , fromWaiRequest
   , talk
+  , socketApp
   ) where
 
 import Control.Monad (forever)
@@ -91,6 +92,14 @@ data ContentType
 contentType :: ContentType -> (HeaderName, ByteString)
 contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
 contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
+
+
+-- TODO: remove IOE and switch back to MonadIO
+socketApp :: (MonadIO m) => PendingConnection -> Eff '[Hyperbole, Reader Connection, IOE] Response -> m ()
+socketApp pend actions = liftIO $ do
+  conn <- WS.acceptRequest pend
+  forever $ do
+    runEff $ runReader conn $ talk actions
 
 
 talk :: (IOE :> es, Reader Connection :> es) => Eff (Hyperbole : es) Response -> Eff es ()

@@ -58,7 +58,8 @@ data Hello
 
 app :: UserStore -> Application
 app users = do
-  websocketsOr defaultConnectionOptions socketApp webApp
+  -- Proof you can reuse the same router twice with different effects
+  websocketsOr defaultConnectionOptions socketApp' webApp
  where
   webApp :: Application
   webApp request respond' = do
@@ -67,13 +68,9 @@ app users = do
     res <- runEff $ waiApplication toDocument handle req :: IO Wai.Response
     respond' res
 
-  socketApp :: PendingConnection -> IO ()
-  socketApp pend = do
-    conn <- acceptRequest pend
-    -- let handle :: Eff '[Hyperbole, IOE] Response = runApp $ runReader conn $ routeRequest router
-    forever $ do
-      let eff :: Eff '[Hyperbole, Reader Connection, IOE] Response = runUsersIO users $ runDebugIO $ routeRequest router
-      runEff $ runReader conn $ talk eff
+  socketApp' :: PendingConnection -> IO ()
+  socketApp' pend = do
+    socketApp pend (runUsersIO users $ runDebugIO $ routeRequest router)
 
   runApp = runUsersIO users . runDebugIO
 
