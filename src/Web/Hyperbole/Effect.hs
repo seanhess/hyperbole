@@ -14,7 +14,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.Reader.Static
-import Network.HTTP.Types (Method, Query)
+import Network.HTTP.Types (Query)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, parseQueryParam)
 import Web.Hyperbole.HyperView
@@ -26,7 +26,7 @@ data Request = Request
   { path :: [Text]
   , query :: Query
   , body :: BL.ByteString
-  , method :: Maybe Method
+  , isFullPage :: Bool
   }
   deriving (Show)
 
@@ -84,6 +84,15 @@ routeRequest actions = do
 
 -- er <- runHyperbole req (actions rt)
 -- either pure pure er
+
+runHyperboleResponse
+  :: Request
+  -> Eff (Hyperbole : es) Response
+  -> Eff es Response
+runHyperboleResponse req actions = do
+  res <- runHyperbole req actions
+  either pure pure res
+
 
 runHyperbole
   :: Request

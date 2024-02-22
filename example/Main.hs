@@ -58,20 +58,12 @@ data Hello
 
 app :: UserStore -> Application
 app users = do
-  -- Proof you can reuse the same router twice with different effects
-  websocketsOr defaultConnectionOptions socketApp' webApp
+  liveApp
+    toDocument
+    (runApp . routeRequest $ router)
+    (runApp . routeRequest $ router)
  where
-  webApp :: Application
-  webApp request respond' = do
-    req <- fromWaiRequest request
-    let handle :: Eff '[Hyperbole, IOE] Response = runApp $ routeRequest router
-    res <- runEff $ waiApplication toDocument handle req :: IO Wai.Response
-    respond' res
-
-  socketApp' :: PendingConnection -> IO ()
-  socketApp' pend = do
-    socketApp pend (runUsersIO users $ runDebugIO $ routeRequest router)
-
+  runApp :: (IOE :> es) => Eff (Debug : Users : es) a -> Eff es a
   runApp = runUsersIO users . runDebugIO
 
   router :: (Hyperbole :> es, Users :> es, Debug :> es) => AppRoute -> Eff es Response

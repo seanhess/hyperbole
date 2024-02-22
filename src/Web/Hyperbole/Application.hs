@@ -1,8 +1,9 @@
 module Web.Hyperbole.Application
-  ( waiApplication
+  ( waiApp
   -- , webSocketApplication
   -- , application
   , websocketsOr
+  , liveApp
   , fromWaiRequest
   , talk
   , socketApp
@@ -17,7 +18,7 @@ import Data.Text qualified as T
 import Effectful
 import Effectful.Error.Static
 import Effectful.Reader.Static
-import Network.HTTP.Types (Method, Query, parseQuery, status200, status400, status404)
+import Network.HTTP.Types (Query, parseQuery, status200, status400, status404)
 import Network.HTTP.Types.Header (HeaderName)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
@@ -57,30 +58,38 @@ import Web.View (View, renderLazyByteString)
 
 -- runSocket = runEff . runReader conn . runErrorNoCallStack @SocketError
 
-waiApplication :: forall es. (IOE :> es) => (L.ByteString -> L.ByteString) -> Eff (Hyperbole : es) Response -> Request -> Eff es Wai.Response
-waiApplication toDoc actions req = do
-  res <- runHyperbole req actions
-  sendResponse $ either id id res
+liveApp :: (L.ByteString -> L.ByteString) -> Eff '[Hyperbole, IOE] Response -> Eff '[Hyperbole, Reader Connection, IOE] Response -> Wai.Application
+liveApp toDoc wai sock =
+  websocketsOr
+    defaultConnectionOptions
+    (socketApp sock)
+    (waiApp toDoc wai)
+
+
+waiApp :: (L.ByteString -> L.ByteString) -> Eff '[Hyperbole, IOE] Response -> Wai.Application
+waiApp toDoc actions request respond = do
+  req <- fromWaiRequest request
+  res <- runEff $ runHyperboleResponse req actions
+  respond $ response req res
  where
   -- TODO: logging?
-  sendResponse :: Response -> Eff es Wai.Response
-  sendResponse (ErrParse e) = respError status400 ("Parse Error: " <> cs e)
-  sendResponse (ErrParam e) = respError status400 $ "ErrParam: " <> cs e
-  sendResponse NotFound = respError status404 "Not Found"
-  sendResponse (Response vw) =
+  response :: Request -> Response -> Wai.Response
+  response _ (ErrParse e) = respError status400 ("Parse Error: " <> cs e)
+  response _ (ErrParam e) = respError status400 $ "ErrParam: " <> cs e
+  response _ NotFound = respError status404 "Not Found"
+  response req (Response vw) =
     respHtml $
-      addDocument req.method (renderLazyByteString vw)
+      addDocument req.isFullPage (renderLazyByteString vw)
 
-  respError s e =
-    pure $ Wai.responseLBS s [contentType ContentText] e
+  respError s = Wai.responseLBS s [contentType ContentText]
 
-  respHtml body = do
+  respHtml body =
     let headers = [contentType ContentHtml]
-    pure $ Wai.responseLBS status200 headers body
+     in Wai.responseLBS status200 headers body
 
-  -- convert to document if GET. Subsequent POST requests will only include fragments
-  addDocument :: Maybe Method -> L.ByteString -> L.ByteString
-  addDocument (Just "GET") bd = toDoc bd
+  -- convert to document if full page request. Subsequent POST requests will only include fragments
+  addDocument :: Bool -> L.ByteString -> L.ByteString
+  addDocument True bd = toDoc bd
   addDocument _ bd = bd
 
 
@@ -94,9 +103,8 @@ contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
 contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
 
 
--- TODO: remove IOE and switch back to MonadIO
-socketApp :: (MonadIO m) => PendingConnection -> Eff '[Hyperbole, Reader Connection, IOE] Response -> m ()
-socketApp pend actions = liftIO $ do
+socketApp :: (MonadIO m) => Eff '[Hyperbole, Reader Connection, IOE] Response -> PendingConnection -> m ()
+socketApp actions pend = liftIO $ do
   conn <- WS.acceptRequest pend
   forever $ do
     runEff $ runReader conn $ talk actions
@@ -105,26 +113,17 @@ socketApp pend actions = liftIO $ do
 talk :: (IOE :> es, Reader Connection :> es) => Eff (Hyperbole : es) Response -> Eff es ()
 talk actions = do
   req <- runErrorNoCallStack @SocketError $ request
-
   case req of
     Left (InvalidMessage e) -> sendError $ "SocketError: " <> e
     Right r -> do
-      (res :: Either Response Response) <- runHyperbole r actions
-
-      case either id id res of
+      -- these can't throw a socket error, just a normal response error
+      res <- runHyperboleResponse r actions
+      case res of
         (Response vw) -> sendView vw
         (ErrParse t) -> sendError $ "ErrParse: " <> t
         (ErrParam t) -> sendError $ "ErrParam: " <> t
         NotFound -> sendError ("NotFound" :: Text)
  where
-  -- Left err -> _ -- sendError err
-
-  -- runSocket :: Eff '[Error SocketError, Reader Connection, IOE] Response -> IO (Either SocketError Response)
-  -- runSocket = runEff . runReader conn . runErrorNoCallStack @SocketError
-
-  -- runSocket :: Eff '[Error SocketError, Reader Connection, IOE] Response -> IO (Either SocketError Response)
-  -- runSocket = runReader conn . runErrorNoCallStack @SocketError
-
   request :: (IOE :> es, Reader Connection :> es, Error SocketError :> es) => Eff es Request
   request = do
     t <- receive
@@ -137,16 +136,11 @@ talk actions = do
     c <- ask @Connection
     liftIO $ WS.receiveData c
 
-  -- We are constructing a request here from the message! It includes the original URI,
-  -- could we argue it should set cookies, etc?
-  -- can't set cookies directly, but what CAN we do?
-  -- sure, we are just abstracting a basic browser call/response cycle here
-  -- make the socket connection act the same
-  -- we don't need the same protocol, but still
   parseMessage :: Text -> Either SocketError Request
   parseMessage t = do
     (path, query, body) <- messageParts t
-    pure $ Request path query (cs body) Nothing
+    let isFullPage = False
+    pure $ Request{path, query, body = cs body, isFullPage}
 
   messageParts :: Text -> Either SocketError ([Text], Query, Text)
   messageParts t = do
@@ -158,13 +152,13 @@ talk actions = do
     paths p = filter (/= "") $ T.splitOn "/" p
     query q = parseQuery (cs q)
 
-  sendView vw = do
-    conn <- ask @Connection
-    liftIO $ WS.sendTextData conn $ renderLazyByteString vw
-
   sendError e = do
     conn <- ask @Connection
     liftIO $ WS.sendTextData conn $ pack (show e)
+
+  sendView vw = do
+    conn <- ask @Connection
+    liftIO $ WS.sendTextData conn $ renderLazyByteString vw
 
 
 data SocketError
@@ -174,5 +168,8 @@ data SocketError
 
 fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
 fromWaiRequest wr = do
-  bd <- liftIO $ Wai.consumeRequestBodyLazy wr
-  pure $ Request (Wai.pathInfo wr) (Wai.queryString wr) bd (Just $ Wai.requestMethod wr)
+  body <- liftIO $ Wai.consumeRequestBodyLazy wr
+  let isFullPage = Wai.requestMethod wr == "GET"
+      path = Wai.pathInfo wr
+      query = Wai.queryString wr
+  pure $ Request{body, path, query, isFullPage}
