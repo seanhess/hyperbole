@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 module Web.Hyperbole.Effect where
 
@@ -14,7 +15,9 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.Reader.Static
-import Network.HTTP.Types (Query)
+import Effectful.State.Static.Local
+import Network.HTTP.Types
+import Network.Wai qualified as Wai
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, parseQueryParam)
 import Web.Hyperbole.HyperView
@@ -31,11 +34,31 @@ data Request = Request
   deriving (Show)
 
 
+-- headers?
+-- we don't have any concept of anything except a response
+-- it's in the implementation...
+-- but....
+-- runRequestWai: reads the request from the starting stuff (Wai.Request) and sends a Response
+-- it always sends a response? Each time you run it? it's super weird
+-- or is sending one of the effects?
+-- the socket implementation reads from the connection to get the request
+-- the wai impleemntation reads from the sent-in request
+
+-- is reading the request one of the actions?
+-- no because, so many of them depend on having it!
+
+-- In both cases the request must be consumed once, then it powers the implementation of the rest
+-- should be done in
+--
+--
+-- 1. Assume someone outside does it. Could be any effect, but make it a reader for now
+
 data Response
-  = ErrParse Text
-  | ErrParam Text
-  | Response (View () ())
+  = Response (View () ())
   | NotFound
+  | ErrParse Text
+  | ErrParam Text
+  | Empty
 
 
 newtype Page es a = Page (Eff es a)
@@ -46,20 +69,6 @@ data Event act id = Event
   { viewId :: id
   , action :: act
   }
-
-
-data Hyperbole :: Effect where
-  QueryParams :: Hyperbole m Query
-  QueryParam :: (FromHttpApiData a) => Text -> Hyperbole m a
-  FormData :: Hyperbole m Form
-  ReqPath :: Hyperbole m [Text]
-  GetEvent :: (HyperView id) => Hyperbole m (Maybe (Event (Action id) id))
-  RespondEarly :: Response -> Hyperbole m a
-
-
--- ParseError :: HyperError -> Hyperbole m a
-
-type instance DispatchOf Hyperbole = 'Dynamic
 
 
 -- runHyperboleRoute
@@ -74,107 +83,170 @@ type instance DispatchOf Hyperbole = 'Dynamic
 --       er <- runHyperbole req (actions rt)
 --       either pure pure er
 
-routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
-routeRequest actions = do
-  path <- send ReqPath
-  case findRoute path of
-    Nothing -> pure NotFound
-    Just rt -> actions rt
-
+-- routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
+-- routeRequest actions = do
+--   path <- reqPath
+--   case findRoute path of
+--     Nothing -> throwError NotFound
+--     Just rt -> actions rt
 
 -- er <- runHyperbole req (actions rt)
 -- either pure pure er
 
-runHyperboleResponse
-  :: Request
-  -> Eff (Hyperbole : es) Response
-  -> Eff es Response
-runHyperboleResponse req actions = do
-  res <- runHyperbole req actions
-  either pure pure res
+-- runHyperboleResponse
+--   :: Request
+--   -> Eff (Hyperbole : es) Response
+--   -> Eff es Response
+-- runHyperboleResponse req actions = do
+--   res <- runHyperbole req actions
+--   either pure pure res
+
+data Hyperbole :: Effect where
+  GetRequest :: Hyperbole m Request
+type instance DispatchOf Hyperbole = 'Dynamic
+
+
+-- whoever USES this guarantees they are only called once
+data Server :: Effect where
+  LoadRequest :: Server m Request
+  SendResponse :: Response -> Server m ()
+type instance DispatchOf Server = 'Dynamic
+
+
+runServerWai
+  :: (IOE :> es)
+  => (BL.ByteString -> BL.ByteString)
+  -> Wai.Request
+  -> (Wai.Response -> IO Wai.ResponseReceived)
+  -> Eff (Server : es) ()
+  -> Eff es ()
+runServerWai toDoc req respond =
+  reinterpret id $ \_ -> \case
+    LoadRequest -> fromWaiRequest req
+    SendResponse r -> do
+      _ <- liftIO $ respond $ response r
+      pure ()
+ where
+  response :: Response -> Wai.Response
+  response (ErrParse e) = respError status400 ("Parse Error: " <> cs e)
+  response (ErrParam e) = respError status400 $ "ErrParam: " <> cs e
+  response NotFound = respError status404 "Not Found"
+  response Empty = respError status500 "Empty Response"
+  response (Response vw) =
+    respHtml $
+      addDocument (Wai.requestMethod req) (renderLazyByteString vw)
+
+  respError s = Wai.responseLBS s [contentType ContentText]
+
+  respHtml body =
+    let headers = [contentType ContentHtml]
+     in Wai.responseLBS status200 headers body
+
+  -- convert to document if full page request. Subsequent POST requests will only include fragments
+  addDocument :: Method -> BL.ByteString -> BL.ByteString
+  addDocument "GET" bd = toDoc bd
+  addDocument _ bd = bd
+
+  -- runLocal :: forall es. Eff (Error () : Reader Request : State Response : es) () -> Eff es ()
+  -- runLocal h =
+  --   evalState Empty
+  --     . runReader req
+  --     . runErrorNoCallStackWith @() (\_ -> pure ())
+  --     $ h
+
+  fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
+  fromWaiRequest wr = do
+    body <- liftIO $ Wai.consumeRequestBodyLazy wr
+    let isFullPage = Wai.requestMethod wr == "GET"
+        path = Wai.pathInfo wr
+        query = Wai.queryString wr
+    pure $ Request{body, path, query, isFullPage}
 
 
 runHyperbole
-  :: Request
-  -> Eff (Hyperbole : es) a
-  -> Eff es (Either Response a)
-runHyperbole req =
-  reinterpret runLocal $ \_ -> \case
-    QueryParams -> getQuery
-    QueryParam p -> getParam p
-    FormData -> getForm
-    ReqPath -> pure req.path
-    GetEvent -> getEvent
-    RespondEarly r -> respond r
+  :: (Server :> es)
+  => Eff (Hyperbole : es) a
+  -> Eff es a
+runHyperbole = reinterpret runLocal $ \_ -> \case
+  GetRequest -> do
+    mr <- get
+    case mr of
+      Just r -> pure r
+      Nothing -> do
+        r <- send LoadRequest
+        put (Just r)
+        pure r
  where
-  respond :: (Error Response :> es) => Response -> Eff es a
-  respond = throwError
-
-  runLocal =
-    runErrorNoCallStack @Response
-      . runReader req
-
-  getQuery :: (Reader Request :> es, Error Response :> es) => Eff es Query
-  getQuery = do
-    asks @Request (.query)
-
-  getParam :: forall es a. (Reader Request :> es, Error Response :> es, FromHttpApiData a) => Text -> Eff es a
-  getParam p = do
-    (q :: Query) <- asks @Request (.query)
-    either throwError pure $ do
-      mv <- require $ List.lookup (encodeUtf8 p) q
-      v <- require mv
-      first ErrParam $ parseQueryParam (decodeUtf8 v)
-   where
-    require :: Maybe x -> Either Response x
-    require Nothing = Left $ ErrParam $ "Missing: " <> p
-    require (Just a) = pure a
-
-  getForm :: (Reader Request :> es, Error Response :> es) => Eff es Form
-  getForm = do
-    b <- asks @Request (.body)
-    let ef = urlDecodeForm b
-    either (respond . ErrParse) pure ef
-
-  getEvent :: (Reader Request :> es, HyperView id) => Eff es (Maybe (Event (Action id) id))
-  getEvent = do
-    q <- asks @Request (.query)
-    pure $ do
-      Event ti ta <- lookupEvent q
-      vid <- parseParam ti
-      act <- parseParam ta
-      pure $ Event vid act
-
-  lookupParam :: BS.ByteString -> Query -> Maybe Text
-  lookupParam p q =
-    fmap cs <$> join $ lookup p q
-
-  lookupEvent :: Query -> Maybe (Event Text Text)
-  lookupEvent q =
-    Event
-      <$> lookupParam "id" q
-      <*> lookupParam "action" q
+  runLocal :: Eff (State (Maybe Request) : es) a -> Eff es a
+  runLocal = evalState Nothing
 
 
-queryParams :: (Hyperbole :> es) => Eff es Query
-queryParams = send QueryParams
+-- returnEarly :: (Hyperbole :> es) => Response -> Eff es ()
+-- returnEarly = _
+
+request :: (Hyperbole :> es) => Eff es Request
+request = send GetRequest
 
 
-queryParam :: (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es a
-queryParam = send . QueryParam
+reqPath :: (Hyperbole :> es) => Eff es [Text]
+reqPath = (.path) <$> request
 
 
 formData :: (Hyperbole :> es) => Eff es Form
-formData = send FormData
+formData = do
+  b <- (.body) <$> request
+  let ef = urlDecodeForm b
+  either (throwError . ErrParse) pure ef
+
+
+getEvent :: (Hyperbole :> es, HyperView id) => Eff es (Maybe (Event (Action id) id))
+getEvent = do
+  q <- reqParams
+  pure $ do
+    Event ti ta <- lookupEvent q
+    vid <- parseParam ti
+    act <- parseParam ta
+    pure $ Event vid act
+
+
+lookupParam :: BS.ByteString -> Query -> Maybe Text
+lookupParam p q =
+  fmap cs <$> join $ lookup p q
+
+
+lookupEvent :: Query -> Maybe (Event Text Text)
+lookupEvent q =
+  Event
+    <$> lookupParam "id" q
+    <*> lookupParam "action" q
+
+
+reqParams :: (Hyperbole :> es) => Eff es Query
+reqParams = (.query) <$> request
+
+
+reqParam :: (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es a
+reqParam p = do
+  q <- reqParams
+  (er :: Either Response a) <- pure $ do
+    mv <- require $ List.lookup (encodeUtf8 p) q
+    v <- require mv
+    first ErrParam $ parseQueryParam (decodeUtf8 v)
+  case er of
+    Left e -> throwError e
+    Right a -> pure a
+ where
+  require :: Maybe x -> Either Response x
+  require Nothing = Left $ ErrParam $ "Missing: " <> p
+  require (Just a) = pure a
 
 
 notFound :: (Hyperbole :> es) => Eff es a
-notFound = send $ RespondEarly NotFound
+notFound = throwError NotFound
 
 
-parseError :: (Hyperbole :> es) => Text -> Eff es a
-parseError e = send $ RespondEarly $ ErrParse e
-
+-- parseError :: (Hyperbole :> es) => Text -> Eff es a
+-- parseError e = send $ RespondEarly $ ErrParse e
 
 -- | Set the response to the view. Note that `page` already expects a view to be returned from the effect
 view :: (Hyperbole :> es) => View () () -> Eff es Response
@@ -198,11 +270,11 @@ hyper
   -> Page es ()
 hyper run = Page $ do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
-  mev <- send GetEvent
+  mev <- getEvent
   case mev of
     Just event -> do
       vw <- run event.viewId event.action
-      send $ RespondEarly $ Response $ viewId event.viewId vw
+      send $ SendResponse $ Response $ viewId event.viewId vw
     _ -> pure ()
 
 
@@ -211,3 +283,13 @@ page
   => Page es Response
   -> Eff es Response
 page (Page eff) = eff
+
+
+data ContentType
+  = ContentHtml
+  | ContentText
+
+
+contentType :: ContentType -> (HeaderName, BS.ByteString)
+contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
+contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")

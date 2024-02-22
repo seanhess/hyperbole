@@ -87,20 +87,8 @@ waiApp toDoc actions request respond = do
     let headers = [contentType ContentHtml]
      in Wai.responseLBS status200 headers body
 
-  -- convert to document if full page request. Subsequent POST requests will only include fragments
-  addDocument :: Bool -> L.ByteString -> L.ByteString
-  addDocument True bd = toDoc bd
-  addDocument _ bd = bd
 
 
-data ContentType
-  = ContentHtml
-  | ContentText
-
-
-contentType :: ContentType -> (HeaderName, ByteString)
-contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
-contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
 
 
 socketApp :: (MonadIO m) => Eff '[Hyperbole, Reader Connection, IOE] Response -> PendingConnection -> m ()
