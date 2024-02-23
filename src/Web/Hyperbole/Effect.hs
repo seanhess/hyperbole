@@ -72,21 +72,10 @@ routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> 
 routeRequest actions = do
   path <- reqPath
   case findRoute path of
-    Nothing -> send $ Respond NotFound
+    Nothing -> send $ RespondEarly NotFound
     Just rt -> actions rt
 
 
--- er <- runHyperbole req (actions rt)
--- either pure pure er
-
--- runHyperboleResponse
---   :: Request
---   -> Eff (Hyperbole : es) Response
---   -> Eff es Response
--- runHyperboleResponse req actions = do
---   res <- runHyperbole req actions
---   either pure pure res
---
 newtype Session = Session [(Text, Text)]
 
 
@@ -94,7 +83,6 @@ setSession :: Text -> Text -> Session -> Session
 setSession k v (Session kvs) = Session $ (k, v) : kvs
 
 
--- whoever USES this guarantees they are only called once
 data Server :: Effect where
   LoadRequest :: Server m Request
   SendResponse :: Session -> Response -> Server m ()
@@ -103,7 +91,7 @@ type instance DispatchOf Server = 'Dynamic
 
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
-  Respond :: Response -> Hyperbole m a
+  RespondEarly :: Response -> Hyperbole m a
   SetSession :: Text -> Text -> Hyperbole m ()
 type instance DispatchOf Hyperbole = 'Dynamic
 
@@ -127,21 +115,27 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
         r <- send LoadRequest
         modify $ \s -> s{request = Just r}
         pure r
-  Respond r -> do
-    -- TODO: build response here!
+  RespondEarly r -> do
     s <- gets @HyperState (.session)
     send $ SendResponse s r
     throwError r
   SetSession k v -> do
     modify $ \s -> s{session = setSession k v s.session}
  where
-  runLocal :: Eff (State HyperState : Error Response : es) a -> Eff es (Either Response a)
-  runLocal = runErrorNoCallStack @Response . evalState (HyperState Nothing (Session []))
+  runLocal :: Eff (State HyperState : Error Response : es) a -> Eff es (Either Response (a, HyperState))
+  runLocal = runErrorNoCallStack @Response . runState (HyperState Nothing (Session []))
 
-  combine :: Eff es (Either Response Response) -> Eff es Response
+  combine :: (Server :> es) => Eff es (Either Response (Response, HyperState)) -> Eff es Response
   combine eff = do
-    err <- eff
-    either pure pure err
+    er <- eff
+    case er of
+      Left res ->
+        -- responded early, don't need to respond again
+        pure res
+      Right (res, st) -> do
+        -- We haven't responded yet!
+        send $ SendResponse st.session res
+        pure res
 
 
 -- e <- eff
@@ -163,7 +157,7 @@ formData = do
   b <- (.body) <$> request
   let ef = urlDecodeForm b
   -- not going to work. we need a way to `throwError` or it doesn't work...
-  either (send . Respond . Err . ErrParse) pure ef
+  either (send . RespondEarly . Err . ErrParse) pure ef
 
 
 getEvent :: (Hyperbole :> es, HyperView id) => Eff es (Maybe (Event (Action id) id))
@@ -200,7 +194,7 @@ reqParam p = do
     v <- require mv
     first (Err . ErrParam) $ parseQueryParam (decodeUtf8 v)
   case er of
-    Left e -> send $ Respond e
+    Left e -> send $ RespondEarly e
     Right a -> pure a
  where
   require :: Maybe x -> Either Response x
@@ -209,17 +203,17 @@ reqParam p = do
 
 
 notFound :: (Hyperbole :> es) => Eff es a
-notFound = send $ Respond NotFound
+notFound = send $ RespondEarly NotFound
 
 
 parseError :: (Hyperbole :> es) => Text -> Eff es a
-parseError = send . Respond . Err . ErrParse
+parseError = send . RespondEarly . Err . ErrParse
 
 
 -- | Set the response to the view. Note that `page` already expects a view to be returned from the effect
 view :: (Hyperbole :> es) => View () () -> Eff es Response
 view vw = do
-  send $ Respond $ Response vw
+  pure $ Response vw
 
 
 -- | Load the entire page when no HyperViews match
@@ -243,7 +237,7 @@ hyper run = Page $ do
   case mev of
     Just event -> do
       vw <- run event.viewId event.action
-      send $ Respond $ Response $ viewId event.viewId vw
+      send $ RespondEarly $ Response $ viewId event.viewId vw
     _ -> pure ()
 
 

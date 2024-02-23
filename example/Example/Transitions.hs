@@ -17,16 +17,14 @@ page = do
 
 data Contents = Contents
   deriving (Show, Read, Param)
+instance HyperView Contents where
+  type Action Contents = ContentsAction
 
 
 data ContentsAction
   = Expand
   | Collapse
   deriving (Show, Read, Param)
-
-
-instance HyperView Contents where
-  type Action Contents = ContentsAction
 
 
 content :: (Hyperbole :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
