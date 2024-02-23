@@ -17,9 +17,10 @@ import Effectful.Error.Static
 import Effectful.State.Static.Local
 import Network.HTTP.Types
 import Web.FormUrlEncoded (Form, urlDecodeForm)
-import Web.HttpApiData (FromHttpApiData, parseQueryParam)
+import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Route
+import Web.Hyperbole.Session as Session
 import Web.View
 
 
@@ -28,6 +29,7 @@ data Request = Request
   , query :: Query
   , body :: BL.ByteString
   , isFullPage :: Bool
+  , cookies :: [(BS.ByteString, BS.ByteString)]
   }
   deriving (Show)
 
@@ -56,31 +58,12 @@ data Event act id = Event
   }
 
 
--- runHyperboleRoute
---   :: (Route route)
---   => Request
---   -> (route -> Eff (Hyperbole : es) Response)
---   -> Eff es Response
--- runHyperboleRoute req actions = do
---   case findRoute req.path of
---     Nothing -> pure NotFound
---     Just rt -> do
---       er <- runHyperbole req (actions rt)
---       either pure pure er
-
 routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
 routeRequest actions = do
   path <- reqPath
   case findRoute path of
     Nothing -> send $ RespondEarly NotFound
     Just rt -> actions rt
-
-
-newtype Session = Session [(Text, Text)]
-
-
-setSession :: Text -> Text -> Session -> Session
-setSession k v (Session kvs) = Session $ (k, v) : kvs
 
 
 data Server :: Effect where
@@ -92,7 +75,7 @@ type instance DispatchOf Server = 'Dynamic
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondEarly :: Response -> Hyperbole m a
-  SetSession :: Text -> Text -> Hyperbole m ()
+  SetSession :: (ToHttpApiData a) => Text -> a -> Hyperbole m ()
 type instance DispatchOf Hyperbole = 'Dynamic
 
 
@@ -119,8 +102,8 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
     s <- gets @HyperState (.session)
     send $ SendResponse s r
     throwError r
-  SetSession k v -> do
-    modify $ \s -> s{session = setSession k v s.session}
+  SetSession k a -> do
+    modify $ \st -> st{session = Session.setSession k a st.session} :: HyperState
  where
   runLocal :: Eff (State HyperState : Error Response : es) a -> Eff es (Either Response (a, HyperState))
   runLocal = runErrorNoCallStack @Response . runState (HyperState Nothing (Session []))
@@ -137,12 +120,6 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
         send $ SendResponse st.session res
         pure res
 
-
--- e <- eff
--- either id id e
-
--- returnEarly :: (Hyperbole :> es) => Response -> Eff es ()
--- returnEarly = _
 
 request :: (Hyperbole :> es) => Eff es Request
 request = send GetRequest
@@ -180,6 +157,22 @@ lookupEvent q =
   Event
     <$> lookupParam "id" q
     <*> lookupParam "action" q
+
+
+session :: (Hyperbole :> es, FromHttpApiData a, IOE :> es) => Text -> Eff es (Maybe a)
+session k = do
+  r <- request
+  let s = parseSessionCookies r.cookies
+  liftIO $ putStrLn "SESSION"
+  liftIO $ print s
+  -- liftIO $ print $ sessionKey @Text k s
+  case sessionKey k s of
+    Left t -> send $ RespondEarly $ Err $ ErrParse t
+    Right a -> pure a
+
+
+setSession :: (Hyperbole :> es, ToHttpApiData a) => Text -> a -> Eff es ()
+setSession k v = send $ SetSession k v
 
 
 reqParams :: (Hyperbole :> es) => Eff es Query
@@ -246,13 +239,3 @@ page
   => Page es Response
   -> Eff es Response
 page (Page eff) = eff
-
-
-data ContentType
-  = ContentHtml
-  | ContentText
-
-
-contentType :: ContentType -> (HeaderName, BS.ByteString)
-contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
-contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")

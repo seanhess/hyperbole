@@ -20,6 +20,7 @@ import Example.Contacts qualified as Contacts
 import Example.Effects.Debug as Debug
 import Example.Effects.Users as Users
 import Example.Forms qualified as Forms
+import Example.Sessions qualified as Sessions
 import Example.Transitions qualified as Transitions
 import GHC.Generics (Generic)
 import Network.HTTP.Types (Method, QueryItem, methodPost, status200, status404)
@@ -48,6 +49,7 @@ data AppRoute
   | Transitions
   | Query
   | Forms
+  | Sessions
   deriving (Show, Generic, Eq, Route)
 
 
@@ -66,19 +68,19 @@ app users = do
   runApp :: (IOE :> es) => Eff (Debug : Users : es) a -> Eff es a
   runApp = runUsersIO users . runDebugIO
 
-  router :: (Hyperbole :> es, Users :> es, Debug :> es) => AppRoute -> Eff es Response
+  router :: (Hyperbole :> es, Users :> es, Debug :> es, IOE :> es) => AppRoute -> Eff es Response
   router (Hello h) = page $ hello h
   router Contacts = page Contacts.page
   router Transitions = page Transitions.page
   router Forms = page Forms.page
+  router Sessions = page Sessions.page
   router Query = do
     p <- reqParam "key"
     view $ do
       text "test: "
       text p
   router Main = do
-    ps <- reqParams
-    Debug.dump "Query Params" ps
+    -- send $ SetSession @Text "woot" "hello"
     view $ do
       col (gap 10 . pad 10) $ do
         el (bold . fontSize 32) "Examples"
@@ -87,6 +89,7 @@ app users = do
         link Transitions id "Transitions"
         link Forms id "Forms"
         tag "a" (att "href" "/query?key=value") "Query Params"
+        link Sessions id "Sessions"
 
   -- example sub-router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es Response

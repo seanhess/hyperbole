@@ -1,6 +1,10 @@
 module Example.Colors where
 
+import Data.String.Conversions
+import Text.Read (readMaybe)
+import Web.HttpApiData
 import Web.Hyperbole
+
 
 data AppColor
   = White
@@ -15,7 +19,15 @@ data AppColor
   | PrimaryLight
   | Secondary
   | SecondaryLight
-  deriving (Show)
+  deriving (Show, Read, Param)
+instance ToHttpApiData AppColor where
+  toQueryParam c = cs (show c)
+instance FromHttpApiData AppColor where
+  parseQueryParam t = do
+    case readMaybe (cs t) of
+      Nothing -> Left $ "Invalid AppColor: " <> t
+      (Just c) -> pure c
+
 
 instance ToColor AppColor where
   colorValue White = "#FFF"

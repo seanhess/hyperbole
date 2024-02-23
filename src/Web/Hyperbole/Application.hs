@@ -11,7 +11,10 @@ module Web.Hyperbole.Application
   ) where
 
 import Control.Monad (forever)
+import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
+import Data.List qualified as L
+import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
@@ -20,13 +23,15 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.Reader.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (Method, Query, parseQuery, status200, status400, status404, status500)
+import Network.HTTP.Types (HeaderName, Method, Query, parseQuery, status200, status400, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.Wai.Internal (ResponseReceived (..))
 import Network.WebSockets (Connection, PendingConnection, defaultConnectionOptions)
 import Network.WebSockets qualified as WS
+import Web.Cookie (parseCookies)
 import Web.Hyperbole.Effect
+import Web.Hyperbole.Session
 import Web.View (View, renderLazyByteString)
 
 
@@ -46,8 +51,6 @@ waiApp toDoc actions req res = do
     Just r -> pure r
 
 
--- the wai server needs to set it as a header to the response
--- I guess we are simulating that the sockcet server works similarly
 runServerWai
   :: (IOE :> es)
   => (BL.ByteString -> BL.ByteString)
@@ -66,7 +69,7 @@ runServerWai toDoc req respond =
   runLocal = execState Nothing
 
   sendResponse :: Session -> Response -> IO Wai.ResponseReceived
-  sendResponse _ r =
+  sendResponse sess r =
     respond $ response r
    where
     response :: Response -> Wai.Response
@@ -82,7 +85,7 @@ runServerWai toDoc req respond =
     respError s = Wai.responseLBS s [contentType ContentText]
 
     respHtml body =
-      let headers = [contentType ContentHtml]
+      let headers = [contentType ContentHtml, setSessionCookie sess]
        in Wai.responseLBS status200 headers body
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
@@ -96,7 +99,11 @@ runServerWai toDoc req respond =
     let isFullPage = Wai.requestMethod wr == "GET"
         path = Wai.pathInfo wr
         query = Wai.queryString wr
-    pure $ Request{body, path, query, isFullPage}
+        headers = Wai.requestHeaders wr
+        cookie = fromMaybe "" $ L.lookup "Cookie" headers
+        cookies = parseCookies cookie
+    liftIO $ print cookies
+    pure $ Request{body, path, query, isFullPage, cookies}
 
 
 socketApp :: (MonadIO m) => Eff '[Hyperbole, Server, Reader Connection, IOE] Response -> PendingConnection -> m ()
@@ -155,7 +162,9 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
   parseMessage t = do
     (path, query, body) <- messageParts t
     let isFullPage = False
-    pure $ Request{path, query, body = cs body, isFullPage}
+        -- TODO: sessions on sockets
+        cookies = []
+    pure $ Request{path, query, body = cs body, isFullPage, cookies}
 
   messageParts :: Text -> Either SocketError ([Text], Query, Text)
   messageParts t = do
@@ -171,3 +180,13 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
 data SocketError
   = InvalidMessage Text
   deriving (Show, Eq)
+
+
+data ContentType
+  = ContentHtml
+  | ContentText
+
+
+contentType :: ContentType -> (HeaderName, BS.ByteString)
+contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
+contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
