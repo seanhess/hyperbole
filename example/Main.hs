@@ -72,12 +72,12 @@ app users = do
   router Transitions = page Transitions.page
   router Forms = page Forms.page
   router Query = do
-    p <- queryParam "key"
+    p <- reqParam "key"
     view $ do
       text "test: "
       text p
   router Main = do
-    ps <- queryParams
+    ps <- reqParams
     Debug.dump "Query Params" ps
     view $ do
       col (gap 10 . pad 10) $ do

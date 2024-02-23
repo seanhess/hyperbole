@@ -1,64 +1,36 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Web.Hyperbole.Application
   ( waiApp
-  -- , webSocketApplication
-  -- , application
   , websocketsOr
+  , defaultConnectionOptions
   , liveApp
-  , fromWaiRequest
-  , talk
   , socketApp
+  , runServerSockets
+  , runServerWai
   ) where
 
 import Control.Monad (forever)
-import Data.ByteString (ByteString)
-import Data.ByteString.Lazy qualified as L
+import Data.ByteString.Lazy qualified as BL
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import Effectful
+import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.Reader.Static
-import Network.HTTP.Types (Query, parseQuery, status200, status400, status404)
-import Network.HTTP.Types.Header (HeaderName)
+import Effectful.State.Static.Local
+import Network.HTTP.Types (Method, Query, parseQuery, status200, status400, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
+import Network.Wai.Internal (ResponseReceived (..))
 import Network.WebSockets (Connection, PendingConnection, defaultConnectionOptions)
 import Network.WebSockets qualified as WS
 import Web.Hyperbole.Effect
-import Web.Hyperbole.Route
 import Web.View (View, renderLazyByteString)
 
 
-{- | Start both a websockets and a WAI server. Wai app serves initial pages, and attempt to process actions via sockets
-  If the socket connection is unavailable, will fall back to the WAI app to process actions
--}
-
--- you can't pass this in once, because it is used twice
--- this doesn't work with ALL (Hyperbole : es). It ONLY works with [Hyperbole, IOE]
--- we are missing the IOE?
--- application :: (Route route) => (L.ByteString -> L.ByteString) -> (route -> Eff (Hyperbole : es) Response) -> Wai.Application
--- application toDoc actions request respond = do
---   resp <- runEff $ waiApplication toDoc actions request
---   respond resp
-
--- websocketsOr
---   defaultConnectionOptions
---   (socketApplication)
---   (waiApplication toDoc actions)
-
--- -- socketApplication :: (Route route, IOE :> es) => (route -> Eff (Hyperbole : es) Response) -> PendingConnection -> Eff es ()
--- socketApplication :: PendingConnection -> IO ()
--- socketApplication pending = do
---   conn <- liftIO $ WS.acceptRequest pending
---   forever $ do
---     res <- runEff . runReader conn . runErrorNoCallStack @SocketError $ talk actions
---     case res of
---       Left err -> fail "OH NO"
---       Right _ -> pure ()
-
--- runSocket = runEff . runReader conn . runErrorNoCallStack @SocketError
-
-liveApp :: (L.ByteString -> L.ByteString) -> Eff '[Hyperbole, IOE] Response -> Eff '[Hyperbole, Reader Connection, IOE] Response -> Wai.Application
+liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Eff '[Hyperbole, Server, Reader Connection, IOE] Response -> Wai.Application
 liveApp toDoc wai sock =
   websocketsOr
     defaultConnectionOptions
@@ -66,63 +38,118 @@ liveApp toDoc wai sock =
     (waiApp toDoc wai)
 
 
-waiApp :: (L.ByteString -> L.ByteString) -> Eff '[Hyperbole, IOE] Response -> Wai.Application
-waiApp toDoc actions request respond = do
-  req <- fromWaiRequest request
-  res <- runEff $ runHyperboleResponse req actions
-  respond $ response req res
+waiApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Wai.Application
+waiApp toDoc actions req res = do
+  rr <- runEff $ runServerWai toDoc req res $ runHyperbole actions
+  case rr of
+    Nothing -> error "Missing required response in handler"
+    Just r -> pure r
+
+
+-- the wai server needs to set it as a header to the response
+-- I guess we are simulating that the sockcet server works similarly
+runServerWai
+  :: (IOE :> es)
+  => (BL.ByteString -> BL.ByteString)
+  -> Wai.Request
+  -> (Wai.Response -> IO ResponseReceived)
+  -> Eff (Server : es) a
+  -> Eff es (Maybe Wai.ResponseReceived)
+runServerWai toDoc req respond =
+  reinterpret runLocal $ \_ -> \case
+    LoadRequest -> fromWaiRequest req
+    SendResponse sess r -> do
+      rr <- liftIO $ sendResponse sess r
+      put (Just rr)
  where
-  -- TODO: logging?
-  response :: Request -> Response -> Wai.Response
-  response _ (ErrParse e) = respError status400 ("Parse Error: " <> cs e)
-  response _ (ErrParam e) = respError status400 $ "ErrParam: " <> cs e
-  response _ NotFound = respError status404 "Not Found"
-  response req (Response vw) =
-    respHtml $
-      addDocument req.isFullPage (renderLazyByteString vw)
+  runLocal :: (IOE :> es) => Eff (State (Maybe ResponseReceived) : es) a -> Eff es (Maybe ResponseReceived)
+  runLocal = execState Nothing
 
-  respError s = Wai.responseLBS s [contentType ContentText]
+  sendResponse :: Session -> Response -> IO Wai.ResponseReceived
+  sendResponse _ r =
+    respond $ response r
+   where
+    response :: Response -> Wai.Response
+    response NotFound = respError status404 "Not Found"
+    response Empty = respError status500 "Empty Response"
+    response (Err (ErrParse e)) = respError status400 ("Parse Error: " <> cs e)
+    response (Err (ErrParam e)) = respError status400 $ "ErrParam: " <> cs e
+    response (Err (ErrOther e)) = respError status500 $ "Server Error: " <> cs e
+    response (Response vw) =
+      respHtml $
+        addDocument (Wai.requestMethod req) (renderLazyByteString vw)
 
-  respHtml body =
-    let headers = [contentType ContentHtml]
-     in Wai.responseLBS status200 headers body
+    respError s = Wai.responseLBS s [contentType ContentText]
+
+    respHtml body =
+      let headers = [contentType ContentHtml]
+       in Wai.responseLBS status200 headers body
+
+  -- convert to document if full page request. Subsequent POST requests will only include fragments
+  addDocument :: Method -> BL.ByteString -> BL.ByteString
+  addDocument "GET" bd = toDoc bd
+  addDocument _ bd = bd
+
+  fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
+  fromWaiRequest wr = do
+    body <- liftIO $ Wai.consumeRequestBodyLazy wr
+    let isFullPage = Wai.requestMethod wr == "GET"
+        path = Wai.pathInfo wr
+        query = Wai.queryString wr
+    pure $ Request{body, path, query, isFullPage}
 
 
-
-
-
-socketApp :: (MonadIO m) => Eff '[Hyperbole, Reader Connection, IOE] Response -> PendingConnection -> m ()
+socketApp :: (MonadIO m) => Eff '[Hyperbole, Server, Reader Connection, IOE] Response -> PendingConnection -> m ()
 socketApp actions pend = liftIO $ do
   conn <- WS.acceptRequest pend
   forever $ do
-    runEff $ runReader conn $ talk actions
+    runEff $ runReader conn $ runServerSockets conn $ runHyperbole actions
 
 
-talk :: (IOE :> es, Reader Connection :> es) => Eff (Hyperbole : es) Response -> Eff es ()
-talk actions = do
-  req <- runErrorNoCallStack @SocketError $ request
-  case req of
-    Left (InvalidMessage e) -> sendError $ "SocketError: " <> e
-    Right r -> do
-      -- these can't throw a socket error, just a normal response error
-      res <- runHyperboleResponse r actions
-      case res of
-        (Response vw) -> sendView vw
-        (ErrParse t) -> sendError $ "ErrParse: " <> t
-        (ErrParam t) -> sendError $ "ErrParam: " <> t
-        NotFound -> sendError ("NotFound" :: Text)
+runServerSockets
+  :: (IOE :> es)
+  => Connection
+  -> Eff (Server : es) Response
+  -> Eff es Response
+runServerSockets conn = reinterpret runLocal $ \_ -> \case
+  LoadRequest -> receiveRequest
+  SendResponse _ res -> do
+    case res of
+      (Response vw) -> sendView vw
+      (Err r) -> sendError r
+      Empty -> sendError $ ErrOther "Empty"
+      NotFound -> sendError $ ErrOther "NotFound"
  where
-  request :: (IOE :> es, Reader Connection :> es, Error SocketError :> es) => Eff es Request
-  request = do
-    t <- receive
+  runLocal = runErrorNoCallStackWith @SocketError onSocketError
+
+  onSocketError :: (IOE :> es) => SocketError -> Eff es Response
+  onSocketError e = do
+    let r = ErrOther $ cs $ show e
+    sendError r
+    pure $ Err r
+
+  sendError :: (IOE :> es) => ResponseError -> Eff es ()
+  sendError r = do
+    -- conn <- ask @Connection
+    -- TODO: better error handling!
+    liftIO $ WS.sendTextData conn $ "|ERROR|" <> pack (show r)
+
+  sendView :: (IOE :> es) => View () () -> Eff es ()
+  sendView vw = do
+    -- conn <- ask @Connection
+    liftIO $ WS.sendTextData conn $ renderLazyByteString vw
+
+  receiveRequest :: (IOE :> es, Error SocketError :> es) => Eff es Request
+  receiveRequest = do
+    t <- receiveText
     case parseMessage t of
       Left e -> throwError e
       Right r -> pure r
 
-  receive :: (Reader Connection :> es, IOE :> es) => Eff es Text
-  receive = do
-    c <- ask @Connection
-    liftIO $ WS.receiveData c
+  receiveText :: (IOE :> es) => Eff es Text
+  receiveText = do
+    -- c <- ask @Connection
+    liftIO $ WS.receiveData conn
 
   parseMessage :: Text -> Either SocketError Request
   parseMessage t = do
@@ -140,24 +167,7 @@ talk actions = do
     paths p = filter (/= "") $ T.splitOn "/" p
     query q = parseQuery (cs q)
 
-  sendError e = do
-    conn <- ask @Connection
-    liftIO $ WS.sendTextData conn $ pack (show e)
-
-  sendView vw = do
-    conn <- ask @Connection
-    liftIO $ WS.sendTextData conn $ renderLazyByteString vw
-
 
 data SocketError
   = InvalidMessage Text
   deriving (Show, Eq)
-
-
-fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
-fromWaiRequest wr = do
-  body <- liftIO $ Wai.consumeRequestBodyLazy wr
-  let isFullPage = Wai.requestMethod wr == "GET"
-      path = Wai.pathInfo wr
-      query = Wai.queryString wr
-  pure $ Request{body, path, query, isFullPage}
