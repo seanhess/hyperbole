@@ -95,9 +95,9 @@ type Response = {
   css: HTMLStyleElement
 }
 
-function parseResponse(ret:string):Response {
+function parseResponse(vw:string):Response {
   const parser = new DOMParser()
-  const doc = parser.parseFromString(ret, 'text/html')
+  const doc = parser.parseFromString(vw, 'text/html')
   const css = doc.querySelector("style") as HTMLStyleElement
   const content = doc.querySelector("div") as HTMLElement
 
@@ -106,6 +106,7 @@ function parseResponse(ret:string):Response {
     css: css
   }
 }
+
 
 function init() {
   rootStyles = document.querySelector('style')
@@ -144,3 +145,4 @@ type VNode = {
   // The real DOM node
   node: Node
 }
+

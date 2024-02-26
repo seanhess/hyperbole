@@ -60,7 +60,8 @@ runServerWai
   -> Eff es (Maybe Wai.ResponseReceived)
 runServerWai toDoc req respond =
   reinterpret runLocal $ \_ -> \case
-    LoadRequest -> fromWaiRequest req
+    LoadRequest -> do
+      fromWaiRequest req
     SendResponse sess r -> do
       rr <- liftIO $ sendResponse sess r
       put (Just rr)
@@ -85,8 +86,12 @@ runServerWai toDoc req respond =
     respError s = Wai.responseLBS s [contentType ContentText]
 
     respHtml body =
-      let headers = [contentType ContentHtml, setSessionCookie sess]
+      -- always set the session...
+      let headers = contentType ContentHtml : setCookies
        in Wai.responseLBS status200 headers body
+
+    setCookies =
+      [("Set-Cookie", sessionSetCookie sess)]
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
   addDocument :: Method -> BL.ByteString -> BL.ByteString
@@ -102,7 +107,6 @@ runServerWai toDoc req respond =
         headers = Wai.requestHeaders wr
         cookie = fromMaybe "" $ L.lookup "Cookie" headers
         cookies = parseCookies cookie
-    liftIO $ print cookies
     pure $ Request{body, path, query, isFullPage, cookies}
 
 
@@ -120,9 +124,9 @@ runServerSockets
   -> Eff es Response
 runServerSockets conn = reinterpret runLocal $ \_ -> \case
   LoadRequest -> receiveRequest
-  SendResponse _ res -> do
+  SendResponse sess res -> do
     case res of
-      (Response vw) -> sendView vw
+      (Response vw) -> sendView sess vw
       (Err r) -> sendError r
       Empty -> sendError $ ErrOther "Empty"
       NotFound -> sendError $ ErrOther "NotFound"
@@ -141,10 +145,21 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
     -- TODO: better error handling!
     liftIO $ WS.sendTextData conn $ "|ERROR|" <> pack (show r)
 
-  sendView :: (IOE :> es) => View () () -> Eff es ()
-  sendView vw = do
+  sendView :: (IOE :> es) => Session -> View () () -> Eff es ()
+  sendView ss vw = do
     -- conn <- ask @Connection
-    liftIO $ WS.sendTextData conn $ renderLazyByteString vw
+
+    -- you may have 1 or more lines containing metadata followed by a view
+    -- \|SESSION| key=value; another=woot;
+    -- <div w,kasdlkfjasdfkjalsdf kl>
+    let msg = BL.intercalate "\n" $ sessionLine : [viewLine]
+    liftIO $ WS.sendTextData conn msg
+   where
+    metaLine name value = "|" <> name <> "|" <> value
+    viewLine = renderLazyByteString vw
+
+    sessionLine :: BL.ByteString
+    sessionLine = metaLine "SESSION" $ cs (sessionSetCookie ss)
 
   receiveRequest :: (IOE :> es, Error SocketError :> es) => Eff es Request
   receiveRequest = do
@@ -160,21 +175,21 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
 
   parseMessage :: Text -> Either SocketError Request
   parseMessage t = do
-    (path, query, body) <- messageParts t
+    (path, query, cookie, body) <- messageParts t
     let isFullPage = False
-        -- TODO: sessions on sockets
-        cookies = []
+        cookies = parseCookies (cs cookie)
     pure $ Request{path, query, body = cs body, isFullPage, cookies}
 
-  messageParts :: Text -> Either SocketError ([Text], Query, Text)
+  messageParts :: Text -> Either SocketError ([Text], Query, Text, Text)
   messageParts t = do
     case T.splitOn "\n" t of
-      [url, q, body] -> pure (paths url, query q, body)
-      [url, q] -> pure (paths url, query q, "")
+      [url, q, cookieHeader, body] -> pure (paths url, query q, cookie cookieHeader, body)
+      [url, q, cookieHeader] -> pure (paths url, query q, cookie cookieHeader, "")
       _ -> Left $ InvalidMessage t
    where
     paths p = filter (/= "") $ T.splitOn "/" p
     query q = parseQuery (cs q)
+    cookie = T.dropWhile (/= ' ') . T.dropWhile (/= ':')
 
 
 data SocketError

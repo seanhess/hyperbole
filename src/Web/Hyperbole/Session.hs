@@ -2,52 +2,62 @@ module Web.Hyperbole.Session where
 
 import Data.ByteString (ByteString)
 import Data.List qualified as L
+import Data.Map (Map)
+import Data.Map qualified as Map
+import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import Data.Text qualified as T
 import Network.HTTP.Types
 import Web.HttpApiData
+import Prelude
 
 
-newtype Session = Session [(Text, Text)]
+newtype Session = Session (Map Text Text)
   deriving (Show)
-  deriving newtype (QueryLike)
 
 
--- I want to serialize this as a query string
-setSession :: (ToHttpApiData a) => Text -> a -> Session -> Session
-setSession k a (Session kvs) =
+-- | Set the session key to value
+sessionSet :: (ToHttpApiData a) => Text -> a -> Session -> Session
+sessionSet k a (Session kvs) =
   let val = toQueryParam a
-   in Session $ (k, val) : kvs
+   in Session $ Map.insert k val kvs
 
 
-renderSession :: Session -> ByteString
-renderSession (Session kvs) =
-  cs $ T.intercalate "; " $ map keyPair kvs
+sessionLookup :: (FromHttpApiData a) => Text -> Session -> Maybe a
+sessionLookup k (Session sm) = do
+  t <- Map.lookup k sm
+  either (const Nothing) pure $ parseQueryParam t
+
+
+sessionEmpty :: Session
+sessionEmpty = Session Map.empty
+
+
+-- | Render a session as a url-encoded query string
+sessionRender :: Session -> ByteString
+sessionRender (Session sm) =
+  urlEncode True $ renderQuery False (toQuery $ Map.toList sm)
+
+
+-- | Parse a session as a url-encoded query string
+sessionParse :: ByteString -> Session
+sessionParse = Session . Map.fromList . map toText . parseQuery . urlDecode True
  where
-  keyPair (k, v) = k <> "=" <> v
+  toText (k, Nothing) = (cs k, "false")
+  toText (k, Just v) = (cs k, cs v)
 
 
--- parseSession :: ByteString -> Session
--- parseSession bs = Session $ mapMaybe keyValue $ parseQuery bs
---  where
---   keyValue :: QueryItem -> Maybe (Text, Text)
---   keyValue (_, Nothing) = Nothing
---   keyValue (k, Just v) = Just (cs k, cs v)
-
-setSessionCookie :: Session -> (HeaderName, ByteString)
-setSessionCookie sess = ("Set-Cookie", renderSession sess)
+sessionFromCookies :: [(ByteString, ByteString)] -> Session
+sessionFromCookies cks = fromMaybe sessionEmpty $ do
+  bs <- L.lookup "session" cks
+  pure $ sessionParse bs
 
 
-parseSessionCookies :: [(ByteString, ByteString)] -> Session
-parseSessionCookies cks =
-  Session $ map toText cks
- where
-  toText (k, v) = (cs k, cs v)
+sessionSetCookie :: Session -> ByteString
+sessionSetCookie ss = "session=" <> sessionRender ss
 
-
-sessionKey :: (FromHttpApiData a) => Text -> Session -> Either Text (Maybe a)
-sessionKey k (Session kvs) =
-  case L.lookup k kvs of
-    Nothing -> pure Nothing
-    Just t -> Just <$> parseQueryParam t
+-- sessionKeyParse :: (FromHttpApiData a) => Text -> Session -> Either Text (Maybe a)
+-- sessionKeyParse k (Session kvs) =
+--   case Map.lookup k kvs of
+--     Nothing -> pure Nothing
+--     Just t -> Just <$> parseQueryParam t

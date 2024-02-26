@@ -77,7 +77,7 @@ app users = do
   router Query = do
     p <- reqParam "key"
     view $ do
-      text "test: "
+      text "key: "
       text p
   router Main = do
     -- send $ SetSession @Text "woot" "hello"

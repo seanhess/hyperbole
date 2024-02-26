@@ -76,11 +76,12 @@ data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondEarly :: Response -> Hyperbole m a
   SetSession :: (ToHttpApiData a) => Text -> a -> Hyperbole m ()
+  GetSession :: (FromHttpApiData a) => Text -> Hyperbole m (Maybe a)
 type instance DispatchOf Hyperbole = 'Dynamic
 
 
 data HyperState = HyperState
-  { request :: Maybe Request
+  { request :: Request
   , session :: Session
   }
 
@@ -91,22 +92,22 @@ runHyperbole
   -> Eff es Response
 runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
   GetRequest -> do
-    mr <- gets @HyperState (.request)
-    case mr of
-      Just r -> pure r
-      Nothing -> do
-        r <- send LoadRequest
-        modify $ \s -> s{request = Just r}
-        pure r
+    gets @HyperState (.request)
   RespondEarly r -> do
     s <- gets @HyperState (.session)
     send $ SendResponse s r
     throwError r
   SetSession k a -> do
-    modify $ \st -> st{session = Session.setSession k a st.session} :: HyperState
+    modify $ \st -> st{session = sessionSet k a st.session} :: HyperState
+  GetSession k -> do
+    s <- gets @HyperState (.session)
+    pure $ sessionLookup k s
  where
-  runLocal :: Eff (State HyperState : Error Response : es) a -> Eff es (Either Response (a, HyperState))
-  runLocal = runErrorNoCallStack @Response . runState (HyperState Nothing (Session []))
+  runLocal :: (Server :> es) => Eff (State HyperState : Error Response : es) a -> Eff es (Either Response (a, HyperState))
+  runLocal eff = do
+    r <- send LoadRequest
+    let st = HyperState r (sessionFromCookies r.cookies)
+    runErrorNoCallStack @Response . runState st $ eff
 
   combine :: (Server :> es) => Eff es (Either Response (Response, HyperState)) -> Eff es Response
   combine eff = do
@@ -116,7 +117,6 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
         -- responded early, don't need to respond again
         pure res
       Right (res, st) -> do
-        -- We haven't responded yet!
         send $ SendResponse st.session res
         pure res
 
@@ -159,16 +159,8 @@ lookupEvent q =
     <*> lookupParam "action" q
 
 
-session :: (Hyperbole :> es, FromHttpApiData a, IOE :> es) => Text -> Eff es (Maybe a)
-session k = do
-  r <- request
-  let s = parseSessionCookies r.cookies
-  liftIO $ putStrLn "SESSION"
-  liftIO $ print s
-  -- liftIO $ print $ sessionKey @Text k s
-  case sessionKey k s of
-    Left t -> send $ RespondEarly $ Err $ ErrParse t
-    Right a -> pure a
+session :: (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es (Maybe a)
+session k = send $ GetSession k
 
 
 setSession :: (Hyperbole :> es, ToHttpApiData a) => Text -> a -> Eff es ()

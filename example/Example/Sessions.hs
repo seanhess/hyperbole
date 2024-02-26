@@ -1,26 +1,25 @@
 module Example.Sessions where
 
 import Data.Maybe (fromMaybe)
-import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Effectful
 import Example.Colors
 import Example.Effects.Debug
-import Text.Read (readMaybe)
 import Web.Hyperbole
 
 
 -- this is already running in a different context
-page :: (Hyperbole :> es, IOE :> es, Debug :> es) => Page es Response
+page :: (Hyperbole :> es, Debug :> es) => Page es Response
 page = do
   hyper content
 
   load $ do
-    setSession "color" Error
+    -- setSession "color" Warning
+    -- setSession "msg" ("________" :: Text)
     (clr :: Maybe AppColor) <- session "color"
-    dump "COLOR" clr
+    (msg :: Maybe Text) <- session "msg"
     pure $ row (pad 20) $ do
-      viewId Contents $ viewContent clr
+      viewId Contents $ viewContent clr msg
 
 
 data Contents = Contents
@@ -31,18 +30,30 @@ instance HyperView Contents where
 
 data ContentsAction
   = SaveColor AppColor
+  | SaveMessage Text
   deriving (Show, Read, Param)
 
 
-content :: (Hyperbole :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
+content :: (Hyperbole :> es, Debug :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
 content _ (SaveColor clr) = do
-  -- TODO: need to set session in socket connection
-  setSession "color" (show clr)
-  pure $ viewContent (Just clr)
+  setSession "color" clr
+  msg <- session "msg"
+  pure $ viewContent (Just clr) msg
+content _ (SaveMessage msg) = do
+  setSession "msg" msg
+  clr <- session "color"
+  pure $ viewContent clr (Just msg)
 
 
-viewContent :: Maybe AppColor -> View Contents ()
-viewContent mc = do
+viewContent :: Maybe AppColor -> Maybe Text -> View Contents ()
+viewContent mclr mmsg =
+  col (gap 20) $ do
+    viewColorPicker mclr
+    viewMessage mmsg
+
+
+viewColorPicker :: Maybe AppColor -> View Contents ()
+viewColorPicker mc = do
   let clr = fromMaybe White mc
   col (gap 10 . pad 20 . bg clr) $ do
     el (fontSize 24 . bold) "Session Background"
@@ -52,13 +63,17 @@ viewContent mc = do
       button (SaveColor Error) (btn Error) "Error"
 
 
--- button Expand btn "Expand"
+viewMessage :: Maybe Text -> View Contents ()
+viewMessage mm = do
+  let msg = fromMaybe "" mm
+  col (gap 10 . pad 20 . border 1) $ do
+    el (fontSize 24 . bold) "Session Message:"
+    el_ $ text msg
+    row (gap 10) $ do
+      button (SaveMessage "Hello") (btn White) "Msg: Hello"
+      button (SaveMessage "Goodbye") (btn White) "Msg: Goodbye"
+      button (SaveMessage "________") (btn White) "Clear"
 
--- viewBig :: View Contents ()
--- viewBig = col (gap 10 . border 1 . pad 20 . transition 300 (Height 400)) $ do
---   el_ "One"
---   el_ "TWO"
---   button Collapse (bg Secondary . hover (bg SecondaryLight) . color White . pad 10) "Collapse"
 
 btn :: AppColor -> Mod
 btn clr = bg clr . color Dark . pad 10 . border 1
