@@ -23,7 +23,7 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.Reader.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (HeaderName, Method, Query, parseQuery, status200, status400, status404, status500)
+import Network.HTTP.Types (HeaderName, Method, Query, parseQuery, status200, status302, status400, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.Wai.Internal (ResponseReceived (..))
@@ -32,7 +32,7 @@ import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
 import Web.Hyperbole.Effect
 import Web.Hyperbole.Session
-import Web.View (View, renderLazyByteString)
+import Web.View (Url (..), View, renderLazyByteString)
 
 
 liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Eff '[Hyperbole, Server, Reader Connection, IOE] Response -> Wai.Application
@@ -82,6 +82,7 @@ runServerWai toDoc req respond =
     response (Response vw) =
       respHtml $
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
+    response (Redirect (Url u)) = Wai.responseLBS status302 [("Location", cs u)] ""
 
     respError s = Wai.responseLBS s [contentType ContentText]
 
@@ -130,6 +131,8 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
       (Err r) -> sendError r
       Empty -> sendError $ ErrOther "Empty"
       NotFound -> sendError $ ErrOther "NotFound"
+      (Redirect (Url u)) -> do
+        liftIO $ WS.sendTextData conn $ "|REDIRECT|" <> u
  where
   runLocal = runErrorNoCallStackWith @SocketError onSocketError
 

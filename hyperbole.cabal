@@ -82,6 +82,7 @@ executable example
       Example.Effects.Debug
       Example.Effects.Users
       Example.Forms
+      Example.Redirects
       Example.Sessions
       Example.Transitions
       Paths_hyperbole

@@ -37,6 +37,7 @@ data Request = Request
 data Response
   = Response (View () ())
   | NotFound
+  | Redirect Url
   | Err ResponseError
   | Empty
 
@@ -193,6 +194,10 @@ notFound = send $ RespondEarly NotFound
 
 parseError :: (Hyperbole :> es) => Text -> Eff es a
 parseError = send . RespondEarly . Err . ErrParse
+
+
+redirect :: (Hyperbole :> es) => Url -> Eff es ()
+redirect = send . RespondEarly . Redirect
 
 
 -- | Set the response to the view. Note that `page` already expects a view to be returned from the effect

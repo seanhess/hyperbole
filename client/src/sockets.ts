@@ -51,6 +51,10 @@ export class SocketConnection {
       document.cookie = metadata.session
     }
 
+    if (metadata.redirect) {
+      window.location.href = metadata.redirect
+    }
+
     return rest
   }
 
@@ -95,6 +99,7 @@ type SocketResponse = {
 
 type Metadata = {
   session?: string
+  redirect?: string
 }
 
 type Meta = {key: string, value: string}
@@ -123,6 +128,7 @@ function parseMetadataResponse(ret:string):SocketResponse {
 
 function parseMetas(meta:Meta[]):Metadata {
   return {
-    session: meta.find(m => m.key == "SESSION")?.value
+    session: meta.find(m => m.key == "SESSION")?.value,
+    redirect: meta.find(m => m.key == "REDIRECT")?.value
   }
 }

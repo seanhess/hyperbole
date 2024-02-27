@@ -20,6 +20,7 @@ import Example.Contacts qualified as Contacts
 import Example.Effects.Debug as Debug
 import Example.Effects.Users as Users
 import Example.Forms qualified as Forms
+import Example.Redirects qualified as Redirects
 import Example.Sessions qualified as Sessions
 import Example.Transitions qualified as Transitions
 import GHC.Generics (Generic)
@@ -50,11 +51,14 @@ data AppRoute
   | Query
   | Forms
   | Sessions
+  | Redirects
+  | RedirectNow
   deriving (Show, Generic, Eq, Route)
 
 
 data Hello
   = Greet Text
+  | Redirected
   deriving (Show, Generic, Eq, Route)
 
 
@@ -74,6 +78,10 @@ app users = do
   router Transitions = page Transitions.page
   router Forms = page Forms.page
   router Sessions = page Sessions.page
+  router Redirects = page Redirects.page
+  router RedirectNow = do
+    redirect (pathUrl . routePath $ Hello Redirected)
+    view "Should not see this message"
   router Query = do
     p <- reqParam "key"
     view $ do
@@ -90,9 +98,13 @@ app users = do
         link Forms id "Forms"
         tag "a" (att "href" "/query?key=value") "Query Params"
         link Sessions id "Sessions"
+        link Redirects id "Redirects"
+        link RedirectNow id "Redirect Now"
 
   -- example sub-router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es Response
+  hello Redirected = load $ do
+    pure $ el_ "You were redirected"
   hello (Greet s) = load $ do
     pure $ do
       el (pad 10 . gap 10) $ do
