@@ -30,6 +30,7 @@ import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.WebSockets (Connection, PendingConnection, acceptRequest, defaultConnectionOptions)
 import Web.Hyperbole
+import Web.Hyperbole.Effect (Request (..))
 
 
 -- import Network.Wai.Handler.WebSockets (websocketsOr)
@@ -81,7 +82,6 @@ app users = do
   router Redirects = page Redirects.page
   router RedirectNow = do
     redirect (pathUrl . routePath $ Hello Redirected)
-    view "Should not see this message"
   router Query = do
     p <- reqParam "key"
     view $ do
@@ -106,10 +106,23 @@ app users = do
   hello Redirected = load $ do
     pure $ el_ "You were redirected"
   hello (Greet s) = load $ do
-    pure $ do
-      el (pad 10 . gap 10) $ do
-        text "Greetings, "
+    r <- request
+    pure $ col (gap 10 . pad 10) $ do
+      el_ $ do
+        text "Greetings: "
         text s
+      el_ $ do
+        text "Host: "
+        text $ cs $ show r.host
+      el_ $ do
+        text "Path: "
+        text $ cs $ show r.path
+      el_ $ do
+        text "Query: "
+        text $ cs $ show r.query
+      el_ $ do
+        text "Cookies: "
+        text $ cs $ show r.cookies
 
   -- Use the embedded version for real applications (see below). The link to /hyperbole.js here is just to make local development easier
   toDocument :: BL.ByteString -> BL.ByteString

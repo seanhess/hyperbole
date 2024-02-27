@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE NoFieldSelectors #-}
 
 module Web.Hyperbole.Effect where
 
@@ -24,11 +25,14 @@ import Web.Hyperbole.Session as Session
 import Web.View
 
 
+newtype Host = Host BS.ByteString
+  deriving (Show)
 data Request = Request
-  { path :: [Text]
+  { host :: Host
+  , path :: [Text]
   , query :: Query
   , body :: BL.ByteString
-  , isFullPage :: Bool
+  , method :: Method
   , cookies :: [(BS.ByteString, BS.ByteString)]
   }
   deriving (Show)
@@ -77,6 +81,7 @@ data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondEarly :: Response -> Hyperbole m a
   SetSession :: (ToHttpApiData a) => Text -> a -> Hyperbole m ()
+  DelSession :: Text -> Hyperbole m ()
   GetSession :: (FromHttpApiData a) => Text -> Hyperbole m (Maybe a)
 type instance DispatchOf Hyperbole = 'Dynamic
 
@@ -100,6 +105,8 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
     throwError r
   SetSession k a -> do
     modify $ \st -> st{session = sessionSet k a st.session} :: HyperState
+  DelSession k -> do
+    modify $ \st -> st{session = sessionDel k st.session} :: HyperState
   GetSession k -> do
     s <- gets @HyperState (.session)
     pure $ sessionLookup k s
@@ -168,6 +175,11 @@ setSession :: (Hyperbole :> es, ToHttpApiData a) => Text -> a -> Eff es ()
 setSession k v = send $ SetSession k v
 
 
+-- Or, do we clear the whole thing?
+clearSession :: (Hyperbole :> es) => Text -> Eff es ()
+clearSession k = send $ DelSession k
+
+
 reqParams :: (Hyperbole :> es) => Eff es Query
 reqParams = (.query) <$> request
 
@@ -196,7 +208,7 @@ parseError :: (Hyperbole :> es) => Text -> Eff es a
 parseError = send . RespondEarly . Err . ErrParse
 
 
-redirect :: (Hyperbole :> es) => Url -> Eff es ()
+redirect :: (Hyperbole :> es) => Url -> Eff es a
 redirect = send . RespondEarly . Redirect
 
 

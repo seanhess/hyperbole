@@ -23,6 +23,11 @@ sessionSet k a (Session kvs) =
    in Session $ Map.insert k val kvs
 
 
+sessionDel :: Text -> Session -> Session
+sessionDel k (Session kvs) =
+  Session $ Map.delete k kvs
+
+
 sessionLookup :: (FromHttpApiData a) => Text -> Session -> Maybe a
 sessionLookup k (Session sm) = do
   t <- Map.lookup k sm

@@ -18,12 +18,13 @@ import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
+import Debug.Trace
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.Reader.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (HeaderName, Method, Query, parseQuery, status200, status302, status400, status404, status500)
+import Network.HTTP.Types (HeaderName, Method, parseQuery, status200, status302, status400, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.Wai.Internal (ResponseReceived (..))
@@ -82,7 +83,9 @@ runServerWai toDoc req respond =
     response (Response vw) =
       respHtml $
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
-    response (Redirect (Url u)) = Wai.responseLBS status302 [("Location", cs u)] ""
+    response (Redirect (Url u)) = do
+      let headers = ("Location", cs u) : setCookies
+      Wai.responseLBS status302 headers ""
 
     respError s = Wai.responseLBS s [contentType ContentText]
 
@@ -102,13 +105,14 @@ runServerWai toDoc req respond =
   fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
   fromWaiRequest wr = do
     body <- liftIO $ Wai.consumeRequestBodyLazy wr
-    let isFullPage = Wai.requestMethod wr == "GET"
-        path = Wai.pathInfo wr
+    let path = Wai.pathInfo wr
         query = Wai.queryString wr
         headers = Wai.requestHeaders wr
         cookie = fromMaybe "" $ L.lookup "Cookie" headers
+        host = Host $ fromMaybe "" $ L.lookup "Host" headers
         cookies = parseCookies cookie
-    pure $ Request{body, path, query, isFullPage, cookies}
+        method = Wai.requestMethod wr
+    pure $ Request{body, path, query, method, cookies, host}
 
 
 socketApp :: (MonadIO m) => Eff '[Hyperbole, Server, Reader Connection, IOE] Response -> PendingConnection -> m ()
@@ -127,12 +131,11 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
   LoadRequest -> receiveRequest
   SendResponse sess res -> do
     case res of
-      (Response vw) -> sendView sess vw
+      (Response vw) -> sendView (addMetadata sess) vw
       (Err r) -> sendError r
       Empty -> sendError $ ErrOther "Empty"
       NotFound -> sendError $ ErrOther "NotFound"
-      (Redirect (Url u)) -> do
-        liftIO $ WS.sendTextData conn $ "|REDIRECT|" <> u
+      (Redirect url) -> sendRedirect (addMetadata sess) url
  where
   runLocal = runErrorNoCallStackWith @SocketError onSocketError
 
@@ -148,21 +151,27 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
     -- TODO: better error handling!
     liftIO $ WS.sendTextData conn $ "|ERROR|" <> pack (show r)
 
-  sendView :: (IOE :> es) => Session -> View () () -> Eff es ()
-  sendView ss vw = do
+  sendView :: (IOE :> es) => (BL.ByteString -> BL.ByteString) -> View () () -> Eff es ()
+  sendView addMeta vw = do
     -- conn <- ask @Connection
+    liftIO $ WS.sendTextData conn $ addMeta $ renderLazyByteString vw
 
+  sendRedirect :: (IOE :> es) => (BL.ByteString -> BL.ByteString) -> Url -> Eff es ()
+  sendRedirect addMeta (Url u) = do
+    -- conn <- ask @Connection
+    liftIO $ WS.sendTextData conn $ addMeta $ "|REDIRECT|" <> cs u
+
+  addMetadata :: Session -> BL.ByteString -> BL.ByteString
+  addMetadata sess cont =
     -- you may have 1 or more lines containing metadata followed by a view
     -- \|SESSION| key=value; another=woot;
     -- <div w,kasdlkfjasdfkjalsdf kl>
-    let msg = BL.intercalate "\n" $ sessionLine : [viewLine]
-    liftIO $ WS.sendTextData conn msg
+    sessionLine <> "\n" <> cont
    where
     metaLine name value = "|" <> name <> "|" <> value
-    viewLine = renderLazyByteString vw
 
     sessionLine :: BL.ByteString
-    sessionLine = metaLine "SESSION" $ cs (sessionSetCookie ss)
+    sessionLine = metaLine "SESSION" $ cs (sessionSetCookie sess)
 
   receiveRequest :: (IOE :> es, Error SocketError :> es) => Eff es Request
   receiveRequest = do
@@ -178,21 +187,32 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
 
   parseMessage :: Text -> Either SocketError Request
   parseMessage t = do
-    (path, query, cookie, body) <- messageParts t
-    let isFullPage = False
-        cookies = parseCookies (cs cookie)
-    pure $ Request{path, query, body = cs body, isFullPage, cookies}
-
-  messageParts :: Text -> Either SocketError ([Text], Query, Text, Text)
-  messageParts t = do
     case T.splitOn "\n" t of
-      [url, q, cookieHeader, body] -> pure (paths url, query q, cookie cookieHeader, body)
-      [url, q, cookieHeader] -> pure (paths url, query q, cookie cookieHeader, "")
+      [url, host, cook, body] -> parse url cook host (Just body)
+      [url, host, cook] -> parse url cook host Nothing
       _ -> Left $ InvalidMessage t
    where
+    parseUrl :: Text -> Either SocketError (Text, Text)
+    parseUrl u =
+      case T.splitOn "?" u of
+        [url, query] -> pure (url, query)
+        _ -> Left $ InvalidMessage u
+
+    parse :: Text -> Text -> Text -> Maybe Text -> Either SocketError Request
+    parse url cook hst mbody = do
+      (u, q) <- parseUrl url
+      traceM "PARSED URL"
+      traceM $ show (url, u, q)
+      let path = paths u
+          query = parseQuery (cs q)
+          cookies = parseCookies $ cs $ header cook
+          host = Host $ cs $ header hst
+          method = "POST"
+          body = cs $ fromMaybe "" mbody
+      pure $ Request{path, host, query, body, method, cookies}
+
     paths p = filter (/= "") $ T.splitOn "/" p
-    query q = parseQuery (cs q)
-    cookie = T.dropWhile (/= ' ') . T.dropWhile (/= ':')
+    header = T.dropWhile (/= ' ') . T.dropWhile (/= ':')
 
 
 data SocketError

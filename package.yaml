@@ -1,5 +1,5 @@
 name:               hyperbole
-version:            0.3.2
+version:            0.3.3
 synopsis:           Web Framework inspired by HTMX
 homepage:           https://github.com/seanhess/hyperbole
 github:             seanhess/hyperbole

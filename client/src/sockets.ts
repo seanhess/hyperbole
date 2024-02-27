@@ -41,8 +41,11 @@ export class SocketConnection {
 
   async sendAction(action:ActionMessage):Promise<string> {
     // console.log("SOCKET sendAction", action)
-    let cookie = "Cookie: " + document.cookie
-    let msg = [action.url.pathname, action.url.search, cookie, action.form].join("\n")
+    let msg = [ action.url.pathname + action.url.search
+              , "Host: " + window.location.host
+              , "Cookie: " + document.cookie
+              , action.form
+              ].join("\n")
     let ret = await this.fetch(msg)
     let {metadata, rest} = parseMetadataResponse(ret)
 
