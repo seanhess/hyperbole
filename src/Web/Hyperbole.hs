@@ -15,7 +15,7 @@ module Web.Hyperbole
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Web.Hyperbole.Application
-import Web.Hyperbole.Effect (Hyperbole, Page, Request, Response, Server, clearSession, formData, getEvent, hyper, load, lookupEvent, lookupParam, notFound, page, parseError, redirect, reqParam, reqParams, reqPath, routeRequest, runHyperbole, setSession, view)
+import Web.Hyperbole.Effect (Hyperbole, Page, Request (..), Response, Server, clearSession, formData, getEvent, hyper, load, lookupEvent, lookupParam, notFound, page, parseError, redirect, reqParam, reqParams, reqPath, routeRequest, runHyperbole, setSession, view)
 import Web.Hyperbole.Effect qualified as Effect
 import Web.Hyperbole.Embed (scriptEmbed)
 import Web.Hyperbole.Forms

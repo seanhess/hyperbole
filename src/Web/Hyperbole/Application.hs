@@ -18,13 +18,12 @@ import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
-import Debug.Trace
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.Reader.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (HeaderName, Method, parseQuery, status200, status302, status400, status404, status500)
+import Network.HTTP.Types (HeaderName, Method, parseQuery, status200, status302, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.Wai.Internal (ResponseReceived (..))
@@ -80,6 +79,7 @@ runServerWai toDoc req respond =
     response (Err (ErrParse e)) = respError status400 ("Parse Error: " <> cs e)
     response (Err (ErrParam e)) = respError status400 $ "ErrParam: " <> cs e
     response (Err (ErrOther e)) = respError status500 $ "Server Error: " <> cs e
+    response (Err ErrAuth) = respError status401 "Unauthorized"
     response (Response vw) =
       respHtml $
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
@@ -201,8 +201,6 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
     parse :: Text -> Text -> Text -> Maybe Text -> Either SocketError Request
     parse url cook hst mbody = do
       (u, q) <- parseUrl url
-      traceM "PARSED URL"
-      traceM $ show (url, u, q)
       let path = paths u
           query = parseQuery (cs q)
           cookies = parseCookies $ cs $ header cook
@@ -212,7 +210,9 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
       pure $ Request{path, host, query, body, method, cookies}
 
     paths p = filter (/= "") $ T.splitOn "/" p
-    header = T.dropWhile (/= ' ') . T.dropWhile (/= ':')
+
+    -- drop up to the colon, then ': '
+    header = T.drop 2 . T.dropWhile (/= ':')
 
 
 data SocketError

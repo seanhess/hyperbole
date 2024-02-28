@@ -59,7 +59,7 @@ sessionFromCookies cks = fromMaybe sessionEmpty $ do
 
 
 sessionSetCookie :: Session -> ByteString
-sessionSetCookie ss = "session=" <> sessionRender ss
+sessionSetCookie ss = "session=" <> sessionRender ss <> "; SameSite=None; secure"
 
 -- sessionKeyParse :: (FromHttpApiData a) => Text -> Session -> Either Text (Maybe a)
 -- sessionKeyParse k (Session kvs) =

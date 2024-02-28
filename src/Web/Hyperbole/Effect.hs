@@ -25,7 +25,7 @@ import Web.Hyperbole.Session as Session
 import Web.View
 
 
-newtype Host = Host BS.ByteString
+newtype Host = Host {text :: BS.ByteString}
   deriving (Show)
 data Request = Request
   { host :: Host
@@ -50,6 +50,7 @@ data ResponseError
   = ErrParse Text
   | ErrParam Text
   | ErrOther Text
+  | ErrAuth
   deriving (Show)
 
 

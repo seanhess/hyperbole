@@ -1,6 +1,24 @@
 {-# LANGUAGE DefaultSignatures #-}
 
-module Web.Hyperbole.Forms where
+module Web.Hyperbole.Forms
+  ( FormFields (..)
+  , FieldInput (..)
+  , Label
+  , Input
+  , InputName (..)
+  , field
+  , label
+  , input
+  , form
+  , submit
+  , parseForm
+  , Form (..)
+  , Field
+  , defaultFormOptions
+  , FormOptions (..)
+  , genericFromForm
+  )
+where
 
 import Data.Functor.Identity (Identity)
 import Data.Kind (Type)
@@ -11,8 +29,8 @@ import Text.Casing (kebab)
 import Web.FormUrlEncoded qualified as FE
 import Web.Hyperbole.Effect
 import Web.Hyperbole.HyperView (HyperView (..), Param (..), dataTarget)
-import Web.Internal.FormUrlEncoded (GFromForm, defaultFormOptions, genericFromForm)
-import Web.View hiding (form, input)
+import Web.Internal.FormUrlEncoded (FormOptions (..), GFromForm, defaultFormOptions, genericFromForm)
+import Web.View hiding (form, input, label)
 
 
 -- | The only time we can use Fields is inside a form
