@@ -82,6 +82,7 @@ executable example
       Example.Effects.Debug
       Example.Effects.Users
       Example.Forms
+      Example.LazyLoading
       Example.Redirects
       Example.Sessions
       Example.Transitions

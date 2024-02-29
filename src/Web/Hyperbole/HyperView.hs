@@ -17,8 +17,8 @@ class (Param id, Param (Action id)) => HyperView id where
 
 viewId :: forall id ctx. (HyperView id) => id -> View id () -> View ctx ()
 viewId vid vw = do
-  el (att "id" (toParam vid) . flexCol)
-    $ addContext vid vw
+  el (att "id" (toParam vid) . flexCol) $
+    addContext vid vw
 
 
 button :: (HyperView id) => Action id -> Mod -> View id () -> View id ()
@@ -31,6 +31,12 @@ onRequest :: View id () -> View id () -> View id ()
 onRequest a b = do
   el (parent "hyp-loading" flexCol . hide) a
   el (parent "hyp-loading" hide . flexCol) b
+
+
+onLoad :: (HyperView id) => Action id -> View id () -> View id ()
+onLoad a initContent = do
+  c <- context
+  el (att "data-on-load" (toParam a) . dataTarget c) initContent
 
 
 -- | Internal

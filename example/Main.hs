@@ -20,6 +20,7 @@ import Example.Contacts qualified as Contacts
 import Example.Effects.Debug as Debug
 import Example.Effects.Users as Users
 import Example.Forms qualified as Forms
+import Example.LazyLoading qualified as LazyLoading
 import Example.Redirects qualified as Redirects
 import Example.Sessions qualified as Sessions
 import Example.Transitions qualified as Transitions
@@ -54,6 +55,7 @@ data AppRoute
   | Sessions
   | Redirects
   | RedirectNow
+  | LazyLoading
   deriving (Show, Generic, Eq, Route)
 
 
@@ -79,6 +81,7 @@ app users = do
   router Transitions = page Transitions.page
   router Forms = page Forms.page
   router Sessions = page Sessions.page
+  router LazyLoading = page LazyLoading.page
   router Redirects = page Redirects.page
   router RedirectNow = do
     redirect (pathUrl . routePath $ Hello Redirected)
@@ -100,6 +103,7 @@ app users = do
         link Sessions id "Sessions"
         link Redirects id "Redirects"
         link RedirectNow id "Redirect Now"
+        link LazyLoading id "Lazy Loading"
 
   -- example sub-router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es Response

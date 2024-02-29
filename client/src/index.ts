@@ -1,6 +1,6 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
-import  { listenChange, listenClick, listenFormSubmit } from './events'
+import  { listenChange, listenClick, listenFormSubmit, listenLoad } from './events'
 import  { actionMessage, ActionMessage } from './action'
 
 
@@ -19,20 +19,6 @@ console.log("Hyperbole 0.2.0")
 let rootStyles: HTMLStyleElement;
 
 
-listenClick(async function(target:HTMLElement, action:string) {
-  console.log("CLICK", target.id, action)
-  runAction(target, action)
-})
-
-listenFormSubmit(async function(target:HTMLElement, action:string, form:FormData) {
-  console.log("FORM", target.id, action,form)
-  runAction(target, action, form)
-})
-
-listenChange(async function(target:HTMLElement, action:string) {
-  console.log("CHANGE", target.id, action)
-  runAction(target, action)
-})
 
 async function sendAction(msg:ActionMessage) {
   async function sendActionHttp(msg:ActionMessage) {
@@ -77,6 +63,7 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   const old:VNode = create(target)
   patch(next, old)
 
+
   // Remove loading and clear add timeout
   clearTimeout(timeout)
   target.classList.remove("hyp-loading")
@@ -110,6 +97,26 @@ function parseResponse(vw:string):Response {
 
 function init() {
   rootStyles = document.querySelector('style')
+
+  listenLoad(document.body, async function(target:HTMLElement, action:string) {
+    console.log("INIT LOAD", target.id, action)
+    runAction(target, action)
+  })
+
+  listenClick(async function(target:HTMLElement, action:string) {
+    console.log("CLICK", target.id, action)
+    runAction(target, action)
+  })
+
+  listenFormSubmit(async function(target:HTMLElement, action:string, form:FormData) {
+    console.log("FORM", target.id, action,form)
+    runAction(target, action, form)
+  })
+
+  listenChange(async function(target:HTMLElement, action:string) {
+    console.log("CHANGE", target.id, action)
+    runAction(target, action)
+  })
 }
 
 document.addEventListener("DOMContentLoaded", init)
@@ -117,6 +124,8 @@ document.addEventListener("DOMContentLoaded", init)
 
 const sock = new SocketConnection()
 sock.connect()
+
+
 
 
 
