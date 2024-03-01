@@ -13,7 +13,7 @@ import  { actionMessage, ActionMessage } from './action'
 // const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole 0.2.0")
+console.log("Hyperbole 0.3.3")
 
 
 let rootStyles: HTMLStyleElement;
@@ -55,6 +55,11 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   let ret = await sendAction(msg)
   let res = parseResponse(ret)
 
+  if (!res.css || !res.content) {
+    console.error("Empty Response")
+    return
+  }
+
   // First, update the stylesheet
   addCSS(res.css.textContent)
 
@@ -63,6 +68,16 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   const old:VNode = create(target)
   patch(next, old)
 
+  // Emit relevant events
+  let newTarget = document.getElementById(target.id)
+  // let event = new Event("content", {bubbles:true})
+  // newTarget.dispatchEvent(event)
+
+  // load doesn't bubble
+  listenLoad(newTarget, async function(target:HTMLElement, action:string) {
+    console.log("PATCH LOAD", target.id, action)
+    runAction(target, action)
+  })
 
   // Remove loading and clear add timeout
   clearTimeout(timeout)

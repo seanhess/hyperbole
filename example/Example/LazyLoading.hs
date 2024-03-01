@@ -1,7 +1,6 @@
 module Example.LazyLoading where
 
 import Effectful
-import Example.Colors
 import Example.Effects.Debug
 import Web.Hyperbole
 
@@ -26,6 +25,7 @@ instance HyperView Contents where
 
 data ContentsAction
   = Load
+  | Reload
   deriving (Show, Read, Param)
 
 
@@ -33,15 +33,16 @@ content :: (Hyperbole :> es, Debug :> es) => Contents -> ContentsAction -> Eff e
 content _ Load = do
   -- go really slow!
   delay 1000
-  pure viewLoaded
+  pure $ onLoad Reload $ do
+    el id "Loaded, should reload once more..."
+content _ Reload = do
+  -- go really slow!
+  delay 1000
+  pure $ col (gap 10) $ do
+    el_ "Reloaded!"
 
 
 viewInit :: View Contents ()
 viewInit = do
   onLoad Load $ do
     el id "Lazy Loading..."
-
-
-viewLoaded :: View Contents ()
-viewLoaded = do
-  el id "Loaded Content!"

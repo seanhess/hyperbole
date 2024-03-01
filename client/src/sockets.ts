@@ -49,6 +49,11 @@ export class SocketConnection {
     let ret = await this.fetch(msg)
     let {metadata, rest} = parseMetadataResponse(ret)
 
+    if (metadata.error) {
+      console.error("Server Error:", metadata.error)
+      return
+    }
+
     if (metadata.session) {
       // console.log("setting cookie", metadata.session)
       document.cookie = metadata.session
@@ -103,6 +108,7 @@ type SocketResponse = {
 type Metadata = {
   session?: string
   redirect?: string
+  error?: string
 }
 
 type Meta = {key: string, value: string}
@@ -132,6 +138,7 @@ function parseMetadataResponse(ret:string):SocketResponse {
 function parseMetas(meta:Meta[]):Metadata {
   return {
     session: meta.find(m => m.key == "SESSION")?.value,
-    redirect: meta.find(m => m.key == "REDIRECT")?.value
+    redirect: meta.find(m => m.key == "REDIRECT")?.value,
+    error: meta.find(m => m.key == "ERROR")?.value
   }
 }

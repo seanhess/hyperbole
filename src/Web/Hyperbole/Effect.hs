@@ -219,6 +219,12 @@ view vw = do
   pure $ Response vw
 
 
+respondEarly :: (Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
+respondEarly vid vw = do
+  let res = Response $ viewId vid vw
+  send $ RespondEarly res
+
+
 -- | Load the entire page when no HyperViews match
 load
   :: (Hyperbole :> es)

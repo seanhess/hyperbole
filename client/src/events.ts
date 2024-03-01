@@ -28,6 +28,7 @@ export function listenClick(cb:(target:HTMLElement, action:string) => void): voi
 
 
 export function listenLoad(node:HTMLElement, cb:(target:HTMLElement, action:string) => void): void {
+  // it doesn't really matter WHO runs this except that it should have target
   node.querySelectorAll("[data-on-load]").forEach((load:HTMLElement) => {
     let action = load.dataset.onLoad
     let target = document.getElementById(load.dataset.target)
