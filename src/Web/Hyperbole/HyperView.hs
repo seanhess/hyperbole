@@ -33,10 +33,13 @@ onRequest a b = do
   el (parent "hyp-loading" hide . flexCol) b
 
 
-onLoad :: (HyperView id) => Action id -> View id () -> View id ()
-onLoad a initContent = do
+type DelayMs = Int
+
+
+onLoad :: (HyperView id) => Action id -> DelayMs -> View id () -> View id ()
+onLoad a delay initContent = do
   c <- context
-  el (att "data-on-load" (toParam a) . dataTarget c) initContent
+  el (att "data-on-load" (toParam a) . att "data-delay" (toParam delay) . dataTarget c) initContent
 
 
 -- | Internal

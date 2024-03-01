@@ -31,6 +31,7 @@ export function listenLoad(node:HTMLElement, cb:(target:HTMLElement, action:stri
   // it doesn't really matter WHO runs this except that it should have target
   node.querySelectorAll("[data-on-load]").forEach((load:HTMLElement) => {
     let action = load.dataset.onLoad
+    let delay = parseInt(load.dataset.delay) || 0
     let target = document.getElementById(load.dataset.target)
 
     if (!target) {
@@ -38,7 +39,7 @@ export function listenLoad(node:HTMLElement, cb:(target:HTMLElement, action:stri
       return
     }
 
-    cb(target, action)
+    setTimeout(() => cb(target, action), delay)
   })
 }
 

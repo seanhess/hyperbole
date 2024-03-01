@@ -33,16 +33,16 @@ content :: (Hyperbole :> es, Debug :> es) => Contents -> ContentsAction -> Eff e
 content _ Load = do
   -- go really slow!
   delay 1000
-  pure $ onLoad Reload $ do
+
+  -- then reload after a 1s delay (client-side)
+  pure $ onLoad Reload 1000 $ do
     el id "Loaded, should reload once more..."
 content _ Reload = do
-  -- go really slow!
-  delay 1000
   pure $ col (gap 10) $ do
     el_ "Reloaded!"
 
 
 viewInit :: View Contents ()
 viewInit = do
-  onLoad Load $ do
+  onLoad Load 0 $ do
     el id "Lazy Loading..."
