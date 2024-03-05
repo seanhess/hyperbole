@@ -1,12 +1,11 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE FunctionalDependencies #-}
 
 module Web.Hyperbole.HyperView where
 
 import Data.Kind (Type)
 import Data.Text
 import Text.Read
-import Web.Hyperbole.Route (Route (..), pathUrl)
+import Web.Hyperbole.Route (Route (..), routeUrl)
 import Web.View
 
 
@@ -110,5 +109,5 @@ instance Param Text where
 
 link :: (Route a) => a -> Mod -> View c () -> View c ()
 link r f cnt = do
-  let Url u = pathUrl . routePath $ r
-  tag "a" (att "href" u . f) cnt
+  let u = routeUrl r
+  tag "a" (att "href" (renderUrl u) . f) cnt

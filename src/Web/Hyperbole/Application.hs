@@ -32,7 +32,7 @@ import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
 import Web.Hyperbole.Effect
 import Web.Hyperbole.Session
-import Web.View (Url (..), View, renderLazyByteString)
+import Web.View (Url (..), View, renderLazyByteString, renderUrl)
 
 
 liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Eff '[Hyperbole, Server, Reader Connection, IOE] Response -> Wai.Application
@@ -83,8 +83,8 @@ runServerWai toDoc req respond =
     response (Response vw) =
       respHtml $
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
-    response (Redirect (Url u)) = do
-      let headers = ("Location", cs u) : setCookies
+    response (Redirect u) = do
+      let headers = ("Location", cs (renderUrl u)) : setCookies
       Wai.responseLBS status302 headers ""
 
     respError s = Wai.responseLBS s [contentType ContentText]
@@ -157,9 +157,9 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
     liftIO $ WS.sendTextData conn $ addMeta $ renderLazyByteString vw
 
   sendRedirect :: (IOE :> es) => (BL.ByteString -> BL.ByteString) -> Url -> Eff es ()
-  sendRedirect addMeta (Url u) = do
+  sendRedirect addMeta u = do
     -- conn <- ask @Connection
-    liftIO $ WS.sendTextData conn $ addMeta $ "|REDIRECT|" <> cs u
+    liftIO $ WS.sendTextData conn $ addMeta $ "|REDIRECT|" <> cs (renderUrl u)
 
   addMetadata :: Session -> BL.ByteString -> BL.ByteString
   addMetadata sess cont =

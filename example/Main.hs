@@ -87,7 +87,7 @@ app users = do
   router Redirects = page Redirects.page
   router Errors = page Errors.page
   router RedirectNow = do
-    redirect (pathUrl . routePath $ Hello Redirected)
+    redirect (routeUrl $ Hello Redirected)
   router Query = do
     p <- reqParam "key"
     view $ el (pad 20) $ do

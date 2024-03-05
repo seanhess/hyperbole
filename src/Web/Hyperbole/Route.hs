@@ -1,50 +1,40 @@
 {-# LANGUAGE DefaultSignatures #-}
 
-module Web.Hyperbole.Route where
+module Web.Hyperbole.Route
+  ( Route (..)
+  , findRoute
+  , pathUrl
+  , routeUrl
+  , GenRoute (..)
+  , genRouteRead
+  , Url
+  ) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (guard)
-import Data.String (IsString (..))
-import Data.Text (Text, dropWhile, dropWhileEnd, intercalate, pack, splitOn, toLower, unpack)
+import Data.Text (Text, pack, toLower, unpack)
 import GHC.Generics
 import Text.Read (readMaybe)
-import Web.View.Types (Url (..))
+import Web.View.Types.Url (Segment, Url, pathUrl)
 import Prelude hiding (dropWhile)
 
 
-type IsAbsolute = Bool
-type Segment = Text
-data Path = Path
-  { isAbsolute :: Bool
-  , segments :: [Segment]
-  }
-  deriving (Show)
-
-
--- what if you want a relative url?
-instance IsString Path where
-  fromString s = Path (isRoot s) [cleanSegment $ pack s]
-   where
-    isRoot ('/' : _) = True
-    isRoot _ = False
-
-
 class Route a where
-  matchRoute :: Path -> Maybe a
-  routePath :: a -> Path
+  matchRoute :: [Segment] -> Maybe a
+  routePath :: a -> [Segment]
   defRoute :: a
 
 
-  default matchRoute :: (Generic a, GenRoute (Rep a)) => Path -> Maybe a
+  default matchRoute :: (Generic a, GenRoute (Rep a)) => [Segment] -> Maybe a
   -- this will match a trailing slash, but not if it is missing
-  matchRoute (Path _ [""]) = pure defRoute
-  matchRoute (Path _ segs) = to <$> genRoute segs
+  matchRoute [""] = pure defRoute
+  matchRoute segs = to <$> genRoute segs
 
 
-  default routePath :: (Generic a, Eq a, GenRoute (Rep a)) => a -> Path
+  default routePath :: (Generic a, Eq a, GenRoute (Rep a)) => a -> [Segment]
   routePath p
-    | p == defRoute = Path True [""]
-    | otherwise = Path True $ genPaths $ from p
+    | p == defRoute = [""]
+    | otherwise = genPaths $ from p
 
 
   default defRoute :: (Generic a, GenRoute (Rep a)) => a
@@ -54,20 +44,11 @@ class Route a where
 -- | Use the default route if it's empty
 findRoute :: (Route a) => [Text] -> Maybe a
 findRoute [] = Just defRoute
-findRoute ps = matchRoute (Path True ps)
+findRoute ps = matchRoute ps
 
 
-pathUrl :: Path -> Url
-pathUrl (Path True ss) = Url $ "/" <> intercalate "/" ss
-pathUrl (Path False ss) = Url $ intercalate "/" ss
-
-
-cleanSegment :: Segment -> Segment
-cleanSegment = dropWhileEnd (== '/') . dropWhile (== '/')
-
-
-pathSegments :: Text -> [Segment]
-pathSegments path = splitOn "/" $ dropWhile (== '/') path
+routeUrl :: (Route a) => a -> Url
+routeUrl = pathUrl . routePath
 
 
 class GenRoute f where
@@ -147,9 +128,9 @@ instance (GenRoute a, GenRoute b) => GenRoute (a :*: b) where
 
 
 instance (Route sub) => GenRoute (K1 R sub) where
-  genRoute ts = K1 <$> matchRoute (Path True ts)
+  genRoute ts = K1 <$> matchRoute ts
   genFirst = K1 defRoute
-  genPaths (K1 sub) = (routePath sub).segments
+  genPaths (K1 sub) = routePath sub
 
 
 genRouteRead :: (Read x) => [Text] -> Maybe (K1 R x a)
@@ -159,16 +140,16 @@ genRouteRead _ = Nothing
 
 
 instance Route Text where
-  matchRoute (Path _ [t]) = pure t
+  matchRoute [t] = pure t
   matchRoute _ = Nothing
-  routePath t = Path False [t]
+  routePath t = [t]
   defRoute = ""
 
 
 instance Route String where
-  matchRoute (Path _ [t]) = pure (unpack t)
+  matchRoute [t] = pure (unpack t)
   matchRoute _ = Nothing
-  routePath t = Path False [pack t]
+  routePath t = [pack t]
   defRoute = ""
 
 
@@ -185,17 +166,17 @@ instance Route Int where
 
 
 instance (Route a) => Route (Maybe a) where
-  matchRoute (Path _ []) = pure Nothing
+  matchRoute [] = pure Nothing
   matchRoute ps = Just <$> matchRoute ps
   routePath (Just a) = routePath a
-  routePath Nothing = Path False []
+  routePath Nothing = []
   defRoute = Nothing
 
 
-matchRouteRead :: (Read a) => Path -> Maybe a
-matchRouteRead (Path _ [t]) = readMaybe (unpack t)
+matchRouteRead :: (Read a) => [Segment] -> Maybe a
+matchRouteRead [t] = readMaybe (unpack t)
 matchRouteRead _ = Nothing
 
 
-routePathShow :: (Show a) => a -> Path
-routePathShow a = Path False [pack (show a)]
+routePathShow :: (Show a) => a -> [Segment]
+routePathShow a = [pack (show a)]
