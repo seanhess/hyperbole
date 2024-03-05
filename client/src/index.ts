@@ -30,6 +30,14 @@ async function sendAction(msg:ActionMessage) {
       body: msg.form
     })
 
+    if (!res.ok) {
+      let error = new Error()
+      error.name = "Fetch"
+      error.message = "Failed with status code " + res.status
+      throw error
+    }
+
+
     return res.text()
   }
 
@@ -42,6 +50,18 @@ async function sendAction(msg:ActionMessage) {
 }
 
 
+async function fetchAction(msg:ActionMessage): Promise<string> {
+  try {
+    let ret = await sendAction(msg)
+    return ret
+  }
+  catch (err) {
+    // handle error here
+    document.body.innerHTML = errorHTML(err)
+    throw err
+
+  }
+}
 
 async function runAction(target:HTMLElement, action:string, form?:FormData) {
 
@@ -52,11 +72,12 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
 
   let msg = actionMessage(target.id, action, form)
 
-  let ret = await sendAction(msg)
+  let ret = await fetchAction(msg)
+
   let res = parseResponse(ret)
 
   if (!res.css || !res.content) {
-    console.error("Empty Response")
+    console.error("Empty Response", res)
     return
   }
 
@@ -168,5 +189,21 @@ type VNode = {
 
   // The real DOM node
   node: Node
+}
+
+
+
+// no it should take over the whole page...
+function errorHTML(error:Error):string {
+
+  // TODO: match on error.name and handle it differently
+  let style = [
+    ".hyp-error {background-color:#DB3524; color:white; padding: 10px}",
+    ".hyp-details {padding: 10px}"
+    ]
+  let content = `<div class='hyp-error'>${error.name}</div>`
+  let details = `<div class='hyp-details'>${error.message}</div>`
+
+  return ["<style>" + style.join("\n") + "</style>", content, details].join("\n")
 }
 

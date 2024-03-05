@@ -1,4 +1,4 @@
-module Example.Transitions where
+module Example.Errors where
 
 import Effectful
 import Example.Style as Style
@@ -12,7 +12,8 @@ page = do
 
   load $ do
     pure $ row (pad 20) $ do
-      viewId Contents viewSmall
+      col (gap 10 . border 1) $ do
+        viewId Contents viewContent
 
 
 data Contents = Contents
@@ -22,27 +23,17 @@ instance HyperView Contents where
 
 
 data ContentsAction
-  = Expand
-  | Collapse
+  = CauseError
   deriving (Show, Read, Param)
 
 
 content :: (Hyperbole :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
-content _ Expand = do
-  pure viewBig
-content _ Collapse = do
-  pure viewSmall
+content _ CauseError = do
+  -- Return a not found error 404
+  notFound
 
 
-viewSmall :: View Contents ()
-viewSmall = do
-  col (gap 10 . border 1 . pad 20 . transition 300 (Height 200)) $ do
-    el id "Hello"
-    button Expand Style.btn "Expand"
-
-
-viewBig :: View Contents ()
-viewBig = col (gap 10 . border 1 . pad 20 . transition 300 (Height 400)) $ do
-  el_ "One"
-  el_ "TWO"
-  button Collapse Style.btn "Collapse"
+viewContent :: View Contents ()
+viewContent = do
+  col (gap 10 . pad 20) $ do
+    button CauseError Style.btn "Not Found Error"

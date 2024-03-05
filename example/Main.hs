@@ -19,6 +19,7 @@ import Effectful.State.Static.Local
 import Example.Contacts qualified as Contacts
 import Example.Effects.Debug as Debug
 import Example.Effects.Users as Users
+import Example.Errors qualified as Errors
 import Example.Forms qualified as Forms
 import Example.LazyLoading qualified as LazyLoading
 import Example.Redirects qualified as Redirects
@@ -56,6 +57,7 @@ data AppRoute
   | Redirects
   | RedirectNow
   | LazyLoading
+  | Errors
   deriving (Show, Generic, Eq, Route)
 
 
@@ -83,17 +85,18 @@ app users = do
   router Sessions = page Sessions.page
   router LazyLoading = page LazyLoading.page
   router Redirects = page Redirects.page
+  router Errors = page Errors.page
   router RedirectNow = do
     redirect (pathUrl . routePath $ Hello Redirected)
   router Query = do
     p <- reqParam "key"
-    view $ do
+    view $ el (pad 20) $ do
       text "key: "
       text p
   router Main = do
     -- send $ SetSession @Text "woot" "hello"
     view $ do
-      col (gap 10 . pad 10) $ do
+      col (gap 10 . pad 20) $ do
         el (bold . fontSize 32) "Examples"
         link (Hello (Greet "World")) id "Hello World"
         link Contacts id "Contacts"
@@ -104,6 +107,7 @@ app users = do
         link Redirects id "Redirects"
         link RedirectNow id "Redirect Now"
         link LazyLoading id "Lazy Loading"
+        link Errors id "Errors"
 
   -- example sub-router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es Response

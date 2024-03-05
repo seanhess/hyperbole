@@ -3,7 +3,7 @@ module Example.Forms where
 import Data.Functor.Identity (Identity)
 import Data.Text (Text, pack)
 import Effectful
-import Example.Colors
+import Example.Style as Style
 import GHC.Generics (Generic)
 import Web.Hyperbole
 
@@ -51,7 +51,7 @@ action _ Cancel = do
 formView :: View Main ()
 formView = do
   form @UserForm Submit (gap 10 . pad 10) $ \f -> do
-    el h1 "Sign Up"
+    el Style.h1 "Sign Up"
 
     field id $ do
       label "Username"
@@ -83,11 +83,3 @@ userView user = do
   el_ $ text $ pack (show user.age)
   el_ $ text user.password1
   el_ $ text user.password2
-
-
-btn :: Mod
-btn = bg Primary . hover (bg PrimaryLight) . color White . pad 10
-
-
-h1 :: Mod
-h1 = bold . fontSize 32

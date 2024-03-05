@@ -14,6 +14,7 @@ export class SocketConnection {
 
   constructor() {}
 
+  // we need to faithfully transmit the 
   connect(addr = defaultAddress) {
     const sock = new WebSocket(addr)
     this.socket = sock
@@ -23,6 +24,7 @@ export class SocketConnection {
     }
 
     sock.addEventListener('error', onConnectError)
+
     sock.addEventListener('open', (event) => {
       console.log("Opened", event)
       this.isConnected = true
@@ -50,8 +52,7 @@ export class SocketConnection {
     let {metadata, rest} = parseMetadataResponse(ret)
 
     if (metadata.error) {
-      console.error("Server Error:", metadata.error)
-      return
+      throw socketError(metadata.error)
     }
 
     if (metadata.session) {
@@ -92,6 +93,13 @@ export class SocketConnection {
   disconnect() {
     this.socket.close()
   }
+}
+
+function socketError(inp:string):Error {
+    let error = new Error()
+    error.name = inp.substring(0, inp.indexOf(' '));
+    error.message = inp.substring(inp.indexOf(' ') + 1);
+    return error
 }
 
 

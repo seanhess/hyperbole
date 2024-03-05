@@ -5,6 +5,7 @@ import Data.Text (Text)
 import Effectful
 import Example.Colors
 import Example.Effects.Debug
+import Example.Style as Style
 import Web.Hyperbole
 
 
@@ -18,8 +19,10 @@ page = do
     -- setSession "msg" ("________" :: Text)
     (clr :: Maybe AppColor) <- session "color"
     (msg :: Maybe Text) <- session "msg"
-    pure $ row (pad 20) $ do
-      viewId Contents $ viewContent clr msg
+    pure $ col (pad 20 . gap 10) $ do
+      el_ "Reload your browser after changing the settings below to see the session information preserved"
+      row id $ do
+        viewId Contents $ viewContent clr msg
 
 
 data Contents = Contents
@@ -58,9 +61,9 @@ viewColorPicker mc = do
   col (gap 10 . pad 20 . bg clr) $ do
     el (fontSize 24 . bold) "Session Background"
     row (gap 10) $ do
-      button (SaveColor Success) (btn Success) "Successs"
-      button (SaveColor Warning) (btn Warning) "Warning"
-      button (SaveColor Error) (btn Error) "Error"
+      button (SaveColor Success) (Style.btn' Success . border 1) "Successs"
+      button (SaveColor Warning) (Style.btn' Warning . border 1) "Warning"
+      button (SaveColor Danger) (Style.btn' Danger . border 1) "Danger"
 
 
 viewMessage :: Maybe Text -> View Contents ()
@@ -70,10 +73,6 @@ viewMessage mm = do
     el (fontSize 24 . bold) "Session Message:"
     el_ $ text msg
     row (gap 10) $ do
-      button (SaveMessage "Hello") (btn White) "Msg: Hello"
-      button (SaveMessage "Goodbye") (btn White) "Msg: Goodbye"
-      button (SaveMessage "________") (btn White) "Clear"
-
-
-btn :: AppColor -> Mod
-btn clr = bg clr . color Dark . pad 10 . border 1
+      button (SaveMessage "Hello") Style.btnLight "Msg: Hello"
+      button (SaveMessage "Goodbye") Style.btnLight "Msg: Goodbye"
+      button (SaveMessage "________") Style.btnLight "Clear"

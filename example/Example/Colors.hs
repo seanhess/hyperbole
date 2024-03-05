@@ -13,7 +13,7 @@ data AppColor
   | GrayDark
   | Dark
   | Success
-  | Error
+  | Danger
   | Warning
   | Primary
   | PrimaryLight
@@ -35,11 +35,11 @@ instance ToColor AppColor where
   colorValue GrayLight = "#E3E5E9"
   colorValue GrayDark = "#2С3С44"
   colorValue Dark = "#2E3842" -- "#232C41"
-  colorValue Primary = "#2C74BB"
-  colorValue PrimaryLight = "#3281cf"
-  colorValue Secondary = "#5CADDB"
-  colorValue SecondaryLight = "#8CFDAB"
+  colorValue Primary = "#4171b7"
+  colorValue PrimaryLight = "#6D9BD3"
+  colorValue Secondary = "#5D5A5C"
+  colorValue SecondaryLight = "#9D999C"
   -- colorValue Success = "67C837"
-  colorValue Success = "#D5E6DE"
-  colorValue Error = "#F3D8DA"
-  colorValue Warning = "#FDF3D1"
+  colorValue Success = "#149e5a"
+  colorValue Danger = "#ef1509"
+  colorValue Warning = "#e1c915"

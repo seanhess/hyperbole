@@ -9,6 +9,7 @@ import Example.Colors
 import Example.Effects.Debug
 import Example.Effects.Users (User (..), Users)
 import Example.Effects.Users qualified as Users
+import Example.Style as Style
 import GHC.Generics (Generic)
 import Web.Hyperbole
 
@@ -59,20 +60,21 @@ contacts _ (Delete uid) = do
 allContactsView :: Maybe Filter -> [User] -> View Contacts ()
 allContactsView fil us = do
   row (gap 10) $ do
-    button (Reload Nothing) (bg GrayLight) "Reload"
-
+    el (pad 10) "Filter: "
     dropdown Reload (== fil) id $ do
       option Nothing ""
       option (Just Active) "Active!"
       option (Just Inactive) "Inactive"
-
-    target (Contact 2) $ button Edit (bg GrayLight) "Edit 2"
 
   row (pad 10 . gap 10) $ do
     let filtered = filter (filterUsers fil) us
     forM_ filtered $ \u -> do
       el (border 1) $ do
         viewId (Contact u.id) $ contactView u
+
+  row (gap 10) $ do
+    button (Reload Nothing) Style.btnLight "Reload"
+    target (Contact 2) $ button Edit Style.btnLight "Edit Sara"
  where
   filterUsers Nothing _ = True
   filterUsers (Just Active) u = u.isActive
@@ -140,7 +142,7 @@ contactView u = do
       el id (text "Active:")
       text (cs $ show u.isActive)
 
-    button Edit (bg Primary . color White . hover (bg PrimaryLight . color Dark)) "Edit"
+    button Edit Style.btn "Edit"
  where
   fld = gap 10
 
@@ -161,13 +163,13 @@ contactEdit u =
         label "Age:"
         input Number (value $ cs $ show u.age) f.age
 
-      submit id "Submit"
+      submit Style.btn "Submit"
 
-      button View id (text "Cancel")
+      button View Style.btnLight (text "Cancel")
 
-      target Contacts $ button (Delete u.id) (bg Secondary) (text "Delete")
+      target Contacts $ button (Delete u.id) (Style.btn' Danger) (text "Delete")
  where
-  loading = el (bg Secondary) "Loading..."
+  loading = el (bg Warning . pad 10) "Loading..."
   fld = flexRow . gap 10
 
 

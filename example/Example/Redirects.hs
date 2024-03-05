@@ -1,7 +1,7 @@
 module Example.Redirects where
 
 import Effectful
-import Example.Colors
+import Example.Style as Style
 import Web.Hyperbole
 
 
@@ -34,8 +34,4 @@ contentsView :: View Contents ()
 contentsView = do
   col (gap 10 . border 1 . pad 20 . transition 300 (Height 200)) $ do
     el id "Redirect as an Action"
-    button RedirectAsAction btn "Redirect Me"
-
-
-btn :: Mod
-btn = bg Primary . hover (bg PrimaryLight) . color White . pad 10
+    button RedirectAsAction Style.btn "Redirect Me"

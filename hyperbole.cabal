@@ -81,10 +81,12 @@ executable example
       Example.Contacts
       Example.Effects.Debug
       Example.Effects.Users
+      Example.Errors
       Example.Forms
       Example.LazyLoading
       Example.Redirects
       Example.Sessions
+      Example.Style
       Example.Transitions
       Paths_hyperbole
   autogen-modules:
