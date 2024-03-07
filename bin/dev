@@ -13,5 +13,7 @@ client() {
   cd client && npx webpack -w
 }
 
+# run tests once (so we don't forget!)
+cabal test
 
 (trap 'kill 0' SIGINT; client & package && compile)
