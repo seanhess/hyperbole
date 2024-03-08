@@ -13,7 +13,7 @@ import  { actionMessage, ActionMessage } from './action'
 // const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole 0.3.3")
+console.log("Hyperbole 0.3.3a")
 
 
 let rootStyles: HTMLStyleElement;
@@ -32,8 +32,9 @@ async function sendAction(msg:ActionMessage) {
 
     if (!res.ok) {
       let error = new Error()
-      error.name = "Fetch"
-      error.message = "Failed with status code " + res.status
+      error.name = "Fetch Error " + res.status
+      let body = await res.text()
+      error.message = body
       throw error
     }
 

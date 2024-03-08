@@ -85,6 +85,8 @@ allContactsView fil us = do
 
 data Contact = Contact Int
   deriving (Show, Read, Param)
+instance HyperView Contact where
+  type Action Contact = ContactAction
 
 
 data ContactAction
@@ -92,10 +94,6 @@ data ContactAction
   | Save
   | View
   deriving (Show, Read, Param)
-
-
-instance HyperView Contact where
-  type Action Contact = ContactAction
 
 
 data UserForm a = UserForm

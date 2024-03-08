@@ -41,10 +41,11 @@ export class SocketConnection {
       console.log("Closed")
 
       // attempt to reconnect in 1s
-      if (this.hasEverConnected)
+      if (this.hasEverConnected) {
         this.reconnectDelay += 1000
         console.log("Reconnecting in " + (this.reconnectDelay/1000) + "s")
         setTimeout(() => this.connect(addr), this.reconnectDelay)
+      }
     })
   }
 

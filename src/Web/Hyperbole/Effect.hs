@@ -50,6 +50,7 @@ data ResponseError
   = ErrParse Text
   | ErrParam Text
   | ErrOther Text
+  | ErrNotHandled (Event Text Text)
   | ErrAuth
   deriving (Show)
 
@@ -58,10 +59,14 @@ newtype Page es a = Page (Eff es a)
   deriving newtype (Applicative, Monad, Functor)
 
 
-data Event act id = Event
+data Event id act = Event
   { viewId :: id
   , action :: act
   }
+
+
+instance (Show act, Show id) => Show (Event id act) where
+  show e = "Event " <> show e.viewId <> " " <> show e.action
 
 
 routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
@@ -114,6 +119,7 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
  where
   runLocal :: (Server :> es) => Eff (State HyperState : Error Response : es) a -> Eff es (Either Response (a, HyperState))
   runLocal eff = do
+    -- Load the request ONCE right when we start
     r <- send LoadRequest
     let st = HyperState r (sessionFromCookies r.cookies)
     runErrorNoCallStack @Response . runState st $ eff
@@ -146,14 +152,10 @@ formData = do
   either (send . RespondEarly . Err . ErrParse) pure ef
 
 
-getEvent :: (Hyperbole :> es, HyperView id) => Eff es (Maybe (Event (Action id) id))
+getEvent :: (HyperView id, Hyperbole :> es, Show id, Show (Action id)) => Eff es (Maybe (Event id (Action id)))
 getEvent = do
   q <- reqParams
-  pure $ do
-    Event ti ta <- lookupEvent q
-    vid <- parseParam ti
-    act <- parseParam ta
-    pure $ Event vid act
+  pure $ parseEvent q
 
 
 lookupParam :: BS.ByteString -> Query -> Maybe Text
@@ -161,11 +163,19 @@ lookupParam p q =
   fmap cs <$> join $ lookup p q
 
 
+parseEvent :: (HyperView id, Show id, Show (Action id)) => Query -> Maybe (Event id (Action id))
+parseEvent q = do
+  Event ti ta <- lookupEvent q
+  vid <- parseParam ti
+  act <- parseParam ta
+  pure $ Event vid act
+
+
 lookupEvent :: Query -> Maybe (Event Text Text)
-lookupEvent q =
+lookupEvent q' =
   Event
-    <$> lookupParam "id" q
-    <*> lookupParam "action" q
+    <$> lookupParam "id" q'
+    <*> lookupParam "action" q'
 
 
 session :: (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es (Maybe a)
@@ -231,18 +241,25 @@ load
   => Eff es (View () ())
   -> Page es Response
 load run = Page $ do
-  vw <- run
-  view vw
+  r <- request
+  case lookupEvent r.query of
+    -- Are id and action set to sometjhing?
+    Just e ->
+      pure $ Err $ ErrNotHandled e
+    Nothing -> do
+      vw <- run
+      view vw
 
 
 -- | Handle a HyperView. If the event matches our handler, respond with the fragment
 hyper
-  :: (Hyperbole :> es, HyperView id)
+  :: forall id es
+   . (Hyperbole :> es, HyperView id, Show id, Show (Action id))
   => (id -> Action id -> Eff es (View id ()))
   -> Page es ()
 hyper run = Page $ do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
-  mev <- getEvent
+  mev <- getEvent @id
   case mev of
     Just event -> do
       vw <- run event.viewId event.action

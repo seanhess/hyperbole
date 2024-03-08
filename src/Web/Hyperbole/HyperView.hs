@@ -5,7 +5,6 @@ module Web.Hyperbole.HyperView where
 import Data.Kind (Type)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import Data.Text qualified as T
 import Text.Read
 import Web.Hyperbole.Route (Route (..), routeUrl)
 import Web.View

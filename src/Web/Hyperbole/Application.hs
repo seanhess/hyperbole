@@ -51,6 +51,22 @@ waiApp toDoc actions req res = do
     Just r -> pure r
 
 
+errNotHandled :: Event Text Text -> String
+errNotHandled ev =
+  L.intercalate
+    "\n"
+    [ "No Handler for Event viewId: " <> cs ev.viewId <> " action: " <> cs ev.action
+    , "<p>Remember to add a `hyper` handler in your page function</p>"
+    , "<pre>"
+    , "page :: (Hyperbole :> es) => Page es Response"
+    , "page = do"
+    , "  hyper contentsHandler"
+    , "  load $ do"
+    , "    pure $ viewId Contents contentsView"
+    , "</pre>"
+    ]
+
+
 runServerWai
   :: (IOE :> es)
   => (BL.ByteString -> BL.ByteString)
@@ -80,6 +96,7 @@ runServerWai toDoc req respond =
     response (Err (ErrParam e)) = respError status400 $ "ErrParam: " <> cs e
     response (Err (ErrOther e)) = respError status500 $ "Server Error: " <> cs e
     response (Err ErrAuth) = respError status401 "Unauthorized"
+    response (Err (ErrNotHandled e)) = respError status400 $ cs $ errNotHandled e
     response (Response vw) =
       respHtml $
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
