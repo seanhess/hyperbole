@@ -131,6 +131,7 @@ test-suite tests
   main-is: Spec.hs
   other-modules:
       Test.RouteSpec
+      Test.ViewSpec
       Paths_hyperbole
   autogen-modules:
       Paths_hyperbole
