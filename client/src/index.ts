@@ -158,6 +158,7 @@ function init() {
 document.addEventListener("DOMContentLoaded", init)
 
 
+// Should we connect to the socket or not?
 const sock = new SocketConnection()
 sock.connect()
 

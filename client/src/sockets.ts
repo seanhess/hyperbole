@@ -10,7 +10,9 @@ export class SocketConnection {
 
   socket:WebSocket
 
+  hasEverConnected:Boolean
   isConnected:Boolean
+  reconnectDelay:number = 0
 
   constructor() {}
 
@@ -28,16 +30,21 @@ export class SocketConnection {
     sock.addEventListener('open', (event) => {
       console.log("Opened", event)
       this.isConnected = true
+      this.hasEverConnected = true
+      this.reconnectDelay = 0
       this.socket.removeEventListener('error', onConnectError)
     })
 
     // TODO: Don't reconnet if the socket server is OFF, only if we've successfully connected once
-    sock.addEventListener('close', (event) => {
+    sock.addEventListener('close', _ => {
       this.isConnected = false
-      console.log("Closed", event)
+      console.log("Closed")
 
       // attempt to reconnect in 1s
-      setTimeout(() => this.connect(addr), 1000)
+      if (this.hasEverConnected)
+        this.reconnectDelay += 1000
+        console.log("Reconnecting in " + (this.reconnectDelay/1000) + "s")
+        setTimeout(() => this.connect(addr), this.reconnectDelay)
     })
   }
 
