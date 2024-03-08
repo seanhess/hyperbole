@@ -89,20 +89,22 @@ data Option opt id action = Option
 class Param a where
   toParam :: a -> Text
   default toParam :: (Show a) => a -> Text
-  toParam = cs . map toSingle . show
-   where
-    toSingle '"' = '\''
-    toSingle c = c
+  toParam = cs . show
 
+
+  -- where
+  --  toSingle '"' = '\''
+  --  toSingle c = c
 
   -- not as flexible as FromHttpApiData, but derivable
   parseParam :: Text -> Maybe a
   default parseParam :: (Read a) => Text -> Maybe a
-  parseParam = readMaybe . cs . T.map toDouble
-   where
-    toDouble '\'' = '\"'
-    toDouble c = c
+  parseParam = readMaybe . cs
 
+
+-- where
+--  toDouble '\'' = '\"'
+--  toDouble c = c
 
 instance Param Integer
 instance Param Float
