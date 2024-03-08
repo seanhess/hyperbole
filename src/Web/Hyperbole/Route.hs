@@ -13,6 +13,7 @@ module Web.Hyperbole.Route
 import Control.Applicative ((<|>))
 import Control.Monad (guard)
 import Data.Text (Text, pack, toLower, unpack)
+import Data.Text qualified as T
 import GHC.Generics
 import Text.Read (readMaybe)
 import Web.View.Types.Url (Segment, Url, pathUrl)
@@ -28,13 +29,14 @@ class Route a where
   default matchRoute :: (Generic a, GenRoute (Rep a)) => [Segment] -> Maybe a
   -- this will match a trailing slash, but not if it is missing
   matchRoute [""] = pure defRoute
+  matchRoute [] = pure defRoute
   matchRoute segs = to <$> genRoute segs
 
 
   default routePath :: (Generic a, Eq a, GenRoute (Rep a)) => a -> [Segment]
   routePath p
-    | p == defRoute = [""]
-    | otherwise = genPaths $ from p
+    | p == defRoute = []
+    | otherwise = filter (not . T.null) $ genPaths $ from p
 
 
   default defRoute :: (Generic a, GenRoute (Rep a)) => a
