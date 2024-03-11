@@ -101,8 +101,12 @@ runServerWai toDoc req respond =
       respHtml $
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
     response (Redirect u) = do
-      let headers = ("Location", cs (renderUrl u)) : setCookies
-      Wai.responseLBS status302 headers ""
+      let url = renderUrl u
+      let headers = ("Location", cs url) : setCookies
+      -- We have to use a 200 javascript redirect because javascript
+      -- will redirect the fetch(), while we want to redirect the whole page
+      -- see index.ts sendAction()
+      Wai.responseLBS status200 headers $ "<script>window.location = '" <> cs url <> "'</script>"
 
     respError s = Wai.responseLBS s [contentType ContentText]
 
@@ -113,6 +117,7 @@ runServerWai toDoc req respond =
 
     setCookies =
       [("Set-Cookie", sessionSetCookie sess)]
+
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
   addDocument :: Method -> BL.ByteString -> BL.ByteString

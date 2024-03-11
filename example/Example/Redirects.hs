@@ -27,7 +27,7 @@ data ContentsAction
 
 contents :: (Hyperbole :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
 contents _ RedirectAsAction = do
-  redirect "/redirectnow"
+  redirect "/hello/redirected"
 
 
 contentsView :: View Contents ()

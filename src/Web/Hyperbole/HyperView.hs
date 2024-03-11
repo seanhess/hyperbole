@@ -116,7 +116,6 @@ instance Param Text where
   toParam = id
 
 
-link :: (Route a) => a -> Mod -> View c () -> View c ()
-link r f cnt = do
-  let u = routeUrl r
-  tag "a" (att "href" (renderUrl u) . f) cnt
+-- | Link to another route
+route :: (Route a) => a -> Mod -> View c () -> View c ()
+route r = link (routeUrl r)

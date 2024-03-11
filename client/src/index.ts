@@ -27,8 +27,24 @@ async function sendAction(msg:ActionMessage) {
     let res = await fetch(msg.url, {
       method: "POST",
       headers: { 'Accept': 'text/html', 'Content-Type': 'application/x-www-form-urlencoded'},
-      body: msg.form
+      body: msg.form,
+      // we never want this to be redirected
+      redirect: "manual"
     })
+
+    if (res.headers.get('location')) {
+      // manual redirect with status 200
+      console.log("Found Redirect", res.headers.get('location'))
+      window.location.href = res.headers.get('location')
+      return
+    }
+
+    console.log("RES", res.headers.get("location"))
+
+    if (res.headers.get("location")) {
+      window.location.href = res.headers.get("location")
+      return
+    }
 
     if (!res.ok) {
       let error = new Error()
@@ -37,7 +53,6 @@ async function sendAction(msg:ActionMessage) {
       error.message = body
       throw error
     }
-
 
     return res.text()
   }
@@ -49,6 +64,8 @@ async function sendAction(msg:ActionMessage) {
     return sendActionHttp(msg)
   }
 }
+
+
 
 
 async function fetchAction(msg:ActionMessage): Promise<string> {

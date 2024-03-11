@@ -98,16 +98,16 @@ app users = do
     view $ do
       col (gap 10 . pad 20) $ do
         el (bold . fontSize 32) "Examples"
-        link (Hello (Greet "World")) id "Hello World"
-        link Contacts id "Contacts"
-        link Transitions id "Transitions"
-        link Forms id "Forms"
-        tag "a" (att "href" "/query?key=value") "Query Params"
-        link Sessions id "Sessions"
-        link Redirects id "Redirects"
-        link RedirectNow id "Redirect Now"
-        link LazyLoading id "Lazy Loading"
-        link Errors id "Errors"
+        route (Hello (Greet "World")) id "Hello World"
+        route Contacts id "Contacts"
+        route Transitions id "Transitions"
+        route Forms id "Forms"
+        link "/query?key=value" id "Query Params"
+        route Sessions id "Sessions"
+        route Redirects id "Redirects"
+        route RedirectNow id "Redirect Now"
+        route LazyLoading id "Lazy Loading"
+        route Errors id "Errors"
 
   -- example sub-router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es Response
