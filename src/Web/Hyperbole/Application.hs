@@ -23,7 +23,7 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.Reader.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (HeaderName, Method, parseQuery, status200, status302, status400, status401, status404, status500)
+import Network.HTTP.Types (HeaderName, Method, parseQuery, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.Wai.Internal (ResponseReceived (..))
@@ -117,7 +117,6 @@ runServerWai toDoc req respond =
 
     setCookies =
       [("Set-Cookie", sessionSetCookie sess)]
-
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
   addDocument :: Method -> BL.ByteString -> BL.ByteString
