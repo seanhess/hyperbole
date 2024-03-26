@@ -102,10 +102,10 @@ runServerWai toDoc req respond =
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
     response (Redirect u) = do
       let url = renderUrl u
-      let headers = ("Location", cs url) : setCookies
       -- We have to use a 200 javascript redirect because javascript
       -- will redirect the fetch(), while we want to redirect the whole page
       -- see index.ts sendAction()
+      let headers = ("Location", cs url) : contentType ContentHtml : setCookies
       Wai.responseLBS status200 headers $ "<script>window.location = '" <> cs url <> "'</script>"
 
     respError s = Wai.responseLBS s [contentType ContentText]
@@ -186,7 +186,7 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
   addMetadata sess cont =
     -- you may have 1 or more lines containing metadata followed by a view
     -- \|SESSION| key=value; another=woot;
-    -- <div w,kasdlkfjasdfkjalsdf kl>
+    -- <div ...>
     sessionLine <> "\n" <> cont
    where
     metaLine name value = "|" <> name <> "|" <> value
