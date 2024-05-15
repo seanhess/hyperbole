@@ -1,6 +1,6 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
-import  { listenChange, listenClick, listenFormSubmit, listenLoad } from './events'
+import  { listenChange, listenClick, listenFormSubmit, listenLoad, listenLoadDocument } from './events'
 import  { actionMessage, ActionMessage } from './action'
 
 
@@ -17,7 +17,6 @@ console.log("Hyperbole 0.3.3a")
 
 
 let rootStyles: HTMLStyleElement;
-
 
 
 async function sendAction(msg:ActionMessage) {
@@ -113,10 +112,7 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   // newTarget.dispatchEvent(event)
 
   // load doesn't bubble
-  listenLoad(newTarget, async function(target:HTMLElement, action:string) {
-    console.log("PATCH LOAD", target.id, action)
-    runAction(target, action)
-  })
+  listenLoad(newTarget)
 
   // Remove loading and clear add timeout
   clearTimeout(timeout)
@@ -152,10 +148,12 @@ function parseResponse(vw:string):Response {
 function init() {
   rootStyles = document.querySelector('style')
 
-  listenLoad(document.body, async function(target:HTMLElement, action:string) {
+  listenLoadDocument(async function(target:HTMLElement, action:string) {
     console.log("INIT LOAD", target.id, action)
     runAction(target, action)
   })
+
+  listenLoad(document.body)
 
   listenClick(async function(target:HTMLElement, action:string) {
     console.log("CLICK", target.id, action)

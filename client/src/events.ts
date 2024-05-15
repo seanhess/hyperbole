@@ -27,11 +27,11 @@ export function listenClick(cb:(target:HTMLElement, action:string) => void): voi
 }
 
 
-export function listenLoad(node:HTMLElement, cb:(target:HTMLElement, action:string) => void): void {
-  // it doesn't really matter WHO runs this except that it should have target
-  node.querySelectorAll("[data-on-load]").forEach((load:HTMLElement) => {
+export function listenLoadDocument(cb:(target:HTMLElement, action:string) => void): void {
+
+  document.addEventListener("hyp-load", function(e) {
+    let load = e.target as HTMLElement
     let action = load.dataset.onLoad
-    let delay = parseInt(load.dataset.delay) || 0
     let target = document.getElementById(load.dataset.target)
 
     if (!target) {
@@ -39,9 +39,22 @@ export function listenLoad(node:HTMLElement, cb:(target:HTMLElement, action:stri
       return
     }
 
-    setTimeout(() => cb(target, action), delay)
+    cb(target, action)
   })
+
 }
+
+export function listenLoad(node:HTMLElement): void {
+  // it doesn't really matter WHO runs this except that it should have target
+  node.querySelectorAll("[data-on-load]").forEach((load:HTMLElement) => {
+    let delay = parseInt(load.dataset.delay) || 0
+
+    setTimeout(() => {
+      let event = new Event("hyp-load", {bubbles:true})
+      load.dispatchEvent(event)
+    }, delay)
+  })
+})
 
 
 export function listenChange(cb:(target:HTMLElement, action:string) => void): void {
