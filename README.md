@@ -209,7 +209,7 @@ Routing, WAI application, running the program
 
 Basics, State with a TVar
 
-<img src="/example/doc/counter.gif" width="200"/>
+<img src="/example/doc/counter.gif" width="300"/>
 
 ### [Contacts](./example/Example/Contacts.hs)
 
@@ -222,22 +222,31 @@ Custom data effects, multiple views, targeting other views, loading indicators
 
 Animate transitions using only CSS
 
-<img src="/example/doc/transitions.gif" width="200"/>
+<img src="/example/doc/transitions.gif" width="300"/>
 
-[Forms](./example/Example/Forms.hs)
-![Forms Recording](./example/doc/forms.png)
+### [Forms](./example/Example/Forms.hs)
 
-[Sessions](./example/Example/Forms.hs) - store data on the client with a session
-![Sessions Recording](./example/doc/sessions.gif)
+<img src="/example/doc/forms.png" width="300"/>
 
-[Redirects](./example/Example/Redirects.hs) - Redirecting to other pages. See Main as well
-![Redirects Recording](./example/doc/redirects.gif)
+### [Sessions](./example/Example/Forms.hs)
+store data on the client with a session
 
-[Lazy Loading](./example/Example/LazyLoading.hs) - Redirecting to other pages. See Main as well
-![Lazy Loading Recording](./example/doc/lazy.gif)
+<img src="/example/doc/sessions.gif" width="300"/>
 
-[Errors](./example/Example/Errors.hs) - Render server errors
-![Errors Recording](./example/doc/errors.gif)
+### [Redirects](./example/Example/Redirects.hs)
+Redirecting to other pages. See Main as well
+
+<img src="/example/doc/redirects.gif" width="300"/>
+
+### [Lazy Loading](./example/Example/LazyLoading.hs)
+Redirecting to other pages. See Main as well
+
+<img src="/example/doc/lazy.gif" width="300"/>
+
+### [Errors](./example/Example/Errors.hs)
+Render server errors
+
+<img src="/example/doc/errors.gif" width="300"/>
 
 
 
