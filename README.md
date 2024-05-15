@@ -200,18 +200,29 @@ Examples
 
 The [example](./example/) directory contains an example application with multiple pages demonstrating different features. To run them locally, clone this repository and use `cabal run`
 
-[Main](./example/Main.hs) - Routing, WAI application, running the program
 
-[Counter](./example/Example/Counter.hs) - Basics, State with a TVar
+### [Main](./example/Main.hs)
+
+Routing, WAI application, running the program
+
+### [Counter](./example/Example/Counter.hs)
+
+Basics, State with a TVar
 
 <img src="/example/doc/counter.gif" width="200"/>
 
-[Contacts](./example/Example/Contacts.hs) - Custom data effects, multiple views, targeting other views, loading indicators
+### [Contacts](./example/Example/Contacts.hs)
 
-<img src="/example/doc/contacts.gif" width="200"/>
+Custom data effects, multiple views, targeting other views, loading indicators
 
-[CSS Transitions](./example/Example/Transitions.hs) - Animate transitions using only CSS
-![Transitions Recording](./example/doc/transitions.gif)
+<img src="/example/doc/contacts.gif" width="300"/>
+
+
+### [CSS Transitions](./example/Example/Transitions.hs)
+
+Animate transitions using only CSS
+
+<img src="/example/doc/transitions.gif" width="200"/>
 
 [Forms](./example/Example/Forms.hs)
 ![Forms Recording](./example/doc/forms.png)
