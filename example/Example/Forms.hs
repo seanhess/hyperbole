@@ -69,7 +69,7 @@ formView = do
       label "Repeat Password"
       input NewPassword (inp . placeholder "repeat password") f.password2
 
-    submit id "Submit"
+    submit Style.btn "Submit"
     button Cancel id "Cancel"
  where
   placeholder = att "placeholder"

@@ -198,22 +198,33 @@ main = Warp.run 3000 app
 Examples
 ---------
 
-See the examples directory for an example application. To run them locally, clone this repository and use `cabal run`
-
+The [example](./example/) directory contains an example application with multiple pages demonstrating different features. To run them locally, clone this repository and use `cabal run`
 
 [Main](./example/Main.hs) - Routing, WAI application, running the program
 
 [Counter](./example/Example/Counter.hs) - Basics, State with a TVar
+![Counter Recording](./example/doc/counter.gif)
 
-![Counter Example](./example/doc/counter.gif)
+[Contacts](./example/Example/Contacts.hs) - Custom data effects, multiple views, targeting other views, loading indicators
+![Contacts Recording](./example/doc/contacts.gif)
 
-3. [Contacts](./example/Example/Contacts.hs) - Custom data effects, multiple views, targeting other views
-4. [CSS Transitions](./example/Example/Transitions.hs)
-5. [Forms](./example/Example/Forms.hs)
-6. [Sessions](./example/Example/Forms.hs) - store data on the client with a session
-7. [Redirects](./example/Example/Redirects.hs) - Redirecting to other pages. See Main as well
-8. [Lazy Loading](./example/Example/LazyLoading.hs) - Redirecting to other pages. See Main as well
-9. [Errors](./example/Example/Errors.hs) - Render server errors
+[CSS Transitions](./example/Example/Transitions.hs) - Animate transitions using only CSS
+![Transitions Recording](./example/doc/transitions.gif)
+
+[Forms](./example/Example/Forms.hs)
+![Forms Recording](./example/doc/forms.png)
+
+[Sessions](./example/Example/Forms.hs) - store data on the client with a session
+![Sessions Recording](./example/doc/sessions.gif)
+
+[Redirects](./example/Example/Redirects.hs) - Redirecting to other pages. See Main as well
+![Redirects Recording](./example/doc/redirects.gif)
+
+[Lazy Loading](./example/Example/LazyLoading.hs) - Redirecting to other pages. See Main as well
+![Lazy Loading Recording](./example/doc/lazy.gif)
+
+[Errors](./example/Example/Errors.hs) - Render server errors
+![Errors Recording](./example/doc/errors.gif)
 
 
 

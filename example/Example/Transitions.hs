@@ -36,13 +36,12 @@ content _ Collapse = do
 
 viewSmall :: View Contents ()
 viewSmall = do
-  col (gap 10 . border 1 . pad 20 . transition 300 (Height 200)) $ do
-    el id "Hello"
+  col (gap 10 . border 1 . pad 20 . transition 300 (Width 200)) $ do
+    el id "Small"
     button Expand Style.btn "Expand"
 
 
 viewBig :: View Contents ()
-viewBig = col (gap 10 . border 1 . pad 20 . transition 300 (Height 400)) $ do
-  el_ "One"
-  el_ "TWO"
+viewBig = col (gap 10 . border 1 . pad 20 . transition 300 (Width 400)) $ do
+  el_ "Expanded"
   button Collapse Style.btn "Collapse"
