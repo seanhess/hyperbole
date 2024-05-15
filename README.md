@@ -55,7 +55,7 @@ viewCount n = col (gap 10) $ do
 Motivation
 ---------------------
 
-Single Page Applications require us to write two programs: a Javascript client and a Server-side API. Hyperbole instead allows us to write a single Haskell program, that runs exclusively on the server. All user interactions are sent to the server for processing, and a sub-section of the page is updated with the resulting HTML.
+Single Page Applications require us to write two programs: a Javascript client and a Server-side API. Hyperbole instead allows us to write a single Haskell program which runs exclusively on the server. All user interactions are sent to the server for processing, and a sub-section of the page is updated with the resulting HTML.
 
 There are frameworks that support this in various languages, including HTMX, Phoenix LiveView, and others. Hyperbole has the following advantages
 
@@ -67,10 +67,11 @@ There are frameworks that support this in various languages, including HTMX, Pho
 An example Page
 ---------------
 
-Hyperbole applications direct URL patterns to different *Page*s. For a static page, we only need a `load` handler.
+Hyperbole applications direct URL patterns to different *Page*s. We use a `load` handler to create the entire page.
 
 ```haskell
 module Page.Messages where
+import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es Response
 page = do
@@ -98,7 +99,7 @@ messageView msg = do
   el_ msg
 
 ```
-Views can tie interactions from UI elements to certain *Actions*. We specify a server-side handler for Actions which returns new HTML. Actions can perform side effects, like reading and writing data to a database.
+Views associate interactions from UI elements with *Actions*. We specify a server-side handler for Actions which returns new HTML. Actions can perform side effects, like reading and writing data to a database.
 
 ```haskell
 page :: (Hyperbole :> es) => Page es Response
@@ -117,7 +118,7 @@ data MessageAction = SetMessage Text
   deriving (Show, Read, Param)
 
 
-message :: (Hyperbole :> es, SomeMessageEffect :> es) => Message -> MessageAction -> Eff es ()
+message :: (Hyperbole :> es, MessageDatabase :> es) => Message -> MessageAction -> Eff es ()
 message (Message n) (SetMessage msg) =
   send $ SaveMessage msg
   pure $ messageView msg
@@ -130,7 +131,7 @@ messageView msg = col (gap 10) $ do
   button (SetMessage "A new message") id "Set Message"
 ```
 
-When the user clicks the button, the server runs the `message` handler, which returns new HTML. The view containing the button is updated via virtual DOM, while the rest of the page remains the same
+When the user clicks the button, the server runs the `message` handler, which returns new HTML. Only the view containing the button is updated via virtual DOM, while the rest of the page remains the same
 
 
 Combining multiple pages into an application
@@ -147,7 +148,7 @@ data AppRoute
   deriving (Show, Generic, Eq, Route)
 ```
 
-Create a *router* function that maps routes to pages
+Write a *router* function that maps routes to pages
 
 ```haskell
 router :: Hyperbole :> es => AppRoute -> Eff es Response
@@ -160,7 +161,6 @@ router Main = do
 
 Create a WAI application from your router by specifying a function to turn page fragments into full web pages on first load. Make sure to include the embedded javascript
 
-```haskell
 ```haskell
 {-# LANGUAGE QuasiQuotes #-}
 import Network.Wai
@@ -192,3 +192,27 @@ import Network.Wai.Handler.Warp qualified as Warp
 main :: IO ()
 main = Warp.run 3000 app
 ```
+
+
+Examples
+---------
+
+See the examples directory for an example application. To run them locally, clone this repository and use `cabal run`
+
+
+1. [Main](./blob/main/example/Main.hs) - Routing, WAI application, running the program
+2. [Counter](.blob/main/example/Example/Counter.hs) - Basics, State with a TVar
+3. [Contacts](.blob/main/example/Example/Contacts.hs) - Custom data effects, multiple views, targeting other views
+4. [CSS Transitions](.blob/main/example/Example/Transitions.hs)
+5. [Forms](.blob/main/example/Example/Forms.hs)
+6. [Sessions](.blob/main/example/Example/Forms.hs) - store data on the client with a session
+7. [Redirects](.blob/main/example/Example/Redirects.hs) - Redirecting to other pages. See Main as well
+8. [Lazy Loading](.blob/main/example/Example/LazyLoading.hs) - Redirecting to other pages. See Main as well
+9. [Errors](.blob/main/example/Example/Errors.hs) - Render server errors
+
+
+
+
+
+
+
