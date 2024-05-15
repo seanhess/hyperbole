@@ -13,10 +13,12 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as L
 import Data.Text.Lazy.Encoding qualified as L
 import Effectful
+import Effectful.Concurrent.STM
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Static
 import Effectful.State.Static.Local
 import Example.Contacts qualified as Contacts
+import Example.Counter qualified as Counter
 import Example.Effects.Debug as Debug
 import Example.Effects.Users as Users
 import Example.Errors qualified as Errors
@@ -41,9 +43,10 @@ main :: IO ()
 main = do
   putStrLn "Starting Examples on http://localhost:3003"
   users <- initUsers
+  count <- runEff $ runConcurrent $ newTVarIO 0
   Warp.run 3003 $
     staticPolicy (addBase "client/dist") $
-      app users
+      app users count
 
 
 data AppRoute
@@ -52,6 +55,7 @@ data AppRoute
   | Contacts
   | Transitions
   | Query
+  | Counter
   | Forms
   | Sessions
   | Redirects
@@ -67,19 +71,20 @@ data Hello
   deriving (Show, Generic, Eq, Route)
 
 
-app :: UserStore -> Application
-app users = do
+app :: UserStore -> TVar Int -> Application
+app users count = do
   liveApp
     toDocument
     (runApp . routeRequest $ router)
     (runApp . routeRequest $ router)
  where
-  runApp :: (IOE :> es) => Eff (Debug : Users : es) a -> Eff es a
-  runApp = runUsersIO users . runDebugIO
+  runApp :: (IOE :> es) => Eff (Concurrent : Debug : Users : es) a -> Eff es a
+  runApp = runUsersIO users . runDebugIO . runConcurrent
 
-  router :: (Hyperbole :> es, Users :> es, Debug :> es, IOE :> es) => AppRoute -> Eff es Response
+  router :: (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
   router (Hello h) = page $ hello h
   router Contacts = page Contacts.page
+  router Counter = page $ Counter.page count
   router Transitions = page Transitions.page
   router Forms = page Forms.page
   router Sessions = page Sessions.page
@@ -99,6 +104,7 @@ app users = do
       col (gap 10 . pad 20) $ do
         el (bold . fontSize 32) "Examples"
         route (Hello (Greet "World")) id "Hello World"
+        route Counter id "Counter"
         route Contacts id "Contacts"
         route Transitions id "Transitions"
         route Forms id "Forms"

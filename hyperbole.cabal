@@ -79,6 +79,7 @@ executable example
       BulkUpdate
       Example.Colors
       Example.Contacts
+      Example.Counter
       Example.Effects.Debug
       Example.Effects.Users
       Example.Errors

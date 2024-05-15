@@ -1,14 +1,15 @@
-Hyperbole
-=========
+module Example.Counter where
 
-Create dynamic HTML applications in server-side Haskell. Inspired by HTMX
+import Data.Text (pack)
+import Effectful
+import Effectful.Concurrent.STM
+import Example.Style as Style
+import Web.Hyperbole
 
 
-Obligatory Counter Example
---------------------------
-
-
-```haskell
+-- We are using a TVar to manage our state
+-- In normal web applications, state will be managed in a database, abstracted behind a custom Effect. See Example.EFfects.Users for the interface
+-- Optionally, the count could be stored in a session. See Example.Sessions
 page :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Page es Response
 page var = do
   hyper $ counter var
@@ -47,5 +48,14 @@ viewCount n = col (gap 10) $ do
   row (gap 10) $ do
     button Increment Style.btn "Increment"
     button Decrement Style.btn "Decrement"
-```
 
+
+modify :: (Concurrent :> es) => TVar Int -> (Int -> Int) -> Eff es Int
+modify var f =
+  atomically $ do
+    modifyTVar var f
+    readTVar var
+
+
+initCounter :: (Concurrent :> es) => Eff es (TVar Int)
+initCounter = newTVarIO 0
