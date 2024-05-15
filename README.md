@@ -200,8 +200,12 @@ Examples
 See the examples directory for an example application. To run them locally, clone this repository and use `cabal run`
 
 
-1. [Main](./example/Main.hs) - Routing, WAI application, running the program
-2. [Counter](./example/Example/Counter.hs) - Basics, State with a TVar
+[Main](./example/Main.hs) - Routing, WAI application, running the program
+
+[Counter](./example/Example/Counter.hs) - Basics, State with a TVar
+
+![Counter Example](./example/doc/Counter.png)
+
 3. [Contacts](./example/Example/Contacts.hs) - Custom data effects, multiple views, targeting other views
 4. [CSS Transitions](./example/Example/Transitions.hs)
 5. [Forms](./example/Example/Forms.hs)
