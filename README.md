@@ -238,10 +238,8 @@ Redirecting to other pages. See Main as well
 
 <img src="/example/doc/redirects.gif" width="300"/>
 
-### [Lazy Loading](./example/Example/LazyLoading.hs)
-Redirecting to other pages. See Main as well
-
-<img src="/example/doc/lazy.gif" width="300"/>
+### [Lazy Loading and Polling](./example/Example/LazyLoading.hs)
+Run an action after a delay for lazy loading or polling. See Main as well
 
 ### [Errors](./example/Example/Errors.hs)
 Render server errors

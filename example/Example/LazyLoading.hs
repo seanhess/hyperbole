@@ -1,5 +1,6 @@
 module Example.LazyLoading where
 
+import Data.Text (pack)
 import Effectful
 import Example.Effects.Debug
 import Web.Hyperbole
@@ -25,21 +26,22 @@ instance HyperView Contents where
 
 data ContentsAction
   = Load
-  | Reload
+  | Reload Int
   deriving (Show, Read, Param)
 
 
 content :: (Hyperbole :> es, Debug :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
 content _ Load = do
-  -- go really slow!
+  -- Pretend the initial Load takes 1s to complete
   delay 1000
-
-  -- then reload after a 1s delay (client-side)
-  pure $ onLoad Reload 1000 $ do
+  pure $ onLoad (Reload 1) 1000 $ do
     el id "Loaded, should reload once more..."
-content _ Reload = do
-  pure $ col (gap 10) $ do
-    el_ "Reloaded!"
+content _ (Reload n) = do
+  -- then reload after a 1s delay (client-side)
+  pure $ onLoad (Reload (n + 1)) 1000 $ do
+    col (gap 10) $ do
+      el_ "Reloaded! polling..."
+      el_ $ text $ pack $ show n
 
 
 viewInit :: View Contents ()
