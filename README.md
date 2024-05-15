@@ -200,15 +200,15 @@ Examples
 See the examples directory for an example application. To run them locally, clone this repository and use `cabal run`
 
 
-1. [Main](./blob/main/example/Main.hs) - Routing, WAI application, running the program
-2. [Counter](.blob/main/example/Example/Counter.hs) - Basics, State with a TVar
-3. [Contacts](.blob/main/example/Example/Contacts.hs) - Custom data effects, multiple views, targeting other views
-4. [CSS Transitions](.blob/main/example/Example/Transitions.hs)
-5. [Forms](.blob/main/example/Example/Forms.hs)
-6. [Sessions](.blob/main/example/Example/Forms.hs) - store data on the client with a session
-7. [Redirects](.blob/main/example/Example/Redirects.hs) - Redirecting to other pages. See Main as well
-8. [Lazy Loading](.blob/main/example/Example/LazyLoading.hs) - Redirecting to other pages. See Main as well
-9. [Errors](.blob/main/example/Example/Errors.hs) - Render server errors
+1. [Main](./example/Main.hs) - Routing, WAI application, running the program
+2. [Counter](./example/Example/Counter.hs) - Basics, State with a TVar
+3. [Contacts](./example/Example/Contacts.hs) - Custom data effects, multiple views, targeting other views
+4. [CSS Transitions](./example/Example/Transitions.hs)
+5. [Forms](./example/Example/Forms.hs)
+6. [Sessions](./example/Example/Forms.hs) - store data on the client with a session
+7. [Redirects](./example/Example/Redirects.hs) - Redirecting to other pages. See Main as well
+8. [Lazy Loading](./example/Example/LazyLoading.hs) - Redirecting to other pages. See Main as well
+9. [Errors](./example/Example/Errors.hs) - Render server errors
 
 
 
