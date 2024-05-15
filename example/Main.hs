@@ -76,7 +76,6 @@ app users count = do
   liveApp
     toDocument
     (runApp . routeRequest $ router)
-    (runApp . routeRequest $ router)
  where
   runApp :: (IOE :> es) => Eff (Concurrent : Debug : Users : es) a -> Eff es a
   runApp = runUsersIO users . runDebugIO . runConcurrent

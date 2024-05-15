@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           hyperbole
-version:        0.3.4
+version:        0.3.5
 synopsis:       Web Framework inspired by HTMX
 description:    Web Framework inspired by HTMX.
 category:       Web

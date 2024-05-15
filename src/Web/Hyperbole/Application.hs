@@ -21,7 +21,6 @@ import Data.Text qualified as T
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
-import Effectful.Reader.Static
 import Effectful.State.Static.Local
 import Network.HTTP.Types (HeaderName, Method, parseQuery, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
@@ -35,12 +34,19 @@ import Web.Hyperbole.Session
 import Web.View (Url (..), View, renderLazyByteString, renderUrl)
 
 
-liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Eff '[Hyperbole, Server, Reader Connection, IOE] Response -> Wai.Application
-liveApp toDoc wai sock =
+liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Wai.Application
+liveApp toDoc app =
   websocketsOr
     defaultConnectionOptions
-    (socketApp sock)
-    (waiApp toDoc wai)
+    (runEff . socketApp app)
+    (waiApp toDoc app)
+
+
+socketApp :: (IOE :> es) => Eff (Hyperbole : Server : es) Response -> PendingConnection -> Eff es ()
+socketApp actions pend = do
+  conn <- liftIO $ WS.acceptRequest pend
+  forever $ do
+    runServerSockets conn $ runHyperbole actions
 
 
 waiApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Wai.Application
@@ -134,13 +140,6 @@ runServerWai toDoc req respond =
         cookies = parseCookies cookie
         method = Wai.requestMethod wr
     pure $ Request{body, path, query, method, cookies, host}
-
-
-socketApp :: (MonadIO m) => Eff '[Hyperbole, Server, Reader Connection, IOE] Response -> PendingConnection -> m ()
-socketApp actions pend = liftIO $ do
-  conn <- WS.acceptRequest pend
-  forever $ do
-    runEff $ runReader conn $ runServerSockets conn $ runHyperbole actions
 
 
 runServerSockets
