@@ -203,10 +203,12 @@ The [example](./example/) directory contains an example application with multipl
 [Main](./example/Main.hs) - Routing, WAI application, running the program
 
 [Counter](./example/Example/Counter.hs) - Basics, State with a TVar
-![Counter Recording](./example/doc/counter.gif | width=200)
+
+<img src="/example/doc/counter.gif" width="200"/>
 
 [Contacts](./example/Example/Contacts.hs) - Custom data effects, multiple views, targeting other views, loading indicators
-![Contacts Recording](./example/doc/contacts.gif | width=200)
+
+<img src="/example/doc/contacts.gif" width="200"/>
 
 [CSS Transitions](./example/Example/Transitions.hs) - Animate transitions using only CSS
 ![Transitions Recording](./example/doc/transitions.gif)
