@@ -14,9 +14,10 @@ page var = do
   hyper $ counter var
 
   load $ do
+    n <- readTVarIO var
     pure $ col (pad 20 . gap 10) $ do
       el h1 "Counter"
-      viewId Counter (viewCount 0)
+      viewId Counter (viewCount n)
 
 
 data Counter = Counter
@@ -204,7 +205,7 @@ See the examples directory for an example application. To run them locally, clon
 
 [Counter](./example/Example/Counter.hs) - Basics, State with a TVar
 
-![Counter Example](./example/doc/Counter.png)
+![Counter Example](./example/doc/counter.gif)
 
 3. [Contacts](./example/Example/Contacts.hs) - Custom data effects, multiple views, targeting other views
 4. [CSS Transitions](./example/Example/Transitions.hs)

@@ -15,9 +15,10 @@ page var = do
   hyper $ counter var
 
   load $ do
+    n <- readTVarIO var
     pure $ col (pad 20 . gap 10) $ do
       el h1 "Counter"
-      viewId Counter (viewCount 0)
+      viewId Counter (viewCount n)
 
 
 data Counter = Counter
@@ -46,8 +47,8 @@ viewCount n = col (gap 10) $ do
   row id $ do
     el (bold . fontSize 48 . border 1 . pad (XY 20 0)) $ text $ pack $ show n
   row (gap 10) $ do
-    button Increment Style.btn "Increment"
     button Decrement Style.btn "Decrement"
+    button Increment Style.btn "Increment"
 
 
 modify :: (Concurrent :> es) => TVar Int -> (Int -> Int) -> Eff es Int
