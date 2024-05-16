@@ -214,41 +214,41 @@ Routing, WAI application, running the program
 
 Basics, State with a TVar
 
-<img src="/example/doc/counter.gif" width="300"/>
+<img src="/example/doc/counter.gif" height="225"/>
 
 ### [Contacts](./example/Example/Contacts.hs)
 
 Custom data effects, multiple views, targeting other views, loading indicators
 
-<img src="/example/doc/contacts.gif" width="300"/>
+<img src="/example/doc/contacts.gif" height="200"/>
 
 
 ### [CSS Transitions](./example/Example/Transitions.hs)
 
 Animate transitions using only CSS
 
-<img src="/example/doc/transitions.gif" width="300"/>
+<img src="/example/doc/transitions.gif" height="120"/>
 
 ### [Forms](./example/Example/Forms.hs)
 
 Elegant interface for Forms including field-specific validation 
 
-<img src="/example/doc/forms.gif" width="300"/>
+<img src="/example/doc/forms.gif" height="450"/>
 
 ### [Sessions](./example/Example/Forms.hs)
 store data on the client with a session
 
-<img src="/example/doc/sessions.gif" width="300"/>
+<img src="/example/doc/sessions.gif" height="200"/>
 
 ### [Redirects](./example/Example/Redirects.hs)
 Redirecting to other pages. See Main as well
 
-<img src="/example/doc/redirects.gif" width="300"/>
+<img src="/example/doc/redirects.gif" height="250"/>
 
 ### [Lazy Loading and Polling](./example/Example/LazyLoading.hs)
 Run an action after a delay for lazy loading or polling. See Main as well
 
-<img src="/example/doc/lazy.gif" width="300"/>
+<img src="/example/doc/lazy.gif" height="250"/>
 
 ### [Errors](./example/Example/Errors.hs)
 Render server errors
