@@ -93,20 +93,15 @@ data ContactAction
   deriving (Show, Read, Param)
 
 
+-- Form Fields
 data FirstName = FirstName Text deriving (Generic, FormField)
 data LastName = LastName Text deriving (Generic, FormField)
 data Age = Age Int deriving (Generic, FormField)
 
 
--- data UserForm a = UserForm
---   { firstName :: Field a Text
---   , lastName :: Field a Text
---   , age :: Field a Int
---   }
---   deriving (Generic, Form)
-
 contact :: (Hyperbole :> es, Users :> es, Debug :> es) => Contact -> ContactAction -> Eff es (View Contact ())
 contact (Contact uid) a = do
+  -- Lookup the user in the database for all actions
   u <- userFind uid
   action u a
  where
@@ -114,14 +109,17 @@ contact (Contact uid) a = do
     pure $ contactView u
   action u Edit = do
     pure $ contactEdit u
-  action u Save = do
+  action _ Save = do
     delay 1000
+    unew <- parseUser
+    userSave unew
+    pure $ contactView unew
+
+  parseUser = do
     FirstName firstName <- formField @FirstName
     LastName lastName <- formField @LastName
     Age age <- formField @Age
-    let u' = User{id = u.id, isActive = True, firstName, lastName, age}
-    userSave u'
-    pure $ contactView u'
+    pure User{id = uid, isActive = True, firstName, lastName, age}
 
 
 contactView :: User -> View Contact ()

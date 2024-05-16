@@ -10,7 +10,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es Response
 page = do
-  hyper action
+  hyper formAction
 
   load $ do
     pure $ row (pad 20) $ do
@@ -34,8 +34,8 @@ data Pass1 = Pass1 Text deriving (Generic, FormField)
 data Pass2 = Pass2 Text deriving (Generic, FormField)
 
 
-action :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
-action _ Submit = do
+formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
+formAction _ Submit = do
   u <- formField @User
   a <- formField @Age
   p1 <- formField @Pass1
@@ -86,9 +86,6 @@ formView v = do
   placeholder = att "placeholder"
   inp = border 1 . pad 8
 
-
--- inv :: forall a. (Field a) => Validation -> Mod
--- inv = onInvalid @a Style.invalid
 
 userView :: User -> Age -> Pass1 -> View FormView ()
 userView (User user) (Age age) (Pass1 pass1) = do

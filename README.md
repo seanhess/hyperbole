@@ -65,9 +65,10 @@ Single Page Applications require us to write two programs: a Javascript client a
 There are frameworks that support this in various languages, including HTMX, Phoenix LiveView, and others. Hyperbole has the following advantages
 
 1. 100% Haskell
-2. Type safe pages, views, actions and routes
-3. Fast updates over sockets using virtual DOM 
-4. Fall-back to HTTP
+2. Type safe views, actions, routes, and forms
+3. Low boilerplate forms
+5. Fast updates over sockets using virtual DOM 
+6. Fall-back to HTTP
 
 An example Page
 ---------------
@@ -229,6 +230,8 @@ Animate transitions using only CSS
 <img src="/example/doc/transitions.gif" width="300"/>
 
 ### [Forms](./example/Example/Forms.hs)
+
+Elegant interface for Forms including field-specific validation 
 
 <img src="/example/doc/forms.png" width="300"/>
 
