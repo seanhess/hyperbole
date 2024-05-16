@@ -29,3 +29,11 @@ btnLight =
 
 h1 :: Mod
 h1 = bold . fontSize 32
+
+
+invalid :: Mod
+invalid = color Danger
+
+
+success :: Mod
+success = color Success

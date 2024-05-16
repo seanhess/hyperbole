@@ -149,17 +149,17 @@ contactEdit :: User -> View Contact ()
 contactEdit u =
   onRequest loading $ do
     form @UserForm Save (pad 10 . gap 10) $ \f -> do
-      field fld $ do
+      field fld f.firstName $ do
         label "First Name:"
-        input Name (value u.firstName) f.firstName
+        input Name (value u.firstName)
 
-      field fld $ do
+      field fld f.lastName $ do
         label "Last Name:"
-        input Name (value u.lastName) f.lastName
+        input Name (value u.lastName)
 
-      field fld $ do
+      field fld f.age $ do
         label "Age:"
-        input Number (value $ cs $ show u.age) f.age
+        input Number (value $ cs $ show u.age)
 
       submit Style.btn "Submit"
 

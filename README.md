@@ -1,7 +1,11 @@
 Hyperbole
 =========
 
-Create dynamic HTML applications in server-side Haskell. Inspired by HTMX
+Create dynamic HTML applications in server-side Haskell. Inspired by HTMX.
+
+Depends on:
+* [Effectful](https://hackage.haskell.org/package/effectful)
+* [Web View](https://hackage.haskell.org/package/web-view)
 
 
 Obligatory Counter Example
