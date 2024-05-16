@@ -1,6 +1,5 @@
 module Example.Forms where
 
-import Control.Applicative ((<|>))
 import Data.Functor.Identity (Identity)
 import Data.Text as T (Text, elem, length, pack)
 import Effectful
@@ -22,15 +21,20 @@ data FormView = FormView
   deriving (Show, Read, Param)
 
 
-data FormAction
-  = Submit
+data FormAction = Submit
   deriving (Show, Read, Param)
-
-
 instance HyperView FormView where
   type Action FormView = FormAction
 
 
+-- The 'Field' type family lets us use UserForm with a variety of types
+-- UserForm Identity = username :: Text, age :: Integer, etc
+-- UserForm Label = username :: InputName, age :: InputName, etc
+-- UserForm Invalid = username :: Maybe Text, age :: Maybe Text, etc
+--
+-- you can index the validation errors by type using the name
+-- validation errors displayed based on their membership in a map of the same name
+--
 data UserForm a = UserForm
   { username :: Field a Text
   , age :: Field a Integer
@@ -44,15 +48,11 @@ action :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView (
 action _ Submit = do
   u <- parseForm
   let inv = validateUser u
-  -- I don't like this...
   case inv.username <|> inv.password1 <|> inv.age of
-    Nothing -> pure $ userView u
+    -- if we have any errors, show them inline
     Just _ -> pure $ formView inv
-
-
-valid :: Bool -> Text -> Maybe Text
-valid True t = Just t
-valid False _ = Nothing
+    -- otherwise, accept the signup
+    Nothing -> pure $ userView u
 
 
 -- another way to identify the fields? With labels? Doesn't have to be a record
@@ -80,6 +80,10 @@ validateUser u =
 
   passLength =
     valid (T.length u.password1 < 8) "Password must be at least 8 chars"
+
+  valid :: Bool -> Text -> Maybe Text
+  valid True t = Just t
+  valid False _ = Nothing
 
 
 formView :: UserForm Invalid -> View FormView ()

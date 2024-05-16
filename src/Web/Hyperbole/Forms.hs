@@ -19,9 +19,11 @@ module Web.Hyperbole.Forms
   , FormOptions (..)
   , genericFromForm
   , (<?>)
+  , (<|>)
   )
 where
 
+import Control.Applicative ((<|>))
 import Data.Functor.Identity (Identity)
 import Data.Kind (Type)
 import Data.Text
