@@ -10,7 +10,6 @@ import Example.Effects.Debug
 import Example.Effects.Users (User (..), Users)
 import Example.Effects.Users qualified as Users
 import Example.Style as Style
-import GHC.Generics (Generic)
 import Web.Hyperbole
 
 
@@ -29,16 +28,14 @@ page = do
 
 data Contacts = Contacts
   deriving (Show, Read, Param)
+instance HyperView Contacts where
+  type Action Contacts = ContactsAction
 
 
 data ContactsAction
   = Reload (Maybe Filter)
   | Delete Int
   deriving (Show, Read, Param)
-
-
-instance HyperView Contacts where
-  type Action Contacts = ContactsAction
 
 
 data Filter
@@ -96,13 +93,17 @@ data ContactAction
   deriving (Show, Read, Param)
 
 
-data UserForm a = UserForm
-  { firstName :: Field a Text
-  , lastName :: Field a Text
-  , age :: Field a Int
-  }
-  deriving (Generic, Form)
+data FirstName = FirstName Text deriving (Generic, FormField)
+data LastName = LastName Text deriving (Generic, FormField)
+data Age = Age Int deriving (Generic, FormField)
 
+
+-- data UserForm a = UserForm
+--   { firstName :: Field a Text
+--   , lastName :: Field a Text
+--   , age :: Field a Int
+--   }
+--   deriving (Generic, Form)
 
 contact :: (Hyperbole :> es, Users :> es, Debug :> es) => Contact -> ContactAction -> Eff es (View Contact ())
 contact (Contact uid) a = do
@@ -115,7 +116,9 @@ contact (Contact uid) a = do
     pure $ contactEdit u
   action u Save = do
     delay 1000
-    UserForm{firstName, lastName, age} <- parseForm
+    FirstName firstName <- formField @FirstName
+    LastName lastName <- formField @LastName
+    Age age <- formField @Age
     let u' = User{id = u.id, isActive = True, firstName, lastName, age}
     userSave u'
     pure $ contactView u'
@@ -148,16 +151,16 @@ contactView u = do
 contactEdit :: User -> View Contact ()
 contactEdit u =
   onRequest loading $ do
-    form @UserForm Save (pad 10 . gap 10) $ \f -> do
-      field fld f.firstName $ do
+    form Save mempty (pad 10 . gap 10) $ do
+      field @FirstName fld id $ do
         label "First Name:"
         input Name (value u.firstName)
 
-      field fld f.lastName $ do
+      field @LastName fld id $ do
         label "Last Name:"
         input Name (value u.lastName)
 
-      field fld f.age $ do
+      field @Age fld id $ do
         label "Age:"
         input Number (value $ cs $ show u.age)
 

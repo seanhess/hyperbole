@@ -1,10 +1,10 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Example.Forms where
 
-import Data.Functor.Identity (Identity)
 import Data.Text as T (Text, elem, length, pack)
 import Effectful
 import Example.Style qualified as Style
-import GHC.Generics (Generic)
 import Web.Hyperbole
 
 
@@ -14,7 +14,7 @@ page = do
 
   load $ do
     pure $ row (pad 20) $ do
-      viewId FormView (formView formInvalid)
+      viewId FormView (formView mempty)
 
 
 data FormView = FormView
@@ -27,86 +27,57 @@ instance HyperView FormView where
   type Action FormView = FormAction
 
 
--- The 'Field' type family lets us use UserForm with a variety of types
--- UserForm Identity = username :: Text, age :: Integer, etc
--- UserForm Label = username :: InputName, age :: InputName, etc
--- UserForm Invalid = username :: Maybe Text, age :: Maybe Text, etc
---
--- you can index the validation errors by type using the name
--- validation errors displayed based on their membership in a map of the same name
---
-data UserForm a = UserForm
-  { username :: Field a Text
-  , age :: Field a Integer
-  , password1 :: Field a Text
-  , password2 :: Field a Text
-  }
-  deriving (Generic, Form)
+-- Form Fields
+data User = User Text deriving (Generic, FormField)
+data Age = Age Int deriving (Generic, FormField)
+data Pass1 = Pass1 Text deriving (Generic, FormField)
+data Pass2 = Pass2 Text deriving (Generic, FormField)
 
 
 action :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
 action _ Submit = do
-  u <- parseForm
-  let inv = validateUser u
-  case inv.username <|> inv.password1 <|> inv.age of
-    -- if we have any errors, show them inline
-    Just _ -> pure $ formView inv
-    -- otherwise, accept the signup
-    Nothing -> pure $ userView u
+  u <- formField @User
+  a <- formField @Age
+  p1 <- formField @Pass1
+  p2 <- formField @Pass2
+
+  case validateUser u a p1 p2 of
+    Validation [] -> pure $ userView u a p1
+    errs -> pure $ formView errs
 
 
--- another way to identify the fields? With labels? Doesn't have to be a record
--- maybe a sumtype? Then you could put them back in... ... perhaps...
-validateUser :: UserForm Identity -> UserForm Invalid
-validateUser u =
-  UserForm
-    { username = userNoSpaces <|> userLength
-    , age = ageOld
-    , password1 = passEqual <|> passLength
-    , password2 = Nothing
-    }
- where
-  ageOld =
-    valid (u.age < 2) "User must be at least 20 years old"
-
-  userNoSpaces =
-    valid (T.elem ' ' u.username) "Username must not contain spaces"
-
-  userLength =
-    valid (T.length u.username < 4) "Username must be at least 4 chars"
-
-  passEqual =
-    valid (u.password1 /= u.password2) "Passwords did not match"
-
-  passLength =
-    valid (T.length u.password1 < 8) "Password must be at least 8 chars"
-
-  valid :: Bool -> Text -> Maybe Text
-  valid True t = Just t
-  valid False _ = Nothing
+validateUser :: User -> Age -> Pass1 -> Pass2 -> Validation
+validateUser (User u) (Age a) (Pass1 p1) (Pass2 p2) =
+  validation
+    [ validate @Age (a < 20) "User must be at least 20 years old"
+    , validate @User (T.elem ' ' u) "Username must not contain spaces"
+    , validate @User (T.length u < 4) "Username must be at least 4 chars"
+    , validate @Pass1 (p1 /= p2) "Passwords did not match"
+    , validate @Pass1 (T.length p1 < 8) "Password must be at least 8 chars"
+    ]
 
 
-formView :: UserForm Invalid -> View FormView ()
-formView inv = do
-  form @UserForm Submit (gap 10 . pad 10) $ \f -> do
+formView :: Validation -> View FormView ()
+formView v = do
+  form Submit v (gap 10 . pad 10) $ do
     el Style.h1 "Sign Up"
 
-    field (invalid inv.username) f.username $ do
+    field @User id Style.invalid $ do
       label "Username"
       input Username (inp . placeholder "username")
-      maybe none (el_ . text) inv.username
+      el_ invalidText
 
-    field (invalid inv.age) f.age $ do
+    field @Age id Style.invalid $ do
       label "Age"
       input Number (inp . placeholder "age" . value "0")
-      maybe none (el_ . text) inv.age
+      el_ invalidText
 
-    field (invalid inv.password1) f.password1 $ do
+    field @Pass1 id Style.invalid $ do
       label "Password"
       input NewPassword (inp . placeholder "password")
-      maybe none (el_ . text) inv.password1
+      el_ invalidText
 
-    field id f.password2 $ do
+    field @Pass2 id id $ do
       label "Repeat Password"
       input NewPassword (inp . placeholder "repeat password")
 
@@ -114,21 +85,22 @@ formView inv = do
  where
   placeholder = att "placeholder"
   inp = border 1 . pad 8
-  invalid Nothing = id
-  invalid (Just _) = Style.invalid
 
 
-userView :: UserForm Identity -> View FormView ()
-userView user = do
+-- inv :: forall a. (Field a) => Validation -> Mod
+-- inv = onInvalid @a Style.invalid
+
+userView :: User -> Age -> Pass1 -> View FormView ()
+userView (User user) (Age age) (Pass1 pass1) = do
   el (bold . Style.success) "Accepted Signup"
   row (gap 5) $ do
     el_ "Username:"
-    el_ $ text user.username
+    el_ $ text user
 
   row (gap 5) $ do
     el_ "Age:"
-    el_ $ text $ pack (show user.age)
+    el_ $ text $ pack (show age)
 
   row (gap 5) $ do
     el_ "Password:"
-    el_ $ text user.password1
+    el_ $ text pass1
