@@ -233,7 +233,7 @@ Animate transitions using only CSS
 
 Elegant interface for Forms including field-specific validation 
 
-<img src="/example/doc/forms.png" width="300"/>
+<img src="/example/doc/forms.gif" width="300"/>
 
 ### [Sessions](./example/Example/Forms.hs)
 store data on the client with a session
