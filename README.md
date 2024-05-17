@@ -162,11 +162,13 @@ messageView :: Text -> View Message ()
 messageView msg = col (gap 10) $ do
   el_ "Current Message"
   el_ msg
-  -- send (SetMessage "A new message") when clicked
+  -- run action `SetMessage "A new message"` when clicked
   button (SetMessage "A new message") id "Set Message"
 ```
 
-When the user clicks the button, the server runs the `message` handler, which returns new HTML. Only the view containing the button is updated via virtual DOM, while the rest of the page remains the same
+When the user clicks the button, the `SetMessage` action is sent to the server. Then `message` handles it, runs side effects, and returns new HTML.
+
+Only the view containing the button is updated via virtual DOM, while the rest of the page remains the same
 
 
 Combining multiple pages into an application
