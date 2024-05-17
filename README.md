@@ -16,10 +16,6 @@ import Data.Text (Text)
 import Web.Hyperbole
 
 
-import Data.Text (Text)
-import Web.Hyperbole
-
-
 main :: IO ()
 main = do
   -- Warp.run on port 3000
@@ -30,17 +26,17 @@ main = do
       page $ do
         -- handle message actions
         hyper message
+        -- handle initial page load
         load $ do
-          -- TODO - Perform load side-effects
+          -- after side effects, render entire page once
           pure viewPage
 
 
--- render entire page once
+-- render entire page
 viewPage :: View c ()
 viewPage = do
   el bold "My Page"
-  -- register a view with Id = Msg
-  -- it will update itself
+  -- register a view with Id = Msg, which updates itself
   viewId Msg $ viewMsg "HELLO WORLD"
 
 
@@ -61,8 +57,7 @@ instance HyperView Msg where
 -- Handle message actions
 message :: Msg -> MsgAction -> Eff es (View Msg ())
 message _ (SetMsg m) = do
-  -- TODO - Perform action side effects
-  -- re-render the view new data
+  -- After side effects, re-render the view with new data
   pure $ viewMsg m
 
 
