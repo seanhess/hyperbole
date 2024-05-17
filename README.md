@@ -35,39 +35,39 @@ main = do
 -- render entire page
 viewPage :: View c ()
 viewPage = do
-
+  -- this part never changes
   el bold "My Page"
-  -- register a view with Id = Msg, which updates itself
-  viewId Msg $ messageView "HELLO WORLD"
+  -- register a view with Id = Message, which updates itself with vdom
+  viewId Message $ messageView "HELLO WORLD"
 
 
 -- Unique View Id
-data Msg = Msg
+data Message = Message
   deriving (Generic, Param)
 
 
--- Actions for that View
-data MsgAction = SetMsg Text
+-- Actions for Message Views
+data MessageAction = SetMessage Text
   deriving (Generic, Param)
 
 
-instance HyperView Msg where
-  type Action Msg = MsgAction
+instance HyperView Message where
+  type Action Message = MessageAction
 
 
--- Handle message actions
-message :: Msg -> MsgAction -> Eff es (View Msg ())
-message _ (SetMsg m) = do
+-- Handle Message actions
+message :: Message -> MessageAction -> Eff es (View Message ())
+message _ (SetMessage m) = do
   -- After side effects, re-render the view with new data
   pure $ messageView m
 
 
 -- Render a message view
-messageView :: Text -> View Msg ()
+messageView :: Text -> View Message ()
 messageView m = col id $ do
   el_ "Message:"
   el_ $ text m
-  button (SetMsg "Goodbye") id "Goodbye"
+  button (SetMessage "Goodbye") id "Goodbye"
 ```
 
 
