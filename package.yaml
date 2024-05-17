@@ -1,6 +1,6 @@
 name:               hyperbole
 version:            0.3.5
-synopsis:           Interactive Serverside Web Framework inspired by HTMX
+synopsis:           Interactive Web pages using type-safe serverside Haskell. Inspired by HTMX
 homepage:           https://github.com/seanhess/hyperbole
 github:             seanhess/hyperbole
 license:            BSD-3-Clause
@@ -8,7 +8,7 @@ license-file:       LICENSE
 author:             Sean Hess
 maintainer:         seanhess@gmail.com
 category:           Web, Network
-description:        Interactive Serverside Web Framework inspired by HTMX
+description:        Interactive Web pages using type-safe serverside Haskell. Inspired by HTMX
 
 extra-doc-files:
   - README.md

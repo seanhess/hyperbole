@@ -44,7 +44,7 @@ class Route a where
 
 
 -- | Use the default route if it's empty
-findRoute :: (Route a) => [Text] -> Maybe a
+findRoute :: (Route a) => [Segment] -> Maybe a
 findRoute [] = Just defRoute
 findRoute ps = matchRoute ps
 

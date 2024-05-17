@@ -1,16 +1,24 @@
 Hyperbole
 =========
 
-Create dynamic HTML applications in server-side Haskell. Inspired by HTMX.
+Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX.
 
 Depends on:
 * [Effectful](https://hackage.haskell.org/package/effectful)
 * [Web View](https://hackage.haskell.org/package/web-view)
 
 
-Obligatory Counter Example
+Simple Example
 --------------------------
 
+```haskell
+import Web.Hyperbole
+
+```
+
+
+Obligatory Counter Example
+--------------------------
 
 ```haskell
 page :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Page es Response
@@ -60,25 +68,26 @@ viewCount n = col (gap 10) $ do
 Motivation
 ---------------------
 
-Single Page Applications require us to write two programs: a Javascript client and a Server-side API. Hyperbole instead allows us to write a single Haskell program which runs exclusively on the server. All user interactions are sent to the server for processing, and a sub-section of the page is updated with the resulting HTML.
+Single Page Applications require us to write two programs: a Javascript client and a Server-side API. Hyperbole allows us instead to write a single Haskell program which runs exclusively on the server. All user interactions are sent to the server for processing, and a sub-section of the page is updated with the resulting HTML.
 
 There are frameworks that support this in various languages, including HTMX, Phoenix LiveView, and others. Hyperbole has the following advantages
 
 1. 100% Haskell
 2. Type safe views, actions, routes, and forms
-3. Low boilerplate forms
+3. Elegant interface with little boilerplate
 5. Fast updates over sockets using virtual DOM 
 6. Fall-back to HTTP
 
-An example Page
+An Example Page
 ---------------
 
-Hyperbole applications direct URL patterns to different *Page*s. We use a `load` handler to create the entire page.
+Hyperbole applications direct URL patterns to different *Page*s. We use a `load` handler for when the user first visits the page.
 
 ```haskell
 module Page.Messages where
 import Web.Hyperbole
 
+-- static page
 page :: (Hyperbole :> es) => Page es Response
 page = do
   load $ do
@@ -86,7 +95,7 @@ page = do
       el h1 "Hello World"
 ```
 
-Our top-level *Page* can be divided up into unique *Views*
+Our top-level *Page* can be divided up into unique interactive *Views*
 
 ```haskell
 page :: (Hyperbole :> es) => Page es Response
@@ -105,7 +114,7 @@ messageView msg = do
   el_ msg
 
 ```
-Views associate interactions from UI elements with *Actions*. We specify a server-side handler for Actions which returns new HTML. Actions can perform side effects, like reading and writing data to a database.
+Views associate interactions from UI elements with *Actions*. We specify a server-side handlers for Actions which return new HTML. Actions can perform side effects, like reading and writing data to a database.
 
 ```haskell
 page :: (Hyperbole :> es) => Page es Response
@@ -126,7 +135,9 @@ data MessageAction = SetMessage Text
 
 message :: (Hyperbole :> es, MessageDatabase :> es) => Message -> MessageAction -> Eff es ()
 message (Message n) (SetMessage msg) =
+  -- look, a side effect!
   send $ SaveMessage msg
+  -- use the same view function for the updated message view
   pure $ messageView msg
 
 
@@ -143,7 +154,7 @@ When the user clicks the button, the server runs the `message` handler, which re
 Combining multiple pages into an application
 --------------------------------------------
 
-Create a sum type to specify routes
+Now that we have a page, let's create an application. First, create a sum type to specify routes
 
 ```haskell
 import Page.Messages qualified as Messages
@@ -162,16 +173,19 @@ router Messages = page Messages.page
 router Main = do
   view $ do
     el_ "click a link below to visit a page"
+    -- type safe routing
     route Messages id "Messages"
 ```
 
-Create a WAI application from your router by specifying a function to turn page fragments into full web pages on first load. Make sure to include the embedded javascript
+Then create a WAI application from your router by specifying a function to turn page fragments into full web pages on first load. Make sure to include Hyperbole's embedded javascript
 
 ```haskell
 {-# LANGUAGE QuasiQuotes #-}
 import Network.Wai
 import Data.String.Interpolate (i)
-import Web.Hyperbole (..., scriptEmbed, cssResetEmbed)
+import Data.ByteString.Lazy as BL
+import Web.Hyperbole (..., liveApp, routeRequest, scriptEmbed, cssResetEmbed)
+
 
 app :: Application
 app = do

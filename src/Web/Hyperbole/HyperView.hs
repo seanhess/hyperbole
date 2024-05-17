@@ -2,9 +2,14 @@
 
 module Web.Hyperbole.HyperView where
 
+import Control.Monad (guard)
 import Data.Kind (Type)
 import Data.String.Conversions (cs)
-import Data.Text (Text)
+import Data.Text (Text, pack, unpack)
+import Data.Text qualified as T
+import Debug.Trace
+import GHC.Generics
+import Text.Casing (kebab)
 import Text.Read
 import Web.Hyperbole.Route (Route (..), routeUrl)
 import Web.View
@@ -87,28 +92,104 @@ data Option opt id action = Option
 
 class Param a where
   toParam :: a -> Text
-  default toParam :: (Show a) => a -> Text
-  toParam = cs . show
+  default toParam :: (Generic a, GParam (Rep a)) => a -> Text
+  toParam = gToParam . from
 
-
-  -- where
-  --  toSingle '"' = '\''
-  --  toSingle c = c
 
   -- not as flexible as FromHttpApiData, but derivable
   parseParam :: Text -> Maybe a
-  default parseParam :: (Read a) => Text -> Maybe a
-  parseParam = readMaybe . cs
+  default parseParam :: (Generic a, GParam (Rep a)) => Text -> Maybe a
+  parseParam t = to <$> gParseParam t
 
+
+class GParam f where
+  gToParam :: f p -> Text
+  gParseParam :: Text -> Maybe (f p)
+
+
+instance (GParam f, GParam g) => GParam (f :*: g) where
+  gToParam (a :*: b) = gToParam a <> "-" <> gToParam b
+  gParseParam t = do
+    let (at, bt) = breakSegment t
+    a <- gParseParam at
+    b <- gParseParam bt
+    pure $ a :*: b
+
+
+-- do we add the datatypename? no, the constructor name
+instance (Datatype d, GParam f) => GParam (M1 D d f) where
+  gToParam (M1 a) = gToParam a
+  gParseParam t = M1 <$> gParseParam t
+
+
+instance (Constructor c, GParam f) => GParam (M1 C c f) where
+  gToParam (M1 a) =
+    let cn = toSegment (conName (undefined :: M1 C c f p))
+     in case gToParam a of
+          "" -> cn
+          t -> cn <> "-" <> t
+  gParseParam t = do
+    let (c, rest) = breakSegment t
+    guard $ c == toSegment (conName (undefined :: M1 C c f p))
+    M1 <$> gParseParam rest
+
+
+instance GParam U1 where
+  gToParam _ = ""
+  gParseParam _ = pure U1
+
+
+instance (GParam f) => GParam (M1 S s f) where
+  gToParam (M1 a) = gToParam a
+  gParseParam t = M1 <$> gParseParam t
+
+
+instance GParam (K1 R Text) where
+  gToParam (K1 t) = t
+  gParseParam t = pure $ K1 t
+
+
+instance GParam (K1 R String) where
+  gToParam (K1 s) = pack s
+  gParseParam t = pure $ K1 $ unpack t
+
+
+instance {-# OVERLAPPABLE #-} (Show a, Read a) => GParam (K1 R a) where
+  gToParam (K1 a) = pack $ show a
+  gParseParam t = do
+    traceM $ show ("Reading ", t)
+    K1 <$> readMaybe (unpack t)
+
+
+breakSegment :: Text -> (Text, Text)
+breakSegment t =
+  let (start, rest) = T.breakOn "-" t
+   in (start, T.drop 1 rest)
+
+
+toSegment :: String -> Text
+toSegment = T.toLower . pack
+
+
+-- instance (GParam f) => GParam (M1 C c f) where
+--   gForm = M1 gForm
 
 -- where
 --  toDouble '\'' = '\"'
 --  toDouble c = c
 
-instance Param Integer
-instance Param Float
-instance Param Int
-instance Param ()
+instance Param Integer where
+  toParam = pack . show
+  parseParam = readMaybe . unpack
+instance Param Float where
+  toParam = pack . show
+  parseParam = readMaybe . unpack
+instance Param Int where
+  toParam = pack . show
+  parseParam = readMaybe . unpack
+instance Param () where
+  toParam = pack . show
+  parseParam = readMaybe . unpack
 
 
 instance Param Text where
@@ -119,3 +200,10 @@ instance Param Text where
 -- | Link to another route
 route :: (Route a) => a -> Mod -> View c () -> View c ()
 route r = link (routeUrl r)
+
+
+data Boot = Boot Int Text deriving (Generic)
+
+
+test :: Boot
+test = to $ from $ Boot 3 "hello"

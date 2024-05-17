@@ -6,9 +6,9 @@ cabal-version: 2.2
 
 name:           hyperbole
 version:        0.3.5
-synopsis:       Web Framework inspired by HTMX
-description:    Web Framework inspired by HTMX.
-category:       Web
+synopsis:       Interactive Web pages using type-safe serverside Haskell. Inspired by HTMX
+description:    Interactive Web pages using type-safe serverside Haskell. Inspired by HTMX
+category:       Web, Network
 homepage:       https://github.com/seanhess/hyperbole
 bug-reports:    https://github.com/seanhess/hyperbole/issues
 author:         Sean Hess
@@ -89,6 +89,7 @@ executable example
       Example.Sessions
       Example.Style
       Example.Transitions
+      Simple
       Paths_hyperbole
   autogen-modules:
       Paths_hyperbole

@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Web.Hyperbole.Application
   ( waiApp
@@ -8,6 +9,7 @@ module Web.Hyperbole.Application
   , socketApp
   , runServerSockets
   , runServerWai
+  , basicDocument
   ) where
 
 import Control.Monad (forever)
@@ -16,6 +18,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as L
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
+import Data.String.Interpolate (i)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import Effectful
@@ -30,6 +33,7 @@ import Network.WebSockets (Connection, PendingConnection, defaultConnectionOptio
 import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
 import Web.Hyperbole.Effect
+import Web.Hyperbole.Embed (cssResetEmbed, scriptEmbed)
 import Web.Hyperbole.Session
 import Web.View (Url (..), View, renderLazyByteString, renderUrl)
 
@@ -248,3 +252,15 @@ data ContentType
 contentType :: ContentType -> (HeaderName, BS.ByteString)
 contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
 contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
+
+
+basicDocument :: Text -> BL.ByteString -> BL.ByteString
+basicDocument title cnt =
+  [i|<html>
+    <head>
+      <title>#{title}</title>
+      <script type="text/javascript">#{scriptEmbed}</script>
+      <style type type="text/css">#{cssResetEmbed}</style>
+    </head>
+    <body>#{cnt}</body>
+  </html>|]

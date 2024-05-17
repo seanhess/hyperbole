@@ -16,7 +16,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types
+import Network.HTTP.Types hiding (Query)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
 import Web.Hyperbole.HyperView
@@ -152,7 +152,7 @@ formData = do
   either (send . RespondEarly . Err . ErrParse) pure ef
 
 
-getEvent :: (HyperView id, Hyperbole :> es, Show id, Show (Action id)) => Eff es (Maybe (Event id (Action id)))
+getEvent :: (HyperView id, Hyperbole :> es) => Eff es (Maybe (Event id (Action id)))
 getEvent = do
   q <- reqParams
   pure $ parseEvent q
@@ -163,7 +163,7 @@ lookupParam p q =
   fmap cs <$> join $ lookup p q
 
 
-parseEvent :: (HyperView id, Show id, Show (Action id)) => Query -> Maybe (Event id (Action id))
+parseEvent :: (HyperView id) => Query -> Maybe (Event id (Action id))
 parseEvent q = do
   Event ti ta <- lookupEvent q
   vid <- parseParam ti
@@ -254,7 +254,7 @@ load run = Page $ do
 -- | Handle a HyperView. If the event matches our handler, respond with the fragment
 hyper
   :: forall id es
-   . (Hyperbole :> es, HyperView id, Show id, Show (Action id))
+   . (Hyperbole :> es, HyperView id)
   => (id -> Action id -> Eff es (View id ()))
   -> Page es ()
 hyper run = Page $ do
