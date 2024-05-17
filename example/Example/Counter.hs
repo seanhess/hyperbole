@@ -22,7 +22,7 @@ page var = do
 
 
 data Counter = Counter
-  deriving (Show, Read, Param)
+  deriving (Generic, Param)
 instance HyperView Counter where
   type Action Counter = Count
 
@@ -30,7 +30,7 @@ instance HyperView Counter where
 data Count
   = Increment
   | Decrement
-  deriving (Show, Read, Param)
+  deriving (Generic, Param)
 
 
 counter :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Counter -> Count -> Eff es (View Counter ())

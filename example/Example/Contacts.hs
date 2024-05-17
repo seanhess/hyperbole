@@ -27,21 +27,23 @@ page = do
 -- Contacts ----------------------------------------------
 
 data Contacts = Contacts
-  deriving (Show, Read, Param)
-instance HyperView Contacts where
-  type Action Contacts = ContactsAction
+  deriving (Generic, Param)
 
 
 data ContactsAction
   = Reload (Maybe Filter)
   | Delete Int
-  deriving (Show, Read, Param)
+  deriving (Generic, Param)
 
 
 data Filter
   = Active
   | Inactive
-  deriving (Show, Read, Eq)
+  deriving (Eq, Generic, Param)
+
+
+instance HyperView Contacts where
+  type Action Contacts = ContactsAction
 
 
 contacts :: (Hyperbole :> es, Users :> es, Debug :> es) => Contacts -> ContactsAction -> Eff es (View Contacts ())
@@ -81,16 +83,18 @@ allContactsView fil us = do
 -- Contact ----------------------------------------------------
 
 data Contact = Contact Int
-  deriving (Show, Read, Param)
-instance HyperView Contact where
-  type Action Contact = ContactAction
+  deriving (Generic, Param)
 
 
 data ContactAction
   = Edit
   | Save
   | View
-  deriving (Show, Read, Param)
+  deriving (Generic, Param)
+
+
+instance HyperView Contact where
+  type Action Contact = ContactAction
 
 
 -- Form Fields

@@ -49,18 +49,14 @@ import Web.View hiding (form, input, label)
 data FormFields id = FormFields id Validation
 
 
-instance (Show id) => Show (FormFields id) where
-  show (FormFields i _) = show i
-
-
-instance (Param id, Show id) => Param (FormFields id) where
+instance (Param id) => Param (FormFields id) where
   parseParam t = do
     i <- parseParam t
     pure $ FormFields i mempty
   toParam (FormFields i _) = toParam i
 
 
-instance (HyperView id, Show id) => HyperView (FormFields id) where
+instance (HyperView id, Param id) => HyperView (FormFields id) where
   type Action (FormFields id) = Action id
 
 

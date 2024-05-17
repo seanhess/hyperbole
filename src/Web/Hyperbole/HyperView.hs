@@ -2,6 +2,7 @@
 
 module Web.Hyperbole.HyperView where
 
+import Control.Applicative ((<|>))
 import Control.Monad (guard)
 import Data.Kind (Type)
 import Data.String.Conversions (cs)
@@ -116,6 +117,13 @@ instance (GParam f, GParam g) => GParam (f :*: g) where
     pure $ a :*: b
 
 
+instance (GParam f, GParam g) => GParam (f :+: g) where
+  gToParam (L1 a) = gToParam a
+  gToParam (R1 b) = gToParam b
+  gParseParam t = do
+    (L1 <$> gParseParam @f t) <|> (R1 <$> gParseParam @g t)
+
+
 -- do we add the datatypename? no, the constructor name
 instance (Datatype d, GParam f) => GParam (M1 D d f) where
   gToParam (M1 a) = gToParam a
@@ -154,12 +162,15 @@ instance GParam (K1 R String) where
   gParseParam t = pure $ K1 $ unpack t
 
 
-instance {-# OVERLAPPABLE #-} (Show a, Read a) => GParam (K1 R a) where
-  gToParam (K1 a) = pack $ show a
-  gParseParam t = do
-    traceM $ show ("Reading ", t)
-    K1 <$> readMaybe (unpack t)
+instance {-# OVERLAPPABLE #-} (Param a) => GParam (K1 R a) where
+  gToParam (K1 a) = toParam a
+  gParseParam t = K1 <$> parseParam t
 
+
+-- instance {-# OVERLAPPABLE #-} (Show a, Read a) => GParam (K1 R a) where
+--   gToParam (K1 a) = pack $ show a
+--   gParseParam t = do
+--     K1 <$> readMaybe (unpack t)
 
 breakSegment :: Text -> (Text, Text)
 breakSegment t =
@@ -178,6 +189,11 @@ toSegment = T.toLower . pack
 --  toDouble '\'' = '\"'
 --  toDouble c = c
 
+instance (Param a) => Param (Maybe a) where
+  toParam Nothing = ""
+  toParam (Just a) = toParam a
+  parseParam "" = pure Nothing
+  parseParam t = Just $ parseParam t
 instance Param Integer where
   toParam = pack . show
   parseParam = readMaybe . unpack

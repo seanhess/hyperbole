@@ -14,6 +14,57 @@ Simple Example
 ```haskell
 import Web.Hyperbole
 
+```haskell
+import Data.Text (Text)
+import Web.Hyperbole
+
+
+main :: IO ()
+main = do
+  -- run using Warp
+  run 3000 $ do
+    -- create an Application
+    liveApp (basicDocument "Example") $ do
+      -- A single page
+      page $ do
+        -- handle message actions
+        hyper message
+        -- initial page load
+        load $ do
+          pure $ do
+            el_ bold "My Page"
+            -- create a view with Id = Msg
+            viewId Msg $ viewMsg "HELLO WORLD"
+
+
+-- Unique View Id
+data Msg = Msg
+  deriving (Generic, Param)
+
+
+-- Actions for that View
+data MsgAction = SetMsg Text
+  deriving (Generic, Param)
+
+
+instance HyperView Msg where
+  type Action Msg = MsgAction
+
+
+-- Handle message actions
+message :: Msg -> MsgAction -> Eff es (View Msg ())
+message _ (SetMsg m) = do
+  -- TODO - Perform side effects
+  -- re-render the view new data
+  pure $ viewMsg m
+
+
+-- Render a message view
+viewMsg :: Text -> View Msg ()
+viewMsg m = col id $ do
+  el_ "Message:"
+  el_ $ text m
+  button (SetMsg "Goodbye") id "Goodbye"
 ```
 
 

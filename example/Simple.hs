@@ -15,12 +15,14 @@ main = do
 
 data Msg = Msg
   deriving (Generic, Param)
-instance HyperView Msg where
-  type Action Msg = MsgAction
 
 
 data MsgAction = SetMsg Text
   deriving (Generic, Param)
+
+
+instance HyperView Msg where
+  type Action Msg = MsgAction
 
 
 message :: Msg -> MsgAction -> Eff es (View Msg ())

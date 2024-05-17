@@ -15,14 +15,16 @@ page = do
 
 
 data Contents = Contents
-  deriving (Show, Read, Param)
-instance HyperView Contents where
-  type Action Contents = ContentsAction
+  deriving (Generic, Param)
 
 
 data ContentsAction
   = RedirectAsAction
-  deriving (Show, Read, Param)
+  deriving (Generic, Param)
+
+
+instance HyperView Contents where
+  type Action Contents = ContentsAction
 
 
 contents :: (Hyperbole :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
