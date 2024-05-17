@@ -16,22 +16,32 @@ import Data.Text (Text)
 import Web.Hyperbole
 
 
+import Data.Text (Text)
+import Web.Hyperbole
+
+
 main :: IO ()
 main = do
-  -- run using Warp
+  -- Warp.run on port 3000
   run 3000 $ do
-    -- create an Application
+    -- create a WAI.Application
     liveApp (basicDocument "Example") $ do
       -- A single page
       page $ do
         -- handle message actions
         hyper message
-        -- initial page load
         load $ do
-          pure $ do
-            el_ bold "My Page"
-            -- create a view with Id = Msg
-            viewId Msg $ viewMsg "HELLO WORLD"
+          -- TODO - Perform load side-effects
+          pure viewPage
+
+
+-- render entire page once
+viewPage :: View c ()
+viewPage = do
+  el bold "My Page"
+  -- register a view with Id = Msg
+  -- it will update itself
+  viewId Msg $ viewMsg "HELLO WORLD"
 
 
 -- Unique View Id
@@ -51,7 +61,7 @@ instance HyperView Msg where
 -- Handle message actions
 message :: Msg -> MsgAction -> Eff es (View Msg ())
 message _ (SetMsg m) = do
-  -- TODO - Perform side effects
+  -- TODO - Perform action side effects
   -- re-render the view new data
   pure $ viewMsg m
 
