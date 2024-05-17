@@ -12,9 +12,6 @@ Simple Example
 --------------------------
 
 ```haskell
-import Web.Hyperbole
-
-```haskell
 import Data.Text (Text)
 import Web.Hyperbole
 
