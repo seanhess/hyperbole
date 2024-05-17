@@ -62,13 +62,13 @@ data AppRoute
   | RedirectNow
   | LazyLoading
   | Errors
-  deriving (Show, Generic, Eq, Route)
+  deriving (Eq, Generic, Route)
 
 
 data Hello
   = Greet Text
   | Redirected
-  deriving (Show, Generic, Eq, Route)
+  deriving (Eq, Generic, Route)
 
 
 app :: UserStore -> TVar Int -> Application

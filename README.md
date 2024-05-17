@@ -9,7 +9,7 @@ Depends on:
 
 
 Simple Example
---------------------------
+--------------
 
 ```haskell
 import Data.Text (Text)
@@ -35,9 +35,10 @@ main = do
 -- render entire page
 viewPage :: View c ()
 viewPage = do
+
   el bold "My Page"
   -- register a view with Id = Msg, which updates itself
-  viewId Msg $ viewMsg "HELLO WORLD"
+  viewId Msg $ messageView "HELLO WORLD"
 
 
 -- Unique View Id
@@ -58,68 +59,21 @@ instance HyperView Msg where
 message :: Msg -> MsgAction -> Eff es (View Msg ())
 message _ (SetMsg m) = do
   -- After side effects, re-render the view with new data
-  pure $ viewMsg m
+  pure $ messageView m
 
 
 -- Render a message view
-viewMsg :: Text -> View Msg ()
-viewMsg m = col id $ do
+messageView :: Text -> View Msg ()
+messageView m = col id $ do
   el_ "Message:"
   el_ $ text m
   button (SetMsg "Goodbye") id "Goodbye"
 ```
 
 
-Obligatory Counter Example
---------------------------
 
-```haskell
-page :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Page es Response
-page var = do
-  hyper $ counter var
-
-  load $ do
-    n <- readTVarIO var
-    pure $ col (pad 20 . gap 10) $ do
-      el h1 "Counter"
-      viewId Counter (viewCount n)
-
-
-data Counter = Counter
-  deriving (Show, Read, Param)
-instance HyperView Counter where
-  type Action Counter = Count
-
-
-data Count
-  = Increment
-  | Decrement
-  deriving (Show, Read, Param)
-
-
-counter :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Counter -> Count -> Eff es (View Counter ())
-counter var _ Increment = do
-  n <- modify var $ \n -> n + 1
-  pure $ viewCount n
-counter var _ Decrement = do
-  n <- modify var $ \n -> n - 1
-  pure $ viewCount n
-
-
-viewCount :: Int -> View Counter ()
-viewCount n = col (gap 10) $ do
-  row id $ do
-    el (bold . fontSize 48 . border 1 . pad (XY 20 0)) $ text $ pack $ show n
-  row (gap 10) $ do
-    button Increment Style.btn "Increment"
-    button Decrement Style.btn "Decrement"
-```
-
-
-
-
-Motivation
----------------------
+Why Hyperbole?
+--------------
 
 Single Page Applications require us to write two programs: a Javascript client and a Server-side API. Hyperbole allows us instead to write a single Haskell program which runs exclusively on the server. All user interactions are sent to the server for processing, and a sub-section of the page is updated with the resulting HTML.
 
@@ -131,8 +85,10 @@ There are frameworks that support this in various languages, including HTMX, Pho
 5. Fast updates over sockets using virtual DOM 
 6. Fall-back to HTTP
 
-An Example Page
----------------
+
+
+Creating an Application, Step-by-Step
+-------------------------------------
 
 Hyperbole applications direct URL patterns to different *Page*s. We use a `load` handler for when the user first visits the page.
 
@@ -143,7 +99,10 @@ import Web.Hyperbole
 -- static page
 page :: (Hyperbole :> es) => Page es Response
 page = do
+  -- this runs when the user visits the page's url
   load $ do
+    -- any load side effects go here
+    -- render this HTML
     pure $ col (gap 10) $ do
       el h1 "Hello World"
 ```
@@ -153,44 +112,49 @@ Our top-level *Page* can be divided up into unique interactive *Views*
 ```haskell
 page :: (Hyperbole :> es) => Page es Response
 page = do
-  load $ do
-    pure $ col (gap 10) $ do
+  load $ pure $ do
+    -- the outer HTML never changes
+    col (gap 10) $ do
       el h1 "My Page"
+      -- Each view updates independently
       viewId (Message 1) $ messageView "Hello"
       viewId (Message 2) $ messageView "World"
 
+-- Views need an id unique to the page
 data Message = Message Int
-  deriving (Show, Read, Param)
+  deriving (Generic, Param)
 
+-- Function that renders Message Views
 messageView :: Text -> View Message ()
 messageView msg = do
   el_ msg
 
 ```
-Views associate interactions from UI elements with *Actions*. We specify a server-side handlers for Actions which return new HTML. Actions can perform side effects, like reading and writing data to a database.
+Views turn UI interactions into server *Actions*. We specify handlers for Actions which return new HTML. Actions can perform side effects, like reading and writing data to a database.
 
 ```haskell
 page :: (Hyperbole :> es) => Page es Response
 page = do
+  -- Add a handler for message actions
   hyper message
   load $ do
     ...
 
 data Message = Message Int
-  deriving (Show, Read, Param)
-instance HyperView Message where
-  type Action Message = MessageAction
+  deriving (Generic, Param)
 
-
+-- Sum-type with all possible actions for Message Views
 data MessageAction = SetMessage Text
-  deriving (Show, Read, Param)
+  deriving (Generic, Param)
 
 
+-- Handle message actions
 message :: (Hyperbole :> es, MessageDatabase :> es) => Message -> MessageAction -> Eff es ()
 message (Message n) (SetMessage msg) =
-  -- look, a side effect!
+  -- Pretend we have a custom MessageDatabase effect
+  -- perform any side effects here
   send $ SaveMessage msg
-  -- use the same view function for the updated message view
+  -- now use the same view function to update the view
   pure $ messageView msg
 
 
@@ -198,6 +162,7 @@ messageView :: Text -> View Message ()
 messageView msg = col (gap 10) $ do
   el_ "Current Message"
   el_ msg
+  -- send (SetMessage "A new message") when clicked
   button (SetMessage "A new message") id "Set Message"
 ```
 
@@ -213,9 +178,11 @@ Now that we have a page, let's create an application. First, create a sum type t
 import Page.Messages qualified as Messages
 
 data AppRoute
+  -- / or /main
   = Main
+  -- /messages
   | Messages
-  deriving (Show, Generic, Eq, Route)
+  deriving (Eq, Generic, Route)
 ```
 
 Write a *router* function that maps routes to pages
@@ -224,13 +191,14 @@ Write a *router* function that maps routes to pages
 router :: Hyperbole :> es => AppRoute -> Eff es Response
 router Messages = page Messages.page
 router Main = do
+  -- render a static page
   view $ do
     el_ "click a link below to visit a page"
-    -- type safe routing
+    -- type-safe hyperlink
     route Messages id "Messages"
 ```
 
-Then create a WAI application from your router by specifying a function to turn page fragments into full web pages on first load. Make sure to include Hyperbole's embedded javascript
+Next create a WAI application from your router by specifying a function to turn page fragments into full web pages on first load. Make sure to include Hyperbole's embedded javascript
 
 ```haskell
 {-# LANGUAGE QuasiQuotes #-}
