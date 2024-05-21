@@ -68,9 +68,18 @@ cabal run
 * [Errors](./Example/Errors.hs)
 * [Contacts (Advanced)](./Example/Contacts.hs)
 
+Learn More
+----------
+
+View Documentation on Hackage
+* https://hackage.haskell.org/package/hyperbole
+
+View on Github
+* https://github.com/seanhess/hyperbole
+
 In Production
 -------------
 
 <a href="https://nso.edu">
-  <img src="./example/doc/nso.png"/>
+  <img src="https://github.com/seanhess/hyperbole/blob/main/example/doc/nso.png"/>
 </a>
