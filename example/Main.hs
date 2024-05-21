@@ -44,8 +44,8 @@ import Web.Hyperbole.Effect (Request (..))
 main :: IO ()
 main = do
   putStrLn "Starting Examples on http://localhost:3000"
-  users <- initUsers
-  count <- runEff $ runConcurrent $ newTVarIO 0
+  users <- Users.initUsers
+  count <- runEff $ runConcurrent Counter.initCounter
   Warp.run 3000 $
     staticPolicy (addBase "client/dist") $
       app users count
