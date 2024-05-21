@@ -26,6 +26,8 @@ import Example.Forms qualified as Forms
 import Example.LazyLoading qualified as LazyLoading
 import Example.Redirects qualified as Redirects
 import Example.Sessions qualified as Sessions
+import Example.Simple qualified as Simple
+import Example.Style qualified as Style
 import Example.Transitions qualified as Transitions
 import GHC.Generics (Generic)
 import Network.HTTP.Types (Method, QueryItem, methodPost, status200, status404)
@@ -41,16 +43,17 @@ import Web.Hyperbole.Effect (Request (..))
 
 main :: IO ()
 main = do
-  putStrLn "Starting Examples on http://localhost:3003"
+  putStrLn "Starting Examples on http://localhost:3000"
   users <- initUsers
   count <- runEff $ runConcurrent $ newTVarIO 0
-  Warp.run 3003 $
+  Warp.run 3000 $
     staticPolicy (addBase "client/dist") $
       app users count
 
 
 data AppRoute
   = Main
+  | Simple
   | Hello Hello
   | Contacts
   | Transitions
@@ -80,8 +83,9 @@ app users count = do
   runApp :: (IOE :> es) => Eff (Concurrent : Debug : Users : es) a -> Eff es a
   runApp = runUsersIO users . runDebugIO . runConcurrent
 
-  router :: (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
+  router :: forall es. (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
   router (Hello h) = page $ hello h
+  router Simple = page Simple.simplePage
   router Contacts = page Contacts.page
   router Counter = page $ Counter.page count
   router Transitions = page Transitions.page
@@ -98,23 +102,25 @@ app users count = do
       text "key: "
       text p
   router Main = do
-    -- send $ SetSession @Text "woot" "hello"
     view $ do
       col (gap 10 . pad 20) $ do
         el (bold . fontSize 32) "Examples"
-        route (Hello (Greet "World")) id "Hello World"
-        route Counter id "Counter"
-        route Contacts id "Contacts"
-        route Transitions id "Transitions"
-        route Forms id "Forms"
-        link "/query?key=value" id "Query Params"
-        route Sessions id "Sessions"
-        route Redirects id "Redirects"
-        route RedirectNow id "Redirect Now"
-        route LazyLoading id "Lazy Loading"
-        route Errors id "Errors"
+        route (Hello (Greet "World")) lnk "Hello World"
+        route Simple lnk "Simple"
+        route Counter lnk "Counter"
+        route Transitions lnk "Transitions"
+        route Forms lnk "Forms"
+        link "/query?key=value" lnk "Query Params"
+        route Sessions lnk "Sessions"
+        route Redirects lnk "Redirects"
+        route RedirectNow lnk "Redirect Now"
+        route LazyLoading lnk "Lazy Loading"
+        route Contacts lnk "Contacts (Advanced)"
+        route Errors lnk "Errors"
 
-  -- example sub-router
+  lnk = Style.link
+
+  -- Nested Router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es Response
   hello Redirected = load $ do
     pure $ el_ "You were redirected"
@@ -137,7 +143,8 @@ app users count = do
         text "Cookies: "
         text $ cs $ show r.cookies
 
-  -- Use the embedded version for real applications (see below). The link to /hyperbole.js here is just to make local development easier
+  -- Use the embedded version for real applications (see basicDocument).
+  -- The link to /hyperbole.js here is just to make local development easier
   toDocument :: BL.ByteString -> BL.ByteString
   toDocument cnt =
     [i|<html>
@@ -148,14 +155,3 @@ app users count = do
       </head>
       <body>#{cnt}</body>
     </html>|]
-
--- toDocument :: BL.ByteString -> BL.ByteString
--- toDocument cnt =
---   [i|<html>
---     <head>
---       <title>Hyperbole Examples</title>
---       <script type="text/javascript">#{scriptEmbed}</script>
---       <style type type="text/css">#{cssResetEmbed}</style>
---     </head>
---     <body>#{cnt}</body>
---   </html>|]

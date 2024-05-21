@@ -20,12 +20,29 @@ import Web.View.Types.Url (Segment, Url, pathUrl)
 import Prelude hiding (dropWhile)
 
 
+{- | Derive this class to use a sum type as a route. Constructors and Selectors map intuitively to url patterns
+
+> data AppRoute
+>  = HomePage
+>  | Users
+>  | User Int
+>  deriving (Generic, Route)
+>
+> /         -> HomePage
+> /users/   -> Users
+> /user/100 -> User 100
+-}
 class Route a where
-  matchRoute :: [Segment] -> Maybe a
-  routePath :: a -> [Segment]
+  -- | The default route to use if attempting to match on empty segments
   defRoute :: a
 
 
+  -- | Map a route to segments
+  routePath :: a -> [Segment]
+
+
+  -- | Try to match segments to a route
+  matchRoute :: [Segment] -> Maybe a
   default matchRoute :: (Generic a, GenRoute (Rep a)) => [Segment] -> Maybe a
   -- this will match a trailing slash, but not if it is missing
   matchRoute [""] = pure defRoute
@@ -43,16 +60,22 @@ class Route a where
   defRoute = to genFirst
 
 
--- | Use the default route if it's empty
+-- | Try to match a route, use 'defRoute' if it's empty
 findRoute :: (Route a) => [Segment] -> Maybe a
 findRoute [] = Just defRoute
 findRoute ps = matchRoute ps
 
 
+{- | Convert a 'Route' to a 'Url'
+
+>>> routeUrl (User 100)
+/user/100
+-}
 routeUrl :: (Route a) => a -> Url
 routeUrl = pathUrl . routePath
 
 
+-- | Automatically derive 'Route'
 class GenRoute f where
   genRoute :: [Text] -> Maybe (f p)
   genPaths :: f p -> [Text]

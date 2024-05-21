@@ -11,6 +11,7 @@ module Web.Hyperbole.Forms
   , label
   , input
   , form
+  , placeholder
   , submit
   , parseForm
   , formField
@@ -18,7 +19,6 @@ module Web.Hyperbole.Forms
   , defaultFormOptions
   , FormOptions (..)
   , genericFromForm
-  , FromHttpApiData
   , Validation (..)
   , FormField (..)
   , lookupInvalid
@@ -26,6 +26,9 @@ module Web.Hyperbole.Forms
   , invalidText
   , validate
   , validation
+
+    -- * Re-exports
+  , FromHttpApiData
   , Generic
   )
 where
@@ -60,9 +63,10 @@ instance (HyperView id, Param id) => HyperView (FormFields id) where
   type Action (FormFields id) = Action id
 
 
--- | TODO: there are many more of these: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
+-- | Choose one for 'input's to give the browser autocomplete hints
 data InputType
-  = NewPassword
+  = -- TODO: there are many more of these: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
+    NewPassword
   | CurrentPassword
   | Username
   | Email
@@ -79,10 +83,33 @@ data InputType
   deriving (Show)
 
 
+{- | Validation results for a 'form'
+
+@
+validateUser :: User -> Age -> Validation
+validateUser (User u) (Age a) =
+  validation
+    [ 'validate' \@Age (a < 20) "User must be at least 20 years old"
+    , 'validate' \@User (T.elem ' ' u) "Username must not contain spaces"
+    , 'validate' \@User (T.length u < 4) "Username must be at least 4 chars"
+    ]
+
+formAction :: ('Hyperbole' :> es, 'UserDB' :> es) => FormView -> FormAction -> 'Eff' es ('View' FormView ())
+formAction _ SignUp = do
+  a <- 'formField' \@Age
+  u <- 'formField' \@User
+
+  case validateUser u a of
+    'Validation' [] -> successView
+    errs -> userForm v
+@
+@
+-}
 newtype Validation = Validation [(Text, Text)]
   deriving newtype (Semigroup, Monoid)
 
 
+-- | Create a 'Validation' from list of validators
 validation :: [Maybe (Text, Text)] -> Validation
 validation = Validation . catMaybes
 
@@ -98,12 +125,22 @@ lookupInvalid :: forall a. (FormField a) => Validation -> Maybe Text
 lookupInvalid (Validation es) = lookup (inputName @a) es
 
 
+{- | Display any validation error for the 'FormField' from the 'Validation' passed to 'form'
+
+@
+'field' \@User id Style.invalid $ do
+  'label' \"Username\"
+  'input' Username ('placeholder' "username")
+  el_ 'invalidText'
+@
+-}
 invalidText :: forall a id. (FormField a) => View (Input id a) ()
 invalidText = do
   Input _ v <- context
   maybe none text $ lookupInvalid @a v
 
 
+-- | specify a check for a 'Validation'
 validate :: forall a. (FormField a) => Bool -> Text -> Maybe (Text, Text)
 validate True t = Just (inputName @a, t)
 validate False _ = Nothing
@@ -118,6 +155,18 @@ data Invalid a
 data Input id a = Input Text Validation
 
 
+{- | Display a 'FormField'
+
+@
+data Age = Age Int deriving (Generic, FormField)
+
+myForm = do
+  'form' SignUp mempty id $ do
+    field @Age id id $ do
+     'label' "Age"
+     'input' Number (value "0")
+@
+-}
 field :: forall a id. (FormField a) => Mod -> Mod -> View (Input id a) () -> View (FormFields id) ()
 field f inv cnt = do
   let n = inputName @a
@@ -126,10 +175,12 @@ field f inv cnt = do
     addContext (Input n v) cnt
 
 
+-- | label for a 'field'
 label :: Text -> View (Input id a) ()
 label = text
 
 
+-- | input for a 'field'
 input :: InputType -> Mod -> View (Input id a) ()
 input ft f = do
   Input nm _ <- context
@@ -146,6 +197,31 @@ input ft f = do
   auto = pack . kebab . show
 
 
+placeholder :: Text -> Mod
+placeholder = att "placeholder"
+
+
+{- | Type-safe \<form\>. Calls (Action id) on submit
+
+@
+userForm :: 'Validation' -> 'View' FormView ()
+userForm v = do
+  form Signup v id $ do
+    el Style.h1 "Sign Up"
+
+    'field' \@User id Style.invalid $ do
+      'label' \"Username\"
+      'input' Username ('placeholder' "username")
+      el_ 'invalidText'
+
+    'field' \@Age id Style.invalid $ do
+      'label' \"Age\"
+      'input' Number ('placeholder' "age" . value "0")
+      el_ 'invalidText'
+
+    'submit' (border 1) \"Submit\"
+@
+-}
 form :: forall id. (HyperView id) => Action id -> Validation -> Mod -> View (FormFields id) () -> View id ()
 form a v f cnt = do
   vid <- context
@@ -157,6 +233,7 @@ form a v f cnt = do
   onSubmit = att "data-on-submit" . toParam
 
 
+-- | Button that submits the 'form'. Use 'button' to specify actions other than submit
 submit :: Mod -> View (FormFields id) () -> View (FormFields id) ()
 submit f = tag "button" (att "type" "submit" . f)
 
@@ -174,6 +251,17 @@ parseForm = do
   either parseError pure ef
 
 
+{- | Parse a 'FormField' from the request
+
+@
+formAction :: ('Hyperbole' :> es, 'UserDB' :> es) => FormView -> FormAction -> 'Eff' es ('View' FormView ())
+formAction _ SignUp = do
+  a <- formField \@Age
+  u <- formField \@User
+  saveUserToDB u a
+  pure $ el_ "Saved!"
+@
+-}
 formField :: forall a es. (FormField a, Hyperbole :> es) => Eff es a
 formField = do
   f <- formData
@@ -227,6 +315,13 @@ instance GForm (M1 S s (K1 R (Maybe Text))) where
   gForm = M1 . K1 $ Nothing
 
 
+{- | Form Fields are identified by a type
+
+@
+data User = User Text deriving (Generic, FormField)
+data Age = Age Int deriving (Generic, FormField)
+@
+-}
 class FormField a where
   inputName :: Text
   default inputName :: (Generic a, GDataName (Rep a)) => Text

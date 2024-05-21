@@ -36,6 +36,7 @@ library
       Web.Hyperbole.HyperView
       Web.Hyperbole.Route
       Web.Hyperbole.Session
+      Web.Hyperbole.View
   other-modules:
       Paths_hyperbole
   autogen-modules:
@@ -73,7 +74,7 @@ library
     , websockets >=0.12 && <0.14
   default-language: GHC2021
 
-executable example
+executable examples
   main-is: Main.hs
   other-modules:
       BulkUpdate
@@ -87,9 +88,10 @@ executable example
       Example.LazyLoading
       Example.Redirects
       Example.Sessions
+      Example.Simple
       Example.Style
       Example.Transitions
-      Simple
+      HelloWorld
       Paths_hyperbole
   autogen-modules:
       Paths_hyperbole

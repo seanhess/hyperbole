@@ -15,13 +15,13 @@ import Web.Hyperbole
 
 page :: forall es. (Hyperbole :> es, Users :> es, Debug :> es) => Page es Response
 page = do
-  hyper contacts
-  hyper contact
+  handle contacts
+  handle contact
   load $ do
     us <- usersAll
     pure $ do
       col (pad 10 . gap 10) $ do
-        viewId Contacts $ allContactsView Nothing us
+        hyper Contacts $ allContactsView Nothing us
 
 
 -- Contacts ----------------------------------------------
@@ -69,7 +69,7 @@ allContactsView fil us = do
     let filtered = filter (filterUsers fil) us
     forM_ filtered $ \u -> do
       el (border 1) $ do
-        viewId (Contact u.id) $ contactView u
+        hyper (Contact u.id) $ contactView u
 
   row (gap 10) $ do
     button (Reload Nothing) Style.btnLight "Reload"

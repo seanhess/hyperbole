@@ -37,3 +37,7 @@ invalid = color Danger
 
 success :: Mod
 success = color Success
+
+
+link :: Mod
+link = color Primary

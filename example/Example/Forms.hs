@@ -10,11 +10,11 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es Response
 page = do
-  hyper formAction
+  handle formAction
 
   load $ do
     pure $ row (pad 20) $ do
-      viewId FormView (formView mempty)
+      hyper FormView (formView mempty)
 
 
 data FormView = FormView
@@ -85,8 +85,9 @@ formView v = do
 
     submit Style.btn "Submit"
  where
-  placeholder = att "placeholder"
   inp = border 1 . pad 8
+
+
 
 
 userView :: User -> Age -> Pass1 -> View FormView ()

@@ -6,49 +6,289 @@ Maintainer:  Sean Hess <seanhess@gmail.com>
 Stability:   experimental
 Portability: portable
 
-Create fully interactive HTML applications using Haskell. Type-safe routing, forms, Inspired by HTMX
+Create fully interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/).
 -}
 module Web.Hyperbole
-  ( module Web.Hyperbole.Effect
-  , module Web.Hyperbole.HyperView
+  ( -- * Introduction
+    -- $use
 
-    -- * Forms
-  , module Web.Hyperbole.Forms
+    -- ** Hello World
+    -- $hello
 
-    -- * Type-Safe Routes
+    -- ** Interactivity
+    -- $interactive
+
+    -- ** Independent Updates
+    -- $multi
+
+    -- ** Examples
+    -- $examples
+
+    -- * Run an Application
+    liveApp
+  , Warp.run
+  , page
+  , basicDocument
+
+    -- ** Type-Safe Routes
+  , routeRequest -- maybe belongs in an application section
   , Route
   , routeUrl
   , route
 
-    -- * Create an Application
-  , liveApp
-  , routeRequest -- maybe belongs in an application section
-  , Warp.run
-  , Application
-  , basicDocument
+    -- * Pages
 
-    -- * Re-exported methods from Web.view
-  , module Web.View
+    -- ** Page
+  , Page
+  , load
+  , handle
 
-    -- * Effects
-  , Eff
-  , (:>)
-  , Effect.request
-  , Effect.session
+    -- ** HyperView
+  , HyperView (..)
+  , hyper
+  , Param
 
-    -- * Embedded Javascript and CSS
+    -- * Interactive Elements
+
+    -- ** Buttons
+  , button
+
+    -- ** Dropdowns
+  , dropdown
+  , option
+  , Option
+
+    -- ** Events
+  , onRequest
+  , onLoad
+  , DelayMs
+
+    -- * Type-Safe Forms
+
+    -- | Painless forms with type-checked field names, and support for validation. See [Example.Forms](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
+  , FormField
+
+    -- ** Form View
+  , form
+  , field
+  , label
+  , input
+  , submit
+  , placeholder
+  , InputType (..)
+
+    -- ** Handlers
+  , formField
+
+    -- ** Validation
+  , Validation (..)
+  , validate
+  , validation
+  , invalidText
+
+    -- * Hyperbole Effect
+  , Hyperbole
+
+    -- ** Request Info
+  , reqParam
+  , reqParams
+  , request
+  , lookupParam
+  , formData
+
+    -- ** Response
+  , notFound
+  , redirect
+  , respondEarly
+
+    -- ** Sessions
+  , session
+  , setSession
+  , clearSession
+
+    -- * Advanced
+  , target
+  , view
+  , Response
+
+    -- * Exports
+
+    -- ** Web.View
+
+    -- | Hyperbole is tightly integrated with [Web.View](https://hackage.haskell.org/package/web-view/docs/Web-View.html) for HTML generation
+  , module Web.Hyperbole.View
+
+    -- ** Embeds
+
+    -- | Embedded CSS and Javascript to include in your document function. See 'basicDocument'
   , module Web.Hyperbole.Embed
+
+    -- ** Effectful
+    -- $effects
+  , module Effectful
+
+    -- ** Other
+  , Application
+  , Generic
   ) where
 
-import Effectful
+import Effectful (Eff, (:>))
+import GHC.Generics (Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Hyperbole.Application
-import Web.Hyperbole.Effect (Hyperbole, Page, Request (..), Response, Server, clearSession, formData, getEvent, hyper, load, lookupEvent, lookupParam, notFound, page, parseError, redirect, reqParam, reqParams, reqPath, respondEarly, routeRequest, runHyperbole, setSession, view)
-import Web.Hyperbole.Effect qualified as Effect
+import Web.Hyperbole.Effect
 import Web.Hyperbole.Embed
-import Web.Hyperbole.Forms
+import Web.Hyperbole.Forms (FormField, InputType (..), Validation (..), field, form, formField, input, invalidText, label, placeholder, submit, validate, validation)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Route
-import Web.View hiding (button, form, input, label)
+import Web.Hyperbole.View
 
+
+-- import Web.View.Types.Url (Segment)
+
+{- $use
+
+Single Page Applications (SPAs) require the programmer to write two programs: a Javascript client and a Server-side API.
+
+Hyperbole allows us instead to write a single Haskell program which runs exclusively on the server. All user interactions are sent to the server for processing, and a sub-section of the page is updated with the resulting HTML.
+
+There are frameworks that support this in various languages, including [HTMX](https://htmx.org/), [Phoenix LiveView](https://www.phoenixframework.org/), and others. Hyperbole has the following advantages
+
+1. 100% Haskell
+2. Type safe views, actions, routes, and forms
+3. Elegant interface with little boilerplate
+5. Fast updates over sockets using virtual DOM
+6. Fall-back to HTTP
+
+
+Depends on:
+
+* [Effectful](https://hackage.haskell.org/package/effectful-core)
+* [Web View](https://hackage.haskell.org/package/web-view)
+
+View the [Github README](https://github.com/seanhess/hyperbole) for more information
+-}
+
+
+{- $hello
+
+Hyperbole applications run via [Warp](https://hackage.haskell.org/package/warp) and [WAI](https://hackage.haskell.org/package/wai)
+
+They are divided into top-level 'Page's. We use 'load' to handle the initial page load
+
+@
+main = do
+  'run' 3000 $ do
+    'liveApp' ('basicDocument' \"Example\") ('page' messagePage)
+
+messagePage = do
+  'load' $ do
+    pure $ do
+      'el' 'bold' "Message Page"
+      messageView "Hello World"
+
+messageView m = do
+  el_ "Message:"
+  el_ (text m)
+@
+-}
+
+
+{- $interactive
+
+Embed 'HyperView's to add type-safe interactivity to subsections of a 'Page'.
+
+To do this, first we connect a view id type to the actions it supports
+
+@
+data Message = Message
+  deriving (Generic, 'Param')
+
+data MessageAction = Louder Text
+  deriving (Generic, 'Param')
+
+instance 'HyperView' Message where
+  type Action Message = MessageAction
+@
+
+
+Next we add a 'handle'r for our view type. It performs side effects, and returns a new view of the same type
+
+@
+message :: Message -> MessageAction -> Eff es (View Message ())
+message _ (Louder m) = do
+  -- side effects
+  let new = m <> "!"
+  pure $ messageView new
+@
+
+We update our parent page view to make the messageView interactive using 'hyper', and add our 'handle'r to the 'Page'
+
+@
+messagePage = do
+  'handle' message
+  'load' $ do
+    pure $ do
+      'el' 'bold' "Message Page"
+      'hyper' Message $ messageView "Hello World"
+@
+
+Finally, let's add a 'button' to our view. When clicked, Hyperbole will run the `message` handler, and update our view, leaving the page header untouched
+
+@
+messageView :: Text -> 'View' Message ()
+messageView m = do
+  'el_' m
+  'button' (Louder m) id "Change Message"
+@
+-}
+
+
+{- $multi
+
+Multiple views update independently, as long as they have different values for their View Id. Add an Int identifier to Message
+
+@
+data Message = Message Int
+  deriving (Generic, 'Param')
+@
+
+We can embed multiple HyperViews on the same page with different ids. Each button will update its view independently
+
+
+@
+messagePage = do
+  'handle' message
+  'load' $ do
+    pure $ do
+      'el' bold "Message Page"
+      'hyper' (Message 1) $ messageView \"Hello\"
+      'hyper' (Message 2) $ messageView \"World\"
+@
+-}
+
+
+{- $examples
+The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/example/README.md) contains an app with pages demonstrating different features
+
+* [Main](https://github.com/seanhess/hyperbole/blob/main/example/Main.hs)
+* [Simple](https://github.com/seanhess/hyperbole/blob/main/example/Example/Simple.hs)
+* [Counter](https://github.com/seanhess/hyperbole/blob/main/example/Example/Counter.hs)
+* [CSS Transitions](https://github.com/seanhess/hyperbole/blob/main/example/Example/Transitions.hs)
+* [Forms](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
+* [Sessions](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
+* [Redirects](https://github.com/seanhess/hyperbole/blob/main/example/Example/Redirects.hs)
+* [Lazy Loading and Polling](https://github.com/seanhess/hyperbole/blob/main/example/Example/LazyLoading.hs)
+* [Errors](https://github.com/seanhess/hyperbole/blob/main/example/Example/Errors.hs)
+* [Contacts (Advanced)](https://github.com/seanhess/hyperbole/blob/main/example/Example/Contacts.hs)
+-}
+
+
+{- $effects
+
+Hyperbole is tighly integrated with [Effectful](https://hackage.haskell.org/package/effectful) for extensible effects. It is used to implement the 'Hyperbole' and 'Server' effects.
+
+* See [Effectful.Dispatch.Dynamic](https://hackage.haskell.org/package/effectful-core/docs/Effectful-Dispatch-Dynamic.html) for an example of how to create a custom effect
+* See [Example.Counter](https://github.com/seanhess/hyperbole/blob/main/example/Example/Counter.hs) for an example of how to compose an existing effect
+-}

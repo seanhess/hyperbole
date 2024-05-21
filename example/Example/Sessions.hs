@@ -12,7 +12,7 @@ import Web.Hyperbole
 -- this is already running in a different context
 page :: (Hyperbole :> es, Debug :> es) => Page es Response
 page = do
-  hyper content
+  handle content
 
   load $ do
     -- setSession "color" Warning
@@ -22,7 +22,7 @@ page = do
     pure $ col (pad 20 . gap 10) $ do
       el_ "Reload your browser after changing the settings below to see the session information preserved"
       row id $ do
-        viewId Contents $ viewContent clr msg
+        hyper Contents $ viewContent clr msg
 
 
 data Contents = Contents

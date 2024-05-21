@@ -27,9 +27,11 @@ import Web.View
 
 newtype Host = Host {text :: BS.ByteString}
   deriving (Show)
+
+
 data Request = Request
   { host :: Host
-  , path :: [Text]
+  , path :: [Segment]
   , query :: Query
   , body :: BL.ByteString
   , method :: Method
@@ -38,6 +40,13 @@ data Request = Request
   deriving (Show)
 
 
+{- | Valid responses for a 'Hyperbole' effect. Use 'notFound', etc instead. Reminds you to use 'load' in your 'Page'
+
+> myPage :: (Hyperbole :> es) => Page es Response
+> myPage = do
+>   -- compiler error: () does not equal Response
+>   pure ()
+-}
 data Response
   = Response (View () ())
   | NotFound
@@ -55,10 +64,24 @@ data ResponseError
   deriving (Show)
 
 
+{- | Hyperbole applications are divided into Pages. Each Page must 'load' the whole page , and 'handle' each /type/ of 'HyperView'
+
+@
+myPage :: ('Hyperbole' :> es) => 'Page' es 'Response'
+myPage = do
+  'handle' messages
+  'load' pageView
+
+pageView = do
+  el_ "My Page"
+  'hyper' (Message 1) $ messageView "Starting Message"
+@
+-}
 newtype Page es a = Page (Eff es a)
   deriving newtype (Applicative, Monad, Functor)
 
 
+-- | An action, with its corresponding id
 data Event id act = Event
   { viewId :: id
   , action :: act
@@ -69,26 +92,27 @@ instance (Show act, Show id) => Show (Event id act) where
   show e = "Event " <> show e.viewId <> " " <> show e.action
 
 
-routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
-routeRequest actions = do
-  path <- reqPath
-  case findRoute path of
-    Nothing -> send $ RespondEarly NotFound
-    Just rt -> actions rt
-
-
+-- | Low level effect mapping request/response to either HTTP or WebSockets
 data Server :: Effect where
   LoadRequest :: Server m Request
   SendResponse :: Session -> Response -> Server m ()
+
+
 type instance DispatchOf Server = 'Dynamic
 
 
+{- | In any 'load' or 'handle', you can use this Effect to get extra request information or control the response manually.
+
+For most 'Page's, you won't need to use this effect directly. Use custom 'Route's for request info, and return 'View's to respond
+-}
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondEarly :: Response -> Hyperbole m a
   SetSession :: (ToHttpApiData a) => Text -> a -> Hyperbole m ()
   DelSession :: Text -> Hyperbole m ()
   GetSession :: (FromHttpApiData a) => Text -> Hyperbole m (Maybe a)
+
+
 type instance DispatchOf Hyperbole = 'Dynamic
 
 
@@ -98,6 +122,7 @@ data HyperState = HyperState
   }
 
 
+-- | Run the 'Hyperbole' effect to 'Server'
 runHyperbole
   :: (Server :> es)
   => Eff (Hyperbole : es) Response
@@ -136,14 +161,24 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
         pure res
 
 
+-- | Return all information about the 'Request'
 request :: (Hyperbole :> es) => Eff es Request
 request = send GetRequest
 
 
-reqPath :: (Hyperbole :> es) => Eff es [Text]
+{- | Return the request path
+
+>>> reqPath
+["users", "100"]
+-}
+reqPath :: (Hyperbole :> es) => Eff es [Segment]
 reqPath = (.path) <$> request
 
 
+{- | Return the request body as a Web.FormUrlEncoded.Form
+
+Prefer using Type-Safe 'Form's when possible
+-}
 formData :: (Hyperbole :> es) => Eff es Form
 formData = do
   b <- (.body) <$> request
@@ -156,11 +191,6 @@ getEvent :: (HyperView id, Hyperbole :> es) => Eff es (Maybe (Event id (Action i
 getEvent = do
   q <- reqParams
   pure $ parseEvent q
-
-
-lookupParam :: BS.ByteString -> Query -> Maybe Text
-lookupParam p q =
-  fmap cs <$> join $ lookup p q
 
 
 parseEvent :: (HyperView id) => Query -> Maybe (Event id (Action id))
@@ -178,23 +208,67 @@ lookupEvent q' =
     <*> lookupParam "action" q'
 
 
+{- | Lookup a session variable by keyword
+
+> load $ do
+>   tok <- session "token"
+>   ...
+-}
 session :: (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es (Maybe a)
 session k = send $ GetSession k
 
 
+{- | Set a session variable by keyword
+
+> load $ do
+>   t <- reqParam "token"
+>   setSession "token" t
+>   ...
+-}
 setSession :: (Hyperbole :> es, ToHttpApiData a) => Text -> a -> Eff es ()
 setSession k v = send $ SetSession k v
 
 
--- Or, do we clear the whole thing?
+-- | Clear the user's session
 clearSession :: (Hyperbole :> es) => Text -> Eff es ()
 clearSession k = send $ DelSession k
 
 
+{- | Return the entire 'Query'
+
+@
+myPage :: 'Page' es 'Response'
+myPage = do
+  'load' $ do
+    q <- reqParams
+    case 'lookupParam' "token" q of
+      Nothing -> pure $ errorView "Missing Token in Query String"
+      Just t -> do
+        sideEffectUsingToken token
+        pure myPageView
+@
+-}
 reqParams :: (Hyperbole :> es) => Eff es Query
 reqParams = (.query) <$> request
 
 
+-- | Lookup the query param in the 'Query'
+lookupParam :: BS.ByteString -> Query -> Maybe Text
+lookupParam p q =
+  fmap cs <$> join $ lookup p q
+
+
+{- | Require a given parameter from the 'Query' arguments
+
+@
+myPage :: 'Page' es 'Response'
+myPage = do
+  'load' $ do
+    token <- reqParam "token"
+    sideEffectUsingToken token
+    pure myPageView
+@
+-}
 reqParam :: (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es a
 reqParam p = do
   q <- reqParams
@@ -211,31 +285,59 @@ reqParam p = do
   require (Just a) = pure a
 
 
+{- | Respond immediately with 404 Not Found
+
+@
+userLoad :: (Hyperbole :> es, Users :> es) => UserId -> Eff es User
+userLoad uid = do
+  mu <- send (LoadUser uid)
+  maybe notFound pure mu
+
+myPage :: (Hyperbole :> es, Users :> es) => Eff es View
+myPage = do
+  load $ do
+    u <- userLoad 100
+    -- skipped if user = Nothing
+    pure $ userView u
+@
+-}
 notFound :: (Hyperbole :> es) => Eff es a
 notFound = send $ RespondEarly NotFound
 
 
+-- | Respond immediately with a parse error
 parseError :: (Hyperbole :> es) => Text -> Eff es a
 parseError = send . RespondEarly . Err . ErrParse
 
 
+-- | Redirect immediately to the 'Url'
 redirect :: (Hyperbole :> es) => Url -> Eff es a
 redirect = send . RespondEarly . Redirect
 
 
--- | Set the response to the view. Note that `page` already expects a view to be returned from the effect
+-- | Respond with the given view, and stop execution
+respondEarly :: (Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
+respondEarly vid vw = do
+  let res = Response $ hyper vid vw
+  send $ RespondEarly res
+
+
+-- | Manually set the response to the given view. Normally you return a 'View' from 'load' or 'handle' instead of using this
 view :: (Hyperbole :> es) => View () () -> Eff es Response
 view vw = do
   pure $ Response vw
 
 
-respondEarly :: (Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
-respondEarly vid vw = do
-  let res = Response $ viewId vid vw
-  send $ RespondEarly res
+{- | The load handler is run when the page is first loaded. Run any side effects needed, then return a view of the full page
 
-
--- | Load the entire page when no HyperViews match
+@
+myPage :: (Hyperbole :> es) => UserId -> Page es Response
+myPage userId = do
+  'load' $ do
+    user <- loadUserFromDatabase userId
+    pure $ userPageView user
+@
+-}
 load
   :: (Hyperbole :> es)
   => Eff es (View () ())
@@ -251,22 +353,41 @@ load run = Page $ do
       view vw
 
 
--- | Handle a HyperView. If the event matches our handler, respond with the fragment
-hyper
+{- | A handler is run when an action for that 'HyperView' is triggered. Run any side effects needed, then return a view of the corresponding type
+
+@
+myPage :: ('Hyperbole' :> es) => 'Page' es 'Response'
+myPage = do
+  'handle' messages
+  'load' pageView
+
+messages :: ('Hyperbole' :> es, MessageDatabase) => Message -> MessageAction -> 'Eff' es ('View' Message ())
+messages (Message mid) ClearMessage = do
+  deleteMessageSideEffect mid
+  pure $ messageView ""
+
+messages (Message mid) (Louder m) = do
+  let new = m <> "!"
+  saveMessageSideEffect mid new
+  pure $ messageView new
+@
+-}
+handle
   :: forall id es
    . (Hyperbole :> es, HyperView id)
   => (id -> Action id -> Eff es (View id ()))
   -> Page es ()
-hyper run = Page $ do
+handle run = Page $ do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
   mev <- getEvent @id
   case mev of
     Just event -> do
       vw <- run event.viewId event.action
-      send $ RespondEarly $ Response $ viewId event.viewId vw
+      send $ RespondEarly $ Response $ hyper event.viewId vw
     _ -> pure ()
 
 
+-- | Run a 'Page' in 'Hyperbole'
 page
   :: (Hyperbole :> es)
   => Page es Response

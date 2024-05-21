@@ -5,14 +5,13 @@ import Example.Style as Style
 import Web.Hyperbole
 
 
--- this is already running in a different context
 page :: (Hyperbole :> es) => Page es Response
 page = do
-  hyper content
+  handle content
 
   load $ do
     pure $ row (pad 20) $ do
-      viewId Contents viewSmall
+      hyper Contents viewSmall
 
 
 data Contents = Contents

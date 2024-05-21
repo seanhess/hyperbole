@@ -10,6 +10,7 @@ module Web.Hyperbole.Application
   , runServerSockets
   , runServerWai
   , basicDocument
+  , routeRequest
   ) where
 
 import Control.Monad (forever)
@@ -34,10 +35,18 @@ import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
 import Web.Hyperbole.Effect
 import Web.Hyperbole.Embed (cssResetEmbed, scriptEmbed)
+import Web.Hyperbole.Route
 import Web.Hyperbole.Session
-import Web.View (Url (..), View, renderLazyByteString, renderUrl)
+import Web.View (View, renderLazyByteString, renderUrl)
 
 
+{- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
+
+> main = do
+>   run 3000 $ do
+>   liveApp (basicDocument "Example") $ do
+>      page mainPage
+-}
 liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Wai.Application
 liveApp toDoc app =
   websocketsOr
@@ -70,9 +79,9 @@ errNotHandled ev =
     , "<pre>"
     , "page :: (Hyperbole :> es) => Page es Response"
     , "page = do"
-    , "  hyper contentsHandler"
+    , "  handle contentsHandler"
     , "  load $ do"
-    , "    pure $ viewId Contents contentsView"
+    , "    pure $ hyper Contents contentsView"
     , "</pre>"
     ]
 
@@ -254,13 +263,66 @@ contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
 contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
 
 
+{- | wrap HTML fragments in a simple document with a custom title and include required embeds
+
+@
+'liveApp' (basicDocument "App Title") ('routeRequest' router)
+@
+
+You may want to specify a custom document function instead:
+
+> myDocument :: ByteString -> ByteString
+> myDocument content =
+>   [i|<html>
+>     <head>
+>       <title>#{title}</title>
+>       <script type="text/javascript">#{scriptEmbed}</script>
+>       <style type type="text/css">#{cssResetEmbed}</style>
+>     </head>
+>     <body>#{content}</body>
+>   </html>|]
+-}
 basicDocument :: Text -> BL.ByteString -> BL.ByteString
 basicDocument title cnt =
   [i|<html>
-    <head>
-      <title>#{title}</title>
-      <script type="text/javascript">#{scriptEmbed}</script>
-      <style type type="text/css">#{cssResetEmbed}</style>
-    </head>
-    <body>#{cnt}</body>
+      <head>
+        <title>#{title}</title>
+        <script type="text/javascript">#{scriptEmbed}</script>
+        <style type type="text/css">#{cssResetEmbed}</style>
+      </head>
+      <body>#{cnt}</body>
   </html>|]
+
+
+{- | Route URL patterns to different pages
+
+
+@
+import Page.Messages qualified as Messages
+import Page.Users qualified as Users
+
+data AppRoute
+  = Main
+  | Messages
+  | Users UserId
+  deriving (Eq, Generic, 'Route')
+
+router :: ('Hyperbole' :> es) => AppRoute -> 'Eff' es 'Response'
+router Messages = 'page' Messages.page
+router (Users uid) = 'page' $ Users.page uid
+router Main = do
+  'view' $ do
+    'el_' "click a link below to visit a page"
+    'route' Messages id \"Messages\"
+
+main = do
+  'run' 3000 $ do
+    'liveApp' ('basicDocument' \"Example\") (routeRequest router)
+@
+-}
+routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
+routeRequest actions = do
+  path <- reqPath
+  case findRoute path of
+    Nothing -> send $ RespondEarly NotFound
+    Just rt -> actions rt

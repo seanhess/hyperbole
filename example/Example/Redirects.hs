@@ -7,11 +7,11 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es Response
 page = do
-  hyper contents
+  handle contents
 
   load $ do
     pure $ row (pad 20) $ do
-      viewId Contents contentsView
+      hyper Contents contentsView
 
 
 data Contents = Contents

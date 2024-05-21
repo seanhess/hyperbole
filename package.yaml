@@ -58,7 +58,7 @@ library:
   source-dirs: src
 
 executables:
-  example:
+  examples:
     main:                Main.hs
     source-dirs:         example
     dependencies:
