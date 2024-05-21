@@ -52,23 +52,23 @@ messageView m = do
 Examples
 ---------
 
-[The example directory](/example/README.md) contains an app with pages demonstrating different features
+The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/example/README.md) contains an app with pages demonstrating various features
 
 Run the examples in this repo using cabal. Then visit http://localhost:3000/ in your browser
 
 ```
 cabal run
 ```
-* [Main](./Main.hs)
-* [Simple](./Example/Simple.hs)
-* [Counter](./Example/Counter.hs)
-* [CSS Transitions](./Example/Transitions.hs)
-* [Forms](./Example/Forms.hs)
-* [Sessions](./Example/Forms.hs)
-* [Redirects](./Example/Redirects.hs)
-* [Lazy Loading and Polling](./Example/LazyLoading.hs)
-* [Errors](./Example/Errors.hs)
-* [Contacts (Advanced)](./Example/Contacts.hs)
+* [Main](https://github.com/seanhess/hyperbole/blob/main/example/Main.hs)
+* [Simple](https://github.com/seanhess/hyperbole/blob/main/example/Example/Simple.hs)
+* [Counter](https://github.com/seanhess/hyperbole/blob/main/example/Example/Counter.hs)
+* [CSS Transitions](https://github.com/seanhess/hyperbole/blob/main/example/Example/Transitions.hs)
+* [Forms](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
+* [Sessions](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
+* [Redirects](https://github.com/seanhess/hyperbole/blob/main/example/Example/Redirects.hs)
+* [Lazy Loading and Polling](https://github.com/seanhess/hyperbole/blob/main/example/Example/LazyLoading.hs)
+* [Errors](https://github.com/seanhess/hyperbole/blob/main/example/Example/Errors.hs)
+* [Contacts (Advanced)](https://github.com/seanhess/hyperbole/blob/main/example/Example/Contacts.hs)
 
 Learn More
 ----------
@@ -83,5 +83,5 @@ In Production
 -------------
 
 <a href="https://nso.edu">
-  <img alt="National Solar Observatory" src="https://github.com/seanhess/hyperbole/blob/main/example/doc/nso.png"/>
+  <img alt="National Solar Observatory" src="https://nso1.b-cdn.net/wp-content/uploads/2020/03/NSO-logo-orange-text.png"/>
 </a>
