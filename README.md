@@ -72,7 +72,7 @@ Learn More
 ----------
 
 View Documentation on Hackage
-* https://hackage.haskell.org/package/hyperbole
+* https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html
 
 View on Github
 * https://github.com/seanhess/hyperbole
@@ -81,5 +81,5 @@ In Production
 -------------
 
 <a href="https://nso.edu">
-  <img src="https://github.com/seanhess/hyperbole/blob/main/example/doc/nso.png"/>
+  <img alt="National Solar Observatory" src="https://github.com/seanhess/hyperbole/blob/main/example/doc/nso.png"/>
 </a>

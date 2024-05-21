@@ -46,7 +46,6 @@ module Web.Hyperbole
     -- ** HyperView
   , HyperView (..)
   , hyper
-  , Param
 
     -- * Interactive Elements
 
@@ -109,6 +108,7 @@ module Web.Hyperbole
     -- * Advanced
   , target
   , view
+  , Param (..)
   , Response
 
     -- * Exports
