@@ -12,7 +12,7 @@ import Web.View.Types
 
 
 data Thing = Thing
-  deriving (Show, Read, Param, Eq)
+  deriving (Generic, Param, Show, Eq)
 
 
 data Custom = Custom
@@ -20,19 +20,19 @@ data Custom = Custom
 
 
 data HasString = HasString String
-  deriving (Show, Read, Param, Eq)
+  deriving (Generic, Param, Show, Eq)
 
 
 data Compound
   = One
   | Two Thing
   | WithId (Id Thing)
-  deriving (Show, Read, Param, Eq)
+  deriving (Generic, Param, Show, Eq)
 
 
 newtype Id a = Id {fromId :: Text}
-  deriving newtype (Show, Read, Eq, Ord)
-  deriving (Generic)
+  deriving newtype (Param, Eq, Ord)
+  deriving (Generic, Show)
 
 
 instance Param Custom where
@@ -46,12 +46,12 @@ spec = do
   describe "HyperView" $ do
     describe "Param" $ do
       describe "toParam" $ do
-        it "basic" $ toParam Thing `shouldBe` "Thing"
+        it "basic" $ toParam Thing `shouldBe` "thing"
         it "custom" $ toParam Custom `shouldBe` "something"
 
       describe "parseParam" $ do
-        it "basic" $ parseParam "Thing" `shouldBe` Just Thing
-        it "basic lowercase" $ parseParam @Thing "thing" `shouldBe` Nothing
+        it "basic" $ parseParam "thing" `shouldBe` Just Thing
+        it "basic lowercase" $ parseParam @Thing "Thing" `shouldBe` Nothing
         it "custom" $ parseParam "something" `shouldBe` Just Custom
         it "custom other" $ parseParam @Thing "custom" `shouldBe` Nothing
 
@@ -64,7 +64,7 @@ spec = do
           parseParam (toParam inp) `shouldBe` Just inp
 
       describe "compound" $ do
-        it "should toparam" $ toParam (Two Thing) `shouldBe` "Two Thing"
+        it "should toparam" $ toParam (Two Thing) `shouldBe` "two-thing"
         it "double roundtrip" $ parseParam (toParam (Two Thing)) `shouldBe` Just (Two Thing)
 
   describe "Param Attributes" $ do
@@ -74,15 +74,15 @@ spec = do
 
     it "should serialize compound id" $ do
       let atts = mempty :: Attributes
-      (setId (toParam $ Two Thing) atts).other `shouldBe` [("id", "Two Thing")]
+      (setId (toParam $ Two Thing) atts).other `shouldBe` [("id", "two-thing")]
 
     it "should serialize stringy id" $ do
       let atts = mempty :: Attributes
-      (setId (toParam $ HasString "woot") atts).other `shouldBe` [("id", "HasString \"woot\"")]
+      (setId (toParam $ HasString "woot") atts).other `shouldBe` [("id", "hasstring-woot")]
 
     it "should serialize with Id" $ do
       let atts = mempty :: Attributes
-      (setId (toParam $ WithId (Id "woot")) atts).other `shouldBe` [("id", "WithId \"woot\"")]
+      (setId (toParam $ WithId (Id "woot")) atts).other `shouldBe` [("id", "withid-woot")]
 
 
 containsSingleQuotes :: Text -> Bool

@@ -71,4 +71,6 @@ cabal run
 In Production
 -------------
 
-Hyperbole is used in production by the [National Solar Observatory](https://nso.edu/)
+<a href="https://nso.edu">
+  <img src="./example/doc/nso.png"/>
+</a>

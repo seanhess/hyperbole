@@ -6,8 +6,8 @@ cabal-version: 2.2
 
 name:           hyperbole
 version:        0.3.5
-synopsis:       Interactive Web pages using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
-description:    Interactive Web pages using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
+synopsis:       Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
+description:    Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
 category:       Web, Network
 homepage:       https://github.com/seanhess/hyperbole
 bug-reports:    https://github.com/seanhess/hyperbole/issues
@@ -58,7 +58,7 @@ library
     , bytestring >=0.11 && <0.13
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
-    , cookie
+    , cookie ==0.4.*
     , effectful >=2.3 && <3
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
@@ -112,7 +112,7 @@ executable examples
     , bytestring >=0.11 && <0.13
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
-    , cookie
+    , cookie ==0.4.*
     , effectful >=2.3 && <3
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
@@ -158,7 +158,7 @@ test-suite tests
     , bytestring >=0.11 && <0.13
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
-    , cookie
+    , cookie ==0.4.*
     , effectful >=2.3 && <3
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
