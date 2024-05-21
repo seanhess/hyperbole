@@ -12,6 +12,8 @@ Create fully interactive HTML applications with type-safe serverside Haskell. In
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
+import Web.Hyperbole
+
 main = do
   run 3000 $ do
     liveApp (basicDocument "Example") (page mainPage)

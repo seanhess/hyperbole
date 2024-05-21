@@ -161,9 +161,9 @@ There are frameworks that support this in different ways, including [HTMX](https
 4. VirtualDOM updates over sockets, fallback to HTTP
 5. Easy to use
 
-Like [HTMX](https://htmx.org/), Hyperbole extends the capability of UI elements, but it uses Haskell's type-system to prevent common errors and provide default functionality. Specifically, a page has multiple update targets called 'HyperView's. These are automatically targeted by any UI element that triggers an action inside them. You can only trigger existing actions that match that HyperView
+Like [HTMX](https://htmx.org/), Hyperbole extends the capability of UI elements, but it uses Haskell's type-system to prevent common errors and provide default functionality. Specifically, a page has multiple update targets called 'HyperView's. These are automatically targeted by any UI element that triggers an action inside them. The compiler makes sure that actions and targets match
 
-Like [Phoenix LiveView](https://www.phoenixframework.org/), it upgrades the page to a WebSocket connection and uses VirtualDOM for live updates
+Like [Phoenix LiveView](https://www.phoenixframework.org/), it upgrades the page to a fast WebSocket connection and uses VirtualDOM for live updates
 
 Like [Elm](https://elm-lang.org/), it relies on an update function to 'handle' actions, but greatly simplifies the Elm Architecture by handling state with extensible effects. 'form's are easy to use with minimal boilerplate
 
