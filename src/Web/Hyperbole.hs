@@ -273,7 +273,7 @@ messagePage = do
 
 
 {- $examples
-The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/example/README.md) contains an app with pages demonstrating various features
+The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/README.md) contains an app with pages demonstrating various features
 
 * [Main](https://github.com/seanhess/hyperbole/blob/main/example/Main.hs)
 * [Simple](https://github.com/seanhess/hyperbole/blob/main/example/Example/Simple.hs)

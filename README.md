@@ -52,7 +52,7 @@ messageView m = do
 Examples
 ---------
 
-The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/example/README.md) contains an app with pages demonstrating various features
+The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/README.md) contains an app with pages demonstrating various features
 
 Run the examples in this repo using cabal. Then visit http://localhost:3000/ in your browser
 
