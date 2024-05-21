@@ -3,7 +3,7 @@ Hyperbole
 
 [![Hackage](https://img.shields.io/hackage/v/hyperbole.svg)](https://hackage.haskell.org/package/hyperbole) 
 
-Create fully interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/).
+Create fully interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/), [Elm](https://elm-lang.org/), and [Phoenix LiveView](https://www.phoenixframework.org/)
 
 [Learn more about Hyperbole on Hackage](https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html)
 
@@ -68,4 +68,7 @@ cabal run
 * [Errors](./Example/Errors.hs)
 * [Contacts (Advanced)](./Example/Contacts.hs)
 
+In Production
+-------------
 
+Hyperbole is used in production by the [National Solar Observatory](https://nso.edu/)

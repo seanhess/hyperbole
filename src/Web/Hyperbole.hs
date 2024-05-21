@@ -6,7 +6,7 @@ Maintainer:  Sean Hess <seanhess@gmail.com>
 Stability:   experimental
 Portability: portable
 
-Create fully interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/).
+Create fully interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/), [Elm](https://elm-lang.org/), and [Phoenix LiveView](https://www.phoenixframework.org/)
 -}
 module Web.Hyperbole
   ( -- * Introduction
@@ -149,25 +149,28 @@ import Web.Hyperbole.View
 
 {- $use
 
-Single Page Applications (SPAs) require the programmer to write two programs: a Javascript client and a Server-side API.
+Single Page Applications (SPAs) require the programmer to write two programs: a Javascript client and a Server, which both must conform to a common API
 
 Hyperbole allows us instead to write a single Haskell program which runs exclusively on the server. All user interactions are sent to the server for processing, and a sub-section of the page is updated with the resulting HTML.
 
-There are frameworks that support this in various languages, including [HTMX](https://htmx.org/), [Phoenix LiveView](https://www.phoenixframework.org/), and others. Hyperbole has the following advantages
+There are frameworks that support this in different ways, including [HTMX](https://htmx.org/), [Phoenix LiveView](https://www.phoenixframework.org/), and others. Hyperbole has the following advantages
 
 1. 100% Haskell
 2. Type safe views, actions, routes, and forms
 3. Elegant interface with little boilerplate
-5. Fast updates over sockets using virtual DOM
-6. Fall-back to HTTP
+4. VirtualDOM updates over sockets, fallback to HTTP
+5. Easy to use
 
+Like [HTMX](https://htmx.org/), Hyperbole extends the capability of UI elements, but it uses Haskell's type-system to prevent common errors and provide default functionality. Specifically, a page has multiple update targets called 'HyperView's. These are automatically targeted by any UI element that triggers an action inside them. You can only trigger existing actions that match that HyperView
 
-Depends on:
+Like [Phoenix LiveView](https://www.phoenixframework.org/), it upgrades the page to a WebSocket connection and uses VirtualDOM for live updates
+
+Like [Elm](https://elm-lang.org/), it relies on an update function to 'handle' actions, but greatly simplifies the Elm Architecture by handling state with extensible effects. 'form's are easy to use with minimal boilerplate
+
+Depends heavily on the following frameworks
 
 * [Effectful](https://hackage.haskell.org/package/effectful-core)
 * [Web View](https://hackage.haskell.org/package/web-view)
-
-View the [Github README](https://github.com/seanhess/hyperbole) for more information
 -}
 
 
