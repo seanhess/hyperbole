@@ -242,7 +242,7 @@ Finally, let's add a 'button' to our view. When clicked, Hyperbole will run the 
 @
 messageView :: Text -> 'View' Message ()
 messageView m = do
-  'el_' m
+  'el_' (text m)
   'button' (Louder m) id "Change Message"
 @
 -}
