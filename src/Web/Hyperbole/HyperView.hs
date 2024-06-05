@@ -32,6 +32,10 @@ instance HyperView Message where
 -}
 class (Param id, Param (Action id)) => HyperView id where
   type Action id :: Type
+  hyperViewMod :: id -> Mod
+  default hyperViewMod :: id -> Mod
+  hyperViewMod _ = id
+
 
 
 {- | Embed HyperViews into the page, or nest them into other views
@@ -65,7 +69,7 @@ otherView = do
 -}
 hyper :: forall id ctx. (HyperView id) => id -> View id () -> View ctx ()
 hyper vid vw = do
-  el (att "id" (toParam vid) . flexCol) $
+  el (att "id" (toParam vid) . hyperViewMod vid) $
     addContext vid vw
 
 
