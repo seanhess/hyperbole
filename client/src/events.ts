@@ -54,7 +54,7 @@ export function listenLoad(node:HTMLElement): void {
       load.dispatchEvent(event)
     }, delay)
   })
-})
+}
 
 
 export function listenChange(cb:(target:HTMLElement, action:string) => void): void {
