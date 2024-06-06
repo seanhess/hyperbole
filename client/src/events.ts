@@ -44,15 +44,32 @@ export function listenLoadDocument(cb:(target:HTMLElement, action:string) => voi
 
 }
 
+let loadInventory:any = {};
+
+export function unregisterOnLoad(id:string): void {
+  console.log(loadInventory)
+  if(loadInventory[id]) {
+    console.error(`Cleared for ${id}`);
+    clearTimeout(loadInventory[id]);
+    loadInventory[id] = undefined  ;
+  }
+}
+
 export function listenLoad(node:HTMLElement): void {
   // it doesn't really matter WHO runs this except that it should have target
   node.querySelectorAll("[data-on-load]").forEach((load:HTMLElement) => {
-    let delay = parseInt(load.dataset.delay) || 0
-
-    setTimeout(() => {
-      let event = new Event("hyp-load", {bubbles:true})
-      load.dispatchEvent(event)
-    }, delay)
+    const delay = parseInt(load.dataset.delay) || 0
+    const action = load.dataset.onLoad;
+    unregisterOnLoad(load.dataset.target)
+    const timeout = setTimeout(() => {
+      const newAction = load.dataset.onLoad;
+      console.log(action == newAction, newAction, action)
+      if(action == newAction) {
+        let event = new Event("hyp-load", {bubbles:true})
+        load.dispatchEvent(event)
+      }
+    }, delay);
+    loadInventory[load.dataset.target] = timeout;
   })
 }
 

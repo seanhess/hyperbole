@@ -1,6 +1,6 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
-import  { listenChange, listenClick, listenFormSubmit, listenLoad, listenLoadDocument } from './events'
+import  { listenChange, listenClick, listenFormSubmit, listenLoad, listenLoadDocument, unregisterOnLoad } from './events'
 import  { actionMessage, ActionMessage } from './action'
 
 
@@ -90,6 +90,7 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   }, 200)
   const correlation = ++correlationNumberRef;
   let msg = actionMessage(correlation, target.id, action, form)
+  unregisterOnLoad(target.id);
   let ret = await fetchAction(msg)
 
   const displayedCorrelation = +target.getAttribute("seq");
