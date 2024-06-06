@@ -4,7 +4,6 @@ import { takeWhileMap, dropWhile } from "./lib"
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
 
-
 export class SocketConnection {
 
 
@@ -16,7 +15,7 @@ export class SocketConnection {
 
   constructor() {}
 
-  // we need to faithfully transmit the 
+  // we need to faithfully transmit the
   connect(addr = defaultAddress) {
     const sock = new WebSocket(addr)
     this.socket = sock
@@ -54,10 +53,10 @@ export class SocketConnection {
     let msg = [ action.url.pathname + action.url.search
               , "Host: " + window.location.host
               , "Cookie: " + document.cookie
+              , "Correlation: " + action.correlation
               , action.form
               ].join("\n")
-    let ret = await this.fetch(msg)
-    let {metadata, rest} = parseMetadataResponse(ret)
+    let {metadata, rest} = await this.fetch(msg, parseMetadataResponse, action.correlation)
 
     if (metadata.error) {
       throw socketError(metadata.error)
@@ -75,9 +74,9 @@ export class SocketConnection {
     return rest
   }
 
-  async fetch(msg:string):Promise<string> {
+  async fetch(msg:string, parse:((data:string) => SocketResponse | null), correlation:number):Promise<SocketResponse> {
     this.sendMessage(msg)
-    let res = await this.waitMessage()
+    let res = await this.waitMessage(parse, correlation)
     return res
   }
 
@@ -85,12 +84,15 @@ export class SocketConnection {
     this.socket.send(msg)
   }
 
-  private async waitMessage():Promise<string> {
+  private async waitMessage(parse:((data:string) => SocketResponse | null), correlation:number):Promise<SocketResponse> {
     return new Promise((resolve, reject) => {
       const onMessage = (event:MessageEvent) => {
-        let data = event.data
-        resolve(data)
-        this.socket.removeEventListener('message', onMessage)
+        const data = event.data
+        const parsed = parse(data);
+        if(parsed && parsed.metadata.correlation == correlation) {
+          resolve(parsed);
+          this.socket.removeEventListener('message', onMessage);
+        }
       }
 
       this.socket.addEventListener('message', onMessage)
@@ -113,9 +115,6 @@ function socketError(inp:string):Error {
 
 console.log("CONNECTING", window.location)
 
-
-
-
 type SocketResponse = {
   metadata: Metadata,
   rest: string
@@ -123,6 +122,8 @@ type SocketResponse = {
 
 type Metadata = {
   session?: string
+  target?: string
+  correlation?: number
   redirect?: string
   error?: string
 }
@@ -154,6 +155,8 @@ function parseMetadataResponse(ret:string):SocketResponse {
 function parseMetas(meta:Meta[]):Metadata {
   return {
     session: meta.find(m => m.key == "SESSION")?.value,
+    target: meta.find(m => m.key == "TARGET")?.value,
+    correlation: + meta.find(m => m.key == "CORRELATION")?.value,
     redirect: meta.find(m => m.key == "REDIRECT")?.value,
     error: meta.find(m => m.key == "ERROR")?.value
   }

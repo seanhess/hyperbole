@@ -17,7 +17,7 @@ import Control.Monad (forever)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as L
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, catMaybes)
 import Data.String.Conversions (cs)
 import Data.String.Interpolate (i)
 import Data.Text (Text, pack)
@@ -116,7 +116,7 @@ runServerWai toDoc req respond =
     response (Err (ErrOther e)) = respError status500 $ "Server Error: " <> cs e
     response (Err ErrAuth) = respError status401 "Unauthorized"
     response (Err (ErrNotHandled e)) = respError status400 $ cs $ errNotHandled e
-    response (Response vw) =
+    response (Response _cor vw) =
       respHtml $
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
     response (Redirect u) = do
@@ -124,18 +124,18 @@ runServerWai toDoc req respond =
       -- We have to use a 200 javascript redirect because javascript
       -- will redirect the fetch(), while we want to redirect the whole page
       -- see index.ts sendAction()
-      let headers = ("Location", cs url) : contentType ContentHtml : setCookies
+      let headers = [("Location", cs url), contentType ContentHtml, setCookies]
       Wai.responseLBS status200 headers $ "<script>window.location = '" <> cs url <> "'</script>"
 
     respError s = Wai.responseLBS s [contentType ContentText]
 
     respHtml body =
       -- always set the session...
-      let headers = contentType ContentHtml : setCookies
+      let headers = [contentType ContentHtml, setCookies]
        in Wai.responseLBS status200 headers body
 
     setCookies =
-      [("Set-Cookie", sessionSetCookie sess)]
+      ("Set-Cookie", sessionSetCookie sess)
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
   addDocument :: Method -> BL.ByteString -> BL.ByteString
@@ -152,7 +152,7 @@ runServerWai toDoc req respond =
         host = Host $ fromMaybe "" $ L.lookup "Host" headers
         cookies = parseCookies cookie
         method = Wai.requestMethod wr
-    pure $ Request{body, path, query, method, cookies, host}
+    pure $ Request{body, path, query, method, cookies, host, correlation = Nothing}
 
 
 runServerSockets
@@ -164,11 +164,11 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
   LoadRequest -> receiveRequest
   SendResponse sess res -> do
     case res of
-      (Response vw) -> sendView (addMetadata sess) vw
+      (Response cor vw) -> sendView (addMetadata cor sess) vw
       (Err r) -> sendError r
       Empty -> sendError $ ErrOther "Empty"
       NotFound -> sendError $ ErrOther "NotFound"
-      (Redirect url) -> sendRedirect (addMetadata sess) url
+      (Redirect url) -> sendRedirect (addMetadata Nothing sess) url
  where
   runLocal = runErrorNoCallStackWith @SocketError onSocketError
 
@@ -194,17 +194,19 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
     -- conn <- ask @Connection
     liftIO $ WS.sendTextData conn $ addMeta $ "|REDIRECT|" <> cs (renderUrl u)
 
-  addMetadata :: Session -> BL.ByteString -> BL.ByteString
-  addMetadata sess cont =
+  addMetadata :: Maybe Correlation -> Session -> BL.ByteString -> BL.ByteString
+  addMetadata correlation sess cont =
     -- you may have 1 or more lines containing metadata followed by a view
     -- \|SESSION| key=value; another=woot;
     -- <div ...>
-    sessionLine <> "\n" <> cont
+    BL.intercalate "\n" $ catMaybes [Just sessionLine, correlationLine, Just cont]
    where
     metaLine name value = "|" <> name <> "|" <> value
 
     sessionLine :: BL.ByteString
     sessionLine = metaLine "SESSION" $ cs (sessionSetCookie sess)
+    correlationLine :: Maybe BL.ByteString
+    correlationLine = (\(Correlation c) -> metaLine "CORRELATION" $ cs c) <$> correlation
 
   receiveRequest :: (IOE :> es, Error SocketError :> es) => Eff es Request
   receiveRequest = do
@@ -221,8 +223,8 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
   parseMessage :: Text -> Either SocketError Request
   parseMessage t = do
     case T.splitOn "\n" t of
-      [url, host, cook, body] -> parse url cook host (Just body)
-      [url, host, cook] -> parse url cook host Nothing
+      [url, host, cook, correlation, body] -> parse url cook host correlation (Just body)
+      [url, host, cook, correlation] -> parse url cook host correlation Nothing
       _ -> Left $ InvalidMessage t
    where
     parseUrl :: Text -> Either SocketError (Text, Text)
@@ -230,9 +232,9 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
       case T.splitOn "?" u of
         [url, query] -> pure (url, query)
         _ -> Left $ InvalidMessage u
-
-    parse :: Text -> Text -> Text -> Maybe Text -> Either SocketError Request
-    parse url cook hst mbody = do
+    parseCorrelation = Correlation . header
+    parse :: Text -> Text -> Text -> Text -> Maybe Text -> Either SocketError Request
+    parse url cook hst cor mbody = do
       (u, q) <- parseUrl url
       let path = paths u
           query = parseQuery (cs q)
@@ -240,12 +242,13 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
           host = Host $ cs $ header hst
           method = "POST"
           body = cs $ fromMaybe "" mbody
-      pure $ Request{path, host, query, body, method, cookies}
+          correlation = Just $ parseCorrelation cor
+      pure $ Request{path, host, query, body, method, cookies, correlation}
 
     paths p = filter (/= "") $ T.splitOn "/" p
 
     -- drop up to the colon, then ': '
-    header = T.drop 2 . T.dropWhile (/= ':')
+    header = T.strip . T.drop 1 . T.dropWhile (/= ':')
 
 
 data SocketError

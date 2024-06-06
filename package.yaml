@@ -63,6 +63,7 @@ executables:
     dependencies:
     - hyperbole
     - wai-middleware-static >= 0.9 && <= 0.10
+    - random
 
 tests:
   tests:
@@ -76,5 +77,3 @@ tests:
     dependencies:
       - hyperbole
       - sydtest >= 0.15 && <0.16
-
-

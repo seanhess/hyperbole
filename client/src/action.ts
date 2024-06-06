@@ -7,7 +7,6 @@ export function actionUrl(id:string, action:string):URL {
 
 export function toSearch(form?:FormData):URLSearchParams | undefined {
   if (!form) return undefined
-    
   const params = new URLSearchParams()
 
   form.forEach((value, key) => {
@@ -17,12 +16,13 @@ export function toSearch(form?:FormData):URLSearchParams | undefined {
   return params
 }
 
-export function actionMessage(id:string, action:string, form?:FormData):ActionMessage {
+export function actionMessage(correlation:number, id:string, action:string, form?:FormData):ActionMessage {
   let url = actionUrl(id, action)
-  return { url, form: toSearch(form) }
+  return { url, form: toSearch(form), correlation }
 }
 
 export type ActionMessage = {
   url: URL
   form: URLSearchParams | undefined
+  correlation: number
 }

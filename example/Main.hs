@@ -24,6 +24,7 @@ import Example.Effects.Users as Users
 import Example.Errors qualified as Errors
 import Example.Forms qualified as Forms
 import Example.LazyLoading qualified as LazyLoading
+import Example.LazyLoadingRace qualified as LazyLoadingRace
 import Example.Redirects qualified as Redirects
 import Example.Sessions qualified as Sessions
 import Example.Simple qualified as Simple
@@ -64,6 +65,7 @@ data AppRoute
   | Redirects
   | RedirectNow
   | LazyLoading
+  | LazyLoadingRace
   | Errors
   deriving (Eq, Generic, Route)
 
@@ -92,6 +94,7 @@ app users count = do
   router Forms = page Forms.page
   router Sessions = page Sessions.page
   router LazyLoading = page LazyLoading.page
+  router LazyLoadingRace = page LazyLoadingRace.page
   router Redirects = page Redirects.page
   router Errors = page Errors.page
   router RedirectNow = do
@@ -115,6 +118,7 @@ app users count = do
         route Redirects lnk "Redirects"
         route RedirectNow lnk "Redirect Now"
         route LazyLoading lnk "Lazy Loading"
+        route LazyLoadingRace lnk "Lazy Loading Race"
         route Contacts lnk "Contacts (Advanced)"
         route Errors lnk "Errors"
 

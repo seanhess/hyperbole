@@ -86,6 +86,7 @@ executable examples
       Example.Errors
       Example.Forms
       Example.LazyLoading
+      Example.LazyLoadingRace
       Example.Redirects
       Example.Sessions
       Example.Simple
@@ -119,6 +120,7 @@ executable examples
     , http-types ==0.12.*
     , hyperbole
     , network >=3.1 && <4
+    , random
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
     , text >=1.2 && <3

@@ -28,6 +28,8 @@ import Web.View
 newtype Host = Host {text :: BS.ByteString}
   deriving (Show)
 
+newtype Correlation = Correlation Text
+  deriving newtype (Show)
 
 data Request = Request
   { host :: Host
@@ -36,6 +38,7 @@ data Request = Request
   , body :: BL.ByteString
   , method :: Method
   , cookies :: [(BS.ByteString, BS.ByteString)]
+  , correlation :: Maybe Correlation
   }
   deriving (Show)
 
@@ -47,8 +50,9 @@ data Request = Request
 >   -- compiler error: () does not equal Response
 >   pure ()
 -}
+
 data Response
-  = Response (View () ())
+  = Response (Maybe Correlation) (View () ())
   | NotFound
   | Redirect Url
   | Err ResponseError
@@ -318,14 +322,16 @@ redirect = send . RespondEarly . Redirect
 -- | Respond with the given view, and stop execution
 respondEarly :: (Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
 respondEarly vid vw = do
-  let res = Response $ hyper vid vw
+  Request{correlation} <- request
+  let res = Response correlation $ hyper vid vw
   send $ RespondEarly res
 
 
 -- | Manually set the response to the given view. Normally you return a 'View' from 'load' or 'handle' instead of using this
 view :: (Hyperbole :> es) => View () () -> Eff es Response
 view vw = do
-  pure $ Response vw
+  Request{correlation} <- request
+  pure $ Response correlation vw
 
 
 {- | The load handler is run when the page is first loaded. Run any side effects needed, then return a view of the full page
@@ -383,7 +389,8 @@ handle run = Page $ do
   case mev of
     Just event -> do
       vw <- run event.viewId event.action
-      send $ RespondEarly $ Response $ hyper event.viewId vw
+      Request{correlation} <- request
+      send $ RespondEarly $ Response correlation $ hyper event.viewId vw
     _ -> pure ()
 
 

@@ -80,15 +80,16 @@ async function fetchAction(msg:ActionMessage): Promise<string> {
   }
 }
 
+let correlationNumberRef:number = 0;
+
 async function runAction(target:HTMLElement, action:string, form?:FormData) {
 
   let timeout = setTimeout(() => {
     // add loading after 200ms, not right away
     target.classList.add("hyp-loading")
   }, 200)
-
-  let msg = actionMessage(target.id, action, form)
-
+  const correlation = ++correlationNumberRef;
+  let msg = actionMessage(correlation, target.id, action, form)
   let ret = await fetchAction(msg)
 
   let res = parseResponse(ret)
@@ -123,7 +124,7 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
 function addCSS(text:string) {
   let rules = text.split("\n")
   rules.forEach((rule) => {
-    rootStyles.sheet.insertRule(rule)
+    if(rule != "") rootStyles.sheet.insertRule(rule)
   })
 }
 
@@ -192,7 +193,7 @@ type VNode = {
 
   // An object whose key/value pairs are the attribute
   // name and value, respectively
-  attributes: [string: string]
+  attributes: any // Object.<attribute: string, value: string>
 
   // Is set to `true` if a node is an `svg`, which tells
   // Omdomdom to treat it, and its children, as such
@@ -223,4 +224,3 @@ function errorHTML(error:Error):string {
 
   return ["<style>" + style.join("\n") + "</style>", content, details].join("\n")
 }
-
