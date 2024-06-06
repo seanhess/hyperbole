@@ -107,7 +107,7 @@ executable examples
       DataKinds
       DerivingStrategies
       DeriveAnyClass
-  ghc-options: -Wall -fdefer-typed-holes
+  ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.16 && <5
     , bytestring >=0.11 && <0.13

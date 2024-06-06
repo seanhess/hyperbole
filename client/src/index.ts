@@ -92,6 +92,13 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   let msg = actionMessage(correlation, target.id, action, form)
   let ret = await fetchAction(msg)
 
+  const displayedCorrelation = +target.getAttribute("seq");
+  console.info("got",correlation,"displayed", displayedCorrelation);
+  if(displayedCorrelation > correlation) {
+    console.warn(`Got late resonse for sequence ${correlation}, already displayed ${displayedCorrelation}`);
+    return
+  }
+
   let res = parseResponse(ret)
 
   if (!res.css || !res.content) {
@@ -103,7 +110,8 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   addCSS(res.css.textContent)
 
   // Patch the node
-  const next:VNode = create(res.content)
+  let next:VNode = create(res.content)
+  next.attributes["seq"] = correlation;
   const old:VNode = create(target)
   patch(next, old)
 

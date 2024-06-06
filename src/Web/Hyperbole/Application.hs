@@ -13,7 +13,7 @@ module Web.Hyperbole.Application
   , routeRequest
   ) where
 
-import Control.Monad (forever)
+import Control.Monad (forever, void)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as L
@@ -38,6 +38,7 @@ import Web.Hyperbole.Embed (cssResetEmbed, scriptEmbed)
 import Web.Hyperbole.Route
 import Web.Hyperbole.Session
 import Web.View (View, renderLazyByteString, renderUrl)
+import Effectful.Concurrent (forkIO, Concurrent, runConcurrent)
 
 
 {- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
@@ -47,24 +48,25 @@ import Web.View (View, renderLazyByteString, renderUrl)
 >   liveApp (basicDocument "Example") $ do
 >      page mainPage
 -}
-liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Wai.Application
+liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, Concurrent, IOE] Response -> Wai.Application
 liveApp toDoc app =
   websocketsOr
     defaultConnectionOptions
-    (runEff . socketApp app)
+    (runEff . runConcurrent . socketApp app)
     (waiApp toDoc app)
 
 
-socketApp :: (IOE :> es) => Eff (Hyperbole : Server : es) Response -> PendingConnection -> Eff es ()
+socketApp :: (IOE :> es, Concurrent :> es) => Eff (Hyperbole : Server : es) Response -> PendingConnection -> Eff es ()
 socketApp actions pend = do
   conn <- liftIO $ WS.acceptRequest pend
   forever $ do
-    runServerSockets conn $ runHyperbole actions
+    msg <- liftIO $ WS.receiveData conn
+    void $ forkIO $ void $ runServerSockets conn msg $ runHyperbole actions
 
 
-waiApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Wai.Application
+waiApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, Concurrent, IOE] Response -> Wai.Application
 waiApp toDoc actions req res = do
-  rr <- runEff $ runServerWai toDoc req res $ runHyperbole actions
+  rr <- runEff $ runConcurrent $ runServerWai toDoc req res $ runHyperbole actions
   case rr of
     Nothing -> error "Missing required response in handler"
     Just r -> pure r
@@ -158,10 +160,11 @@ runServerWai toDoc req respond =
 runServerSockets
   :: (IOE :> es)
   => Connection
+  -> Text
   -> Eff (Server : es) Response
   -> Eff es Response
-runServerSockets conn = reinterpret runLocal $ \_ -> \case
-  LoadRequest -> receiveRequest
+runServerSockets conn msg = reinterpret runLocal $ \_ -> \case
+  LoadRequest -> receiveRequest msg
   SendResponse sess res -> do
     case res of
       (Response cor vw) -> sendView (addMetadata cor sess) vw
@@ -208,17 +211,16 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
     correlationLine :: Maybe BL.ByteString
     correlationLine = (\(Correlation c) -> metaLine "CORRELATION" $ cs c) <$> correlation
 
-  receiveRequest :: (IOE :> es, Error SocketError :> es) => Eff es Request
-  receiveRequest = do
-    t <- receiveText
+  receiveRequest :: (IOE :> es, Error SocketError :> es) => Text -> Eff es Request
+  receiveRequest t = do
     case parseMessage t of
       Left e -> throwError e
       Right r -> pure r
 
-  receiveText :: (IOE :> es) => Eff es Text
-  receiveText = do
-    -- c <- ask @Connection
-    liftIO $ WS.receiveData conn
+  -- receiveText :: (IOE :> es) => Eff es Text
+  -- receiveText = do
+  --   -- c <- ask @Connection
+  --   liftIO $ WS.receiveData conn
 
   parseMessage :: Text -> Either SocketError Request
   parseMessage t = do
