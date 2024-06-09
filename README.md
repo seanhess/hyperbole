@@ -114,10 +114,14 @@ Run examples (requires building the JS client)
 cabal run examples
 ```
 
-
 Run Tests
 
 ```
 cabal test
 ```
 
+Watch for file changes and recompile everything
+
+```
+bin/dev
+```

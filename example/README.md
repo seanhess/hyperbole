@@ -4,7 +4,7 @@ Hyperbole Examples
 This directory contains an example application with multiple pages demonstrating different features. To try them out:
 
 1. Checkout the repository
-2. Follow the Local Development instructions
+2. Follow the [Local Development](../README.md#local-development) instructions
 3. `cabal run examples`
 4. visit http://localhost:3000/
 
