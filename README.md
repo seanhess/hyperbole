@@ -54,11 +54,6 @@ Examples
 
 The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/README.md) contains an app with pages demonstrating various features
 
-Run the examples in this repo using cabal. Then visit http://localhost:3000/ in your browser
-
-```
-cabal run
-```
 * [Main](https://github.com/seanhess/hyperbole/blob/main/example/Main.hs)
 * [Simple](https://github.com/seanhess/hyperbole/blob/main/example/Example/Simple.hs)
 * [Counter](https://github.com/seanhess/hyperbole/blob/main/example/Example/Counter.hs)
@@ -69,6 +64,7 @@ cabal run
 * [Lazy Loading and Polling](https://github.com/seanhess/hyperbole/blob/main/example/Example/LazyLoading.hs)
 * [Errors](https://github.com/seanhess/hyperbole/blob/main/example/Example/Errors.hs)
 * [Contacts (Advanced)](https://github.com/seanhess/hyperbole/blob/main/example/Example/Contacts.hs)
+
 
 Learn More
 ----------
@@ -87,3 +83,41 @@ In Production
 </a>
 
 The NSO uses Hyperbole for the [L2 Data creation UI](https://github.com/DKISTDC/level2/blob/main/src/App.hs) for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/)
+
+Local Development
+-----------------
+
+Download and install [NPM](https://nodejs.org/en/download). On a mac, can be installed via homebrew:
+
+```
+brew install npm
+```
+
+Install client dependencies
+
+```
+cd client
+npm install
+```
+
+Build JavaScript client
+
+```
+cd client
+npx webpack
+```
+
+
+Run examples (requires building the JS client) 
+
+```
+cabal run examples
+```
+
+
+Run Tests
+
+```
+cabal test
+```
+
