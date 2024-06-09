@@ -49,7 +49,7 @@ data Request = Request
 >   pure ()
 -}
 data Response
-  = Response (View () ())
+  = Response ViewId (View () ())
   | NotFound
   | Redirect Url
   | Err ResponseError
@@ -80,6 +80,10 @@ pageView = do
 -}
 newtype Page es a = Page (Eff es a)
   deriving newtype (Applicative, Monad, Functor)
+
+
+-- | Serialized ViewId
+newtype ViewId = ViewId Text
 
 
 -- | An action, with its corresponding id
@@ -318,15 +322,16 @@ redirect = send . RespondEarly . Redirect
 
 -- | Respond with the given view, and stop execution
 respondEarly :: (Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
-respondEarly vid vw = do
-  let res = Response $ hyper vid vw
+respondEarly i vw = do
+  let vid = ViewId (toParam i)
+  let res = Response vid $ hyper i vw
   send $ RespondEarly res
 
 
 -- | Manually set the response to the given view. Normally you return a 'View' from 'load' or 'handle' instead of using this
 view :: (Hyperbole :> es) => View () () -> Eff es Response
 view vw = do
-  pure $ Response vw
+  pure $ Response (ViewId "") vw
 
 
 {- | The load handler is run when the page is first loaded. Run any side effects needed, then return a view of the full page
@@ -384,7 +389,8 @@ handle run = Page $ do
   case mev of
     Just event -> do
       vw <- run event.viewId event.action
-      send $ RespondEarly $ Response $ hyper event.viewId vw
+      let vid = ViewId $ toParam event.viewId
+      send $ RespondEarly $ Response vid $ hyper event.viewId vw
     _ -> pure ()
 
 

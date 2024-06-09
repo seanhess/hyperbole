@@ -6,7 +6,6 @@ import Example.Effects.Debug
 import Web.Hyperbole
 
 
--- this is already running in a different context
 page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es Response
 page = do
   handle content
@@ -14,7 +13,7 @@ page = do
   load $ do
     pure $ do
       col (pad 20) $ do
-        hyper (Contents 1000) $ viewPoll 1
+        hyper (Contents 100) $ viewPoll 1
         hyper (Contents 2000) $ viewPoll 100
 
 
@@ -31,6 +30,7 @@ data ContentsAction
 
 content :: (Hyperbole :> es, Debug :> es, IOE :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
 content (Contents dl) (Load n) = do
+  -- BUG: this is blocking the thread, so the short poll has to wait for the long to finish before continuing
   delay dl
   pure $ viewPoll (n + 1)
 

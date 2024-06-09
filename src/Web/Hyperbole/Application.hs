@@ -116,7 +116,7 @@ runServerWai toDoc req respond =
     response (Err (ErrOther e)) = respError status500 $ "Server Error: " <> cs e
     response (Err ErrAuth) = respError status401 "Unauthorized"
     response (Err (ErrNotHandled e)) = respError status400 $ cs $ errNotHandled e
-    response (Response vw) =
+    response (Response _ vw) =
       respHtml $
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
     response (Redirect u) = do
@@ -164,11 +164,11 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
   LoadRequest -> receiveRequest
   SendResponse sess res -> do
     case res of
-      (Response vw) -> sendView (addMetadata sess) vw
+      (Response vid vw) -> sendView (sessionMeta sess) vid vw
       (Err r) -> sendError r
       Empty -> sendError $ ErrOther "Empty"
       NotFound -> sendError $ ErrOther "NotFound"
-      (Redirect url) -> sendRedirect (addMetadata sess) url
+      (Redirect url) -> sendRedirect (sessionMeta sess) url
  where
   runLocal = runErrorNoCallStackWith @SocketError onSocketError
 
@@ -178,33 +178,40 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
     sendError r
     pure $ Err r
 
+  sendMessage :: (MonadIO m) => Metadata -> BL.ByteString -> m ()
+  sendMessage meta cnt = do
+    let msg = renderMetadata meta <> "\n" <> cnt
+    liftIO $ WS.sendTextData conn msg
+
   sendError :: (IOE :> es) => ResponseError -> Eff es ()
   sendError r = do
-    -- conn <- ask @Connection
     -- TODO: better error handling!
-    liftIO $ WS.sendTextData conn $ "|ERROR|" <> pack (show r)
+    sendMessage (metadata "ERROR" (pack (show r))) ""
 
-  sendView :: (IOE :> es) => (BL.ByteString -> BL.ByteString) -> View () () -> Eff es ()
-  sendView addMeta vw = do
+  sendView :: (IOE :> es) => Metadata -> ViewId -> View () () -> Eff es ()
+  sendView meta vid vw = do
+    sendMessage (viewIdMeta vid <> meta) (renderLazyByteString vw)
+
+  renderMetadata :: Metadata -> BL.ByteString
+  renderMetadata (Metadata m) = BL.intercalate "\n" $ fmap (uncurry metaLine) m
+
+  sendRedirect :: (IOE :> es) => Metadata -> Url -> Eff es ()
+  sendRedirect meta u = do
     -- conn <- ask @Connection
-    liftIO $ WS.sendTextData conn $ addMeta $ renderLazyByteString vw
+    let r = metadata "REDIRECT" (renderUrl u)
+    sendMessage (r <> meta) ""
 
-  sendRedirect :: (IOE :> es) => (BL.ByteString -> BL.ByteString) -> Url -> Eff es ()
-  sendRedirect addMeta u = do
-    -- conn <- ask @Connection
-    liftIO $ WS.sendTextData conn $ addMeta $ "|REDIRECT|" <> cs (renderUrl u)
+  sessionMeta :: Session -> Metadata
+  sessionMeta sess = Metadata [("SESSION", cs (sessionSetCookie sess))]
 
-  addMetadata :: Session -> BL.ByteString -> BL.ByteString
-  addMetadata sess cont =
-    -- you may have 1 or more lines containing metadata followed by a view
-    -- \|SESSION| key=value; another=woot;
-    -- <div ...>
-    sessionLine <> "\n" <> cont
-   where
-    metaLine name value = "|" <> name <> "|" <> value
+  viewIdMeta :: ViewId -> Metadata
+  viewIdMeta (ViewId vid) = Metadata [("VIEW-ID", cs vid)]
 
-    sessionLine :: BL.ByteString
-    sessionLine = metaLine "SESSION" $ cs (sessionSetCookie sess)
+  metadata :: BL.ByteString -> Text -> Metadata
+  metadata name value = Metadata [(name, value)]
+
+  metaLine :: BL.ByteString -> Text -> BL.ByteString
+  metaLine name value = "|" <> name <> "|" <> cs value
 
   receiveRequest :: (IOE :> es, Error SocketError :> es) => Eff es Request
   receiveRequest = do
@@ -246,6 +253,10 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
 
     -- drop up to the colon, then ': '
     header = T.drop 2 . T.dropWhile (/= ':')
+
+
+newtype Metadata = Metadata [(BL.ByteString, Text)]
+  deriving newtype (Semigroup, Monoid)
 
 
 data SocketError

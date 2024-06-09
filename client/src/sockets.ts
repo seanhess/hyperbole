@@ -1,4 +1,4 @@
-import  { ActionMessage } from './action'
+import  { ActionMessage, ViewId } from './action'
 import { takeWhileMap, dropWhile } from "./lib"
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -56,28 +56,15 @@ export class SocketConnection {
               , "Cookie: " + document.cookie
               , action.form
               ].join("\n")
-    let ret = await this.fetch(msg)
-    let {metadata, rest} = parseMetadataResponse(ret)
+    let {metadata, rest} = await this.fetch(action.id, msg)
 
-    if (metadata.error) {
-      throw socketError(metadata.error)
-    }
-
-    if (metadata.session) {
-      // console.log("setting cookie", metadata.session)
-      document.cookie = metadata.session
-    }
-
-    if (metadata.redirect) {
-      window.location.href = metadata.redirect
-    }
 
     return rest
   }
 
-  async fetch(msg:string):Promise<string> {
+  async fetch(id:ViewId, msg:string):Promise<SocketResponse> {
     this.sendMessage(msg)
-    let res = await this.waitMessage()
+    let res = await this.waitMessage(id)
     return res
   }
 
@@ -85,11 +72,35 @@ export class SocketConnection {
     this.socket.send(msg)
   }
 
-  private async waitMessage():Promise<string> {
+  private async waitMessage(id:ViewId):Promise<SocketResponse> {
     return new Promise((resolve, reject) => {
       const onMessage = (event:MessageEvent) => {
         let data = event.data
-        resolve(data)
+
+        let {metadata, rest} = parseMetadataResponse(data)
+
+        if (metadata.error) {
+          throw socketError(metadata.error)
+        }
+
+        if (metadata.redirect) {
+          window.location.href = metadata.redirect
+          return
+        }
+
+        if (metadata.session) {
+          // console.log("setting cookie", metadata.session)
+          document.cookie = metadata.session
+        }
+
+        if (metadata.viewId != id) {
+          console.warn("Mismatched ids, ignoring", metadata.viewId, id)
+          return
+        }
+
+        resolve({metadata, rest})
+
+        // we should only resolve if we have found our message
         this.socket.removeEventListener('message', onMessage)
       }
 
@@ -122,6 +133,7 @@ type SocketResponse = {
 }
 
 type Metadata = {
+  viewId?: ViewId
   session?: string
   redirect?: string
   error?: string
@@ -132,16 +144,16 @@ type Meta = {key: string, value: string}
 
 function parseMetadataResponse(ret:string):SocketResponse {
   let lines = ret.split("\n")
-  let metas:Metadata = parseMetas(takeWhileMap(parseMeta, lines))
+  let metas:Meta[] = takeWhileMap(parseMeta, lines)
   let rest = dropWhile(parseMeta, lines).join("\n")
 
   return {
-    metadata: metas,
+    metadata: parseMetas(metas),
     rest: rest
   }
 
   function parseMeta(line:string):Meta | undefined {
-    let match = line.match(/^\|(\w+)\|(.*)$/)
+    let match = line.match(/^\|([A-Z\-]+)\|(.*)$/)
     if (match) {
       return {
         key: match[1],
@@ -155,6 +167,7 @@ function parseMetas(meta:Meta[]):Metadata {
   return {
     session: meta.find(m => m.key == "SESSION")?.value,
     redirect: meta.find(m => m.key == "REDIRECT")?.value,
-    error: meta.find(m => m.key == "ERROR")?.value
+    error: meta.find(m => m.key == "ERROR")?.value,
+    viewId: meta.find(m => m.key == "VIEW-ID")?.value
   }
 }
