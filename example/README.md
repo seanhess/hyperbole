@@ -8,7 +8,7 @@ This directory contains an example application with multiple pages demonstrating
 3. `cabal run examples`
 4. visit http://localhost:3000/
 
-Alternatively, create a new project that depends on hyperbole using cabal or stack and copy them in to your source folder
+Alternatively, create a new project that depends on hyperbole using cabal or stack and copy the examples into your source folder
 
 ### [Main](./Main.hs)
 Routing, WAI application, running the program
