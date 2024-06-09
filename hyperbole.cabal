@@ -80,6 +80,7 @@ executable examples
   other-modules:
       BulkUpdate
       Example.Colors
+      Example.Concurrent
       Example.Contacts
       Example.Counter
       Example.Effects.Debug

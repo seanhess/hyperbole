@@ -17,6 +17,7 @@ import Effectful.Concurrent.STM
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Static
 import Effectful.State.Static.Local
+import Example.Concurrent qualified as Concurrent
 import Example.Contacts qualified as Contacts
 import Example.Counter qualified as Counter
 import Example.Effects.Debug as Debug
@@ -64,6 +65,7 @@ data AppRoute
   | Redirects
   | RedirectNow
   | LazyLoading
+  | Concurrent
   | Errors
   deriving (Eq, Generic, Route)
 
@@ -92,6 +94,7 @@ app users count = do
   router Forms = page Forms.page
   router Sessions = page Sessions.page
   router LazyLoading = page LazyLoading.page
+  router Concurrent = page Concurrent.page
   router Redirects = page Redirects.page
   router Errors = page Errors.page
   router RedirectNow = do
