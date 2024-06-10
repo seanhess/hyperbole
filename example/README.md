@@ -3,12 +3,11 @@ Hyperbole Examples
 
 This directory contains an example application with multiple pages demonstrating different features. To try them out:
 
-1. Checkout the repository
-2. Follow the [Local Development](https://github.com/seanhess/hyperbole#local-development) instructions
-3. `cabal run examples`
-4. visit http://localhost:3000/
+```
+cabal run examples
+```
 
-Alternatively, create a new project that depends on hyperbole using cabal or stack and copy the examples into your source folder
+Then visit http://localhost:3000/
 
 ### [Main](./Main.hs)
 Routing, WAI application, running the program

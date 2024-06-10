@@ -107,8 +107,7 @@ cd client
 npx webpack
 ```
 
-
-Run examples (requires building the JS client) 
+Run examples
 
 ```
 cabal run examples
