@@ -151,18 +151,18 @@ contactView u = do
 
 
 contactEdit :: User -> View Contact ()
-contactEdit u =
+contactEdit u = do
   onRequest loading $ do
-    form Save mempty (pad 10 . gap 10) $ do
-      field @FirstName fld id $ do
+    form @[FirstName, LastName, Age] Save mempty (pad 10 . gap 10) $ do
+      field @FirstName (const fld) $ do
         label "First Name:"
         input Name (value u.firstName)
 
-      field @LastName fld id $ do
+      field @LastName (const fld) $ do
         label "Last Name:"
         input Name (value u.lastName)
 
-      field @Age fld id $ do
+      field @Age (const fld) $ do
         label "Age:"
         input Number (value $ cs $ show u.age)
 

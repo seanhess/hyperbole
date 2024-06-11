@@ -1,5 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.Forms
   ( FormFields (..)
@@ -20,12 +21,14 @@ module Web.Hyperbole.Forms
   , FormOptions (..)
   , genericFromForm
   , Validation (..)
+  , Validated (..)
   , FormField (..)
-  , lookupInvalid
-  , invalidStyle
+  , validation
+  , fieldValid
+  , anyInvalid
   , invalidText
   , validate
-  , validation
+  , validateWith
 
     -- * Re-exports
   , FromHttpApiData
@@ -34,11 +37,11 @@ module Web.Hyperbole.Forms
 where
 
 import Data.Functor.Identity (Identity)
-import Data.Kind (Type)
-import Data.Maybe (catMaybes)
-import Data.Text
+import Data.Kind (Constraint, Type)
+import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
+import GHC.TypeLits hiding (Mod)
 import Text.Casing (kebab)
 import Web.FormUrlEncoded qualified as FE
 import Web.HttpApiData (FromHttpApiData (..))
@@ -49,7 +52,7 @@ import Web.View hiding (form, input, label)
 
 
 -- | The only time we can use Fields is inside a form
-data FormFields id = FormFields id Validation
+data FormFields id fs = FormFields id (Validation fs)
 
 
 instance (ViewId id) => ViewId (FormFields id) where
@@ -105,28 +108,40 @@ formAction _ SignUp = do
 @
 @
 -}
-newtype Validation = Validation [(Text, Text)]
-  deriving newtype (Semigroup, Monoid)
+
+-- would be easier if you pass in your own data. Right now everything is indexed by type
+data Validated fs a = Invalid Text | NotInvalid | Valid
+  deriving Show
 
 
--- | Create a 'Validation' from list of validators
-validation :: [Maybe (Text, Text)] -> Validation
-validation = Validation . catMaybes
+instance Semigroup (Validated fs a) where
+  Invalid t <> _ = Invalid t
+  _ <> Invalid t = Invalid t
+  Valid <> _ = Valid
+  _ <> Valid = Valid
+  a <> _ = a
+
+instance Monoid (Validated fs a) where
+  mempty = NotInvalid
 
 
-invalidStyle :: forall a. (FormField a) => Mod -> Validation -> Mod
-invalidStyle f errs =
-  case lookupInvalid @a errs of
-    Nothing -> id
-    Just _ -> f
+-- it's going to have
+newtype Validation (fs :: [Type]) = Validation [(Text, Validated fs ())]
+  deriving newtype (Semigroup, Monoid, Show)
 
 
-lookupInvalid :: forall a. (FormField a) => Validation -> Maybe Text
-lookupInvalid (Validation es) = lookup (inputName @a) es
+-- TODO: constraint Elem a fs
+validation :: forall a fs. (FormField a) => Validation fs -> Validated fs a
+validation (Validation vs) = mconcat $ fmap (convert . snd) $ filter ((==inputName @a) . fst) vs
 
 
-{- | Display any validation error for the 'FormField' from the 'Validation' passed to 'form'
+convert :: Validated fs a -> Validated fs b
+convert (Invalid t) = Invalid t
+convert NotInvalid = NotInvalid
+convert Valid = Valid
 
+
+{-
 @
 'field' \@User id Style.invalid $ do
   'label' \"Username\"
@@ -134,16 +149,38 @@ lookupInvalid (Validation es) = lookup (inputName @a) es
   el_ 'invalidText'
 @
 -}
-invalidText :: forall a id. (FormField a) => View (Input id a) ()
+invalidText :: forall a fs id. (FormField a) => View (Input id fs a) ()
 invalidText = do
   Input _ v <- context
-  maybe none text $ lookupInvalid @a v
+  case v of
+    Invalid t -> text t
+    _ -> none
 
 
 -- | specify a check for a 'Validation'
-validate :: forall a. (FormField a) => Bool -> Text -> Maybe (Text, Text)
-validate True t = Just (inputName @a, t)
-validate False _ = Nothing
+validate :: forall a fs. (FormField a, Elem a fs) => Bool -> Text -> Validation fs
+validate True t = Validation [(inputName @a, Invalid t)]
+validate False _ = Validation [(inputName @a, NotInvalid)]
+
+
+validateWith :: forall a fs. (FormField a) => Validated fs a -> Validation fs
+validateWith v = Validation [(inputName @a, convert v)]
+
+
+anyInvalid :: Validation fs -> Bool
+anyInvalid (Validation vs) =
+  any (isInvalid . snd) vs
+
+
+isInvalid :: Validated fs a -> Bool
+isInvalid (Invalid _) = True
+isInvalid _ = False
+
+
+fieldValid :: View (Input id fs a) (Validated fs a)
+fieldValid = do
+  Input _ v <- context
+  pure v
 
 
 data Label a
@@ -152,7 +189,7 @@ data Label a
 data Invalid a
 
 
-data Input id a = Input Text Validation
+data Input id fs a = Input Text (Validated fs a)
 
 
 {- | Display a 'FormField'
@@ -167,21 +204,22 @@ myForm = do
      'input' Number (value "0")
 @
 -}
-field :: forall a id. (FormField a) => Mod -> Mod -> View (Input id a) () -> View (FormFields id) ()
-field f inv cnt = do
+field :: forall a id fs. (FormField a, Elem a fs) => (Validated fs a -> Mod) -> View (Input id fs a) () -> View (FormFields id fs) ()
+field f cnt = do
   let n = inputName @a
-  FormFields _ v <- context
-  tag "label" (f . flexCol . invalidStyle @a inv v) $
+  FormFields _ vals <- context
+  let v = validation @a vals
+  tag "label" (f v . flexCol) $ do
     addContext (Input n v) cnt
 
 
 -- | label for a 'field'
-label :: Text -> View (Input id a) ()
+label :: Text -> View (Input id fs a) ()
 label = text
 
 
 -- | input for a 'field'
-input :: InputType -> Mod -> View (Input id a) ()
+input :: InputType -> Mod -> View (Input id fs a) ()
 input ft f = do
   Input nm _ <- context
   tag "input" (f . name nm . att "type" (inpType ft) . att "autocomplete" (auto ft)) none
@@ -222,7 +260,7 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: forall id. (HyperView id) => Action id -> Validation -> Mod -> View (FormFields id) () -> View id ()
+form :: forall fs id. (HyperView id) => Action id -> Validation fs -> Mod -> View (FormFields id fs) () -> View id ()
 form a v f cnt = do
   vid <- context
   -- let frm = formLabels :: form Label
@@ -234,7 +272,7 @@ form a v f cnt = do
 
 
 -- | Button that submits the 'form'. Use 'button' to specify actions other than submit
-submit :: Mod -> View (FormFields id) () -> View (FormFields id) ()
+submit :: Mod -> View (FormFields id fs) () -> View (FormFields id fs) ()
 submit f = tag "button" (att "type" "submit" . f)
 
 
@@ -359,3 +397,107 @@ instance (GFieldParse f) => GFieldParse (M1 S s f) where
 
 instance (FromHttpApiData a) => GFieldParse (K1 R a) where
   gFieldParse t f = K1 <$> FE.parseUnique t f
+
+
+-- Type family to check if an element is in a type-level list
+type Elem e es = ElemGo e es es
+
+
+-- 'orig' is used to store original list for better error messages
+type family ElemGo e es orig :: Constraint where
+  ElemGo x (x ': xs) orig = ()
+  ElemGo y (x ': xs) orig = ElemGo y xs orig
+  -- Note [Custom Errors]
+  ElemGo x '[] orig =
+    TypeError
+      ( 'ShowType x
+          ':<>: 'Text " not found in "
+          ':<>: 'ShowType orig
+      )
+
+-------------------------------------------------
+-- EXAMPLE --------------------------------------
+-------------------------------------------------
+-- data FormView = FormView
+--   deriving (Generic, Param)
+--
+--
+-- data FormAction = Submit
+--   deriving (Generic, Param)
+--
+--
+-- instance HyperView FormView where
+--   type Action FormView = FormAction
+--
+--
+-- data User = User Text deriving (Generic, FormField)
+-- data Age = Age Int deriving (Generic, FormField)
+-- data Pass1 = Pass1 Text deriving (Generic, FormField)
+-- data Pass2 = Pass2 Text deriving (Generic, FormField)
+-- data FakeField = FakeField Text deriving (Generic, FormField)
+--
+--
+-- type UserForm = [User, Age, Pass1, Pass2]
+--
+--
+-- formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
+-- formAction _ Submit = do
+--   u <- formField @User
+--   a <- formField @Age
+--   p1 <- formField @Pass1
+--   p2 <- formField @Pass2
+--
+--   let vals = validateUser u a p1 p2
+--   if anyInvalid vals
+--     then pure $ formView vals
+--     else pure $ userView u a p1
+--
+--
+-- -- we don't type-check that we've validated all the fields here, but that's ok
+-- validateUser :: User -> Age -> Pass1 -> Pass2 -> Validation UserForm
+-- validateUser (User u) (Age a) (Pass1 p1) (Pass2 p2) =
+--   Validation
+--     [ validate @Age (a < 20) "User must be at least 20 years old"
+--     , validate @User (T.elem ' ' u) "Username must not contain spaces"
+--     , validate @User (T.length u < 4) "Username must be at least 4 chars"
+--     , validate @Pass1 (p1 /= p2) "Passwords did not match"
+--     , validate @Pass1 (T.length p1 < 8) "Password must be at least 8 chars"
+--     -- , validate @FakeField False "Bad"
+--     ]
+--
+--
+-- formView :: Validation UserForm -> View FormView ()
+-- formView v = do
+--   form Submit v (gap 10 . pad 10) $ do
+--     el id "Sign Up"
+--
+--     field @User (const id) $ do
+--       label "Username"
+--       input Username (placeholder "username")
+--       el_ invalidText
+--
+--     field @Age (const id) $ do
+--       label "Age"
+--       input Number (placeholder "age" . value "0")
+--       el_ invalidText
+--
+--     field @Pass1 (const id) $ do
+--       label "Password"
+--       input NewPassword (placeholder "password")
+--       el_ invalidText
+--
+--     field @Pass2 (const id) $ do
+--       label "Repeat Password"
+--       input NewPassword (placeholder "repeat password")
+--
+--
+-- userView :: User -> Age -> Pass1 -> View FormView ()
+-- userView (User user) (Age age) (Pass1 pass1) = do
+--   el bold "Accepted Signup"
+--   row (gap 5) $ do
+--     el_ "Username:"
+--     el_ $ text user
+--
+--   row (gap 5) $ do
+--     el_ "Age:"
+--     el_ $ text $ pack (show age)
