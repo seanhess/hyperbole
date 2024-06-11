@@ -35,7 +35,7 @@ class GParam f where
 instance (GParam f, GParam g) => GParam (f :*: g) where
   gToParam (a :*: b) = gToParam a <> "-" <> gToParam b
   gParseParam t = do
-    let (at, bt) = breakSegment t
+    let (at, bt) = breakSegment '-' t
     a <- gParseParam at
     b <- gParseParam bt
     pure $ a :*: b
@@ -61,7 +61,7 @@ instance (Constructor c, GParam f) => GParam (M1 C c f) where
           "" -> cn
           t -> cn <> "-" <> t
   gParseParam t = do
-    let (c, rest) = breakSegment t
+    let (c, rest) = breakSegment '-' t
     guard $ c == toSegment (conName (undefined :: M1 C c f p))
     M1 <$> gParseParam rest
 
@@ -86,9 +86,9 @@ instance {-# OVERLAPPABLE #-} (Param a) => GParam (K1 R a) where
 --   gParseParam t = do
 --     K1 <$> readMaybe (unpack t)
 
-breakSegment :: Text -> (Text, Text)
-breakSegment t =
-  let (start, rest) = T.breakOn "-" t
+breakSegment :: Char -> Text -> (Text, Text)
+breakSegment c t =
+  let (start, rest) = T.breakOn (pack [c]) t
    in (start, T.drop 1 rest)
 
 
@@ -129,6 +129,6 @@ instance Param String where
 
 
 -- | Easily derive Param for a type that implements HttpApiData with this and toQueryParam
-parseParamQuery :: FromHttpApiData a => Text -> Maybe a
+parseParamQuery :: (FromHttpApiData a) => Text -> Maybe a
 parseParamQuery t =
   either (const Nothing) Just $ parseQueryParam t

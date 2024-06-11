@@ -27,13 +27,13 @@ page = do
 -- Contacts ----------------------------------------------
 
 data Contacts = Contacts
-  deriving (Generic, Param)
+  deriving (Generic, ViewId)
 
 
 data ContactsAction
   = Reload (Maybe Filter)
   | Delete Int
-  deriving (Generic, Param)
+  deriving (Generic, ViewAction)
 
 
 data Filter
@@ -83,14 +83,14 @@ allContactsView fil us = do
 -- Contact ----------------------------------------------------
 
 data Contact = Contact Int
-  deriving (Generic, Param)
+  deriving (Generic, ViewId)
 
 
 data ContactAction
   = Edit
   | Save
   | View
-  deriving (Generic, Param)
+  deriving (Generic, ViewAction)
 
 
 instance HyperView Contact where

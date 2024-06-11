@@ -25,11 +25,11 @@ simplePage = do
 
 
 data Message = Message Int
-  deriving (Generic, Param)
+  deriving (Generic, ViewId)
 
 
 data MessageAction = Louder Text
-  deriving (Generic, Param)
+  deriving (Generic, ViewAction)
 
 
 instance HyperView Message where

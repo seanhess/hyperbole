@@ -15,12 +15,12 @@ page = do
 
 
 data Contents = Contents
-  deriving (Generic, Param)
+  deriving (Generic, ViewId)
 
 
 data ContentsAction
   = RedirectAsAction
-  deriving (Generic, Param)
+  deriving (Generic, ViewAction)
 
 
 instance HyperView Contents where

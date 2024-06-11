@@ -43,7 +43,8 @@ import Text.Casing (kebab)
 import Web.FormUrlEncoded qualified as FE
 import Web.HttpApiData (FromHttpApiData (..))
 import Web.Hyperbole.Effect
-import Web.Hyperbole.HyperView (HyperView (..), Param (..), dataTarget)
+import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..), dataTarget)
+import Web.Hyperbole.Param (Param (..))
 import Web.Internal.FormUrlEncoded (FormOptions (..), GFromForm, defaultFormOptions, genericFromForm)
 import Web.View hiding (form, input, label)
 
@@ -52,14 +53,14 @@ import Web.View hiding (form, input, label)
 data FormFields id = FormFields id Validation
 
 
-instance (Param id) => Param (FormFields id) where
-  parseParam t = do
-    i <- parseParam t
+instance (ViewId id) => ViewId (FormFields id) where
+  parseViewId t = do
+    i <- parseViewId t
     pure $ FormFields i mempty
-  toParam (FormFields i _) = toParam i
+  toViewId (FormFields i _) = toViewId i
 
 
-instance (HyperView id, Param id) => HyperView (FormFields id) where
+instance (HyperView id, ViewId id) => HyperView (FormFields id) where
   type Action (FormFields id) = Action id
 
 
@@ -229,8 +230,8 @@ form a v f cnt = do
   -- let cnt = fcnt frm
   tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormFields vid v) cnt
  where
-  onSubmit :: (Param a) => a -> Mod
-  onSubmit = att "data-on-submit" . toParam
+  onSubmit :: (ViewAction a) => a -> Mod
+  onSubmit = att "data-on-submit" . toAction
 
 
 -- | Button that submits the 'form'. Use 'button' to specify actions other than submit
