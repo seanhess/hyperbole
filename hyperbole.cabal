@@ -135,8 +135,9 @@ test-suite tests
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Test.ParamSpec
       Test.RouteSpec
-      Test.ViewSpec
+      Test.ViewActionSpec
       Paths_hyperbole
   autogen-modules:
       Paths_hyperbole

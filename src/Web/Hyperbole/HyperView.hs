@@ -5,12 +5,16 @@ module Web.Hyperbole.HyperView where
 import Control.Applicative ((<|>))
 import Control.Monad (guard)
 import Data.Kind (Type)
-import Data.Text (Text, pack)
+import Data.Text (Text, pack, unpack)
 import Data.Text qualified as T
 import GHC.Generics
+import Text.Read (readMaybe)
 import Web.Hyperbole.Param (GParam (..), Param (..), breakSegment)
 import Web.Hyperbole.Route (Route (..), routeUrl)
 import Web.View
+import Data.ByteString qualified as BS
+import Debug.Trace
+import Data.ByteString.Lazy qualified as BL
 
 
 {- | HyperViews are interactive subsections of a 'Page'
@@ -225,13 +229,30 @@ class GAction f where
   gParseAction :: Text -> Maybe (f p)
 
 
-instance (GParam f, GParam g) => GAction (f :*: g) where
-  gToAction (a :*: b) = gToParam a <> " " <> gToParam b
+instance (GAction f, GAction g) => GAction (f :*: g) where
+  gToAction (a :*: b) = gToAction a <> " " <> gToAction b
+
   gParseAction t = do
-    let (at, bt) = breakSegment ' ' t
-    a <- gParseParam at
-    b <- gParseParam bt
+    let (at, bt) = breakProduct
+    a <- gParseAction at
+    b <- gParseAction bt
     pure $ a :*: b
+
+    where
+      breakProduct
+        -- if it starts with a ( or a ", we want to skip until the terminator
+        | T.isPrefixOf "\"" t = breakString
+        | T.isPrefixOf "(" t = breakParens
+        | otherwise = breakSegment ' ' t
+
+      breakString =
+        let rest = T.drop 1 t
+        in ("\"" <> T.takeWhile (/= '"') rest <> "\"", T.drop 2 $ T.dropWhile (/= '"') rest)
+
+      breakParens =
+        let rest = T.drop 1 t
+        in ("(" <> T.takeWhile (/= ')') rest <> ")", T.drop 2 $ T.dropWhile (/= ')') rest)
+
 
 
 instance (GAction f, GAction g) => GAction (f :+: g) where
@@ -263,10 +284,45 @@ instance GAction U1 where
   gParseAction _ = pure U1
 
 
-instance (GParam f) => GAction (M1 S s f) where
-  gToAction (M1 a) = gToParam a
-  gParseAction t = M1 <$> gParseParam t
+instance (GAction f) => GAction (M1 S s f) where
+  gToAction (M1 a) = gToAction a
+  gParseAction t = M1 <$> gParseAction t
 
--- instance {-# OVERLAPPABLE #-} (Param a) => GAction (K1 R a) where
---   gToAction (K1 a) = toParam a
---   gParseAction t = K1 <$> parseParam t
+
+instance GAction (K1 R Int) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+instance GAction (K1 R Integer) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+instance GAction (K1 R String) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+instance GAction (K1 R Text) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+instance GAction (K1 R BS.ByteString) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+instance GAction (K1 R BL.ByteString) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+
+
+
+instance {-# OVERLAPPABLE #-} (Show a, Read a) => GAction (K1 R a) where
+  gToAction (K1 a) = "(" <> pack (show a) <> ")"
+  gParseAction t = K1 <$> readMaybe (unpack t)
+
+
+toActionShow :: Show a => K1 R a p -> Text
+toActionShow (K1 a) = pack (show a)
+
+parseActionRead :: Read a => Text -> Maybe (K1 R a p)
+parseActionRead t = K1 <$> readMaybe (unpack t)

@@ -39,7 +39,7 @@ data ContactsAction
 data Filter
   = Active
   | Inactive
-  deriving (Eq, Generic, Param)
+  deriving (Eq, Show, Read)
 
 
 instance HyperView Contacts where

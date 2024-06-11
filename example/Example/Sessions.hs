@@ -22,20 +22,16 @@ page = do
     pure $ col (pad 20 . gap 10) $ do
       el_ "Reload your browser after changing the settings below to see the session information preserved"
       row id $ do
-        hyper (Contents (Woot 3) "hello bobby") $ viewContent clr msg
+        hyper Contents $ viewContent clr msg
 
 
-data Contents = Contents Woot Text
+data Contents = Contents
   deriving (Generic, ViewId)
-
-
-newtype Woot = Woot Int
-  deriving newtype (Param)
 
 
 data ContentsAction
   = SaveColor AppColor
-  | SaveMessage Text Int
+  | SaveMessage Text
   deriving (Generic, ViewAction)
 
 
@@ -48,7 +44,7 @@ content _ (SaveColor clr) = do
   setSession "color" clr
   msg <- session "msg"
   pure $ viewContent (Just clr) msg
-content _ (SaveMessage msg _) = do
+content _ (SaveMessage msg) = do
   setSession "msg" msg
   clr <- session "color"
   pure $ viewContent clr (Just msg)
@@ -79,6 +75,6 @@ viewMessage mm = do
     el (fontSize 24 . bold) "Session Message:"
     el_ $ text msg
     row (gap 10) $ do
-      button (SaveMessage "Hello" 12) Style.btnLight "Msg: Hello"
-      button (SaveMessage "This is Goodbye" 123) Style.btnLight "Msg: Goodbye"
-      button (SaveMessage "________" 0) Style.btnLight "Clear"
+      button (SaveMessage "Hello") Style.btnLight "Msg: Hello"
+      button (SaveMessage "Goodbye") Style.btnLight "Msg: Goodbye"
+      button (SaveMessage "________") Style.btnLight "Clear"

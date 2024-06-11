@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedLists #-}
 
-module Test.ViewSpec where
+module Test.ParamSpec where
 
 import Data.Text (Text)
 import Data.Text qualified as T
 import GHC.Generics
 import Test.Syd
-import Web.Hyperbole.HyperView
+import Web.Hyperbole.Param
 import Web.View (att)
 import Web.View.Types
 
@@ -43,29 +43,28 @@ instance Param Custom where
 
 spec :: Spec
 spec = do
-  describe "HyperView" $ do
-    describe "Param" $ do
-      describe "toParam" $ do
-        it "basic" $ toParam Thing `shouldBe` "thing"
-        it "custom" $ toParam Custom `shouldBe` "something"
+  describe "Param" $ do
+    describe "toParam" $ do
+      it "basic" $ toParam Thing `shouldBe` "thing"
+      it "custom" $ toParam Custom `shouldBe` "something"
 
-      describe "parseParam" $ do
-        it "basic" $ parseParam "thing" `shouldBe` Just Thing
-        it "basic lowercase" $ parseParam @Thing "Thing" `shouldBe` Nothing
-        it "custom" $ parseParam "something" `shouldBe` Just Custom
-        it "custom other" $ parseParam @Thing "custom" `shouldBe` Nothing
+    describe "parseParam" $ do
+      it "basic" $ parseParam "thing" `shouldBe` Just Thing
+      it "basic lowercase" $ parseParam @Thing "Thing" `shouldBe` Nothing
+      it "custom" $ parseParam "something" `shouldBe` Just Custom
+      it "custom other" $ parseParam @Thing "custom" `shouldBe` Nothing
 
-      describe "has-string" $ do
-        it "should not contain single quotes" $ do
-          toParam (HasString "woot") `shouldNotSatisfy` containsSingleQuotes
+    describe "has-string" $ do
+      it "should not contain single quotes" $ do
+        toParam (HasString "woot") `shouldNotSatisfy` containsSingleQuotes
 
-        it "should roundtrip" $ do
-          let inp = HasString "woot"
-          parseParam (toParam inp) `shouldBe` Just inp
+      it "should roundtrip" $ do
+        let inp = HasString "woot"
+        parseParam (toParam inp) `shouldBe` Just inp
 
-      describe "compound" $ do
-        it "should toparam" $ toParam (Two Thing) `shouldBe` "two-thing"
-        it "double roundtrip" $ parseParam (toParam (Two Thing)) `shouldBe` Just (Two Thing)
+    describe "compound" $ do
+      it "should toparam" $ toParam (Two Thing) `shouldBe` "two-thing"
+      it "double roundtrip" $ parseParam (toParam (Two Thing)) `shouldBe` Just (Two Thing)
 
   describe "Param Attributes" $ do
     it "should serialize basic id" $ do
