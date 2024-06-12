@@ -1,4 +1,4 @@
-export function actionUrl(id:string, action:string):URL {
+export function actionUrl(id:ViewId, action:string):URL {
   let url = new URL(window.location.href)
   url.searchParams.append("id", id)
   url.searchParams.append("action", action)
@@ -17,12 +17,15 @@ export function toSearch(form?:FormData):URLSearchParams | undefined {
   return params
 }
 
-export function actionMessage(id:string, action:string, form?:FormData):ActionMessage {
+export function actionMessage(id:ViewId, action:string, form?:FormData):ActionMessage {
   let url = actionUrl(id, action)
-  return { url, form: toSearch(form) }
+  return { id, url, form: toSearch(form) }
 }
 
 export type ActionMessage = {
+  id: ViewId
   url: URL
   form: URLSearchParams | undefined
 }
+
+export type ViewId = string
