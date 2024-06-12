@@ -18,14 +18,16 @@ page = do
 
 
 data Contents = Contents Milliseconds
-  deriving (Generic, Param)
-instance HyperView Contents where
-  type Action Contents = ContentsAction
+  deriving (Generic, ViewId)
 
 
 data ContentsAction
   = Load Int
-  deriving (Generic, Param)
+  deriving (Generic, ViewAction)
+
+
+instance HyperView Contents where
+  type Action Contents = ContentsAction
 
 
 content :: (Hyperbole :> es, Debug :> es, IOE :> es) => Contents -> ContentsAction -> Eff es (View Contents ())

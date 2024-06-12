@@ -20,7 +20,6 @@ import Network.HTTP.Types hiding (Query)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.Param (Param (..))
 import Web.Hyperbole.Route
 import Web.Hyperbole.Session as Session
 import Web.View
@@ -49,7 +48,7 @@ data Request = Request
 >   pure ()
 -}
 data Response
-  = Response ViewId (View () ())
+  = Response TargetViewId (View () ())
   | NotFound
   | Redirect Url
   | Err ResponseError
@@ -83,7 +82,7 @@ newtype Page es a = Page (Eff es a)
 
 
 -- | Serialized ViewId
-newtype ViewId = ViewId Text
+newtype TargetViewId = TargetViewId Text
 
 
 -- | An action, with its corresponding id
@@ -323,7 +322,7 @@ redirect = send . RespondEarly . Redirect
 -- | Respond with the given view, and stop execution
 respondEarly :: (Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
 respondEarly i vw = do
-  let vid = ViewId (toParam i)
+  let vid = TargetViewId (toViewId i)
   let res = Response vid $ hyper i vw
   send $ RespondEarly res
 
@@ -331,7 +330,7 @@ respondEarly i vw = do
 -- | Manually set the response to the given view. Normally you return a 'View' from 'load' or 'handle' instead of using this
 view :: (Hyperbole :> es) => View () () -> Eff es Response
 view vw = do
-  pure $ Response (ViewId "") vw
+  pure $ Response (TargetViewId "") vw
 
 
 {- | The load handler is run when the page is first loaded. Run any side effects needed, then return a view of the full page
@@ -389,7 +388,7 @@ handle run = Page $ do
   case mev of
     Just event -> do
       vw <- run event.viewId event.action
-      let vid = ViewId $ toParam event.viewId
+      let vid = TargetViewId $ toViewId event.viewId
       send $ RespondEarly $ Response vid $ hyper event.viewId vw
     _ -> pure ()
 

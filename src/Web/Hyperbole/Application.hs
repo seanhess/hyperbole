@@ -188,7 +188,7 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
     -- TODO: better error handling!
     sendMessage (metadata "ERROR" (pack (show r))) ""
 
-  sendView :: (IOE :> es) => Metadata -> ViewId -> View () () -> Eff es ()
+  sendView :: (IOE :> es) => Metadata -> TargetViewId -> View () () -> Eff es ()
   sendView meta vid vw = do
     sendMessage (viewIdMeta vid <> meta) (renderLazyByteString vw)
 
@@ -204,8 +204,8 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
   sessionMeta :: Session -> Metadata
   sessionMeta sess = Metadata [("SESSION", cs (sessionSetCookie sess))]
 
-  viewIdMeta :: ViewId -> Metadata
-  viewIdMeta (ViewId vid) = Metadata [("VIEW-ID", cs vid)]
+  viewIdMeta :: TargetViewId -> Metadata
+  viewIdMeta (TargetViewId vid) = Metadata [("VIEW-ID", cs vid)]
 
   metadata :: BL.ByteString -> Text -> Metadata
   metadata name value = Metadata [(name, value)]

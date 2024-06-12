@@ -44,7 +44,6 @@ import Web.FormUrlEncoded qualified as FE
 import Web.HttpApiData (FromHttpApiData (..))
 import Web.Hyperbole.Effect
 import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..), dataTarget)
-import Web.Hyperbole.Param (Param (..))
 import Web.Internal.FormUrlEncoded (FormOptions (..), GFromForm, defaultFormOptions, genericFromForm)
 import Web.View hiding (form, input, label)
 
