@@ -7,6 +7,7 @@ import Data.Text qualified as T
 import Effectful
 import Example.Style qualified as Style
 import Web.Hyperbole
+import Web.Hyperbole.Forms
 
 
 page :: (Hyperbole :> es) => Page es Response
@@ -37,34 +38,44 @@ data Pass1 = Pass1 Text deriving (Generic, FormField)
 data Pass2 = Pass2 Text deriving (Generic, FormField)
 
 
-type UserForm = [User, Age, Pass1, Pass2]
+type UserFields = [User, Age, Pass1, Pass2]
+
+
+data UserForm = UserForm
+  { user :: User
+  , age :: Age
+  , pass1 :: Pass1
+  , pass2 :: Pass2
+  }
+  deriving (Generic, Form)
 
 
 formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
 formAction _ Submit = do
-  u <- formField @User
-  a <- formField @Age
-  p1 <- formField @Pass1
-  p2 <- formField @Pass2
+  -- u <- formField @User
+  -- a <- formField @Age
+  -- p1 <- formField @Pass1
+  -- p2 <- formField @Pass2
+  uf <- formFields
 
-  let vals = validateForm u a p1 p2
+  let vals = validateForm uf
 
   if anyInvalid vals
     then pure $ formView vals
-    else pure $ userView u a p1
+    else pure $ userView uf.user uf.age uf.pass1
 
 
-validateForm :: User -> Age -> Pass1 -> Pass2 -> Validation UserForm
-validateForm u a p1 p2 =
-  validateUser u <> validateAge a <> validatePass p1 p2
+validateForm :: UserForm -> Validation UserFields
+validateForm uf =
+  validateUser uf.user <> validateAge uf.age <> validatePass uf.pass1 uf.pass2
 
 
-validateAge :: Age -> Validation UserForm
+validateAge :: Age -> Validation UserFields
 validateAge (Age a) =
   validate @Age (a < 20) "User must be at least 20 years old"
 
 
-validateUser :: User -> Validation UserForm
+validateUser :: User -> Validation UserFields
 validateUser (User u) =
   mconcat
     [ validate @User (T.elem ' ' u) "Username must not contain spaces"
@@ -76,7 +87,7 @@ validateUser (User u) =
     ]
 
 
-validatePass :: Pass1 -> Pass2 -> Validation UserForm
+validatePass :: Pass1 -> Pass2 -> Validation UserFields
 validatePass (Pass1 p1) (Pass2 p2) =
   mconcat
     [ validate @Pass1 (p1 /= p2) "Passwords did not match"
@@ -84,7 +95,7 @@ validatePass (Pass1 p1) (Pass2 p2) =
     ]
 
 
-formView :: Validation UserForm -> View FormView ()
+formView :: Validation UserFields -> View FormView ()
 formView v = do
   form Submit v (gap 10 . pad 10) $ do
     el Style.h1 "Sign Up"

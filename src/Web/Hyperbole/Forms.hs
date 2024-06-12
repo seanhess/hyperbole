@@ -14,12 +14,11 @@ module Web.Hyperbole.Forms
   , form
   , placeholder
   , submit
-  , parseForm
   , formField
+  , formFields
   , Form (..)
   , defaultFormOptions
   , FormOptions (..)
-  , genericFromForm
   , Validation (..)
   , Validated (..)
   , FormField (..)
@@ -47,7 +46,7 @@ import Web.FormUrlEncoded qualified as FE
 import Web.HttpApiData (FromHttpApiData (..))
 import Web.Hyperbole.Effect
 import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..), dataTarget)
-import Web.Internal.FormUrlEncoded (FormOptions (..), GFromForm, defaultFormOptions, genericFromForm)
+import Web.Internal.FormUrlEncoded (FormOptions (..), defaultFormOptions)
 import Web.View hiding (form, input, label)
 
 
@@ -277,16 +276,18 @@ submit :: Mod -> View (FormFields id fs) () -> View (FormFields id fs) ()
 submit f = tag "button" (att "type" "submit" . f)
 
 
-type family Field' (context :: Type -> Type) a
-type instance Field' Identity a = a
-type instance Field' Label a = Text
-type instance Field' Invalid a = Maybe Text
+-- type family Field' (context :: Type -> Type) a
+-- type instance Field' Identity a = a
+-- type instance Field' Label a = Text
+-- type instance Field' Invalid a = Maybe Text
+
+newtype Field a = Field a
 
 
-parseForm :: forall form es. (Form form, Hyperbole :> es) => Eff es (form Identity)
-parseForm = do
+formFields :: forall form es. (Form form, Hyperbole :> es) => Eff es form
+formFields = do
   f <- formData
-  let ef = fromForm f :: Either Text (form Identity)
+  let ef = formParse f :: Either Text form
   either parseError pure ef
 
 
@@ -304,55 +305,77 @@ formAction _ SignUp = do
 formField :: forall a es. (FormField a, Hyperbole :> es) => Eff es a
 formField = do
   f <- formData
-  case fieldParse (inputName @a) f of
+  case fieldParse f of
     Left e -> parseError e
     Right a -> pure a
 
 
-class Form (form :: (Type -> Type) -> Type) where
-  formLabels :: form Label
-  default formLabels :: (Generic (form Label), GForm (Rep (form Label))) => form Label
-  formLabels = to gForm
+class Form f where
+  formParse :: FE.Form -> Either Text f
+  default formParse :: (Generic f, GForm (Rep f)) => FE.Form -> Either Text f
+  formParse f = to <$> gFormParse f
 
 
-  formInvalid :: form Invalid
-  default formInvalid :: (Generic (form Invalid), GForm (Rep (form Invalid))) => form Invalid
-  formInvalid = to gForm
+instance (FormField a, FormField b) => Form (a, b) where
+  formParse f = do
+    (,) <$> fieldParse f <*> fieldParse f
 
 
-  fromForm :: FE.Form -> Either Text (form Identity)
-  default fromForm :: (Generic (form Identity), GFromForm (form Identity) (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
-  fromForm = genericFromForm defaultFormOptions
+instance (FormField a, FormField b, FormField c) => Form (a, b, c) where
+  formParse f = do
+    (,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f
+
+
+instance (FormField a, FormField b, FormField c, FormField d) => Form (a, b, c, d) where
+  formParse f = do
+    (,,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f
+
+
+instance (FormField a, FormField b, FormField c, FormField d, FormField e) => Form (a, b, c, d, e) where
+  formParse f = do
+    (,,,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f
 
 
 -- | Automatically derive labels from form field names
 class GForm f where
-  gForm :: f p
+  gFormParse :: FE.Form -> Either Text (f p)
 
 
-instance GForm U1 where
-  gForm = U1
-
+-- instance GForm U1 where
+--   gForm = U1
 
 instance (GForm f, GForm g) => GForm (f :*: g) where
-  gForm = gForm :*: gForm
+  gFormParse f = do
+    a <- gFormParse f
+    b <- gFormParse f
+    pure $ a :*: b
 
 
 instance (GForm f) => GForm (M1 D d f) where
-  gForm = M1 gForm
+  gFormParse f = M1 <$> gFormParse f
 
 
 instance (GForm f) => GForm (M1 C c f) where
-  gForm = M1 gForm
+  gFormParse f = M1 <$> gFormParse f
 
 
-instance (Selector s) => GForm (M1 S s (K1 R Text)) where
-  gForm = M1 . K1 $ pack (selName (undefined :: M1 S s (K1 R Text) p))
+instance (Selector s, GForm f) => GForm (M1 S s f) where
+  gFormParse f = M1 <$> gFormParse f
 
 
-instance GForm (M1 S s (K1 R (Maybe Text))) where
-  gForm = M1 . K1 $ Nothing
+instance (Selector s, FromHttpApiData a) => GForm (M1 S s (K1 R (Field a))) where
+  gFormParse f =
+    M1 . K1 . Field <$> do
+      let sel = pack (selName (undefined :: M1 S s (K1 R a) p))
+      FE.parseUnique sel f
 
+
+instance (FormField a) => GForm (K1 R a) where
+  gFormParse f = K1 <$> fieldParse f
+
+
+-- instance GForm (M1 S s (K1 R (Maybe Text))) where
+--   gForm = M1 . K1 $ Nothing
 
 {- | Form Fields are identified by a type
 
@@ -367,9 +390,14 @@ class FormField a where
   inputName = gDataName (from (undefined :: a))
 
 
-  fieldParse :: Text -> FE.Form -> Either Text a
-  default fieldParse :: (Generic a, GFieldParse (Rep a)) => Text -> FE.Form -> Either Text a
-  fieldParse t f = to <$> gFieldParse t f
+  fieldParse :: FE.Form -> Either Text a
+  default fieldParse :: FE.Form -> Either Text a
+  fieldParse = fieldParse' (inputName @a)
+
+
+  fieldParse' :: Text -> FE.Form -> Either Text a
+  default fieldParse' :: (Generic a, GFieldParse (Rep a)) => Text -> FE.Form -> Either Text a
+  fieldParse' t f = to <$> gFieldParse t f
 
 
 class GDataName f where
@@ -438,7 +466,17 @@ type family ElemGo e es orig :: Constraint where
 -- data FakeField = FakeField Text deriving (Generic, FormField)
 --
 --
--- type UserForm = [User, Age, Pass1, Pass2]
+-- type UserFields = [User, Age, Pass1, Pass2]
+--
+--
+-- data UserForm = UserForm
+--   { user :: User
+--   , age :: Age
+--   , pass1 :: Pass1
+--   , pass2 :: Pass2
+--   }
+--   deriving (Generic, Form)
+
 --
 --
 -- formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
@@ -502,3 +540,4 @@ type family ElemGo e es orig :: Constraint where
 --   row (gap 5) $ do
 --     el_ "Age:"
 --     el_ $ text $ pack (show age)
+--
