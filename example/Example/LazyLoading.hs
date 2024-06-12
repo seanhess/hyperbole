@@ -19,7 +19,7 @@ page = do
 
 
 data Contents = Contents
-  deriving (Generic, Param)
+  deriving (Generic, ViewId)
 instance HyperView Contents where
   type Action Contents = ContentsAction
 
@@ -27,7 +27,7 @@ instance HyperView Contents where
 data ContentsAction
   = Load
   | Reload Int
-  deriving (Generic, Param)
+  deriving (Generic, ViewAction)
 
 
 content :: (Hyperbole :> es, Debug :> es) => Contents -> ContentsAction -> Eff es (View Contents ())

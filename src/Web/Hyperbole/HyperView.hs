@@ -8,9 +8,13 @@ import Data.Kind (Type)
 import Data.Text (Text, pack, unpack)
 import Data.Text qualified as T
 import GHC.Generics
-import Text.Read
+import Text.Read (readMaybe)
+import Web.Hyperbole.Param (GParam (..), Param (..), breakSegment)
 import Web.Hyperbole.Route (Route (..), routeUrl)
 import Web.View
+import Data.ByteString qualified as BS
+import Debug.Trace
+import Data.ByteString.Lazy qualified as BL
 
 
 {- | HyperViews are interactive subsections of a 'Page'
@@ -30,8 +34,30 @@ instance HyperView Message where
   type Action Message = MessageAction
 @
 -}
-class (Param id, Param (Action id)) => HyperView id where
+class (ViewId id, ViewAction (Action id)) => HyperView id where
   type Action id :: Type
+
+
+class ViewAction a where
+  toAction :: a -> Text
+  default toAction :: (Generic a, GAction (Rep a)) => a -> Text
+  toAction = gToAction . from
+
+
+  parseAction :: Text -> Maybe a
+  default parseAction :: (Generic a, GAction (Rep a)) => Text -> Maybe a
+  parseAction t = to <$> gParseAction t
+
+
+class ViewId a where
+  toViewId :: a -> Text
+  default toViewId :: (Generic a, GParam (Rep a)) => a -> Text
+  toViewId = gToParam . from
+
+
+  parseViewId :: Text -> Maybe a
+  default parseViewId :: (Generic a, GParam (Rep a)) => Text -> Maybe a
+  parseViewId t = to <$> gParseParam t
 
 
 {- | Embed HyperViews into the page, or nest them into other views
@@ -65,7 +91,7 @@ otherView = do
 -}
 hyper :: forall id ctx. (HyperView id) => id -> View id () -> View ctx ()
 hyper vid vw = do
-  el (att "id" (toParam vid) . flexCol) $
+  el (att "id" (toViewId vid) . flexCol) $
     addContext vid vw
 
 
@@ -76,7 +102,7 @@ hyper vid vw = do
 button :: (HyperView id) => Action id -> Mod -> View id () -> View id ()
 button a f cd = do
   c <- context
-  tag "button" (att "data-on-click" (toParam a) . dataTarget c . f) cd
+  tag "button" (att "data-on-click" (toAction a) . dataTarget c . f) cd
 
 
 {- | Send the action after N milliseconds. Can be used to implement lazy loading or polling
@@ -92,7 +118,7 @@ pollMessageView m = do
 onLoad :: (HyperView id) => Action id -> DelayMs -> View id () -> View id ()
 onLoad a delay initContent = do
   c <- context
-  el (att "data-on-load" (toParam a) . att "data-delay" (toParam delay) . dataTarget c) initContent
+  el (att "data-on-load" (toAction a) . att "data-delay" (toParam delay) . dataTarget c) initContent
 
 
 type DelayMs = Int
@@ -115,8 +141,8 @@ onRequest a b = do
 
 
 -- | Internal
-dataTarget :: (Param a) => a -> Mod
-dataTarget = att "data-target" . toParam
+dataTarget :: (ViewId a) => a -> Mod
+dataTarget = att "data-target" . toViewId
 
 
 {- | Trigger actions for another view. They will update the view specified
@@ -160,10 +186,10 @@ dropdown
   -> Mod
   -> View (Option opt id (Action id)) ()
   -> View id ()
-dropdown toAction isSel f options = do
+dropdown act isSel f options = do
   c <- context
   tag "select" (att "data-on-change" "" . dataTarget c . f) $ do
-    addContext (Option toAction isSel) options
+    addContext (Option act isSel) options
 
 
 -- | An option for a 'dropdown'. First argument is passed to (opt -> Action id) in the 'dropdown', and to the selected predicate
@@ -174,7 +200,7 @@ option
   -> View (Option opt id (Action id)) ()
 option opt cnt = do
   os <- context
-  tag "option" (att "value" (toParam (os.toAction opt)) . selected (os.selected opt)) cnt
+  tag "option" (att "value" (toAction (os.toAction opt)) . selected (os.selected opt)) cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
@@ -189,133 +215,6 @@ data Option opt id action = Option
   }
 
 
-{- | Types that can be serialized. 'HyperView' requires this for both its view id and action
-
-> data Message = Message Int
->   deriving (Generic, Param)
--}
-class Param a where
-  toParam :: a -> Text
-  default toParam :: (Generic a, GParam (Rep a)) => a -> Text
-  toParam = gToParam . from
-
-
-  -- not as flexible as FromHttpApiData, but derivable
-  parseParam :: Text -> Maybe a
-  default parseParam :: (Generic a, GParam (Rep a)) => Text -> Maybe a
-  parseParam t = to <$> gParseParam t
-
-
-class GParam f where
-  gToParam :: f p -> Text
-  gParseParam :: Text -> Maybe (f p)
-
-
-instance (GParam f, GParam g) => GParam (f :*: g) where
-  gToParam (a :*: b) = gToParam a <> "-" <> gToParam b
-  gParseParam t = do
-    let (at, bt) = breakSegment t
-    a <- gParseParam at
-    b <- gParseParam bt
-    pure $ a :*: b
-
-
-instance (GParam f, GParam g) => GParam (f :+: g) where
-  gToParam (L1 a) = gToParam a
-  gToParam (R1 b) = gToParam b
-  gParseParam t = do
-    (L1 <$> gParseParam @f t) <|> (R1 <$> gParseParam @g t)
-
-
--- do we add the datatypename? no, the constructor name
-instance (Datatype d, GParam f) => GParam (M1 D d f) where
-  gToParam (M1 a) = gToParam a
-  gParseParam t = M1 <$> gParseParam t
-
-
-instance (Constructor c, GParam f) => GParam (M1 C c f) where
-  gToParam (M1 a) =
-    let cn = toSegment (conName (undefined :: M1 C c f p))
-     in case gToParam a of
-          "" -> cn
-          t -> cn <> "-" <> t
-  gParseParam t = do
-    let (c, rest) = breakSegment t
-    guard $ c == toSegment (conName (undefined :: M1 C c f p))
-    M1 <$> gParseParam rest
-
-
-instance GParam U1 where
-  gToParam _ = ""
-  gParseParam _ = pure U1
-
-
-instance (GParam f) => GParam (M1 S s f) where
-  gToParam (M1 a) = gToParam a
-  gParseParam t = M1 <$> gParseParam t
-
-
-instance GParam (K1 R Text) where
-  gToParam (K1 t) = t
-  gParseParam t = pure $ K1 t
-
-
-instance GParam (K1 R String) where
-  gToParam (K1 s) = pack s
-  gParseParam t = pure $ K1 $ unpack t
-
-
-instance {-# OVERLAPPABLE #-} (Param a) => GParam (K1 R a) where
-  gToParam (K1 a) = toParam a
-  gParseParam t = K1 <$> parseParam t
-
-
--- instance {-# OVERLAPPABLE #-} (Show a, Read a) => GParam (K1 R a) where
---   gToParam (K1 a) = pack $ show a
---   gParseParam t = do
---     K1 <$> readMaybe (unpack t)
-
-breakSegment :: Text -> (Text, Text)
-breakSegment t =
-  let (start, rest) = T.breakOn "-" t
-   in (start, T.drop 1 rest)
-
-
-toSegment :: String -> Text
-toSegment = T.toLower . pack
-
-
--- instance (GParam f) => GParam (M1 C c f) where
---   gForm = M1 gForm
-
--- where
---  toDouble '\'' = '\"'
---  toDouble c = c
-
-instance (Param a) => Param (Maybe a) where
-  toParam Nothing = ""
-  toParam (Just a) = toParam a
-  parseParam "" = pure Nothing
-  parseParam t = Just $ parseParam t
-instance Param Integer where
-  toParam = pack . show
-  parseParam = readMaybe . unpack
-instance Param Float where
-  toParam = pack . show
-  parseParam = readMaybe . unpack
-instance Param Int where
-  toParam = pack . show
-  parseParam = readMaybe . unpack
-instance Param () where
-  toParam = pack . show
-  parseParam = readMaybe . unpack
-
-
-instance Param Text where
-  parseParam = pure
-  toParam = id
-
-
 {- | A hyperlink to another route
 
 >>> route (User 100) id "View User"
@@ -323,3 +222,107 @@ instance Param Text where
 -}
 route :: (Route a) => a -> Mod -> View c () -> View c ()
 route r = link (routeUrl r)
+
+
+class GAction f where
+  gToAction :: f p -> Text
+  gParseAction :: Text -> Maybe (f p)
+
+
+instance (GAction f, GAction g) => GAction (f :*: g) where
+  gToAction (a :*: b) = gToAction a <> " " <> gToAction b
+
+  gParseAction t = do
+    let (at, bt) = breakProduct
+    a <- gParseAction at
+    b <- gParseAction bt
+    pure $ a :*: b
+
+    where
+      breakProduct
+        -- if it starts with a ( or a ", we want to skip until the terminator
+        | T.isPrefixOf "\"" t = breakString
+        | T.isPrefixOf "(" t = breakParens
+        | otherwise = breakSegment ' ' t
+
+      breakString =
+        let rest = T.drop 1 t
+        in ("\"" <> T.takeWhile (/= '"') rest <> "\"", T.drop 2 $ T.dropWhile (/= '"') rest)
+
+      breakParens =
+        let rest = T.drop 1 t
+        in ("(" <> T.takeWhile (/= ')') rest <> ")", T.drop 2 $ T.dropWhile (/= ')') rest)
+
+
+
+instance (GAction f, GAction g) => GAction (f :+: g) where
+  gToAction (L1 a) = gToAction a
+  gToAction (R1 b) = gToAction b
+  gParseAction t = do
+    (L1 <$> gParseAction @f t) <|> (R1 <$> gParseAction @g t)
+
+
+instance (Datatype d, GAction f) => GAction (M1 D d f) where
+  gToAction (M1 a) = gToAction a
+  gParseAction t = M1 <$> gParseAction t
+
+
+instance (Constructor c, GAction f) => GAction (M1 C c f) where
+  gToAction (M1 a) =
+    let cn = conName (undefined :: M1 C c f p)
+     in case gToAction a of
+          "" -> pack cn
+          t -> pack cn <> " " <> t
+  gParseAction t = do
+    let (c, rest) = breakSegment ' ' t
+    guard $ c == pack (conName (undefined :: M1 C c f p))
+    M1 <$> gParseAction rest
+
+
+instance GAction U1 where
+  gToAction _ = ""
+  gParseAction _ = pure U1
+
+
+instance (GAction f) => GAction (M1 S s f) where
+  gToAction (M1 a) = gToAction a
+  gParseAction t = M1 <$> gParseAction t
+
+
+instance GAction (K1 R Int) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+instance GAction (K1 R Integer) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+instance GAction (K1 R String) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+instance GAction (K1 R Text) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+instance GAction (K1 R BS.ByteString) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+instance GAction (K1 R BL.ByteString) where
+  gToAction = toActionShow
+  gParseAction = parseActionRead
+
+
+
+
+instance {-# OVERLAPPABLE #-} (Show a, Read a) => GAction (K1 R a) where
+  gToAction (K1 a) = "(" <> pack (show a) <> ")"
+  gParseAction t = K1 <$> readMaybe (unpack t)
+
+
+toActionShow :: Show a => K1 R a p -> Text
+toActionShow (K1 a) = pack (show a)
+
+parseActionRead :: Read a => Text -> Maybe (K1 R a p)
+parseActionRead t = K1 <$> readMaybe (unpack t)

@@ -20,6 +20,7 @@ import Network.HTTP.Types hiding (Query)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.Param (Param (..))
 import Web.Hyperbole.Route
 import Web.Hyperbole.Session as Session
 import Web.View
@@ -196,8 +197,8 @@ getEvent = do
 parseEvent :: (HyperView id) => Query -> Maybe (Event id (Action id))
 parseEvent q = do
   Event ti ta <- lookupEvent q
-  vid <- parseParam ti
-  act <- parseParam ta
+  vid <- parseViewId ti
+  act <- parseAction ta
   pure $ Event vid act
 
 

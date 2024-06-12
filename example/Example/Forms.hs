@@ -18,11 +18,11 @@ page = do
 
 
 data FormView = FormView
-  deriving (Generic, Param)
+  deriving (Generic, ViewId)
 
 
 data FormAction = Submit
-  deriving (Generic, Param)
+  deriving (Generic, ViewAction)
 
 
 instance HyperView FormView where
@@ -86,8 +86,6 @@ formView v = do
     submit Style.btn "Submit"
  where
   inp = border 1 . pad 8
-
-
 
 
 userView :: User -> Age -> Pass1 -> View FormView ()

@@ -26,13 +26,13 @@ page = do
 
 
 data Contents = Contents
-  deriving (Generic, Param)
+  deriving (Generic, ViewId)
 
 
 data ContentsAction
   = SaveColor AppColor
   | SaveMessage Text
-  deriving (Generic, Param)
+  deriving (Generic, ViewAction)
 
 
 instance HyperView Contents where

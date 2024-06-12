@@ -4,7 +4,6 @@ import Data.Text (Text)
 import Web.Hyperbole
 
 
-
 main :: IO ()
 main = do
   run 3000 $ do
@@ -26,11 +25,11 @@ messageView m = do
 
 
 data Message = Message
-  deriving (Generic, Param)
+  deriving (Generic, ViewId)
 
 
 data MessageAction = SetMessage Text
-  deriving (Generic, Param)
+  deriving (Generic, ViewAction)
 
 
 instance HyperView Message where
