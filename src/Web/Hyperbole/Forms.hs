@@ -55,15 +55,15 @@ import Web.View hiding (form, input, label)
 data FormFields id fs = FormFields id (Validation fs)
 
 
-instance (ViewId id) => ViewId (FormFields id) where
+instance (ViewId id) => ViewId (FormFields id fs) where
   parseViewId t = do
     i <- parseViewId t
     pure $ FormFields i mempty
   toViewId (FormFields i _) = toViewId i
 
 
-instance (HyperView id, ViewId id) => HyperView (FormFields id) where
-  type Action (FormFields id) = Action id
+instance (HyperView id, ViewId id) => HyperView (FormFields id fs) where
+  type Action (FormFields id fs) = Action id
 
 
 -- | Choose one for 'input's to give the browser autocomplete hints
@@ -111,7 +111,7 @@ formAction _ SignUp = do
 
 -- would be easier if you pass in your own data. Right now everything is indexed by type
 data Validated fs a = Invalid Text | NotInvalid | Valid
-  deriving Show
+  deriving (Show)
 
 
 instance Semigroup (Validated fs a) where
@@ -120,6 +120,7 @@ instance Semigroup (Validated fs a) where
   Valid <> _ = Valid
   _ <> Valid = Valid
   a <> _ = a
+
 
 instance Monoid (Validated fs a) where
   mempty = NotInvalid
@@ -132,7 +133,7 @@ newtype Validation (fs :: [Type]) = Validation [(Text, Validated fs ())]
 
 -- TODO: constraint Elem a fs
 validation :: forall a fs. (FormField a) => Validation fs -> Validated fs a
-validation (Validation vs) = mconcat $ fmap (convert . snd) $ filter ((==inputName @a) . fst) vs
+validation (Validation vs) = mconcat $ fmap (convert . snd) $ filter ((== inputName @a) . fst) vs
 
 
 convert :: Validated fs a -> Validated fs b
