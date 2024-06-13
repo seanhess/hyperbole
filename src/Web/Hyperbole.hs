@@ -81,7 +81,8 @@ module Web.Hyperbole
   , formField
 
     -- ** Validation
-  , Validation (..)
+  , Validation
+  , Validation' (..)
   , Validated (..)
   , validate
   , validation

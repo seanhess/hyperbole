@@ -20,7 +20,8 @@ module Web.Hyperbole.Forms
   , Field (..)
   , defaultFormOptions
   , FormOptions (..)
-  , Validation (..)
+  , Validation
+  , Validation' (..)
   , Validated (..)
   , FormField (..)
   , validation
@@ -51,18 +52,18 @@ import Web.View hiding (form, input, label)
 
 
 -- | The only time we can use Fields is inside a form
-data FormFields id fs = FormFields id (Validation fs)
+data FormFields id v fs = FormFields id (Validation' v fs)
 
 
-instance (ViewId id) => ViewId (FormFields id fs) where
+instance (ViewId id) => ViewId (FormFields id v fs) where
   parseViewId t = do
     i <- parseViewId t
     pure $ FormFields i mempty
   toViewId (FormFields i _) = toViewId i
 
 
-instance (HyperView id, ViewId id) => HyperView (FormFields id fs) where
-  type Action (FormFields id fs) = Action id
+instance (HyperView id, ViewId id) => HyperView (FormFields id v fs) where
+  type Action (FormFields id v fs) = Action id
 
 
 -- | Choose one for 'input's to give the browser autocomplete hints
@@ -125,20 +126,30 @@ instance Monoid (Validated fs a) where
   mempty = NotInvalid
 
 
--- it's going to have
-newtype Validation (fs :: [Type]) = Validation [(Text, Validated fs ())]
-  deriving newtype (Semigroup, Monoid, Show)
+type Validation = Validation' Validated
 
 
--- TODO: constraint Elem a fs
-validation :: forall a fs. (FormField a) => Validation fs -> Validated fs a
+newtype Validation' validated (fs :: [Type]) = Validation [(Text, validated fs ())]
+  deriving newtype (Semigroup, Monoid)
+
+
+instance (Show (v fs ())) => Show (Validation' v fs) where
+  show (Validation v) = show v
+
+
+validation :: forall a fs v. (FormField a, Elem a fs, ValidationState v, Monoid (v fs a)) => Validation' v fs -> v fs a
 validation (Validation vs) = mconcat $ fmap (convert . snd) $ filter ((== inputName @a) . fst) vs
 
 
-convert :: Validated fs a -> Validated fs b
-convert (Invalid t) = Invalid t
-convert NotInvalid = NotInvalid
-convert Valid = Valid
+class ValidationState (v :: [Type] -> Type -> Type) where
+  convert :: v fs a -> v fs b
+
+
+instance ValidationState Validated where
+  convert :: Validated fs a -> Validated fs b
+  convert (Invalid t) = Invalid t
+  convert NotInvalid = NotInvalid
+  convert Valid = Valid
 
 
 {-
@@ -149,7 +160,7 @@ convert Valid = Valid
   el_ 'invalidText'
 @
 -}
-invalidText :: forall a fs id. (FormField a) => View (Input id fs a) ()
+invalidText :: forall a fs id. (FormField a) => View (Input id Validated fs a) ()
 invalidText = do
   Input _ v <- context
   case v of
@@ -163,7 +174,7 @@ validate True t = Validation [(inputName @a, Invalid t)]
 validate False _ = Validation [(inputName @a, NotInvalid)]
 
 
-validateWith :: forall a fs. (FormField a) => Validated fs a -> Validation fs
+validateWith :: forall a fs v. (FormField a, Elem a fs, ValidationState v) => v fs a -> Validation' v fs
 validateWith v = Validation [(inputName @a, convert v)]
 
 
@@ -177,7 +188,7 @@ isInvalid (Invalid _) = True
 isInvalid _ = False
 
 
-fieldValid :: View (Input id fs a) (Validated fs a)
+fieldValid :: View (Input id v fs a) (v fs a)
 fieldValid = do
   Input _ v <- context
   pure v
@@ -189,7 +200,7 @@ data Label a
 data Invalid a
 
 
-data Input id fs a = Input Text (Validated fs a)
+data Input id v fs a = Input Text (v fs a)
 
 
 {- | Display a 'FormField'
@@ -204,7 +215,7 @@ myForm = do
      'input' Number (value "0")
 @
 -}
-field :: forall a id fs. (FormField a, Elem a fs) => (Validated fs a -> Mod) -> View (Input id fs a) () -> View (FormFields id fs) ()
+field :: forall a id v fs. (FormField a, Elem a fs, ValidationState v, Monoid (v fs a)) => (v fs a -> Mod) -> View (Input id v fs a) () -> View (FormFields id v fs) ()
 field f cnt = do
   let n = inputName @a
   FormFields _ vals <- context
@@ -214,12 +225,12 @@ field f cnt = do
 
 
 -- | label for a 'field'
-label :: Text -> View (Input id fs a) ()
+label :: Text -> View (Input id v fs a) ()
 label = text
 
 
 -- | input for a 'field'
-input :: InputType -> Mod -> View (Input id fs a) ()
+input :: InputType -> Mod -> View (Input id v fs a) ()
 input ft f = do
   Input nm _ <- context
   tag "input" (f . name nm . att "type" (inpType ft) . att "autocomplete" (auto ft)) none
@@ -237,6 +248,17 @@ input ft f = do
 
 placeholder :: Text -> Mod
 placeholder = att "placeholder"
+
+
+form' :: forall fs v id. (HyperView id) => Action id -> Validation' v fs -> Mod -> View (FormFields id v fs) () -> View id ()
+form' a v f cnt = do
+  vid <- context
+  -- let frm = formLabels :: form Label
+  -- let cnt = fcnt frm
+  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormFields vid v) cnt
+ where
+  onSubmit :: (ViewAction a) => a -> Mod
+  onSubmit = att "data-on-submit" . toAction
 
 
 {- | Type-safe \<form\>. Calls (Action id) on submit
@@ -260,19 +282,12 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: forall fs id. (HyperView id) => Action id -> Validation fs -> Mod -> View (FormFields id fs) () -> View id ()
-form a v f cnt = do
-  vid <- context
-  -- let frm = formLabels :: form Label
-  -- let cnt = fcnt frm
-  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormFields vid v) cnt
- where
-  onSubmit :: (ViewAction a) => a -> Mod
-  onSubmit = att "data-on-submit" . toAction
+form :: forall fs id. (HyperView id) => Action id -> Validation fs -> Mod -> View (FormFields id Validated fs) () -> View id ()
+form = form'
 
 
 -- | Button that submits the 'form'. Use 'button' to specify actions other than submit
-submit :: Mod -> View (FormFields id fs) () -> View (FormFields id fs) ()
+submit :: Mod -> View (FormFields id v fs) () -> View (FormFields id v fs) ()
 submit f = tag "button" (att "type" "submit" . f)
 
 
