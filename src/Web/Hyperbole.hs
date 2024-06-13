@@ -34,6 +34,7 @@ module Web.Hyperbole
   , routeRequest -- maybe belongs in an application section
   , Route
   , routeUrl
+  , routePath
   , route
 
     -- * Pages

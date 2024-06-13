@@ -17,6 +17,7 @@ module Web.Hyperbole.Forms
   , formField
   , formFields
   , Form (..)
+  , Field (..)
   , defaultFormOptions
   , FormOptions (..)
   , Validation (..)
@@ -35,7 +36,6 @@ module Web.Hyperbole.Forms
   )
 where
 
-import Data.Functor.Identity (Identity)
 import Data.Kind (Constraint, Type)
 import Data.Text (Text, pack)
 import Effectful
@@ -281,7 +281,8 @@ submit f = tag "button" (att "type" "submit" . f)
 -- type instance Field' Label a = Text
 -- type instance Field' Invalid a = Maybe Text
 
-newtype Field a = Field a
+-- | Generic FormField type for parsing record-based forms
+newtype Field a = Field {value :: a}
 
 
 formFields :: forall form es. (Form form, Hyperbole :> es) => Eff es form
@@ -359,7 +360,7 @@ instance (GForm f) => GForm (M1 C c f) where
   gFormParse f = M1 <$> gFormParse f
 
 
-instance (Selector s, GForm f) => GForm (M1 S s f) where
+instance {-# OVERLAPPABLE #-} (Selector s, GForm f) => GForm (M1 S s f) where
   gFormParse f = M1 <$> gFormParse f
 
 
@@ -466,14 +467,14 @@ type family ElemGo e es orig :: Constraint where
 -- data FakeField = FakeField Text deriving (Generic, FormField)
 --
 --
--- type UserFields = [User, Age, Pass1, Pass2]
---
+-- -- type UserFields = [User, Age, Pass1, Pass2]
 --
 -- data UserForm = UserForm
 --   { user :: User
 --   , age :: Age
 --   , pass1 :: Pass1
 --   , pass2 :: Pass2
+--   , woot :: Field Text
 --   }
 --   deriving (Generic, Form)
 
