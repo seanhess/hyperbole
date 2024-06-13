@@ -94,7 +94,7 @@ export class SocketConnection {
         }
 
         if (metadata.viewId != id) {
-          console.warn("Mismatched ids, ignoring", metadata.viewId, id)
+          // console.warn("Mismatched ids, ignoring", metadata.viewId, id)
           return
         }
 

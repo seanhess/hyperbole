@@ -23,6 +23,7 @@ import Data.String.Interpolate (i)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import Effectful
+import Effectful.Concurrent.Async
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
@@ -47,24 +48,31 @@ import Web.View (View, renderLazyByteString, renderUrl)
 >   liveApp (basicDocument "Example") $ do
 >      page mainPage
 -}
-liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Wai.Application
+liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, Concurrent, IOE] Response -> Wai.Application
 liveApp toDoc app =
   websocketsOr
     defaultConnectionOptions
-    (runEff . socketApp app)
+    (runEff . runConcurrent . socketApp app)
     (waiApp toDoc app)
 
 
-socketApp :: (IOE :> es) => Eff (Hyperbole : Server : es) Response -> PendingConnection -> Eff es ()
+socketApp :: (IOE :> es, Concurrent :> es) => Eff (Hyperbole : Server : es) Response -> PendingConnection -> Eff es ()
 socketApp actions pend = do
   conn <- liftIO $ WS.acceptRequest pend
   forever $ do
-    runServerSockets conn $ runHyperbole actions
+    ereq <- runErrorNoCallStack @SocketError $ receiveRequest conn
+    case ereq of
+      Left e -> liftIO $ putStrLn $ "SOCKET ERROR " <> show e
+      Right r -> do
+        a <- async (runServerSockets conn r $ runHyperbole actions)
+        -- throw exceptions in this thread
+        link a
+        pure ()
 
 
-waiApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, IOE] Response -> Wai.Application
+waiApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, Concurrent, IOE] Response -> Wai.Application
 waiApp toDoc actions req res = do
-  rr <- runEff $ runServerWai toDoc req res $ runHyperbole actions
+  rr <- runEff $ runConcurrent $ runServerWai toDoc req res $ runHyperbole actions
   case rr of
     Nothing -> error "Missing required response in handler"
     Just r -> pure r
@@ -158,10 +166,11 @@ runServerWai toDoc req respond =
 runServerSockets
   :: (IOE :> es)
   => Connection
+  -> Request
   -> Eff (Server : es) Response
   -> Eff es Response
-runServerSockets conn = reinterpret runLocal $ \_ -> \case
-  LoadRequest -> receiveRequest
+runServerSockets conn req = reinterpret runLocal $ \_ -> \case
+  LoadRequest -> pure req -- receiveRequest conn
   SendResponse sess res -> do
     case res of
       (Response vid vw) -> sendView (sessionMeta sess) vid vw
@@ -213,46 +222,49 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
   metaLine :: BL.ByteString -> Text -> BL.ByteString
   metaLine name value = "|" <> name <> "|" <> cs value
 
-  receiveRequest :: (IOE :> es, Error SocketError :> es) => Eff es Request
-  receiveRequest = do
-    t <- receiveText
-    case parseMessage t of
-      Left e -> throwError e
-      Right r -> pure r
 
-  receiveText :: (IOE :> es) => Eff es Text
-  receiveText = do
-    -- c <- ask @Connection
-    liftIO $ WS.receiveData conn
+receiveRequest :: (IOE :> es, Error SocketError :> es) => Connection -> Eff es Request
+receiveRequest conn = do
+  t <- receiveText conn
+  case parseMessage t of
+    Left e -> throwError e
+    Right r -> pure r
 
-  parseMessage :: Text -> Either SocketError Request
-  parseMessage t = do
-    case T.splitOn "\n" t of
-      [url, host, cook, body] -> parse url cook host (Just body)
-      [url, host, cook] -> parse url cook host Nothing
-      _ -> Left $ InvalidMessage t
-   where
-    parseUrl :: Text -> Either SocketError (Text, Text)
-    parseUrl u =
-      case T.splitOn "?" u of
-        [url, query] -> pure (url, query)
-        _ -> Left $ InvalidMessage u
 
-    parse :: Text -> Text -> Text -> Maybe Text -> Either SocketError Request
-    parse url cook hst mbody = do
-      (u, q) <- parseUrl url
-      let path = paths u
-          query = parseQuery (cs q)
-          cookies = parseCookies $ cs $ header cook
-          host = Host $ cs $ header hst
-          method = "POST"
-          body = cs $ fromMaybe "" mbody
-      pure $ Request{path, host, query, body, method, cookies}
+receiveText :: (IOE :> es) => Connection -> Eff es Text
+receiveText conn = do
+  -- c <- ask @Connection
+  liftIO $ WS.receiveData conn
 
-    paths p = filter (/= "") $ T.splitOn "/" p
 
-    -- drop up to the colon, then ': '
-    header = T.drop 2 . T.dropWhile (/= ':')
+parseMessage :: Text -> Either SocketError Request
+parseMessage t = do
+  case T.splitOn "\n" t of
+    [url, host, cook, body] -> parse url cook host (Just body)
+    [url, host, cook] -> parse url cook host Nothing
+    _ -> Left $ InvalidMessage t
+ where
+  parseUrl :: Text -> Either SocketError (Text, Text)
+  parseUrl u =
+    case T.splitOn "?" u of
+      [url, query] -> pure (url, query)
+      _ -> Left $ InvalidMessage u
+
+  parse :: Text -> Text -> Text -> Maybe Text -> Either SocketError Request
+  parse url cook hst mbody = do
+    (u, q) <- parseUrl url
+    let path = paths u
+        query = parseQuery (cs q)
+        cookies = parseCookies $ cs $ header cook
+        host = Host $ cs $ header hst
+        method = "POST"
+        body = cs $ fromMaybe "" mbody
+    pure $ Request{path, host, query, body, method, cookies}
+
+  paths p = filter (/= "") $ T.splitOn "/" p
+
+  -- drop up to the colon, then ': '
+  header = T.drop 2 . T.dropWhile (/= ':')
 
 
 newtype Metadata = Metadata [(BL.ByteString, Text)]
