@@ -37,8 +37,10 @@ module Web.Hyperbole.Forms
   )
 where
 
+import Data.Diverse.Many
 import Data.Kind (Constraint, Type)
 import Data.Text (Text, pack)
+import Data.Text qualified as T
 import Effectful
 import GHC.Generics
 import GHC.TypeLits hiding (Mod)
@@ -110,11 +112,11 @@ formAction _ SignUp = do
 -}
 
 -- would be easier if you pass in your own data. Right now everything is indexed by type
-data Validated fs a = Invalid Text | NotInvalid | Valid
+data Validated a = Invalid Text | NotInvalid | Valid
   deriving (Show)
 
 
-instance Semigroup (Validated fs a) where
+instance Semigroup (Validated a) where
   Invalid t <> _ = Invalid t
   _ <> Invalid t = Invalid t
   Valid <> _ = Valid
@@ -122,31 +124,31 @@ instance Semigroup (Validated fs a) where
   a <> _ = a
 
 
-instance Monoid (Validated fs a) where
+instance Monoid (Validated a) where
   mempty = NotInvalid
 
 
 type Validation = Validation' Validated
 
 
-newtype Validation' validated (fs :: [Type]) = Validation [(Text, validated fs ())]
+newtype Validation' validated (fs :: [Type]) = Validation [(Text, validated ())]
   deriving newtype (Semigroup, Monoid)
 
 
-instance (Show (v fs ())) => Show (Validation' v fs) where
+instance (Show (v ())) => Show (Validation' v fs) where
   show (Validation v) = show v
 
 
-validation :: forall a fs v. (FormField a, Elem a fs, ValidationState v, Monoid (v fs a)) => Validation' v fs -> v fs a
+validation :: forall a fs v. (FormField a, Elem a fs, ValidationState v, Monoid (v a)) => Validation' v fs -> v a
 validation (Validation vs) = mconcat $ fmap (convert . snd) $ filter ((== inputName @a) . fst) vs
 
 
-class ValidationState (v :: [Type] -> Type -> Type) where
-  convert :: v fs a -> v fs b
+class ValidationState (v :: Type -> Type) where
+  convert :: v a -> v b
 
 
 instance ValidationState Validated where
-  convert :: Validated fs a -> Validated fs b
+  convert :: Validated a -> Validated b
   convert (Invalid t) = Invalid t
   convert NotInvalid = NotInvalid
   convert Valid = Valid
@@ -174,7 +176,7 @@ validate True t = Validation [(inputName @a, Invalid t)]
 validate False _ = Validation [(inputName @a, NotInvalid)]
 
 
-validateWith :: forall a fs v. (FormField a, Elem a fs, ValidationState v) => v fs a -> Validation' v fs
+validateWith :: forall a fs v. (FormField a, Elem a fs, ValidationState v) => v a -> Validation' v fs
 validateWith v = Validation [(inputName @a, convert v)]
 
 
@@ -183,12 +185,12 @@ anyInvalid (Validation vs) =
   any (isInvalid . snd) vs
 
 
-isInvalid :: Validated fs a -> Bool
+isInvalid :: Validated a -> Bool
 isInvalid (Invalid _) = True
 isInvalid _ = False
 
 
-fieldValid :: View (Input id v fs a) (v fs a)
+fieldValid :: View (Input id v fs a) (v a)
 fieldValid = do
   Input _ v <- context
   pure v
@@ -200,7 +202,7 @@ data Label a
 data Invalid a
 
 
-data Input id v fs a = Input Text (v fs a)
+data Input id v fs a = Input Text (v a)
 
 
 {- | Display a 'FormField'
@@ -215,7 +217,7 @@ myForm = do
      'input' Number (value "0")
 @
 -}
-field :: forall a id v fs. (FormField a, Elem a fs, ValidationState v, Monoid (v fs a)) => (v fs a -> Mod) -> View (Input id v fs a) () -> View (FormFields id v fs) ()
+field :: forall a id v fs. (FormField a, Elem a fs, ValidationState v, Monoid (v a)) => (v a -> Mod) -> View (Input id v fs a) () -> View (FormFields id v fs) ()
 field f cnt = do
   let n = inputName @a
   FormFields _ vals <- context
@@ -464,11 +466,11 @@ type family ElemGo e es orig :: Constraint where
 -- EXAMPLE --------------------------------------
 -------------------------------------------------
 -- data FormView = FormView
---   deriving (Generic, Param)
+--   deriving (Generic, ViewId)
 --
 --
 -- data FormAction = Submit
---   deriving (Generic, Param)
+--   deriving (Generic, ViewAction)
 --
 --
 -- instance HyperView FormView where
@@ -482,8 +484,31 @@ type family ElemGo e es orig :: Constraint where
 -- data FakeField = FakeField Text deriving (Generic, FormField)
 --
 --
--- -- type UserFields = [User, Age, Pass1, Pass2]
+-- type UserFields = [User, Age, Pass1, Pass2]
 --
+--
+-- data ValidField a
+--   = InvalidField Text
+--   | ValidField a
+--   | EmptyField
+--   | NeedsCheck a
+--
+--
+-- instance Semigroup (ValidField a) where
+--   a <> _ = a
+--
+--
+-- instance Monoid (ValidField a) where
+--   mempty = EmptyField
+--
+--
+-- instance ValidationState ValidField where
+--   convert (InvalidField t) = InvalidField t
+--   convert (ValidField a) = ValidField a
+--   convert EmptyField = EmptyField
+--   convert (NeedsCheck a) = NeedsCheck a
+--
+
 -- data UserForm = UserForm
 --   { user :: User
 --   , age :: Age
@@ -493,8 +518,6 @@ type family ElemGo e es orig :: Constraint where
 --   }
 --   deriving (Generic, Form)
 
---
---
 -- formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
 -- formAction _ Submit = do
 --   u <- formField @User
@@ -509,9 +532,9 @@ type family ElemGo e es orig :: Constraint where
 --
 --
 -- -- we don't type-check that we've validated all the fields here, but that's ok
--- validateUser :: User -> Age -> Pass1 -> Pass2 -> Validation UserForm
+-- validateUser :: User -> Age -> Pass1 -> Pass2 -> Validation UserFields
 -- validateUser (User u) (Age a) (Pass1 p1) (Pass2 p2) =
---   Validation
+--   mconcat
 --     [ validate @Age (a < 20) "User must be at least 20 years old"
 --     , validate @User (T.elem ' ' u) "Username must not contain spaces"
 --     , validate @User (T.length u < 4) "Username must be at least 4 chars"
@@ -521,30 +544,52 @@ type family ElemGo e es orig :: Constraint where
 --     ]
 --
 --
--- formView :: Validation UserForm -> View FormView ()
+-- formView :: Validation' ValidField UserFields -> View FormView ()
 -- formView v = do
---   form Submit v (gap 10 . pad 10) $ do
+--   form' Submit v (gap 10 . pad 10) $ do
 --     el id "Sign Up"
 --
 --     field @User (const id) $ do
 --       label "Username"
---       input Username (placeholder "username")
---       el_ invalidText
+--       -- input Username (placeholder "username")
+--       filledInput Username (placeholder "username")
+--     -- el_ invalidText
 --
 --     field @Age (const id) $ do
 --       label "Age"
---       input Number (placeholder "age" . value "0")
---       el_ invalidText
+--       filledInput Number (placeholder "age" . value "0")
 --
 --     field @Pass1 (const id) $ do
 --       label "Password"
---       input NewPassword (placeholder "password")
---       el_ invalidText
+--       filledInput NewPassword (placeholder "password")
 --
 --     field @Pass2 (const id) $ do
 --       label "Repeat Password"
---       input NewPassword (placeholder "repeat password")
+--       filledInput NewPassword (placeholder "repeat password")
 --
+--
+-- class ToValue a where
+--   toValue :: a -> Text
+--
+--
+-- instance ToValue User where
+--   toValue (User u) = u
+--
+--
+-- filledInput :: (ToValue a) => InputType -> Mod -> View (Input id ValidField a) ()
+-- filledInput it f = do
+--   v <- fieldValid
+--   input it (f . val v)
+--   case v of
+--     InvalidField t -> el_ $ text $ "NOPE!" <> t
+--     _ -> none
+--  where
+--   val (InvalidField _) = id
+--   val EmptyField = id
+--   val (NeedsCheck a) = value $ toValue a
+--   val (ValidField a) = value $ toValue a
+--
+-- --
 --
 -- userView :: User -> Age -> Pass1 -> View FormView ()
 -- userView (User user) (Age age) (Pass1 pass1) = do
