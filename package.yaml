@@ -56,14 +56,6 @@ dependencies:
 library:
   source-dirs: src
 
-executables:
-  examples:
-    main:                Main.hs
-    source-dirs:         example
-    dependencies:
-    - hyperbole
-    - wai-middleware-static >= 0.9 && <= 0.10
-
 tests:
   tests:
     main:        Spec.hs

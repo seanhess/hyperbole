@@ -1,0 +1,89 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.36.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           hyperbole-examples
+version:        0.3.6
+synopsis:       Interactive HTML apps using type-safe serverside Haskell
+description:    Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
+category:       Web, Network
+homepage:       https://github.com/seanhess/hyperbole
+bug-reports:    https://github.com/seanhess/hyperbole/issues
+author:         Sean Hess
+maintainer:     seanhess@gmail.com
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/seanhess/hyperbole
+
+executable woot
+  main-is: Main.hs
+  other-modules:
+      Web.Hyperbole
+      Web.Hyperbole.Application
+      Web.Hyperbole.Effect
+      Web.Hyperbole.Embed
+      Web.Hyperbole.Forms
+      Web.Hyperbole.HyperView
+      Web.Hyperbole.Param
+      Web.Hyperbole.Route
+      Web.Hyperbole.Session
+      Web.Hyperbole.View
+      BulkUpdate
+      Example.Colors
+      Example.Concurrent
+      Example.Contacts
+      Example.Counter
+      Example.Effects.Debug
+      Example.Effects.Users
+      Example.Errors
+      Example.Forms
+      Example.LazyLoading
+      Example.Redirects
+      Example.Sessions
+      Example.Simple
+      Example.Style
+      Example.Transitions
+      HelloWorld
+      Paths_hyperbole_examples
+  autogen-modules:
+      Paths_hyperbole_examples
+  hs-source-dirs:
+      ../src
+      ./
+  default-extensions:
+      OverloadedStrings
+      OverloadedRecordDot
+      DuplicateRecordFields
+      NoFieldSelectors
+      TypeFamilies
+      DataKinds
+      DerivingStrategies
+      DeriveAnyClass
+  ghc-options: -Wall -fdefer-typed-holes
+  build-depends:
+      base
+    , bytestring
+    , casing
+    , containers
+    , cookie
+    , effectful
+    , file-embed
+    , http-api-data
+    , http-types
+    , network
+    , string-conversions
+    , string-interpolate
+    , text
+    , wai
+    , wai-middleware-static
+    , wai-websockets
+    , warp
+    , web-view
+    , websockets
+  default-language: GHC2021

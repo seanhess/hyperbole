@@ -4,7 +4,8 @@ Hyperbole Examples
 This directory contains an example application with multiple pages demonstrating different features. To try them out:
 
 ```
-cabal run examples
+cd example
+cabal run
 ```
 
 Then visit http://localhost:3000/

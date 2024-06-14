@@ -87,6 +87,8 @@ The NSO uses Hyperbole for the [L2 Data creation UI](https://github.com/DKISTDC/
 Local Development
 -----------------
 
+### Dependencies
+
 Download and install [NPM](https://nodejs.org/en/download). On a mac, can be installed via homebrew:
 
 ```
@@ -100,6 +102,9 @@ cd client
 npm install
 ```
 
+
+### Building
+
 Build JavaScript client
 
 ```
@@ -110,16 +115,19 @@ npx webpack
 Run examples
 
 ```
-cabal run examples
+cd example
+cabal run
 ```
 
-Run Tests
+### Tests
 
 ```
 cabal test
 ```
 
-Watch for file changes and recompile everything
+### File watching
+
+Run tests, then recompile everything on file change and restart examples
 
 ```
 bin/dev

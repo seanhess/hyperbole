@@ -6,11 +6,13 @@ package() {
 }
 
 compile() {
-  ghcid --command "cabal repl examples" -T Main.main -W
+  cd example
+  ghcid -T main -W
 }
 
 client() {
-  cd client && npx webpack -w
+  cd client
+  npx webpack -w
 }
 
 # run tests once (so we don't forget!)

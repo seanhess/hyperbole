@@ -75,63 +75,6 @@ library
     , websockets >=0.12 && <0.14
   default-language: GHC2021
 
-executable examples
-  main-is: Main.hs
-  other-modules:
-      BulkUpdate
-      Example.Colors
-      Example.Concurrent
-      Example.Contacts
-      Example.Counter
-      Example.Effects.Debug
-      Example.Effects.Users
-      Example.Errors
-      Example.Forms
-      Example.LazyLoading
-      Example.Redirects
-      Example.Sessions
-      Example.Simple
-      Example.Style
-      Example.Transitions
-      HelloWorld
-      Paths_hyperbole
-  autogen-modules:
-      Paths_hyperbole
-  hs-source-dirs:
-      example
-  default-extensions:
-      OverloadedStrings
-      OverloadedRecordDot
-      DuplicateRecordFields
-      NoFieldSelectors
-      TypeFamilies
-      DataKinds
-      DerivingStrategies
-      DeriveAnyClass
-  ghc-options: -Wall -fdefer-typed-holes
-  build-depends:
-      base >=4.16 && <5
-    , bytestring >=0.11 && <0.13
-    , casing >0.1 && <0.2
-    , containers >=0.6 && <1
-    , cookie ==0.4.*
-    , effectful >=2.3 && <3
-    , file-embed >=0.0.10 && <0.1
-    , http-api-data ==0.6.*
-    , http-types ==0.12.*
-    , hyperbole
-    , network >=3.1 && <4
-    , string-conversions ==0.4.*
-    , string-interpolate ==0.3.*
-    , text >=1.2 && <3
-    , wai >=3.2 && <4
-    , wai-middleware-static >=0.9 && <=0.10
-    , wai-websockets >=3.0 && <4
-    , warp >=3.3 && <4
-    , web-view >=0.4 && <=0.5
-    , websockets >=0.12 && <0.14
-  default-language: GHC2021
-
 test-suite tests
   type: exitcode-stdio-1.0
   main-is: Spec.hs
