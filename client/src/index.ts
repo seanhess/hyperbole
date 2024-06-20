@@ -13,7 +13,7 @@ import  { actionMessage, ActionMessage } from './action'
 // const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole 0.3.3a")
+console.log("Hyperbole 0.4")
 
 
 let rootStyles: HTMLStyleElement;
@@ -153,7 +153,7 @@ function init() {
   rootStyles = document.querySelector('style')
 
   listenLoadDocument(async function(target:HTMLElement, action:string) {
-    console.log("INIT LOAD", target.id, action)
+    // console.log("INIT LOAD", target.id, action)
     runAction(target, action)
   })
 

@@ -13,8 +13,8 @@ page = do
   load $ do
     pure $ do
       col (pad 20) $ do
-        hyper (Contents 100) $ viewPoll 1
-        hyper (Contents 2000) $ viewPoll 100
+        hyper (Contents 50) $ viewPoll 1
+        hyper (Contents 1000) $ viewPoll 100
 
 
 data Contents = Contents Milliseconds
