@@ -19,7 +19,7 @@ data AppColor
   | PrimaryLight
   | Secondary
   | SecondaryLight
-  deriving (Show, Read, Generic, Param)
+  deriving (Show, Read)
 
 
 instance ToHttpApiData AppColor where

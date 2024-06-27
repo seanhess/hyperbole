@@ -25,11 +25,11 @@ messageView m = do
 
 
 data Message = Message
-  deriving (Generic, ViewId)
+  deriving (Show, Read, ViewId)
 
 
 data MessageAction = SetMessage Text
-  deriving (Generic, ViewAction)
+  deriving (Show, Read, ViewAction)
 
 
 instance HyperView Message where

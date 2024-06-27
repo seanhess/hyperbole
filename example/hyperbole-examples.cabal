@@ -30,7 +30,6 @@ executable woot
       Web.Hyperbole.Embed
       Web.Hyperbole.Forms
       Web.Hyperbole.HyperView
-      Web.Hyperbole.Param
       Web.Hyperbole.Route
       Web.Hyperbole.Session
       Web.Hyperbole.View

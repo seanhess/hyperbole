@@ -12,7 +12,7 @@ import Web.View.Types
 
 
 data Simple = Simple
-  deriving (Generic, Eq, Show, ViewAction)
+  deriving (Generic, Eq, Show, Read, ViewAction)
 
 
 data Product = Product String Int
@@ -26,15 +26,15 @@ data Product' = Product' HasText Int
 data Sum
   = SumA
   | SumB Int
-  deriving (Generic, Show, Eq, ViewAction)
+  deriving (Generic, Show, Eq, Read, ViewAction)
 
 
 data Compound = Compound Product
-  deriving (Generic, Show, Eq, ViewAction)
+  deriving (Generic, Show, Eq, Read, ViewAction)
 
 
 data HasText = HasText Text
-  deriving (Generic, Show, Eq, ViewAction, Read)
+  deriving (Generic, Show, Eq, Read, ViewAction)
 
 
 -- data Compound

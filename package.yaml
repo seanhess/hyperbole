@@ -57,7 +57,7 @@ library:
   source-dirs: src
 
 tests:
-  tests:
+  test:
     main:        Spec.hs
     source-dirs: test/
     build-tools: sydtest-discover
