@@ -1,19 +1,18 @@
 {-# LANGUAGE OverloadedLists #-}
 
-module Test.ParamSpec where
+module Test.ViewIdSpec where
 
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import GHC.Generics
 import Test.Syd
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.Param
 import Web.View (att)
 import Web.View.Types
 
 
 data Thing = Thing
-  deriving (Generic, Param, Show, Read, Eq, ViewId)
+  deriving (Generic, Show, Read, Eq, ViewId)
 
 
 data Custom = Custom
@@ -21,7 +20,7 @@ data Custom = Custom
 
 
 data HasString = HasString String
-  deriving (Generic, Param, Show, Eq, Read, ViewId)
+  deriving (Generic, Show, Eq, Read, ViewId)
 
 
 data Compound
@@ -29,15 +28,15 @@ data Compound
   | Two Thing
   | WithId (Id Thing)
   | Compound Text Compound
-  deriving (Generic, Param, Show, Eq, Read, ViewId)
+  deriving (Generic, Show, Eq, Read, ViewId)
 
 
 data Product4 = Product4 Text Text Text Text
-  deriving (Generic, Param, Show, Eq, Read, ViewId)
+  deriving (Generic, Show, Eq, Read, ViewId)
 
 
 newtype Id a = Id {fromId :: Text}
-  deriving newtype (Param, Eq, Ord, Show, Read)
+  deriving newtype (Eq, Ord, Show, Read)
   deriving (Generic)
 
 

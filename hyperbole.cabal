@@ -34,7 +34,6 @@ library
       Web.Hyperbole.Embed
       Web.Hyperbole.Forms
       Web.Hyperbole.HyperView
-      Web.Hyperbole.Param
       Web.Hyperbole.Route
       Web.Hyperbole.Session
       Web.Hyperbole.View
@@ -79,9 +78,9 @@ test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Test.ParamSpec
       Test.RouteSpec
       Test.ViewActionSpec
+      Test.ViewIdSpec
       Paths_hyperbole
   autogen-modules:
       Paths_hyperbole
