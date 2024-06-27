@@ -9,6 +9,7 @@ import Data.Bifunctor (first)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as List
+import Data.Maybe (isJust)
 import Data.String.Conversions
 import Data.Text
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
@@ -256,12 +257,6 @@ reqParams :: (Hyperbole :> es) => Eff es Query
 reqParams = (.query) <$> request
 
 
--- | Lookup the query param in the 'Query'
-lookupParam :: BS.ByteString -> Query -> Maybe Text
-lookupParam p q =
-  fmap cs <$> join $ lookup p q
-
-
 {- | Require a given parameter from the 'Query' arguments
 
 @
@@ -273,7 +268,7 @@ myPage = do
     pure myPageView
 @
 -}
-reqParam :: (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es a
+reqParam :: forall a es. (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es a
 reqParam p = do
   q <- reqParams
   (er :: Either Response a) <- pure $ do
@@ -287,6 +282,18 @@ reqParam p = do
   require :: Maybe x -> Either Response x
   require Nothing = Left $ Err $ ErrParam $ "Missing: " <> p
   require (Just a) = pure a
+
+
+-- | Lookup the query param in the 'Query'
+lookupParam :: BS.ByteString -> Query -> Maybe Text
+lookupParam p q =
+  fmap cs <$> join $ lookup p q
+
+
+-- | Whether the param is present or not
+hasParam :: BS.ByteString -> Query -> Bool
+hasParam p q =
+  isJust $ lookup p q
 
 
 {- | Respond immediately with 404 Not Found

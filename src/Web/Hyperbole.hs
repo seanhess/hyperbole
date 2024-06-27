@@ -93,6 +93,7 @@ module Web.Hyperbole
   , reqParams
   , request
   , lookupParam
+  , hasParam
   , formData
 
     -- ** Response
