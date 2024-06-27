@@ -18,11 +18,11 @@ page = do
 
 
 data FormView = FormView
-  deriving (Generic, ViewId)
+  deriving (Show, Read, ViewId)
 
 
 data FormAction = Submit
-  deriving (Generic, ViewAction)
+  deriving (Show, Read, ViewAction)
 
 
 instance HyperView FormView where

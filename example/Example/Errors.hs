@@ -17,12 +17,12 @@ page = do
 
 
 data Contents = Contents
-  deriving (Generic, ViewId)
+  deriving (Show, Read, ViewId)
 
 
 data ContentsAction
   = CauseError
-  deriving (Generic, ViewAction)
+  deriving (Show, Read, ViewAction)
 
 
 instance HyperView Contents where

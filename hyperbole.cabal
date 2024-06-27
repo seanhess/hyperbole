@@ -75,7 +75,7 @@ library
     , websockets >=0.12 && <0.14
   default-language: GHC2021
 
-test-suite tests
+test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
