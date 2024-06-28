@@ -35,10 +35,8 @@ import Prelude hiding (dropWhile)
 class Route a where
   -- | The default route to use if attempting to match on empty segments
   defRoute :: a
-
-
-  -- | Map a route to segments
-  routePath :: a -> [Segment]
+  default defRoute :: (Generic a, GenRoute (Rep a)) => a
+  defRoute = to genFirst
 
 
   -- | Try to match segments to a route
@@ -50,14 +48,12 @@ class Route a where
   matchRoute segs = to <$> genRoute segs
 
 
+  -- | Map a route to segments
+  routePath :: a -> [Segment]
   default routePath :: (Generic a, Eq a, GenRoute (Rep a)) => a -> [Segment]
   routePath p
     | p == defRoute = []
     | otherwise = filter (not . T.null) $ genPaths $ from p
-
-
-  default defRoute :: (Generic a, GenRoute (Rep a)) => a
-  defRoute = to genFirst
 
 
 -- | Try to match a route, use 'defRoute' if it's empty
