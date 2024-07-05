@@ -14,22 +14,18 @@ module Web.Hyperbole.Forms
   , form
   , placeholder
   , submit
-  , formField
   , formFields
   , Form (..)
-  , Field (..)
+  , Field
   , defaultFormOptions
   , FormOptions (..)
-  , Validation
-  , Validation' (..)
   , Validated (..)
   , FormField (..)
-  , validation
   , fieldValid
   , anyInvalid
   , invalidText
   , validate
-  , validateWith
+  , Identity
 
     -- * Re-exports
   , FromHttpApiData
@@ -37,6 +33,7 @@ module Web.Hyperbole.Forms
   )
 where
 
+import Data.Functor.Identity (Identity)
 import Data.Kind (Constraint, Type)
 import Data.Text (Text, pack)
 import Effectful
@@ -52,19 +49,24 @@ import Web.View hiding (form, input, label)
 
 
 -- | The only time we can use Fields is inside a form
-data FormFields id v fs = FormFields id (Validation' v fs)
+data FormFields id v form = FormFields id (form (FormField v))
 
 
-instance (ViewId id) => ViewId (FormFields id v fs) where
-  parseViewId t = do
-    i <- parseViewId t
-    pure $ FormFields i mempty
-  toViewId (FormFields i _) = toViewId i
+data FormField v a = FormField
+  { label :: Text
+  , validated :: v a
+  }
 
 
-instance (HyperView id, ViewId id) => HyperView (FormFields id v fs) where
-  type Action (FormFields id v fs) = Action id
-
+-- instance (ViewId id) => ViewId (FormFields id v fs) where
+--   parseViewId t = do
+--     i <- parseViewId t
+--     pure $ FormFields i lbls mempty
+--   toViewId (FormFields i _ _) = toViewId i
+--
+--
+-- instance (HyperView id, ViewId id) => HyperView (FormFields id v fs) where
+--   type Action (FormFields id v fs) = Action id
 
 -- | Choose one for 'input's to give the browser autocomplete hints
 data InputType
@@ -126,20 +128,18 @@ instance Monoid (Validated a) where
   mempty = NotInvalid
 
 
-type Validation = Validation' Validated
+-- type Validation = Validation' Validated
+--
+--
+-- newtype Validation' validated a = Validation [(Text, validated ())]
+--   deriving newtype (Semigroup, Monoid)
 
-
-newtype Validation' validated (fs :: [Type]) = Validation [(Text, validated ())]
-  deriving newtype (Semigroup, Monoid)
-
-
-instance (Show (v ())) => Show (Validation' v fs) where
-  show (Validation v) = show v
-
-
-validation :: forall a fs v. (FormField a, Elem a fs, ValidationState v, Monoid (v a)) => Validation' v fs -> v a
-validation (Validation vs) = mconcat $ fmap (convert . snd) $ filter ((== inputName @a) . fst) vs
-
+-- instance (Show (v ())) => Show (Validation' v fs) where
+--   show (Validation v) = show v
+--
+--
+-- validation :: forall a fs v. (FormField a, Elem a fs, ValidationState v, Monoid (v a)) => Validation' v fs -> v a
+-- validation (Validation vs) = mconcat $ fmap (convert . snd) $ filter ((== inputName @a) . fst) vs
 
 class ValidationState (v :: Type -> Type) where
   convert :: v a -> v b
@@ -160,7 +160,7 @@ instance ValidationState Validated where
   el_ 'invalidText'
 @
 -}
-invalidText :: forall a fs id. (FormField a) => View (Input id Validated fs a) ()
+invalidText :: forall a fs id. View (Input id Validated fs a) ()
 invalidText = do
   Input _ v <- context
   case v of
@@ -169,19 +169,19 @@ invalidText = do
 
 
 -- | specify a check for a 'Validation'
-validate :: forall a fs. (FormField a, Elem a fs) => Bool -> Text -> Validation fs
-validate True t = Validation [(inputName @a, Invalid t)]
-validate False _ = Validation [(inputName @a, NotInvalid)]
+validate :: Bool -> Text -> Validated a
+validate True t = Invalid t -- Validation [(inputName @a, Invalid t)]
+validate False _ = NotInvalid -- Validation [(inputName @a, NotInvalid)]
 
 
-validateWith :: forall a fs v. (FormField a, Elem a fs, ValidationState v) => v a -> Validation' v fs
-validateWith v = Validation [(inputName @a, convert v)]
+-- validateWith :: forall a fs v. (FormField a, Elem a fs, ValidationState v) => v a -> Validation' v fs
+-- validateWith v = Validation [(inputName @a, convert v)]
+
+anyInvalid :: form Validated -> Bool
+anyInvalid _ = _
 
 
-anyInvalid :: Validation fs -> Bool
-anyInvalid (Validation vs) =
-  any (isInvalid . snd) vs
-
+-- any (isInvalid . snd) vs
 
 isInvalid :: Validated a -> Bool
 isInvalid (Invalid _) = True
@@ -200,7 +200,10 @@ data Label a
 data Invalid a
 
 
-data Input id v fs a = Input Text (v a)
+data Input id v fs a = Input
+  { inputName :: Text
+  , valid :: v a
+  }
 
 
 {- | Display a 'FormField'
@@ -215,13 +218,18 @@ myForm = do
      'input' Number (value "0")
 @
 -}
-field :: forall a id v fs. (FormField a, Elem a fs, ValidationState v, Monoid (v a)) => (v a -> Mod) -> View (Input id v fs a) () -> View (FormFields id v fs) ()
-field f cnt = do
-  let n = inputName @a
-  FormFields _ vals <- context
-  let v = validation @a vals
-  tag "label" (f v . flexCol) $ do
-    addContext (Input n v) cnt
+field
+  :: forall a id f v form
+   . (ValidationState v, Monoid (v a))
+  => (form (FormField v) -> FormField v a)
+  -> (v a -> Mod)
+  -> View (Input id v form a) ()
+  -> View (FormFields id v form) ()
+field toField md cnt = do
+  FormFields _ frm <- context
+  let fld = toField frm :: FormField v a
+  tag "label" (md fld.validated . flexCol) $ do
+    addContext (Input fld.label fld.validated) cnt
 
 
 -- | label for a 'field'
@@ -250,12 +258,17 @@ placeholder :: Text -> Mod
 placeholder = att "placeholder"
 
 
-form' :: forall fs v id. (HyperView id) => Action id -> Validation' v fs -> Mod -> View (FormFields id v fs) () -> View id ()
+form' :: forall form v id. (HyperView id) => Action id -> form v -> Mod -> View (FormFields id v form) () -> View id ()
 form' a v f cnt = do
   vid <- context
+  lbl <- pure _ :: View id (form Label)
+
+  -- TODO: need a generic way to merge all fields.
+  --  (Form form) => mapFields (\v selName -> FormField selName v)
+
   -- let frm = formLabels :: form Label
   -- let cnt = fcnt frm
-  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormFields vid v) cnt
+  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormFields vid lbl v) cnt
  where
   onSubmit :: (ViewAction a) => a -> Mod
   onSubmit = att "data-on-submit" . toAction
@@ -282,7 +295,7 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: forall fs id. (HyperView id) => Action id -> Validation fs -> Mod -> View (FormFields id Validated fs) () -> View id ()
+form :: forall form id. (HyperView id) => Action id -> form Validated -> Mod -> View (FormFields id Validated form) () -> View id ()
 form = form'
 
 
@@ -291,13 +304,10 @@ submit :: Mod -> View (FormFields id v fs) () -> View (FormFields id v fs) ()
 submit f = tag "button" (att "type" "submit" . f)
 
 
--- type family Field' (context :: Type -> Type) a
--- type instance Field' Identity a = a
--- type instance Field' Label a = Text
--- type instance Field' Invalid a = Maybe Text
-
--- | Generic FormField type for parsing record-based forms
-newtype Field a = Field {value :: a}
+type family Field (context :: Type -> Type) a
+type instance Field Identity a = a
+type instance Field Label a = Text
+type instance Field Validated a = Validated a
 
 
 formFields :: forall form es. (Form form, Hyperbole :> es) => Eff es form
@@ -318,13 +328,13 @@ formAction _ SignUp = do
   pure $ el_ "Saved!"
 @
 -}
-formField :: forall a es. (FormField a, Hyperbole :> es) => Eff es a
-formField = do
-  f <- formData
-  case fieldParse f of
-    Left e -> parseError e
-    Right a -> pure a
 
+-- formField :: forall a es. (FormField a, Hyperbole :> es) => Eff es a
+-- formField = do
+--   f <- formData
+--   case fieldParse f of
+--     Left e -> parseError e
+--     Right a -> pure a
 
 class Form f where
   formParse :: FE.Form -> Either Text f
@@ -332,25 +342,24 @@ class Form f where
   formParse f = to <$> gFormParse f
 
 
-instance (FormField a, FormField b) => Form (a, b) where
-  formParse f = do
-    (,) <$> fieldParse f <*> fieldParse f
-
-
-instance (FormField a, FormField b, FormField c) => Form (a, b, c) where
-  formParse f = do
-    (,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f
-
-
-instance (FormField a, FormField b, FormField c, FormField d) => Form (a, b, c, d) where
-  formParse f = do
-    (,,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f
-
-
-instance (FormField a, FormField b, FormField c, FormField d, FormField e) => Form (a, b, c, d, e) where
-  formParse f = do
-    (,,,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f
-
+-- instance (FormField a, FormField b) => Form (a, b) where
+--   formParse f = do
+--     (,) <$> fieldParse f <*> fieldParse f
+--
+--
+-- instance (FormField a, FormField b, FormField c) => Form (a, b, c) where
+--   formParse f = do
+--     (,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f
+--
+--
+-- instance (FormField a, FormField b, FormField c, FormField d) => Form (a, b, c, d) where
+--   formParse f = do
+--     (,,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f
+--
+--
+-- instance (FormField a, FormField b, FormField c, FormField d, FormField e) => Form (a, b, c, d, e) where
+--   formParse f = do
+--     (,,,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f
 
 -- | Automatically derive labels from form field names
 class GForm f where
@@ -379,19 +388,8 @@ instance {-# OVERLAPPABLE #-} (Selector s, GForm f) => GForm (M1 S s f) where
   gFormParse f = M1 <$> gFormParse f
 
 
-instance (Selector s, FromHttpApiData a) => GForm (M1 S s (K1 R (Field a))) where
-  gFormParse f =
-    M1 . K1 . Field <$> do
-      let sel = pack (selName (undefined :: M1 S s (K1 R a) p))
-      FE.parseUnique sel f
-
-
-instance (FormField a) => GForm (K1 R a) where
-  gFormParse f = K1 <$> fieldParse f
-
-
--- instance GForm (M1 S s (K1 R (Maybe Text))) where
---   gForm = M1 . K1 $ Nothing
+-- instance (FormField a) => GForm (K1 R a) where
+--   gFormParse f = K1 <$> fieldParse f
 
 {- | Form Fields are identified by a type
 
@@ -400,66 +398,67 @@ data User = User Text deriving (Generic, FormField)
 data Age = Age Int deriving (Generic, FormField)
 @
 -}
-class FormField a where
-  inputName :: Text
-  default inputName :: (Generic a, GDataName (Rep a)) => Text
-  inputName = gDataName (from (undefined :: a))
 
-
-  fieldParse :: FE.Form -> Either Text a
-  default fieldParse :: FE.Form -> Either Text a
-  fieldParse = fieldParse' (inputName @a)
-
-
-  fieldParse' :: Text -> FE.Form -> Either Text a
-  default fieldParse' :: (Generic a, GFieldParse (Rep a)) => Text -> FE.Form -> Either Text a
-  fieldParse' t f = to <$> gFieldParse t f
-
-
-class GDataName f where
-  gDataName :: f p -> Text
-
-
-instance (Datatype d) => GDataName (M1 D d (M1 C c f)) where
-  gDataName m1 = pack $ datatypeName m1
-
-
-class GFieldParse f where
-  gFieldParse :: Text -> FE.Form -> Either Text (f p)
-
-
-instance (GFieldParse f) => GFieldParse (M1 D d f) where
-  gFieldParse t f = M1 <$> gFieldParse t f
-
-
-instance (GFieldParse f) => GFieldParse (M1 C c f) where
-  gFieldParse t f = M1 <$> gFieldParse t f
-
-
-instance (GFieldParse f) => GFieldParse (M1 S s f) where
-  gFieldParse t f = M1 <$> gFieldParse t f
-
-
-instance (FromHttpApiData a) => GFieldParse (K1 R a) where
-  gFieldParse t f = K1 <$> FE.parseUnique t f
-
+-- class FormField a where
+--   inputName :: Text
+--   default inputName :: (Generic a, GDataName (Rep a)) => Text
+--   inputName = gDataName (from (undefined :: a))
+--
+--
+--   fieldParse :: FE.Form -> Either Text a
+--   default fieldParse :: FE.Form -> Either Text a
+--   fieldParse = fieldParse' (inputName @a)
+--
+--
+--   fieldParse' :: Text -> FE.Form -> Either Text a
+--   default fieldParse' :: (Generic a, GFieldParse (Rep a)) => Text -> FE.Form -> Either Text a
+--   fieldParse' t f = to <$> gFieldParse t f
+--
+--
+-- class GDataName f where
+--   gDataName :: f p -> Text
+--
+--
+-- instance (Datatype d) => GDataName (M1 D d (M1 C c f)) where
+--   gDataName m1 = pack $ datatypeName m1
+--
+--
+-- class GFieldParse f where
+--   gFieldParse :: Text -> FE.Form -> Either Text (f p)
+--
+--
+-- instance (GFieldParse f) => GFieldParse (M1 D d f) where
+--   gFieldParse t f = M1 <$> gFieldParse t f
+--
+--
+-- instance (GFieldParse f) => GFieldParse (M1 C c f) where
+--   gFieldParse t f = M1 <$> gFieldParse t f
+--
+--
+-- instance (GFieldParse f) => GFieldParse (M1 S s f) where
+--   gFieldParse t f = M1 <$> gFieldParse t f
+--
+--
+-- instance (FromHttpApiData a) => GFieldParse (K1 R a) where
+--   gFieldParse t f = K1 <$> FE.parseUnique t f
+--
 
 -- Type family to check if an element is in a type-level list
-type Elem e es = ElemGo e es es
-
-
--- 'orig' is used to store original list for better error messages
-type family ElemGo e es orig :: Constraint where
-  ElemGo x (x ': xs) orig = ()
-  ElemGo y (x ': xs) orig = ElemGo y xs orig
-  -- Note [Custom Errors]
-  ElemGo x '[] orig =
-    TypeError
-      ( 'ShowType x
-          ':<>: 'Text " not found in "
-          ':<>: 'ShowType orig
-      )
-
+-- type Elem e es = ElemGo e es es
+--
+--
+-- -- 'orig' is used to store original list for better error messages
+-- type family ElemGo e es orig :: Constraint where
+--   ElemGo x (x ': xs) orig = ()
+--   ElemGo y (x ': xs) orig = ElemGo y xs orig
+--   -- Note [Custom Errors]
+--   ElemGo x '[] orig =
+--     TypeError
+--       ( 'ShowType x
+--           ':<>: 'Text " not found in "
+--           ':<>: 'ShowType orig
+--       )
+--
 -------------------------------------------------
 -- EXAMPLE --------------------------------------
 -------------------------------------------------
