@@ -5,7 +5,7 @@
 module Web.Hyperbole.Forms
   ( FormFields (..)
   , InputType (..)
-  , Label
+  , FieldName
   , Invalid
   , Input (..)
   , field
@@ -30,10 +30,13 @@ module Web.Hyperbole.Forms
     -- * Re-exports
   , FromHttpApiData
   , Generic
+  , GenFields (..)
+  , GenField (..)
+  , test
   )
 where
 
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity (..))
 import Data.Kind (Constraint, Type)
 import Data.Text (Text, pack)
 import Effectful
@@ -53,10 +56,14 @@ data FormFields id v form = FormFields id (form (FormField v))
 
 
 data FormField v a = FormField
-  { label :: Text
+  { label :: FieldName a
   , validated :: v a
   }
+  deriving (Show)
 
+
+-- instance Show (v a) => Show (FormField v) where
+--   show f = "Form Field"
 
 -- instance (ViewId id) => ViewId (FormFields id v fs) where
 --   parseViewId t = do
@@ -177,6 +184,7 @@ validate False _ = NotInvalid -- Validation [(inputName @a, NotInvalid)]
 -- validateWith :: forall a fs v. (FormField a, Elem a fs, ValidationState v) => v a -> Validation' v fs
 -- validateWith v = Validation [(inputName @a, convert v)]
 
+-- eh... not sure how to do this...
 anyInvalid :: form Validated -> Bool
 anyInvalid _ = _
 
@@ -194,14 +202,15 @@ fieldValid = do
   pure v
 
 
-data Label a
+data FieldName a = FieldName Text
+  deriving (Show)
 
 
 data Invalid a
 
 
 data Input id v fs a = Input
-  { inputName :: Text
+  { inputName :: FieldName a
   , valid :: v a
   }
 
@@ -240,7 +249,7 @@ label = text
 -- | input for a 'field'
 input :: InputType -> Mod -> View (Input id v fs a) ()
 input ft f = do
-  Input nm _ <- context
+  Input (FieldName nm) _ <- context
   tag "input" (f . name nm . att "type" (inpType ft) . att "autocomplete" (auto ft)) none
  where
   inpType NewPassword = "password"
@@ -261,14 +270,14 @@ placeholder = att "placeholder"
 form' :: forall form v id. (HyperView id) => Action id -> form v -> Mod -> View (FormFields id v form) () -> View id ()
 form' a v f cnt = do
   vid <- context
-  lbl <- pure _ :: View id (form Label)
+  frm <- pure $ _ v :: View id (form (FormField v))
 
   -- TODO: need a generic way to merge all fields.
   --  (Form form) => mapFields (\v selName -> FormField selName v)
 
   -- let frm = formLabels :: form Label
   -- let cnt = fcnt frm
-  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormFields vid lbl v) cnt
+  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormFields vid _) cnt
  where
   onSubmit :: (ViewAction a) => a -> Mod
   onSubmit = att "data-on-submit" . toAction
@@ -306,7 +315,7 @@ submit f = tag "button" (att "type" "submit" . f)
 
 type family Field (context :: Type -> Type) a
 type instance Field Identity a = a
-type instance Field Label a = Text
+type instance Field FieldName a = FieldName a
 type instance Field Validated a = Validated a
 
 
@@ -338,9 +347,12 @@ formAction _ SignUp = do
 
 class Form f where
   formParse :: FE.Form -> Either Text f
-  default formParse :: (Generic f, GForm (Rep f)) => FE.Form -> Either Text f
+  default formParse :: (Generic f, GFormParse (Rep f)) => FE.Form -> Either Text f
   formParse f = to <$> gFormParse f
 
+
+-- formFieldNames :: f (FieldName
+-- formFieldNames = _
 
 -- instance (FormField a, FormField b) => Form (a, b) where
 --   formParse f = do
@@ -362,240 +374,180 @@ class Form f where
 --     (,,,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f
 
 -- | Automatically derive labels from form field names
-class GForm f where
+class GFormParse f where
   gFormParse :: FE.Form -> Either Text (f p)
 
 
 -- instance GForm U1 where
 --   gForm = U1
 
-instance (GForm f, GForm g) => GForm (f :*: g) where
+instance (GFormParse f, GFormParse g) => GFormParse (f :*: g) where
   gFormParse f = do
     a <- gFormParse f
     b <- gFormParse f
     pure $ a :*: b
 
 
-instance (GForm f) => GForm (M1 D d f) where
+instance (GFormParse f) => GFormParse (M1 D d f) where
   gFormParse f = M1 <$> gFormParse f
 
 
-instance (GForm f) => GForm (M1 C c f) where
+instance (GFormParse f) => GFormParse (M1 C c f) where
   gFormParse f = M1 <$> gFormParse f
 
 
-instance {-# OVERLAPPABLE #-} (Selector s, GForm f) => GForm (M1 S s f) where
+instance {-# OVERLAPPABLE #-} (Selector s, GFormParse f) => GFormParse (M1 S s f) where
   gFormParse f = M1 <$> gFormParse f
 
 
--- instance (FormField a) => GForm (K1 R a) where
---   gFormParse f = K1 <$> fieldParse f
+-- create
+-- class GenFields (form :: (Type -> Type) -> Type) where
+--   genFieldNames :: form FieldName
+--   default genFieldNames :: (Generic (form FieldName), GFields (Rep (form FieldName))) => form FieldName
+--   genFieldNames = to gGenFields
+--
+--
+--   genValids :: form Validated
+--   default genValids :: (Generic (form Validated), GFields (Rep (form Validated))) => form Validated
+--   genValids = to gGenFields
 
-{- | Form Fields are identified by a type
+-- mergeNames :: form Validated -> form (FormField Validated)
+-- default mergeNames :: (Generic (form Validated), GFields (Rep (form Validated))) => form Validated -> form (FormField Validated)
+-- mergeNames f =
+--   let rf = from f :: Rep (form Validated) x
+--    in to $ gMapFields $ rf
 
-@
-data User = User Text deriving (Generic, FormField)
-data Age = Age Int deriving (Generic, FormField)
-@
--}
+-- let repF = from ff :: Rep (form f) x
+--  in gMapFields f repF
 
--- class FormField a where
---   inputName :: Text
---   default inputName :: (Generic a, GDataName (Rep a)) => Text
---   inputName = gDataName (from (undefined :: a))
---
---
---   fieldParse :: FE.Form -> Either Text a
---   default fieldParse :: FE.Form -> Either Text a
---   fieldParse = fieldParse' (inputName @a)
---
---
---   fieldParse' :: Text -> FE.Form -> Either Text a
---   default fieldParse' :: (Generic a, GFieldParse (Rep a)) => Text -> FE.Form -> Either Text a
---   fieldParse' t f = to <$> gFieldParse t f
---
---
--- class GDataName f where
---   gDataName :: f p -> Text
---
---
--- instance (Datatype d) => GDataName (M1 D d (M1 C c f)) where
---   gDataName m1 = pack $ datatypeName m1
---
---
--- class GFieldParse f where
---   gFieldParse :: Text -> FE.Form -> Either Text (f p)
---
---
--- instance (GFieldParse f) => GFieldParse (M1 D d f) where
---   gFieldParse t f = M1 <$> gFieldParse t f
---
---
--- instance (GFieldParse f) => GFieldParse (M1 C c f) where
---   gFieldParse t f = M1 <$> gFieldParse t f
---
---
--- instance (GFieldParse f) => GFieldParse (M1 S s f) where
---   gFieldParse t f = M1 <$> gFieldParse t f
---
---
--- instance (FromHttpApiData a) => GFieldParse (K1 R a) where
---   gFieldParse t f = K1 <$> FE.parseUnique t f
---
+-- how are we going to merge theM??
 
--- Type family to check if an element is in a type-level list
--- type Elem e es = ElemGo e es es
---
---
--- -- 'orig' is used to store original list for better error messages
--- type family ElemGo e es orig :: Constraint where
---   ElemGo x (x ': xs) orig = ()
---   ElemGo y (x ': xs) orig = ElemGo y xs orig
---   -- Note [Custom Errors]
---   ElemGo x '[] orig =
---     TypeError
---       ( 'ShowType x
---           ':<>: 'Text " not found in "
---           ':<>: 'ShowType orig
---       )
---
--------------------------------------------------
--- EXAMPLE --------------------------------------
--------------------------------------------------
--- data FormView = FormView
---   deriving (Generic, ViewId)
---
---
--- data FormAction = Submit
---   deriving (Generic, ViewAction)
---
---
--- instance HyperView FormView where
---   type Action FormView = FormAction
---
---
--- data User = User Text deriving (Generic, FormField)
--- data Age = Age Int deriving (Generic, FormField)
--- data Pass1 = Pass1 Text deriving (Generic, FormField)
--- data Pass2 = Pass2 Text deriving (Generic, FormField)
--- data FakeField = FakeField Text deriving (Generic, FormField)
---
---
--- type UserFields = [User, Age, Pass1, Pass2]
---
---
--- data ValidField a
---   = InvalidField Text
---   | ValidField a
---   | EmptyField
---   | NeedsCheck a
---
---
--- instance Semigroup (ValidField a) where
---   a <> _ = a
---
---
--- instance Monoid (ValidField a) where
---   mempty = EmptyField
---
---
--- instance ValidationState ValidField where
---   convert (InvalidField t) = InvalidField t
---   convert (ValidField a) = ValidField a
---   convert EmptyField = EmptyField
---   convert (NeedsCheck a) = NeedsCheck a
---
+-- | Automatically derive labels from form field names
 
--- data UserForm = UserForm
---   { user :: User
---   , age :: Age
---   , pass1 :: Pass1
---   , pass2 :: Pass2
---   , woot :: Field Text
---   }
---   deriving (Generic, Form)
+------------------------------------------------------------------------------
+-- GEN FIELDS :: Create the field! -------------------------------------------
+------------------------------------------------------------------------------
 
--- formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
--- formAction _ Submit = do
---   u <- formField @User
---   a <- formField @Age
---   p1 <- formField @Pass1
---   p2 <- formField @Pass2
---
---   let vals = validateUser u a p1 p2
---   if anyInvalid vals
---     then pure $ formView vals
---     else pure $ userView u a p1
---
---
--- -- we don't type-check that we've validated all the fields here, but that's ok
--- validateUser :: User -> Age -> Pass1 -> Pass2 -> Validation UserFields
--- validateUser (User u) (Age a) (Pass1 p1) (Pass2 p2) =
---   mconcat
---     [ validate @Age (a < 20) "User must be at least 20 years old"
---     , validate @User (T.elem ' ' u) "Username must not contain spaces"
---     , validate @User (T.length u < 4) "Username must be at least 4 chars"
---     , validate @Pass1 (p1 /= p2) "Passwords did not match"
---     , validate @Pass1 (T.length p1 < 8) "Password must be at least 8 chars"
---     -- , validate @FakeField False "Bad"
---     ]
---
---
--- formView :: Validation' ValidField UserFields -> View FormView ()
--- formView v = do
---   form' Submit v (gap 10 . pad 10) $ do
---     el id "Sign Up"
---
---     field @User (const id) $ do
---       label "Username"
---       -- input Username (placeholder "username")
---       filledInput Username (placeholder "username")
---     -- el_ invalidText
---
---     field @Age (const id) $ do
---       label "Age"
---       filledInput Number (placeholder "age" . value "0")
---
---     field @Pass1 (const id) $ do
---       label "Password"
---       filledInput NewPassword (placeholder "password")
---
---     field @Pass2 (const id) $ do
---       label "Repeat Password"
---       filledInput NewPassword (placeholder "repeat password")
---
---
--- class ToValue a where
---   toValue :: a -> Text
---
---
--- instance ToValue User where
---   toValue (User u) = u
---
---
--- filledInput :: (ToValue a) => InputType -> Mod -> View (Input id ValidField a) ()
--- filledInput it f = do
---   v <- fieldValid
---   input it (f . val v)
---   case v of
---     InvalidField t -> el_ $ text $ "NOPE!" <> t
---     _ -> none
---  where
---   val (InvalidField _) = id
---   val EmptyField = id
---   val (NeedsCheck a) = value $ toValue a
---   val (ValidField a) = value $ toValue a
---
--- --
---
--- userView :: User -> Age -> Pass1 -> View FormView ()
--- userView (User user) (Age age) (Pass1 pass1) = do
---   el bold "Accepted Signup"
---   row (gap 5) $ do
---     el_ "Username:"
---     el_ $ text user
---
---   row (gap 5) $ do
---     el_ "Age:"
---     el_ $ text $ pack (show age)
---
+class GenFields f where
+  gGenFields :: f p
+
+
+instance GenFields U1 where
+  gGenFields = U1
+
+
+instance (GenFields f, GenFields g) => GenFields (f :*: g) where
+  gGenFields = gGenFields :*: gGenFields
+
+
+instance (Selector s, GenField f a) => GenFields (M1 S s (K1 R (f a))) where
+  gGenFields = M1 . K1 $ genField (selName (undefined :: M1 S s (K1 R (f a)) p))
+
+
+instance (GenFields f) => GenFields (M1 D d f) where
+  gGenFields = M1 gGenFields
+
+
+instance (GenFields f) => GenFields (M1 C c f) where
+  gGenFields = M1 gGenFields
+
+
+------------------------------------------------------------------------------
+-- GenField -- Generate a value from the selector name
+------------------------------------------------------------------------------
+
+class GenField f a where
+  genField :: String -> f a
+
+
+instance GenField FieldName a where
+  genField s = FieldName $ pack s
+
+
+instance GenField Validated a where
+  genField = const NotInvalid
+
+
+instance GenField (FormField Validated) a where
+  genField s = FormField (genField s) NotInvalid
+
+
+------------------------------------------------------------------------------
+-- ConvertFields: start with another one
+------------------------------------------------------------------------------
+
+-- class ConvertFields a where
+--   convertFields :: (FromSelector f g) => a f -> a g
+--   default convertFields :: (Generic (a f), Generic (a g), GConvert (Rep (a f)) (Rep (a g))) => a f -> a g
+--   convertFields x = to $ gConvert (from x)
+
+class GConvert repf repg where
+  gConvert :: repf p -> repg p
+
+
+instance (GConvert a1 a2, GConvert b1 b2) => GConvert (a1 :*: b1) (a2 :*: b2) where
+  gConvert (a :*: b) = gConvert a :*: gConvert b
+
+
+instance (GConvert f g) => GConvert (M1 D d f) (M1 D d g) where
+  gConvert (M1 fa) = M1 $ gConvert fa
+
+
+instance (GConvert f g) => GConvert (M1 C d f) (M1 C d g) where
+  gConvert (M1 fa) = M1 $ gConvert fa
+
+
+instance (Selector s, FromSelector f g) => GConvert (M1 S s (K1 R (f a))) (M1 S s (K1 R (g a))) where
+  gConvert (M1 (K1 fa)) =
+    let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
+     in M1 . K1 $ fromSelector sel fa
+
+
+class FromSelector f g where
+  fromSelector :: String -> f a -> g a
+
+
+instance FromSelector Identity Maybe where
+  fromSelector _ (Identity a) = Just a
+
+
+instance FromSelector v (FormField v) where
+  fromSelector s = FormField (FieldName $ pack s)
+
+
+instance FromSelector FieldName (FormField Validated) where
+  fromSelector _ fn = FormField fn NotInvalid
+
+
+class Fields form where
+  convertFields :: (FromSelector f g) => form f -> form g
+  default convertFields :: (Generic (form f), Generic (form g), GConvert (Rep (form f)) (Rep (form g))) => form f -> form g
+  convertFields x = to $ gConvert (from x)
+
+
+  fieldNames :: form FieldName
+  default fieldNames :: (Generic (form FieldName), GenFields (Rep (form FieldName))) => form FieldName
+  fieldNames = to gGenFields
+
+
+  fieldValids :: form Validated
+  default fieldValids :: (Generic (form Validated), GenFields (Rep (form Validated))) => form Validated
+  fieldValids = to gGenFields
+
+
+data MyType f = MyType {one :: f Int, two :: f Text}
+  deriving (Generic, Fields)
+
+
+test :: IO ()
+test = do
+  let formNames = fieldNames :: MyType FieldName
+      formValids = fieldValids :: MyType Validated
+      vs = MyType{one = NotInvalid, two = Invalid "NOPPE"}
+      a = convertFields formNames :: MyType (FormField Validated)
+      b = convertFields formValids :: MyType (FormField Validated)
+      c = convertFields vs :: MyType (FormField Validated)
+
+  print (a.one, a.two)
+  print (b.one, b.two)
+  print (c.one, c.two)

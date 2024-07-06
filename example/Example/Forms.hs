@@ -92,11 +92,15 @@ validatePass p1 p2 =
     ]
 
 
+-- can I just remove the requirement for the validator?
 formView :: UserForm Validated -> View FormView ()
 formView v = do
-  form Submit v (gap 10 . pad 10) $ do
+  form Submit v (gap 10 . pad 10) $ \f -> do
     el Style.h1 "Sign Up"
 
+    -- can I just generate a random name?
+    -- can't do it based on the order
+    -- has to be the selector name
     field (.user) valStyle $ do
       label "Username"
       input Username (inp . placeholder "username")
@@ -110,7 +114,7 @@ formView v = do
     field (.age) valStyle $ do
       label "Age"
       input Number (inp . placeholder "age" . value "0")
-      el_ invalidText
+      el_ $ invalidText v.age
 
     field (.pass1) valStyle $ do
       label "Password"
