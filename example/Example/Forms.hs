@@ -32,7 +32,9 @@ instance HyperView FormView where
 
 
 -- Form Fields
-data User = User Text deriving (Generic, FormField)
+newtype User = User Text
+  deriving (Generic)
+  deriving newtype (FromHttpApiData)
 
 
 data UserForm f = UserForm
@@ -41,10 +43,7 @@ data UserForm f = UserForm
   , pass1 :: Field f Text
   , pass2 :: Field f Text
   }
-  deriving (Generic)
-
-
-instance Form (UserForm Identity)
+  deriving (Generic, Form)
 
 
 formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())

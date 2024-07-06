@@ -15,7 +15,7 @@ module Web.Hyperbole.Forms
   , placeholder
   , submit
   , formFields
-  , FormData (..)
+  , Form (..)
   , Field
   , defaultFormOptions
   , FormOptions (..)
@@ -316,13 +316,14 @@ submit f = tag "button" (att "type" "submit" . f)
 type family Field (context :: Type -> Type) a
 type instance Field Identity a = a
 type instance Field FieldName a = FieldName a
+type instance Field (FormField v) a = FormField v a
 type instance Field Validated a = Validated a
 
 
-formFields :: forall form es. (FormData form, Hyperbole :> es) => Eff es form
+formFields :: forall form es. (Form form, Hyperbole :> es) => Eff es (form Identity)
 formFields = do
   f <- formData
-  let ef = formParse f :: Either Text form
+  let ef = formParse f :: Either Text (form Identity)
   either parseError pure ef
 
 
@@ -345,10 +346,25 @@ formAction _ SignUp = do
 --     Left e -> parseError e
 --     Right a -> pure a
 
-class FormData f where
-  formParse :: FE.Form -> Either Text f
-  default formParse :: (Generic f, GFormParse (Rep f)) => FE.Form -> Either Text f
+class Form form where
+  formParse :: FE.Form -> Either Text (form Identity)
+  default formParse :: (Generic (form Identity), GFormParse (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
   formParse f = to <$> gFormParse f
+
+
+  fieldsConvert :: form f -> form g
+  default fieldsConvert :: (Generic (form f), Generic (form g), GConvert (Rep (form f)) (Rep (form g))) => form f -> form g
+  fieldsConvert x = to $ gConvert (from x)
+
+
+  fieldNames :: form FieldName
+  default fieldNames :: (Generic (form FieldName), GenFields (Rep (form FieldName))) => form FieldName
+  fieldNames = to gGenFields
+
+
+  fieldValids :: form Validated
+  default fieldValids :: (Generic (form Validated), GenFields (Rep (form Validated))) => form Validated
+  fieldValids = to gGenFields
 
 
 -- fromForm :: FE.Form -> Either Text (form Identity)
@@ -463,8 +479,8 @@ instance GenField (FormField Validated) a where
 --   default convertFields :: (Generic (a f), Generic (a g), GConvert (Rep (a f)) (Rep (a g))) => a f -> a g
 --   convertFields x = to $ gConvert (from x)
 
-class GConvert repf repg where
-  gConvert :: repf p -> repg p
+class GConvert rf rg where
+  gConvert :: rf p -> rg p
 
 
 instance (GConvert a1 a2, GConvert b1 b2) => GConvert (a1 :*: b1) (a2 :*: b2) where
@@ -479,49 +495,35 @@ instance (GConvert f g) => GConvert (M1 C d f) (M1 C d g) where
   gConvert (M1 fa) = M1 $ gConvert fa
 
 
-instance (Selector s, FromSelector f g) => GConvert (M1 S s (K1 R (f a))) (M1 S s (K1 R (g a))) where
+instance (Selector s, FromSelector f g a) => GConvert (M1 S s (K1 R (f a))) (M1 S s (K1 R (g a))) where
   gConvert (M1 (K1 fa)) =
     let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
      in M1 . K1 $ fromSelector sel fa
 
 
-class FromSelector f g where
+class FromSelector f g a where
   fromSelector :: String -> f a -> g a
 
 
 -- if we start with validateds, we can add the names!
-instance FromSelector v (FormField v) where
+instance FromSelector v (FormField v) a where
   fromSelector s = FormField (FieldName $ pack s)
 
 
-class Fields form where
-  fieldsConvert :: (FromSelector f g) => form f -> form g
-  default fieldsConvert :: (Generic (form f), Generic (form g), GConvert (Rep (form f)) (Rep (form g))) => form f -> form g
-  fieldsConvert x = to $ gConvert (from x)
-
-
-  fieldNames :: form FieldName
-  default fieldNames :: (Generic (form FieldName), GenFields (Rep (form FieldName))) => form FieldName
-  fieldNames = to gGenFields
-
-
-  fieldValids :: form Validated
-  default fieldValids :: (Generic (form Validated), GenFields (Rep (form Validated))) => form Validated
-  fieldValids = to gGenFields
-
-
-data MyType f = MyType {one :: f Int, two :: f Text}
-  deriving (Generic, Fields)
-instance FormData (MyType Identity)
+data MyType f = MyType {one :: Field f Int, two :: Field f Text}
+  deriving (Generic, Form)
 
 
 test :: IO ()
 test = do
   let formValids = fieldValids :: MyType Validated
-      vs = MyType{one = NotInvalid, two = Invalid "NOPPE"}
-      -- a = convertFields formNames :: MyType (FormField Validated)
-      b = fieldsConvert formValids :: MyType (FormField Validated)
-      c = fieldsConvert vs :: MyType (FormField Validated)
+      formNames = fieldNames :: MyType FieldName
+      vs = MyType{one = NotInvalid, two = Invalid "NOPPE"} :: MyType Validated
+      b = formValids
+      c = formNames
+  -- a = convertFields formNames :: MyType (FormField Validated)
+  -- b = fieldsConvert formValids :: MyType (FormField Validated)
+  -- c = fieldsConvert vs :: MyType (FormField Validated)
 
   -- print (a.one, a.two)
   print (b.one, b.two)
