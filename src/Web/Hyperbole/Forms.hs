@@ -41,12 +41,12 @@ import Data.Kind (Constraint, Type)
 import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
-import GHC.TypeLits hiding (Mod)
 import Text.Casing (kebab)
 import Web.FormUrlEncoded qualified as FE
 import Web.HttpApiData (FromHttpApiData (..))
 import Web.Hyperbole.Effect
 import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..), dataTarget)
+import Web.Hyperbole.Types (Elem)
 import Web.Internal.FormUrlEncoded (FormOptions (..), defaultFormOptions)
 import Web.View hiding (form, input, label)
 
@@ -442,23 +442,6 @@ instance (GFieldParse f) => GFieldParse (M1 S s f) where
 
 instance (FromHttpApiData a) => GFieldParse (K1 R a) where
   gFieldParse t f = K1 <$> FE.parseUnique t f
-
-
--- Type family to check if an element is in a type-level list
-type Elem e es = ElemGo e es es
-
-
--- 'orig' is used to store original list for better error messages
-type family ElemGo e es orig :: Constraint where
-  ElemGo x (x ': xs) orig = ()
-  ElemGo y (x ': xs) orig = ElemGo y xs orig
-  -- Note [Custom Errors]
-  ElemGo x '[] orig =
-    TypeError
-      ( 'ShowType x
-          ':<>: 'Text " not found in "
-          ':<>: 'ShowType orig
-      )
 
 -------------------------------------------------
 -- EXAMPLE --------------------------------------

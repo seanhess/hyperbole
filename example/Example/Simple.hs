@@ -14,10 +14,9 @@ main = do
     liveApp (basicDocument "Example") (page simplePage)
 
 
-simplePage :: (Hyperbole :> es) => Page es Response
+simplePage :: (Hyperbole :> es) => Page es '[Message]
 simplePage = do
-  handle message
-  load $ do
+  handle message $ load $ do
     pure $ col (pad 20) $ do
       el bold "My Page"
       hyper (Message 1) $ messageView "Hello"

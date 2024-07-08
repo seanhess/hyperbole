@@ -28,6 +28,7 @@ source-repository head
 
 library
   exposed-modules:
+      Simple
       Web.Hyperbole
       Web.Hyperbole.Application
       Web.Hyperbole.Effect
@@ -36,6 +37,7 @@ library
       Web.Hyperbole.HyperView
       Web.Hyperbole.Route
       Web.Hyperbole.Session
+      Web.Hyperbole.Types
       Web.Hyperbole.View
   other-modules:
       Paths_hyperbole

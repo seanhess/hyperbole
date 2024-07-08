@@ -5,11 +5,9 @@ import Example.Style as Style
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Page es Response
+page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
-  handle contents
-
-  load $ do
+  handle contents $ load $ do
     pure $ row (pad 20) $ do
       hyper Contents contentsView
 

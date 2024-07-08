@@ -10,7 +10,7 @@ main = do
     liveApp (basicDocument "Example") (page messagePage')
 
 
-messagePage :: (Hyperbole :> es) => Page es Response
+messagePage :: (Hyperbole :> es) => Page es '[]
 messagePage = do
   load $ do
     pure $ do
@@ -49,10 +49,9 @@ messageView' m = do
   button (SetMessage "Goodbye World") id "Change Message"
 
 
-messagePage' :: (Hyperbole :> es) => Page es Response
+messagePage' :: (Hyperbole :> es) => Page es '[Message]
 messagePage' = do
-  handle message
-  load $ do
+  handle message $ load $ do
     pure $ do
       el bold "Message Page"
       hyper Message $ messageView' "Hello World"

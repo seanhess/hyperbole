@@ -6,11 +6,9 @@ import Web.Hyperbole
 
 
 -- this is already running in a different context
-page :: (Hyperbole :> es) => Page es Response
+page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
-  handle content
-
-  load $ do
+  handle content $ load $ do
     pure $ row (pad 20) $ do
       col (gap 10 . border 1) $ do
         hyper Contents viewContent

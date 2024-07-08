@@ -13,11 +13,12 @@ import Example.Style qualified as Style
 import Web.Hyperbole
 
 
-page :: forall es. (Hyperbole :> es, Users :> es, Debug :> es) => Page es Response
+page
+  :: forall es
+   . (Hyperbole :> es, Users :> es, Debug :> es)
+  => Page es [Contacts, Contact]
 page = do
-  handle contacts
-  handle contact
-  load $ do
+  handle contacts . handle contact . load $ do
     us <- usersAll
     pure $ do
       col (pad 10 . gap 10) $ do
@@ -45,6 +46,7 @@ data Filter
 
 instance HyperView Contacts where
   type Action Contacts = ContactsAction
+  type Children Contacts = '[Contact]
 
 
 contacts :: (Hyperbole :> es, Users :> es, Debug :> es) => Contacts -> ContactsAction -> Eff es (View Contacts ())
