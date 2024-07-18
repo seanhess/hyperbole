@@ -2,14 +2,14 @@ module Example.Contacts where
 
 import Control.Monad (forM_)
 import Data.String.Conversions
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Example.Colors
 import Example.Effects.Debug
 import Example.Effects.Users (User (..), Users)
 import Example.Effects.Users qualified as Users
-import Example.Style as Style
+import Example.Style qualified as Style
 import Web.Hyperbole
 
 
@@ -33,6 +33,7 @@ data Contacts = Contacts
 data ContactsAction
   = Reload (Maybe Filter)
   | Delete Int
+  | AddUser
   deriving (Show, Read, ViewAction)
 
 
@@ -54,10 +55,16 @@ contacts _ (Delete uid) = do
   userDelete uid
   us <- usersAll
   pure $ allContactsView Nothing us
+contacts _ AddUser = do
+  uid <- usersNextId
+  u <- parseUser uid
+  userSave u
+  us <- usersAll
+  pure $ allContactsView Nothing us
 
 
 allContactsView :: Maybe Filter -> [User] -> View Contacts ()
-allContactsView fil us = do
+allContactsView fil us = col (gap 20) $ do
   row (gap 10) $ do
     el (pad 10) "Filter: "
     dropdown Reload (== fil) id $ do
@@ -65,7 +72,7 @@ allContactsView fil us = do
       option (Just Active) "Active!"
       option (Just Inactive) "Inactive"
 
-  row (pad 10 . gap 10) $ do
+  row (gap 10) $ do
     let filtered = filter (filterUsers fil) us
     forM_ filtered $ \u -> do
       el (border 1) $ do
@@ -74,6 +81,11 @@ allContactsView fil us = do
   row (gap 10) $ do
     button (Reload Nothing) Style.btnLight "Reload"
     target (Contact 2) $ button Edit Style.btnLight "Edit Sara"
+
+  el bold "Add Contact"
+
+  row (pad 10 . gap 10 . border 1) $ do
+    userForm AddUser Nothing
  where
   filterUsers Nothing _ = True
   filterUsers (Just Active) u = u.isActive
@@ -115,15 +127,17 @@ contact (Contact uid) a = do
     pure $ contactEdit u
   action _ Save = do
     delay 1000
-    unew <- parseUser
+    unew <- parseUser uid
     userSave unew
     pure $ contactView unew
 
-  parseUser = do
-    FirstName firstName <- formField @FirstName
-    LastName lastName <- formField @LastName
-    Age age <- formField @Age
-    pure User{id = uid, isActive = True, firstName, lastName, age}
+
+parseUser :: (Hyperbole :> es) => Int -> Eff es User
+parseUser uid = do
+  FirstName firstName <- formField @FirstName
+  LastName lastName <- formField @LastName
+  Age age <- formField @Age
+  pure User{id = uid, isActive = True, firstName, lastName, age}
 
 
 contactView :: User -> View Contact ()
@@ -153,27 +167,35 @@ contactView u = do
 contactEdit :: User -> View Contact ()
 contactEdit u = do
   onRequest loading $ do
-    form @[FirstName, LastName, Age] Save mempty (pad 10 . gap 10) $ do
-      field @FirstName (const fld) $ do
-        label "First Name:"
-        input Name (value u.firstName)
-
-      field @LastName (const fld) $ do
-        label "Last Name:"
-        input Name (value u.lastName)
-
-      field @Age (const fld) $ do
-        label "Age:"
-        input Number (value $ cs $ show u.age)
-
-      submit Style.btn "Submit"
-
+    col (gap 10 . pad 10) $ do
+      userForm Save (Just u)
       button View Style.btnLight (text "Cancel")
-
       target Contacts $ button (Delete u.id) (Style.btn' Danger) (text "Delete")
  where
   loading = el (bg Warning . pad 10) "Loading..."
+
+
+userForm :: (HyperView id) => Action id -> Maybe User -> View id ()
+userForm onSubmit mu = do
+  form @[FirstName, LastName, Age] onSubmit mempty (gap 10) $ do
+    field @FirstName (const fld) $ do
+      label "First Name:"
+      input Name (inp . valMaybe (.firstName) mu)
+
+    field @LastName (const fld) $ do
+      label "Last Name:"
+      input Name (inp . valMaybe (.lastName) mu)
+
+    field @Age (const fld) $ do
+      label "Age:"
+      input Number (inp . valMaybe (pack . show . (.age)) mu)
+
+    submit Style.btn "Submit"
+ where
   fld = flexRow . gap 10
+  inp = Style.input
+  valMaybe _ Nothing = id
+  valMaybe f (Just a) = value (f a)
 
 
 userFind :: (Hyperbole :> es, Users :> es) => Int -> Eff es User
@@ -192,3 +214,7 @@ userSave = send . Users.SaveUser
 
 userDelete :: (Users :> es) => Int -> Eff es ()
 userDelete = send . Users.DeleteUser
+
+
+usersNextId :: (Users :> es) => Eff es Int
+usersNextId = send Users.NextId

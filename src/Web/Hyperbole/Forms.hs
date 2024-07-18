@@ -37,10 +37,8 @@ module Web.Hyperbole.Forms
   )
 where
 
-import Data.Diverse.Many
 import Data.Kind (Constraint, Type)
 import Data.Text (Text, pack)
-import Data.Text qualified as T
 import Effectful
 import GHC.Generics
 import GHC.TypeLits hiding (Mod)

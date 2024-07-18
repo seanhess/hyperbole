@@ -41,3 +41,7 @@ success = color Success
 
 link :: Mod
 link = color Primary
+
+
+input :: Mod
+input = border 1 . pad 8

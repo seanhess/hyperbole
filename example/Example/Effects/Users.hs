@@ -27,6 +27,7 @@ data Users :: Effect where
   SaveUser :: User -> Users m ()
   ModifyUser :: Int -> (User -> User) -> Users m ()
   DeleteUser :: Int -> Users m ()
+  NextId :: Users m Int
 
 
 type instance DispatchOf Users = 'Dynamic
@@ -46,6 +47,10 @@ runUsersIO var = interpret $ \_ -> \case
   SaveUser u -> save u
   ModifyUser uid f -> modify uid f
   DeleteUser uid -> delete uid
+  NextId -> do
+    us <- loadAll
+    let umax = maximum $ fmap (.id) us
+    pure (umax + 1)
  where
   load :: (MonadIO m) => Int -> m (Maybe User)
   load uid = do

@@ -126,7 +126,7 @@ formView v = do
 
     submit Style.btn "Submit"
  where
-  inp = border 1 . pad 8
+  inp = Style.input
   valStyle (Invalid _) = Style.invalid
   valStyle Valid = Style.success
   valStyle _ = id
