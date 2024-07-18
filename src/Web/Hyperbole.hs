@@ -34,6 +34,7 @@ module Web.Hyperbole
   , routeRequest -- maybe belongs in an application section
   , Route
   , routeUrl
+  , routePath
   , route
 
     -- * Pages
@@ -80,10 +81,15 @@ module Web.Hyperbole
   , formField
 
     -- ** Validation
-  , Validation (..)
+  , Validation
+  , Validation' (..)
+  , Validated (..)
   , validate
   , validation
+  , fieldValid
+  , validateWith
   , invalidText
+  , anyInvalid
 
     -- * Hyperbole Effect
   , Hyperbole
@@ -135,13 +141,12 @@ module Web.Hyperbole
   ) where
 
 import Effectful (Eff, (:>))
-import GHC.Generics (Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Hyperbole.Application
 import Web.Hyperbole.Effect
 import Web.Hyperbole.Embed
-import Web.Hyperbole.Forms (FormField, InputType (..), Validation (..), field, form, formField, input, invalidText, label, placeholder, submit, validate, validation)
+import Web.Hyperbole.Forms
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Route
 import Web.Hyperbole.View

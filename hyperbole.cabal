@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           hyperbole
-version:        0.3.6
+version:        0.4.0
 synopsis:       Interactive HTML apps using type-safe serverside Haskell
 description:    Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
 category:       Web, Network
@@ -59,6 +59,7 @@ library
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
     , cookie ==0.4.*
+    , data-diverse
     , effectful >=2.3 && <3
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
@@ -70,7 +71,7 @@ library
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
-    , web-view >=0.4 && <=0.5
+    , web-view >=0.4 && <=0.6
     , websockets >=0.12 && <0.14
   default-language: GHC2021
 
@@ -104,6 +105,7 @@ test-suite test
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
     , cookie ==0.4.*
+    , data-diverse
     , effectful >=2.3 && <3
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
@@ -117,6 +119,6 @@ test-suite test
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
-    , web-view >=0.4 && <=0.5
+    , web-view >=0.4 && <=0.6
     , websockets >=0.12 && <0.14
   default-language: GHC2021

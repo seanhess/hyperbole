@@ -12,6 +12,7 @@ Create fully interactive HTML applications with type-safe serverside Haskell. In
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
+import Data.Text (Text)
 import Web.Hyperbole
 
 main = do
@@ -29,10 +30,10 @@ mainPage = do
 
 
 data Message = Message Int
-  deriving (Generic, Param)
+  deriving (Generic, ViewId)
 
 data MessageAction = Louder Text
-  deriving (Generic, Param)
+  deriving (Generic, ViewAction)
 
 instance HyperView Message where
   type Action Message = MessageAction
