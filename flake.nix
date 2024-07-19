@@ -49,8 +49,7 @@
               # TODO: hlint is currently failing. Fix hints.
               # hlint.enable = true;
               hpack.enable = true;
-              # TODO: fourmolu is currently failing. Fix formatting.
-              # fourmolu.enable = true;
+              fourmolu.enable = true;
               nixpkgs-fmt.enable = true;
             };
           };
