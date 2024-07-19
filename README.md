@@ -1,7 +1,7 @@
 Hyperbole
 =========
 
-[![Hackage](https://img.shields.io/hackage/v/hyperbole.svg)](https://hackage.haskell.org/package/hyperbole) 
+[![Hackage](https://img.shields.io/hackage/v/hyperbole.svg)](https://hackage.haskell.org/package/hyperbole)
 
 Create fully interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/), [Elm](https://elm-lang.org/), and [Phoenix LiveView](https://www.phoenixframework.org/)
 
@@ -89,6 +89,17 @@ Local Development
 -----------------
 
 ### Dependencies
+
+#### With nix
+
+With nix installed, you can use `nix develop` to get a shell with all dependencies installed.
+
+Tip:
+If you have `direnv` as well, you can run `direnv allow` once and every time you open a shell in this directory, it will automatically load the environment.
+
+```
+
+#### Manual dependency installation
 
 Download and install [NPM](https://nodejs.org/en/download). On a mac, can be installed via homebrew:
 
