@@ -32,7 +32,7 @@ instance HyperView FormView where
 
 
 -- Form Fields
-newtype User = User Text
+newtype User = User {username :: Text}
   deriving (Generic)
   deriving newtype (FromHttpApiData)
 
@@ -54,7 +54,7 @@ formAction _ Submit = do
 
   if anyInvalid vals
     then pure $ formView vals
-    else pure $ userView uf.user uf.age uf.pass1
+    else pure $ userView uf
 
 
 validateForm :: UserForm Identity -> UserForm Validated
@@ -94,7 +94,7 @@ validatePass p1 p2 =
 -- can I just remove the requirement for the validator?
 formView :: UserForm Validated -> View FormView ()
 formView v = do
-  form Submit v (gap 10 . pad 10) $ \f -> do
+  form Submit v (gap 10 . pad 10) $ do
     el Style.h1 "Sign Up"
 
     -- can I just generate a random name?
@@ -113,7 +113,7 @@ formView v = do
     field (.age) valStyle $ do
       label "Age"
       input Number (inp . placeholder "age" . value "0")
-      el_ $ invalidText v.age
+      el_ invalidText
 
     field (.pass1) valStyle $ do
       label "Password"
@@ -133,16 +133,16 @@ formView v = do
 
 
 userView :: UserForm Identity -> View FormView ()
-userView = do
+userView u = do
   el (bold . Style.success) "Accepted Signup"
   row (gap 5) $ do
     el_ "Username:"
-    el_ $ text user
+    el_ $ text u.user.username
 
   row (gap 5) $ do
     el_ "Age:"
-    el_ $ text $ pack (show age)
+    el_ $ text $ pack (show u.age)
 
   row (gap 5) $ do
     el_ "Password:"
-    el_ $ text pass1
+    el_ $ text u.pass1

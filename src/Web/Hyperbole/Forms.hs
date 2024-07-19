@@ -228,7 +228,7 @@ myForm = do
 @
 -}
 field
-  :: forall a id f v form
+  :: forall a id v form
    . (ValidationState v, Monoid (v a))
   => (form (FormField v) -> FormField v a)
   -> (v a -> Mod)
@@ -267,17 +267,12 @@ placeholder :: Text -> Mod
 placeholder = att "placeholder"
 
 
-form' :: forall form v id. (HyperView id) => Action id -> form v -> Mod -> View (FormFields id v form) () -> View id ()
+form' :: forall (form :: (Type -> Type) -> Type) id. (HyperView id, Form form) => Action id -> form Validated -> Mod -> View (FormFields id Validated form) () -> View id ()
 form' a v f cnt = do
   vid <- context
-  frm <- pure $ _ v :: View id (form (FormField v))
+  let frm = toFields @form (v :: form Validated) :: form (FormField Validated)
 
-  -- TODO: need a generic way to merge all fields.
-  --  (Form form) => mapFields (\v selName -> FormField selName v)
-
-  -- let frm = formLabels :: form Label
-  -- let cnt = fcnt frm
-  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormFields vid _) cnt
+  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormFields vid frm) cnt
  where
   onSubmit :: (ViewAction a) => a -> Mod
   onSubmit = att "data-on-submit" . toAction
@@ -304,7 +299,7 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: forall form id. (HyperView id) => Action id -> form Validated -> Mod -> View (FormFields id Validated form) () -> View id ()
+form :: forall (form :: (Type -> Type) -> Type) id. (HyperView id, Form form) => Action id -> form Validated -> Mod -> View (FormFields id Validated form) () -> View id ()
 form = form'
 
 
@@ -352,10 +347,9 @@ class Form form where
   formParse f = to <$> gFormParse f
 
 
-  fieldsConvert :: form f -> form g
-  default fieldsConvert :: (Generic (form f), Generic (form g), GConvert (Rep (form f)) (Rep (form g))) => form f -> form g
-  fieldsConvert x = to $ gConvert (from x)
-
+  -- fieldsConvert :: form f -> form g
+  -- default fieldsConvert :: (Generic (form f), Generic (form g), GConvert (Rep (form f)) (Rep (form g))) => form f -> form g
+  -- fieldsConvert x = to $ gConvert (from x)
 
   fieldNames :: form FieldName
   default fieldNames :: (Generic (form FieldName), GenFields (Rep (form FieldName))) => form FieldName
@@ -366,6 +360,14 @@ class Form form where
   default fieldValids :: (Generic (form Validated), GenFields (Rep (form Validated))) => form Validated
   fieldValids = to gGenFields
 
+
+  toFields :: form Validated -> form (FormField Validated)
+  default toFields :: (Generic (form Validated), Generic (form (FormField Validated)), GConvert (Rep (form Validated)) (Rep (form (FormField Validated)))) => form Validated -> form (FormField Validated)
+  toFields x = to $ gConvert (from x)
+
+
+-- toFields :: form Validated -> form (FormField Validated)
+-- default toFields :: (Generic (form Validated), GenFields (Rep (form Validated))) => form Validated
 
 -- fromForm :: FE.Form -> Either Text (form Identity)
 -- default fromForm :: (Generic (form Identity), GFromForm (form Identity) (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
@@ -495,18 +497,18 @@ instance (GConvert f g) => GConvert (M1 C d f) (M1 C d g) where
   gConvert (M1 fa) = M1 $ gConvert fa
 
 
-instance (Selector s, FromSelector f g a) => GConvert (M1 S s (K1 R (f a))) (M1 S s (K1 R (g a))) where
+instance (Selector s, FromSelector f val a) => GConvert (M1 S s (K1 R (val a))) (M1 S s (K1 R (f a))) where
   gConvert (M1 (K1 fa)) =
     let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
      in M1 . K1 $ fromSelector sel fa
 
 
-class FromSelector f g a where
-  fromSelector :: String -> f a -> g a
+class FromSelector f val a where
+  fromSelector :: String -> val a -> f a
 
 
 -- if we start with validateds, we can add the names!
-instance FromSelector v (FormField v) a where
+instance FromSelector (FormField v) v a where
   fromSelector s = FormField (FieldName $ pack s)
 
 
