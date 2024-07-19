@@ -2,3 +2,7 @@ dist-newstyle
 .DS_Store
 tags
 node_modules
+# Auto-generated pre-commit config
+.pre-commit-config.yaml
+# Nix output dir
+result
