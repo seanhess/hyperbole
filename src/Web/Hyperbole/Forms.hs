@@ -33,6 +33,7 @@ module Web.Hyperbole.Forms
   , GenFields (..)
   , GenField (..)
   , test
+  , MyType
   )
 where
 
@@ -311,10 +312,10 @@ type instance Field (FormField v) a = FormField v a
 type instance Field Validated a = Validated a
 
 
-formFields :: forall form es. (Form form, Hyperbole :> es) => Eff es (form Identity)
+formFields :: forall form val es. (Form val form, Hyperbole :> es) => Eff es (form Identity)
 formFields = do
   f <- formData
-  let ef = formParse f :: Either Text (form Identity)
+  let ef = formParse @val f :: Either Text (form Identity)
   either parseError pure ef
 
 
@@ -340,29 +341,28 @@ formAction _ SignUp = do
 -- WARNING: needs the capability to
 -- TODO: Generate an empty set of field names?
 -- TODO: Merge Validation and FieldNames
-class Form form where
+class Form val form where
   formParse :: FE.Form -> Either Text (form Identity)
   default formParse :: (Generic (form Identity), GFormParse (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
   formParse f = to <$> gFormParse f
 
 
-  fieldNames :: form FieldName
-  default fieldNames :: (Generic (form FieldName), GenFields (Rep (form FieldName))) => form FieldName
-  fieldNames = to gGenFields
+  genFields :: (GenField val a) => form val
+  default genFields :: (Generic (form val), GenFields (Rep (form val))) => form val
+  genFields = to gGenFields
 
 
-  fieldValids :: form Validated
-  default fieldValids :: (Generic (form Validated), GenFields (Rep (form Validated))) => form Validated
-  fieldValids = to gGenFields
+  -- TODO: we don't need this! Just make the other one handle this
+  -- genFieldNames :: form FieldName
+  -- default genFieldNames :: (Generic (form FieldName), GenFields (Rep (form FieldName))) => form FieldName
+  -- genFieldNames = to gGenFields
 
-
-  toFields :: form FieldName -> form Validated -> form (FormField Validated)
-  default toFields
-    :: (Generic (form FieldName), Generic (form Validated), Generic (form (FormField Validated)), GMerge (Rep (form FieldName)) (Rep (form Validated)) (Rep (form (FormField Validated))))
-    => form FieldName
-    -> form Validated
-    -> form (FormField Validated)
-  toFields fn fv = to $ gMerge (from fn) (from fv)
+  genFieldsFrom :: (GenFieldFrom (FormField val) val a) => form val -> form (FormField val)
+  default genFieldsFrom
+    :: (Generic (form val), Generic (form (FormField val)), GConvert (Rep (form val)) (Rep (form (FormField val))))
+    => form val
+    -> form (FormField val)
+  genFieldsFrom fv = to $ gConvert (from fv)
 
 
 -- toFields :: form Validated -> form (FormField Validated)
@@ -439,8 +439,10 @@ instance (GenFields f, GenFields g) => GenFields (f :*: g) where
   gGenFields = gGenFields :*: gGenFields
 
 
-instance (Selector s, GenField f a) => GenFields (M1 S s (K1 R (f a))) where
-  gGenFields = M1 . K1 $ genField (selName (undefined :: M1 S s (K1 R (f a)) p))
+instance (Selector s, GenField f a, Field f a ~ f a) => GenFields (M1 S s (K1 R (f a))) where
+  gGenFields =
+    let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
+     in M1 . K1 $ genField @f @a sel
 
 
 instance (GenFields f) => GenFields (M1 D d f) where
@@ -456,7 +458,7 @@ instance (GenFields f) => GenFields (M1 C c f) where
 ------------------------------------------------------------------------------
 
 class GenField f a where
-  genField :: String -> f a
+  genField :: String -> Field f a
 
 
 instance GenField FieldName a where
@@ -468,11 +470,11 @@ instance GenField Validated a where
 
 
 instance GenField (FormField Validated) a where
-  genField s = FormField (genField s) NotInvalid
+  genField s = FormField (FieldName $ pack s) NotInvalid
 
 
 ------------------------------------------------------------------------------
--- ConvertFields: start with another one
+-- GMerge - combine two records with the same structure
 ------------------------------------------------------------------------------
 
 -- class ConvertFields a where
@@ -508,21 +510,66 @@ instance MergeField (FieldName a) (Validated a) (FormField Validated a) where
   mergeField = FormField
 
 
+------------------------------------------------------------------------------
+-- GConvert - combine two records with the same structure
+------------------------------------------------------------------------------
+
+-- class ConvertFields a where
+--   convertFields :: (FromSelector f g) => a f -> a g
+--   default convertFields :: (Generic (a f), Generic (a g), GConvert (Rep (a f)) (Rep (a g))) => a f -> a g
+--   convertFields x = to $ gConvert (from x)
+
+class GConvert ra rc where
+  gConvert :: ra p -> rc p
+
+
+instance (GConvert ra0 rc0, GConvert ra1 rc1) => GConvert (ra0 :*: ra1) (rc0 :*: rc1) where
+  gConvert (a0 :*: a1) = gConvert a0 :*: gConvert a1
+
+
+instance (GConvert ra rc) => GConvert (M1 D d ra) (M1 D d rc) where
+  gConvert (M1 fa) = M1 $ gConvert fa
+
+
+instance (GConvert ra rc) => GConvert (M1 C d ra) (M1 C d rc) where
+  gConvert (M1 fa) = M1 $ gConvert fa
+
+
+instance (Selector s, GenFieldFrom g f a, Field g a ~ g a) => GConvert (M1 S s (K1 R (f a))) (M1 S s (K1 R (g a))) where
+  gConvert (M1 (K1 inp)) =
+    let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
+     in M1 . K1 $ genFieldFrom @g @f sel inp
+
+
+class GenFieldFrom f inp a where
+  genFieldFrom :: String -> inp a -> Field f a
+
+
+instance GenFieldFrom (FormField Validated) Validated a where
+  genFieldFrom s = FormField (FieldName $ pack s)
+
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- TODO: remove dependency on second Form instance. Hard code it somehow
+-- maybe abandon generic merge, and go more specific
 data MyType f = MyType {one :: Field f Int, two :: Field f Text}
-  deriving (Generic, Form)
+  deriving (Generic, Form Validated)
 
 
 test :: IO ()
 test = do
-  let vs = fieldValids :: MyType Validated
-      ns = fieldNames :: MyType FieldName
+  putStrLn "TEST"
+  let vs = genFields :: MyType Validated
+      fs = genFieldsFrom vs
       vs' = MyType{one = NotInvalid, two = Invalid "NOPE"} :: MyType Validated
-      fs = toFields ns vs'
-  -- a = convertFields formNames :: MyType (FormField Validated)
-  -- b = fieldsConvert formValids :: MyType (FormField Validated)
-  -- c = fieldsConvert vs :: MyType (FormField Validated)
-
-  -- print (a.one, a.two)
-  print (ns.one, ns.two)
+      fs' = genFieldsFrom vs'
+  --   -- a = convertFields formNames :: MyType (FormField Validated)
+  --   -- b = fieldsConvert formValids :: MyType (FormField Validated)
+  --   -- c = fieldsConvert vs :: MyType (FormField Validated)
+  --
+  --   -- print (a.one, a.two)
   print (vs.one, vs.two)
   print (fs.one, fs.two)
+  print (fs'.one, fs'.two)
