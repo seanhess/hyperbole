@@ -46,8 +46,7 @@
           pre-commit-check = pre-commit-hooks.lib.${system}.run {
             src = ./.;
             hooks = {
-              # TODO: hlint is currently failing. Fix hints.
-              # hlint.enable = true;
+              hlint.enable = true;
               hpack.enable = true;
               fourmolu.enable = true;
               nixpkgs-fmt.enable = true;

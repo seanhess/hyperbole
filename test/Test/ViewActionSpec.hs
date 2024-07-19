@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedLists #-}
-
 module Test.ViewActionSpec where
 
 import Data.Text (Text)
