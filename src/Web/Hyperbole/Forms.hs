@@ -52,11 +52,11 @@ import Web.View hiding (form, input, label)
 
 
 -- | The only time we can use Fields is inside a form
-data FormFields id v form = FormFields id (form (FormField v))
+data FormFields id = FormFields id
 
 
 data FormField v a = FormField
-  { label :: FieldName a
+  { fieldName :: FieldName a
   , validated :: v a
   }
   deriving (Show)
@@ -167,7 +167,7 @@ instance ValidationState Validated where
   el_ 'invalidText'
 @
 -}
-invalidText :: forall a fs id. View (Input id Validated fs a) ()
+invalidText :: forall a fs id. View (Input id Validated a) ()
 invalidText = do
   Input _ v <- context
   case v of
@@ -196,7 +196,7 @@ isInvalid (Invalid _) = True
 isInvalid _ = False
 
 
-fieldValid :: View (Input id v fs a) (v a)
+fieldValid :: View (Input id v a) (v a)
 fieldValid = do
   Input _ v <- context
   pure v
@@ -209,7 +209,7 @@ data FieldName a = FieldName Text
 data Invalid a
 
 
-data Input id v fs a = Input
+data Input id v a = Input
   { inputName :: FieldName a
   , valid :: v a
   }
@@ -228,26 +228,23 @@ myForm = do
 @
 -}
 field
-  :: forall a id v form
-   . (ValidationState v, Monoid (v a))
-  => (form (FormField v) -> FormField v a)
+  :: forall v a id
+   . FormField v a
   -> (v a -> Mod)
-  -> View (Input id v form a) ()
-  -> View (FormFields id v form) ()
-field toField md cnt = do
-  FormFields _ frm <- context
-  let fld = toField frm :: FormField v a
+  -> View (Input id v a) ()
+  -> View (FormFields id) ()
+field fld md cnt = do
   tag "label" (md fld.validated . flexCol) $ do
-    addContext (Input fld.label fld.validated) cnt
+    addContext (Input fld.fieldName fld.validated) cnt
 
 
 -- | label for a 'field'
-label :: Text -> View (Input id v fs a) ()
+label :: Text -> View (Input id v a) ()
 label = text
 
 
 -- | input for a 'field'
-input :: InputType -> Mod -> View (Input id v fs a) ()
+input :: InputType -> Mod -> View (Input id v a) ()
 input ft f = do
   Input (FieldName nm) _ <- context
   tag "input" (f . name nm . att "type" (inpType ft) . att "autocomplete" (auto ft)) none
@@ -267,12 +264,11 @@ placeholder :: Text -> Mod
 placeholder = att "placeholder"
 
 
-form' :: forall (form :: (Type -> Type) -> Type) id. (HyperView id, Form form) => Action id -> form Validated -> Mod -> View (FormFields id Validated form) () -> View id ()
-form' a v f cnt = do
+form' :: forall id. (HyperView id) => Action id -> Mod -> View (FormFields id) () -> View id ()
+form' a md cnt = do
   vid <- context
-  let frm = toFields @form (v :: form Validated) :: form (FormField Validated)
 
-  tag "form" (onSubmit a . dataTarget vid . f . flexCol) $ addContext (FormFields vid frm) cnt
+  tag "form" (onSubmit a . dataTarget vid . md . flexCol) $ addContext (FormFields vid) cnt
  where
   onSubmit :: (ViewAction a) => a -> Mod
   onSubmit = att "data-on-submit" . toAction
@@ -299,12 +295,12 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: forall (form :: (Type -> Type) -> Type) id. (HyperView id, Form form) => Action id -> form Validated -> Mod -> View (FormFields id Validated form) () -> View id ()
+form :: forall id. (HyperView id) => Action id -> Mod -> View (FormFields id) () -> View id ()
 form = form'
 
 
 -- | Button that submits the 'form'. Use 'button' to specify actions other than submit
-submit :: Mod -> View (FormFields id v fs) () -> View (FormFields id v fs) ()
+submit :: Mod -> View (FormFields id) () -> View (FormFields id) ()
 submit f = tag "button" (att "type" "submit" . f)
 
 
@@ -341,15 +337,14 @@ formAction _ SignUp = do
 --     Left e -> parseError e
 --     Right a -> pure a
 
+-- WARNING: needs the capability to
+-- TODO: Generate an empty set of field names?
+-- TODO: Merge Validation and FieldNames
 class Form form where
   formParse :: FE.Form -> Either Text (form Identity)
   default formParse :: (Generic (form Identity), GFormParse (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
   formParse f = to <$> gFormParse f
 
-
-  -- fieldsConvert :: form f -> form g
-  -- default fieldsConvert :: (Generic (form f), Generic (form g), GConvert (Rep (form f)) (Rep (form g))) => form f -> form g
-  -- fieldsConvert x = to $ gConvert (from x)
 
   fieldNames :: form FieldName
   default fieldNames :: (Generic (form FieldName), GenFields (Rep (form FieldName))) => form FieldName
@@ -361,9 +356,13 @@ class Form form where
   fieldValids = to gGenFields
 
 
-  toFields :: form Validated -> form (FormField Validated)
-  default toFields :: (Generic (form Validated), Generic (form (FormField Validated)), GConvert (Rep (form Validated)) (Rep (form (FormField Validated)))) => form Validated -> form (FormField Validated)
-  toFields x = to $ gConvert (from x)
+  toFields :: form FieldName -> form Validated -> form (FormField Validated)
+  default toFields
+    :: (Generic (form FieldName), Generic (form Validated), Generic (form (FormField Validated)), GMerge (Rep (form FieldName)) (Rep (form Validated)) (Rep (form (FormField Validated))))
+    => form FieldName
+    -> form Validated
+    -> form (FormField Validated)
+  toFields fn fv = to $ gMerge (from fn) (from fv)
 
 
 -- toFields :: form Validated -> form (FormField Validated)
@@ -481,35 +480,32 @@ instance GenField (FormField Validated) a where
 --   default convertFields :: (Generic (a f), Generic (a g), GConvert (Rep (a f)) (Rep (a g))) => a f -> a g
 --   convertFields x = to $ gConvert (from x)
 
-class GConvert rf rg where
-  gConvert :: rf p -> rg p
+class GMerge ra rb rc where
+  gMerge :: ra p -> rb p -> rc p
 
 
-instance (GConvert a1 a2, GConvert b1 b2) => GConvert (a1 :*: b1) (a2 :*: b2) where
-  gConvert (a :*: b) = gConvert a :*: gConvert b
+instance (GMerge ra0 rb0 rc0, GMerge ra1 rb1 rc1) => GMerge (ra0 :*: ra1) (rb0 :*: rb1) (rc0 :*: rc1) where
+  gMerge (a0 :*: a1) (b0 :*: b1) = gMerge a0 b0 :*: gMerge a1 b1
 
 
-instance (GConvert f g) => GConvert (M1 D d f) (M1 D d g) where
-  gConvert (M1 fa) = M1 $ gConvert fa
+instance (GMerge ra rb rc) => GMerge (M1 D d ra) (M1 D d rb) (M1 D d rc) where
+  gMerge (M1 fa) (M1 fb) = M1 $ gMerge fa fb
 
 
-instance (GConvert f g) => GConvert (M1 C d f) (M1 C d g) where
-  gConvert (M1 fa) = M1 $ gConvert fa
+instance (GMerge ra rb rc) => GMerge (M1 C d ra) (M1 C d rb) (M1 C d rc) where
+  gMerge (M1 fa) (M1 fb) = M1 $ gMerge fa fb
 
 
-instance (Selector s, FromSelector f val a) => GConvert (M1 S s (K1 R (val a))) (M1 S s (K1 R (f a))) where
-  gConvert (M1 (K1 fa)) =
-    let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
-     in M1 . K1 $ fromSelector sel fa
+instance (Selector s, MergeField a b c) => GMerge (M1 S s (K1 R a)) (M1 S s (K1 R b)) (M1 S s (K1 R c)) where
+  gMerge (M1 (K1 a)) (M1 (K1 b)) = M1 . K1 $ mergeField a b
 
 
-class FromSelector f val a where
-  fromSelector :: String -> val a -> f a
+class MergeField a b c where
+  mergeField :: a -> b -> c
 
 
--- if we start with validateds, we can add the names!
-instance FromSelector (FormField v) v a where
-  fromSelector s = FormField (FieldName $ pack s)
+instance MergeField (FieldName a) (Validated a) (FormField Validated a) where
+  mergeField = FormField
 
 
 data MyType f = MyType {one :: Field f Int, two :: Field f Text}
@@ -518,15 +514,15 @@ data MyType f = MyType {one :: Field f Int, two :: Field f Text}
 
 test :: IO ()
 test = do
-  let formValids = fieldValids :: MyType Validated
-      formNames = fieldNames :: MyType FieldName
-      vs = MyType{one = NotInvalid, two = Invalid "NOPPE"} :: MyType Validated
-      b = formValids
-      c = formNames
+  let vs = fieldValids :: MyType Validated
+      ns = fieldNames :: MyType FieldName
+      vs' = MyType{one = NotInvalid, two = Invalid "NOPE"} :: MyType Validated
+      fs = toFields ns vs'
   -- a = convertFields formNames :: MyType (FormField Validated)
   -- b = fieldsConvert formValids :: MyType (FormField Validated)
   -- c = fieldsConvert vs :: MyType (FormField Validated)
 
   -- print (a.one, a.two)
-  print (b.one, b.two)
-  print (c.one, c.two)
+  print (ns.one, ns.two)
+  print (vs.one, vs.two)
+  print (fs.one, fs.two)
