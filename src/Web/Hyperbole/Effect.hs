@@ -86,7 +86,7 @@ pageView = do
 
 -- newtype Page views es a = Page (Page' views views es (View (Root views) a))
 -- type Page views es a = Handle views views es (View (Root views) a)
-newtype Page (es :: [Effect]) (views :: [Type]) = Page (Eff es Response)
+newtype Page (es :: [Effect]) (views :: [Type]) = Page (Eff es (View (Root views) ()))
 
 
 data Handler (view :: Type) :: Effect where
@@ -102,7 +102,11 @@ type family AllHandled (views :: [Type]) (es :: [Effect]) :: Constraint where
 
 
 load :: (Hyperbole :> es, AllHandled total es) => Eff es (View (Root total) ()) -> Page es total
-load run = Page $ do
+load = Page
+
+
+runLoad :: (Hyperbole :> es) => Eff es (View (Root total) ()) -> Eff es Response
+runLoad run = do
   r <- request
   case lookupEvent r.query of
     -- Are id and action set to something?
@@ -472,4 +476,5 @@ page
    . (Hyperbole :> es)
   => Page es views
   -> Eff es Response
-page (Page eff) = eff
+page (Page eff) = do
+  runLoad eff
