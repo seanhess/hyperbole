@@ -186,8 +186,8 @@ validate False _ = NotInvalid -- Validation [(inputName @a, NotInvalid)]
 -- validateWith v = Validation [(inputName @a, convert v)]
 
 -- eh... not sure how to do this...
-anyInvalid :: form Validated -> Bool
-anyInvalid _ = _
+anyInvalid :: (Form Validated form) => form Validated -> Bool
+anyInvalid f = any isInvalid (collectValids f :: [Validated ()])
 
 
 -- any (isInvalid . snd) vs
@@ -352,12 +352,17 @@ class Form val form where
   genFields = to gGenFields
 
 
+  collectValids :: (ValidationState val) => form val -> [val ()]
+  default collectValids :: (Generic (form val), GCollect (Rep (form val)) val) => form val -> [val ()]
+  collectValids f = gCollect (from f)
+
+
   -- TODO: we don't need this! Just make the other one handle this
   -- genFieldNames :: form FieldName
   -- default genFieldNames :: (Generic (form FieldName), GenFields (Rep (form FieldName))) => form FieldName
   -- genFieldNames = to gGenFields
 
-  genFieldsFrom :: (GenFieldFrom (FormField val) val a) => form val -> form (FormField val)
+  genFieldsFrom :: (GenFieldFrom val (FormField val) a) => form val -> form (FormField val)
   default genFieldsFrom
     :: (Generic (form val), Generic (form (FormField val)), GConvert (Rep (form val)) (Rep (form (FormField val))))
     => form val
@@ -535,18 +540,44 @@ instance (GConvert ra rc) => GConvert (M1 C d ra) (M1 C d rc) where
   gConvert (M1 fa) = M1 $ gConvert fa
 
 
-instance (Selector s, GenFieldFrom g f a, Field g a ~ g a) => GConvert (M1 S s (K1 R (f a))) (M1 S s (K1 R (g a))) where
+instance (Selector s, GenFieldFrom f g a, Field g a ~ g a) => GConvert (M1 S s (K1 R (f a))) (M1 S s (K1 R (g a))) where
   gConvert (M1 (K1 inp)) =
     let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
-     in M1 . K1 $ genFieldFrom @g @f sel inp
+     in M1 . K1 $ genFieldFrom @f @g sel inp
 
 
-class GenFieldFrom f inp a where
+class GenFieldFrom inp f a where
   genFieldFrom :: String -> inp a -> Field f a
 
 
-instance GenFieldFrom (FormField Validated) Validated a where
+instance GenFieldFrom Validated (FormField Validated) a where
   genFieldFrom s = FormField (FieldName $ pack s)
+
+
+------------------------------------------------------------------------------
+
+class GCollect ra v where
+  gCollect :: ra p -> [v ()]
+
+
+instance GCollect U1 v where
+  gCollect _ = []
+
+
+instance (GCollect f v, GCollect g v) => GCollect (f :*: g) v where
+  gCollect (a :*: b) = gCollect a <> gCollect b
+
+
+instance (Selector s, ValidationState v) => GCollect (M1 S s (K1 R (v a))) v where
+  gCollect (M1 (K1 val)) = [convert val]
+
+
+instance (GCollect f v) => GCollect (M1 D d f) v where
+  gCollect (M1 f) = gCollect f
+
+
+instance (GCollect f v) => GCollect (M1 C c f) v where
+  gCollect (M1 f) = gCollect f
 
 
 ------------------------------------------------------------------------------
@@ -562,9 +593,10 @@ test :: IO ()
 test = do
   putStrLn "TEST"
   let vs = genFields :: MyType Validated
-      fs = genFieldsFrom vs
+      fs = genFieldsFrom vs :: MyType (FormField Validated)
       vs' = MyType{one = NotInvalid, two = Invalid "NOPE"} :: MyType Validated
-      fs' = genFieldsFrom vs'
+      fs' = genFieldsFrom vs' :: MyType (FormField Validated)
+      xx = collectValids vs'
   --   -- a = convertFields formNames :: MyType (FormField Validated)
   --   -- b = fieldsConvert formValids :: MyType (FormField Validated)
   --   -- c = fieldsConvert vs :: MyType (FormField Validated)
@@ -573,3 +605,5 @@ test = do
   print (vs.one, vs.two)
   print (fs.one, fs.two)
   print (fs'.one, fs'.two)
+  print xx
+  print $ anyInvalid vs'

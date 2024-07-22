@@ -16,7 +16,7 @@ page = do
 
   load $ do
     pure $ row (pad 20) $ do
-      hyper FormView (formView mempty)
+      hyper FormView (formView genFields)
 
 
 data FormView = FormView
@@ -43,12 +43,12 @@ data UserForm f = UserForm
   , pass1 :: Field f Text
   , pass2 :: Field f Text
   }
-  deriving (Generic, Form)
+  deriving (Generic, Form Validated)
 
 
 formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
 formAction _ Submit = do
-  uf <- formFields
+  uf <- formFields @UserForm @Validated
 
   let vals = validateForm uf
 
@@ -91,16 +91,12 @@ validatePass p1 p2 =
     ]
 
 
--- can I just remove the requirement for the validator?
 formView :: UserForm Validated -> View FormView ()
 formView v = do
-  let f = v
+  let f = genFieldsFrom v
   form Submit (gap 10 . pad 10) $ do
     el Style.h1 "Sign Up"
 
-    -- can I just generate a random name?
-    -- can't do it based on the order
-    -- has to be the selector name
     field f.user valStyle $ do
       label "Username"
       input Username (inp . placeholder "username")
