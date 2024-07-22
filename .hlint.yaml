@@ -1,2 +1,9 @@
+- arguments:
+    - -XOverloadedRecordDot
+
 - ignore: {name: "Use <$>"}
 - ignore: {name: "Use newtype instead of data"}
+
+# Hlint is not aware of OverloadedRecordDot
+# See https://github.com/ndmitchell/hlint/issues/1383
+- ignore: { name: Redundant id }
