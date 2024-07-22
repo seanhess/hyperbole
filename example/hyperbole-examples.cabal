@@ -21,7 +21,7 @@ source-repository head
   type: git
   location: https://github.com/seanhess/hyperbole
 
-executable woot
+executable examples
   main-is: Main.hs
   other-modules:
       Web.Hyperbole
@@ -64,7 +64,7 @@ executable woot
       DataKinds
       DerivingStrategies
       DeriveAnyClass
-  ghc-options: -Wall -fdefer-typed-holes
+  ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
     , bytestring
