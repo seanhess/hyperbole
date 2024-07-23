@@ -96,12 +96,12 @@ data Handler (view :: Type) :: Effect where
 type instance DispatchOf (Handler view) = Dynamic
 
 
-type family AllHandled (views :: [Type]) (es :: [Effect]) :: Constraint where
-  AllHandled '[] es = ()
-  AllHandled (x ': xs) es = (Handler x :> es, AllHandled xs es)
+type family Handlers (views :: [Type]) (es :: [Effect]) :: Constraint where
+  Handlers '[] es = ()
+  Handlers (x ': xs) es = (Handler x :> es, Handlers xs es)
 
 
-load :: (Hyperbole :> es, AllHandled total es) => Eff es (View (Root total) ()) -> Page es total
+load :: (Hyperbole :> es, Handlers total es) => Eff es (View (Root total) ()) -> Page es total
 load = Page
 
 

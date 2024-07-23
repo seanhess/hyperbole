@@ -42,7 +42,7 @@ data MainAction
 
 instance HyperView MainView where
   type Action MainView = MainAction
-  type Children MainView = '[Status]
+  type Require MainView = '[Status]
 
 
 main' :: MainView -> MainAction -> Eff es (View MainView ())
@@ -84,7 +84,7 @@ data CheckStatus
 
 instance HyperView Status where
   type Action Status = CheckStatus
-  type Children Status = '[MainView]
+  type Require Status = '[MainView]
 
 
 status :: Status -> CheckStatus -> Eff es (View Status ())

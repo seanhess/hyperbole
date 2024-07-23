@@ -46,7 +46,7 @@ data Filter
 
 instance HyperView Contacts where
   type Action Contacts = ContactsAction
-  type Children Contacts = '[Contact]
+  type Require Contacts = '[Contact]
 
 
 contacts :: (Hyperbole :> es, Users :> es, Debug :> es) => Contacts -> ContactsAction -> Eff es (View Contacts ())
