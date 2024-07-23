@@ -2,12 +2,33 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE NoFieldSelectors #-}
 
-module Web.Hyperbole.Effect where
+module Web.Hyperbole.Effect
+  ( Page
+  , Hyperbole (..)
+  , clearSession
+  , formData
+  , handle
+  , hasParam
+  , load
+  , lookupParam
+  , notFound
+  , page
+  , parseError
+  , redirect
+  , reqParam
+  , reqParams
+  , reqPath
+  , request
+  , respondEarly
+  , runHyperbole
+  , session
+  , setSession
+  , view
+  ) where
 
 import Control.Monad (join)
 import Data.Bifunctor (first)
 import Data.ByteString qualified as BS
-import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as List
 import Data.Maybe (isJust)
 import Data.String.Conversions
@@ -17,52 +38,16 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types hiding (Query)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
+import Web.Hyperbole.Effect.Server (Server (..))
+import Web.Hyperbole.Event (Event (..))
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.Request (Request (..))
+import Web.Hyperbole.Response (Response (..), ResponseError (..), TargetViewId (..))
 import Web.Hyperbole.Route
 import Web.Hyperbole.Session as Session
 import Web.View
-
-
-newtype Host = Host {text :: BS.ByteString}
-  deriving (Show)
-
-
-data Request = Request
-  { host :: Host
-  , path :: [Segment]
-  , query :: Query
-  , body :: BL.ByteString
-  , method :: Method
-  , cookies :: [(BS.ByteString, BS.ByteString)]
-  }
-  deriving (Show)
-
-
-{- | Valid responses for a 'Hyperbole' effect. Use 'notFound', etc instead. Reminds you to use 'load' in your 'Page'
-
-> myPage :: (Hyperbole :> es) => Page es Response
-> myPage = do
->   -- compiler error: () does not equal Response
->   pure ()
--}
-data Response
-  = Response TargetViewId (View () ())
-  | NotFound
-  | Redirect Url
-  | Err ResponseError
-  | Empty
-
-
-data ResponseError
-  = ErrParse Text
-  | ErrParam Text
-  | ErrOther Text
-  | ErrNotHandled (Event Text Text)
-  | ErrAuth
-  deriving (Show)
 
 
 {- | Hyperbole applications are divided into Pages. Each Page must 'load' the whole page , and 'handle' each /type/ of 'HyperView'
@@ -80,30 +65,6 @@ pageView = do
 -}
 newtype Page es a = Page (Eff es a)
   deriving newtype (Applicative, Monad, Functor)
-
-
--- | Serialized ViewId
-newtype TargetViewId = TargetViewId Text
-
-
--- | An action, with its corresponding id
-data Event id act = Event
-  { viewId :: id
-  , action :: act
-  }
-
-
-instance (Show act, Show id) => Show (Event id act) where
-  show e = "Event " <> show e.viewId <> " " <> show e.action
-
-
--- | Low level effect mapping request/response to either HTTP or WebSockets
-data Server :: Effect where
-  LoadRequest :: Server m Request
-  SendResponse :: Session -> Response -> Server m ()
-
-
-type instance DispatchOf Server = 'Dynamic
 
 
 {- | In any 'load' or 'handle', you can use this Effect to get extra request information or control the response manually.
@@ -151,7 +112,7 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
   runLocal eff = do
     -- Load the request ONCE right when we start
     r <- send LoadRequest
-    let st = HyperState r (sessionFromCookies r.cookies)
+    let st = HyperState{request = r, session = sessionFromCookies r.cookies}
     runErrorNoCallStack @Response . runState st $ eff
 
   combine :: (Server :> es) => Eff es (Either Response (Response, HyperState)) -> Eff es Response

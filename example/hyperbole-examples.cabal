@@ -27,9 +27,14 @@ executable examples
       Web.Hyperbole
       Web.Hyperbole.Application
       Web.Hyperbole.Effect
+      Web.Hyperbole.Effect.Server
       Web.Hyperbole.Embed
+      Web.Hyperbole.Event
       Web.Hyperbole.Forms
+      Web.Hyperbole.Host
       Web.Hyperbole.HyperView
+      Web.Hyperbole.Request
+      Web.Hyperbole.Response
       Web.Hyperbole.Route
       Web.Hyperbole.Session
       Web.Hyperbole.View

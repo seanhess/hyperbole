@@ -148,6 +148,7 @@ import Web.Hyperbole.Effect
 import Web.Hyperbole.Embed
 import Web.Hyperbole.Forms
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.Response (Response)
 import Web.Hyperbole.Route
 import Web.Hyperbole.View
 
