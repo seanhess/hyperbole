@@ -37,7 +37,7 @@ module Web.Hyperbole.Forms
   )
 where
 
-import Data.Kind (Constraint, Type)
+import Data.Kind (Type)
 import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics

@@ -292,7 +292,9 @@ type NotHandled id ctx (views :: [Type]) =
         :<>: 'Text ")"
         :$$: 'Text "  " :<>: 'ShowType views
         :$$: 'Text "Try adding it to the HyperView instance:"
-        :$$: 'Text "  type Require " :<>: 'ShowType ctx :<>: 'Text " = [" :<>: ShowType id :<>: 'Text "]"
+        :$$: 'Text "  instance HyperView " :<>: 'ShowType ctx :<>: 'Text " where"
+        :$$: 'Text "    type Action " :<>: 'ShowType ctx :<>: 'Text " = " :<>: ShowType (Action id) :<>: 'Text ""
+        :$$: 'Text "    type Require " :<>: 'ShowType ctx :<>: 'Text " = [" :<>: ShowType id :<>: 'Text ", ...]"
     )
 
 
@@ -313,9 +315,13 @@ type NotDesc id ctx x cs =
 type NotInPage x total =
   TypeError
     ( 'Text ""
-        ':<>: 'ShowType x
-        ':<>: 'Text " not handled by Page: "
-        ':$$: 'ShowType total
+        :<>: 'ShowType x
+        :<>: 'Text " not included in: "
+        :$$: 'Text "  Page es " :<>: ShowType total
+        :$$: 'Text "try expanding the page views to:"
+        :$$: 'Text "  Page es " :<>: ShowType (x : total)
+        -- :$$: 'Text " " :<>: 'ShowType ctx :<>: 'Text " = " :<>: ShowType (Action id) :<>: 'Text ""
+        -- :$$: 'Text "    page :: (Hyperbole :> es) => Page es '[" :<>: 'ShowType ctx :<>: 'Text " = [" :<>: ShowType id :<>: 'Text ", ...]"
     )
 
 
