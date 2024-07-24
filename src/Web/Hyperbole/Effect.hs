@@ -102,20 +102,20 @@ type family Handlers (views :: [Type]) (es :: [Effect]) :: Constraint where
 
 
 load :: (Hyperbole :> es, Handlers total es) => Eff es (View (Root total) ()) -> Page es total
-load = Page
-
-
-runLoad :: (Hyperbole :> es) => Eff es (View (Root total) ()) -> Eff es Response
-runLoad run = do
+load run = Page $ do
   r <- request
   case lookupEvent r.query of
     -- Are id and action set to something?
     Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
-    Nothing -> do
-      vw <- run
-      let vid = TargetViewId (toViewId Root)
-      let res = Response vid $ addContext Root vw
-      pure res
+    Nothing -> run
+
+
+loadToResponse :: Eff es (View (Root total) ()) -> Eff es Response
+loadToResponse run = do
+  vw <- run
+  let vid = TargetViewId (toViewId Root)
+  let res = Response vid $ addContext Root vw
+  pure res
 
 
 -- but we actually have to run the handler here...
@@ -141,13 +141,14 @@ runHandler
 runHandler run = interpret $ \_ -> \case
   RespondEvents -> do
     -- Get an event matching our type. If it doesn't match, skip to the next handler
-    mev <- getEvent @id
+    mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
     case mev of
       Just event -> do
         vw <- run event.viewId event.action
         let vid = TargetViewId $ toViewId event.viewId
         send $ RespondEarly $ Response vid $ hyperUnsafe event.viewId vw
-      _ -> pure ()
+      _ -> do
+        pure ()
 
 
 -- deriving newtype (Applicative, Monad, Functor)
@@ -477,4 +478,4 @@ page
   => Page es views
   -> Eff es Response
 page (Page eff) = do
-  runLoad eff
+  loadToResponse eff
