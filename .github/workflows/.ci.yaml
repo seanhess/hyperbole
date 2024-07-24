@@ -1,0 +1,14 @@
+name: "CI"
+on:
+  pull_request:
+  push:
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix build
+      - run: nix flake check
+      - run: nix develop --command bash -c "cabal update; cabal test"
