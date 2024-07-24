@@ -24,6 +24,7 @@ source-repository head
 executable examples
   main-is: Main.hs
   other-modules:
+      Simple
       Web.Hyperbole
       Web.Hyperbole.Application
       Web.Hyperbole.Effect
@@ -32,6 +33,7 @@ executable examples
       Web.Hyperbole.HyperView
       Web.Hyperbole.Route
       Web.Hyperbole.Session
+      Web.Hyperbole.Types
       Web.Hyperbole.View
       BulkUpdate
       Example.Colors

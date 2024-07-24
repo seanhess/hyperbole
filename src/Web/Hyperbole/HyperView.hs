@@ -1,11 +1,14 @@
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.HyperView where
 
-import Data.Kind (Type)
+import Data.Kind (Constraint, Type)
 import Data.Text (Text, pack, unpack)
+import GHC.TypeLits hiding (Mod)
 import Text.Read (readMaybe)
 import Web.Hyperbole.Route (Route (..), routeUrl)
+import Web.Hyperbole.Types
 import Web.View
 
 
@@ -28,6 +31,8 @@ instance HyperView Message where
 -}
 class (ViewId id, ViewAction (Action id)) => HyperView id where
   type Action id :: Type
+  type Require id :: [Type]
+  type Require id = '[]
 
 
 class ViewAction a where
@@ -39,6 +44,11 @@ class ViewAction a where
   parseAction :: Text -> Maybe a
   default parseAction :: (Read a) => Text -> Maybe a
   parseAction = readMaybe . unpack
+
+
+instance ViewAction () where
+  toAction _ = ""
+  parseAction _ = Just ()
 
 
 class ViewId a where
@@ -81,8 +91,21 @@ otherView = do
   button (Louder \"Hi\") id "Louder"
 @
 -}
-hyper :: forall id ctx. (HyperView id) => id -> View id () -> View ctx ()
-hyper vid vw = do
+
+-- TODO: if I'm going to limit it, it's going to happen here
+-- AND all their children have to be there
+-- , All (Elem (Require ctx)) (Require id)
+hyper
+  :: forall id ctx
+   . (HyperViewHandled id ctx)
+  => id
+  -> View id ()
+  -> View ctx ()
+hyper = hyperUnsafe
+
+
+hyperUnsafe :: (ViewId id) => id -> View id () -> View ctx ()
+hyperUnsafe vid vw = do
   el (att "id" (toViewId vid) . flexCol) $
     addContext vid vw
 
@@ -214,3 +237,113 @@ data Option opt id action = Option
 -}
 route :: (Route a) => a -> Mod -> View c () -> View c ()
 route r = link (routeUrl r)
+
+
+data Root (views :: [Type]) = Root
+  deriving (Show, Read, ViewId)
+
+
+instance HyperView (Root views) where
+  type Action (Root views) = ()
+  type Require (Root views) = views
+
+
+type family AllDescendents (xs :: [Type]) :: [Type] where
+  AllDescendents xs = xs <++> RemoveAll xs (NextDescendents '[] xs)
+
+
+type family ValidDescendents x :: [Type] where
+  ValidDescendents x = x : NextDescendents '[] '[x]
+
+
+type family NextDescendents (ex :: [Type]) (xs :: [Type]) where
+  NextDescendents _ '[] = '[]
+  NextDescendents ex (x ': xs) =
+    RemoveAll (x : ex) (Require x)
+      <++> NextDescendents ((x : ex) <++> Require x) (RemoveAll (x : ex) (Require x))
+      <++> NextDescendents (x : ex) (RemoveAll (x : ex) xs)
+
+
+-- concat lists
+type family (<++>) xs ys where
+  '[] <++> ys = ys
+  xs <++> '[] = xs
+  (x ': xs) <++> ys = x : xs <++> ys
+
+
+type family Remove x ys where
+  Remove x '[] = '[]
+  Remove x (x ': ys) = Remove x ys
+  Remove x (y ': ys) = y ': Remove x ys
+
+
+type family RemoveAll xs ys where
+  RemoveAll '[] ys = ys
+  RemoveAll xs '[] = '[]
+  RemoveAll (x ': xs) ys = RemoveAll xs (Remove x ys)
+
+
+type NotHandled id ctx (views :: [Type]) =
+  TypeError
+    ( 'Text "HyperView "
+        :<>: 'ShowType id
+        :<>: 'Text " not found in (Require "
+        :<>: 'ShowType ctx
+        :<>: 'Text ")"
+        :$$: 'Text "  " :<>: 'ShowType views
+        :$$: 'Text "Try adding it to the HyperView instance:"
+        :$$: 'Text "  instance HyperView " :<>: 'ShowType ctx :<>: 'Text " where"
+        :$$: 'Text "    type Action " :<>: 'ShowType ctx :<>: 'Text " = " :<>: ShowType (Action id) :<>: 'Text ""
+        :$$: 'Text "    type Require " :<>: 'ShowType ctx :<>: 'Text " = [" :<>: ShowType id :<>: 'Text ", ...]"
+    )
+
+
+type NotDesc id ctx x cs =
+  TypeError
+    ( 'Text ""
+        :<>: 'ShowType x
+        :<>: 'Text ", a child of HyperView "
+        :<>: 'ShowType id
+        :<>: 'Text ", not handled by context "
+        :<>: 'ShowType ctx
+        :$$: ('Text " Require = " ':<>: 'ShowType cs)
+        -- ':$$: 'ShowType x
+        -- ':$$: 'ShowType cs
+    )
+
+
+type NotInPage x total =
+  TypeError
+    ( 'Text ""
+        :<>: 'ShowType x
+        :<>: 'Text " not included in: "
+        :$$: 'Text "  Page es " :<>: ShowType total
+        :$$: 'Text "try expanding the page views to:"
+        :$$: 'Text "  Page es " :<>: ShowType (x : total)
+        -- :$$: 'Text " " :<>: 'ShowType ctx :<>: 'Text " = " :<>: ShowType (Action id) :<>: 'Text ""
+        -- :$$: 'Text "    page :: (Hyperbole :> es) => Page es '[" :<>: 'ShowType ctx :<>: 'Text " = [" :<>: ShowType id :<>: 'Text ", ...]"
+    )
+
+
+type HyperViewHandled id ctx =
+  ( HyperView id
+  , HyperView ctx
+  , -- the id must be found in the children of the context
+    ElemOr id (Require ctx) (NotHandled id ctx (Require ctx))
+  , -- Make sure the descendents of id are in the context for the root page
+    CheckDescendents id ctx
+  )
+
+
+-- TODO: Report which view requires the missing one
+type family CheckDescendents id ctx :: Constraint where
+  CheckDescendents id (Root total) =
+    ( AllInPage (ValidDescendents id) total
+    )
+  CheckDescendents id ctx = ()
+
+
+type family AllInPage ids total :: Constraint where
+  AllInPage '[] _ = ()
+  AllInPage (x ': xs) total =
+    (ElemOr x total (NotInPage x total), AllInPage xs total)

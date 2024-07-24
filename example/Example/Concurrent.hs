@@ -6,11 +6,9 @@ import Example.Effects.Debug
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es Response
+page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es '[Contents]
 page = do
-  handle content
-
-  load $ do
+  handle content $ load $ do
     pure $ do
       col (pad 20) $ do
         hyper (Contents 50) $ viewPoll 1

@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoFieldSelectors #-}
 
 module Web.Hyperbole.Effect where
@@ -8,6 +9,7 @@ import Control.Monad (join)
 import Data.Bifunctor (first)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
+import Data.Kind (Constraint, Type)
 import Data.List qualified as List
 import Data.Maybe (isJust)
 import Data.String.Conversions
@@ -78,9 +80,78 @@ pageView = do
   'hyper' (Message 1) $ messageView "Starting Message"
 @
 -}
-newtype Page es a = Page (Eff es a)
-  deriving newtype (Applicative, Monad, Functor)
 
+-- newtype Handle (views :: [Type]) (total :: [Type]) es a = Handle (Eff es a)
+--   deriving newtype (Functor, Monad, Applicative)
+
+-- newtype Page views es a = Page (Page' views views es (View (Root views) a))
+-- type Page views es a = Handle views views es (View (Root views) a)
+newtype Page (es :: [Effect]) (views :: [Type]) = Page (Eff es (View (Root views) ()))
+
+
+data Handler (view :: Type) :: Effect where
+  RespondEvents :: Handler view m ()
+
+
+type instance DispatchOf (Handler view) = Dynamic
+
+
+type family Handlers (views :: [Type]) (es :: [Effect]) :: Constraint where
+  Handlers '[] es = ()
+  Handlers (x ': xs) es = (Handler x :> es, Handlers xs es)
+
+
+load :: (Hyperbole :> es, Handlers total es) => Eff es (View (Root total) ()) -> Page es total
+load run = Page $ do
+  r <- request
+  case lookupEvent r.query of
+    -- Are id and action set to something?
+    Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
+    Nothing -> run
+
+
+loadToResponse :: Eff es (View (Root total) ()) -> Eff es Response
+loadToResponse run = do
+  vw <- run
+  let vid = TargetViewId (toViewId Root)
+  let res = Response vid $ addContext Root vw
+  pure res
+
+
+-- but we actually have to run the handler here...
+-- this IS the handler running
+handle
+  :: forall id total es
+   . (HyperView id, Hyperbole :> es)
+  => (id -> Action id -> Eff es (View id ()))
+  -> Page (Handler id : es) total
+  -> Page es total
+handle action (Page inner) = Page $ do
+  runHandler action $ do
+    send $ RespondEvents @id
+    inner
+
+
+runHandler
+  :: forall id es a
+   . (HyperView id, Hyperbole :> es)
+  => (id -> Action id -> Eff es (View id ()))
+  -> Eff (Handler id : es) a
+  -> Eff es a
+runHandler run = interpret $ \_ -> \case
+  RespondEvents -> do
+    -- Get an event matching our type. If it doesn't match, skip to the next handler
+    mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
+    case mev of
+      Just event -> do
+        vw <- run event.viewId event.action
+        let vid = TargetViewId $ toViewId event.viewId
+        send $ RespondEarly $ Response vid $ hyperUnsafe event.viewId vw
+      _ -> do
+        pure ()
+
+
+-- deriving newtype (Applicative, Monad, Functor)
 
 -- | Serialized ViewId
 newtype TargetViewId = TargetViewId Text
@@ -330,7 +401,7 @@ redirect = send . RespondEarly . Redirect
 respondEarly :: (Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
 respondEarly i vw = do
   let vid = TargetViewId (toViewId i)
-  let res = Response vid $ hyper i vw
+  let res = Response vid $ addContext i vw
   send $ RespondEarly res
 
 
@@ -350,20 +421,20 @@ myPage userId = do
     pure $ userPageView user
 @
 -}
-load
-  :: (Hyperbole :> es)
-  => Eff es (View () ())
-  -> Page es Response
-load run = Page $ do
-  r <- request
-  case lookupEvent r.query of
-    -- Are id and action set to sometjhing?
-    Just e ->
-      pure $ Err $ ErrNotHandled e
-    Nothing -> do
-      vw <- run
-      view vw
 
+-- load
+--   :: (Hyperbole :> es)
+--   => Eff es (View (Root views) ())
+--   -> Page views es Response
+-- load run = Page $ do
+--   r <- request
+--   case lookupEvent r.query of
+--     -- Are id and action set to sometjhing?
+--     Just e ->
+--       pure $ Err $ ErrNotHandled e
+--     Nothing -> do
+--       vw <- run
+--       view vw
 
 {- | A handler is run when an action for that 'HyperView' is triggered. Run any side effects needed, then return a view of the corresponding type
 
@@ -384,25 +455,27 @@ messages (Message mid) (Louder m) = do
   pure $ messageView new
 @
 -}
-handle
-  :: forall id es
-   . (Hyperbole :> es, HyperView id)
-  => (id -> Action id -> Eff es (View id ()))
-  -> Page es ()
-handle run = Page $ do
-  -- Get an event matching our type. If it doesn't match, skip to the next handler
-  mev <- getEvent @id
-  case mev of
-    Just event -> do
-      vw <- run event.viewId event.action
-      let vid = TargetViewId $ toViewId event.viewId
-      send $ RespondEarly $ Response vid $ hyper event.viewId vw
-    _ -> pure ()
 
+-- runHandler
+--   :: forall id es
+--    . (Hyperbole :> es, HyperView id)
+--   => (id -> Action id -> Eff es (View id ()))
+--   -> Eff es ()
+-- runHandler run = do
+--   -- Get an event matching our type. If it doesn't match, skip to the next handler
+--   mev <- getEvent @id
+--   case mev of
+--     Just event -> do
+--       vw <- run event.viewId event.action
+--       let vid = TargetViewId $ toViewId event.viewId
+--       send $ RespondEarly $ Response vid $ hyperUnsafe event.viewId vw
+--     _ -> pure ()
 
 -- | Run a 'Page' in 'Hyperbole'
 page
-  :: (Hyperbole :> es)
-  => Page es Response
+  :: forall views es
+   . (Hyperbole :> es)
+  => Page es views
   -> Eff es Response
-page (Page eff) = eff
+page (Page eff) = do
+  loadToResponse eff

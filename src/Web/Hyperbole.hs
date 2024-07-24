@@ -41,8 +41,8 @@ module Web.Hyperbole
 
     -- ** Page
   , Page
-  , load
-  , handle
+  -- , load
+  -- , handle
 
     -- ** HyperView
   , HyperView (..)
@@ -118,6 +118,11 @@ module Web.Hyperbole
   , ViewId
   , ViewAction
   , Response
+  , handle
+  , load
+  , Handler
+  , Root
+  , HyperViewHandled
 
     -- * Exports
 
@@ -302,3 +307,64 @@ Hyperbole is tighly integrated with [Effectful](https://hackage.haskell.org/pack
 * See [Effectful.Dispatch.Dynamic](https://hackage.haskell.org/package/effectful-core/docs/Effectful-Dispatch-Dynamic.html) for an example of how to create a custom effect
 * See [Example.Counter](https://github.com/seanhess/hyperbole/blob/main/example/Example/Counter.hs) for an example of how to compose an existing effect
 -}
+
+-- test :: (Hyperbole :> es) => Page '[Woot, Nope] es ()
+-- test =
+--   handler woot $ handler nope $ load $ do
+--     pure $ do
+--       hyper Woot none
+--       hyper Nope none
+--
+--
+-- -- makePage
+-- --   <$> woot ()
+-- --   <*> zoop asdflsadfkl
+-- --   <*> do
+-- --     pure $ do
+-- --       hyper Woot none
+-- --       hyper Nope none
+--
+-- nope :: Nope -> None -> Eff es (View Nope ())
+-- nope = _
+--
+--
+-- -- hyper Nope none
+--
+-- data PageView = PageView
+--   deriving (Read, Show, ViewId)
+--
+--
+-- instance HyperView PageView where
+--   type Children PageView = '[Woot]
+--   type Action PageView = ()
+--
+--
+-- data Woot = Woot
+--   deriving (Read, Show, ViewId)
+--
+--
+-- instance HyperView Woot where
+--   type Action Woot = None
+--   type Children Woot = '[]
+--
+--
+-- woot :: (Hyperbole :> es) => Woot -> None -> Eff es (View Woot ())
+-- woot _ _ = pure none
+--
+--
+-- data Nope = Nope
+--   deriving (Read, Show, ViewId)
+--
+--
+-- instance HyperView Nope where
+--   type Action Nope = None
+--
+--
+-- viewWoot :: View Woot ()
+-- viewWoot = do
+--   hyper Nope none
+--   none
+--
+-- -- TODO: woot is allowed to appear in our page
+-- -- how can we specify this?
+-- -- certain views are allowed in others?
