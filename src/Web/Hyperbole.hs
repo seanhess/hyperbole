@@ -78,16 +78,11 @@ module Web.Hyperbole
   , InputType (..)
 
     -- ** Handlers
-  , formField
 
     -- ** Validation
-  , Validation
-  , Validation' (..)
   , Validated (..)
   , validate
-  , validation
   , fieldValid
-  , validateWith
   , invalidText
   , anyInvalid
 
