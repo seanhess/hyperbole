@@ -69,5 +69,8 @@ tests:
     dependencies:
       - hyperbole
       - sydtest >= 0.15 && <0.16
+      # envparse 0.5 gives error in sydtest
+      - envparse >= 0.4 && <= 0.5
+
 
 
