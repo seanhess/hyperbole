@@ -34,6 +34,15 @@
                 }
                 { });
 
+            envparse =
+              super.callHackageDirect
+                {
+                  pkg = "envparse";
+                  ver = "0.4.1";
+                  sha256 = "sha256-Xf7z9UptgkY6C0etLonsCWRh3MrWjFlnnbrLGDfpDto=";
+                }
+                { };
+
           };
         };
       in
