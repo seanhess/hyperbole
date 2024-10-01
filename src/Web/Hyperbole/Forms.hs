@@ -44,12 +44,11 @@ import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
 import Text.Casing (kebab)
+import Web.FormUrlEncoded (FormOptions (..), defaultFormOptions, parseUnique)
 import Web.FormUrlEncoded qualified as FE
 import Web.HttpApiData (FromHttpApiData (..))
 import Web.Hyperbole.Effect
-import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..), dataTarget)
-import Web.Hyperbole.Types (Elem)
-import Web.Internal.FormUrlEncoded (FormOptions (..), defaultFormOptions)
+import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), dataTarget)
 import Web.View hiding (form, input, label)
 
 
