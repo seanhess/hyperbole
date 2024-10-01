@@ -63,6 +63,8 @@ contacts _ AddUser = do
   pure $ allContactsView Nothing us
 
 
+-- TODO: get the form to close when submitted
+
 allContactsView :: Maybe Filter -> [User] -> View Contacts ()
 allContactsView fil us = col (gap 20) $ do
   row (gap 10) $ do
@@ -85,7 +87,7 @@ allContactsView fil us = col (gap 20) $ do
   el bold "Add Contact"
 
   row (pad 10 . gap 10 . border 1) $ do
-    userForm AddUser Nothing
+    contactForm AddUser genForm
  where
   filterUsers Nothing _ = True
   filterUsers (Just Active) u = u.isActive
@@ -109,10 +111,23 @@ instance HyperView Contact where
   type Action Contact = ContactAction
 
 
--- Form Fields
-data FirstName = FirstName Text deriving (Generic, FormField)
-data LastName = LastName Text deriving (Generic, FormField)
-data Age = Age Int deriving (Generic, FormField)
+data ContactForm f = ContactForm
+  { firstName :: Field f Text
+  , lastName :: Field f Text
+  , age :: Field f Int
+  }
+  deriving (Generic)
+instance Form ContactForm where
+  type Val ContactForm = Maybe
+
+
+contactFromUser :: User -> ContactForm Maybe
+contactFromUser u =
+  ContactForm
+    { firstName = Just u.firstName
+    , lastName = Just u.lastName
+    , age = Just u.age
+    }
 
 
 contact :: (Hyperbole :> es, Users :> es, Debug :> es) => Contact -> ContactAction -> Eff es (View Contact ())
@@ -134,9 +149,7 @@ contact (Contact uid) a = do
 
 parseUser :: (Hyperbole :> es) => Int -> Eff es User
 parseUser uid = do
-  FirstName firstName <- formField @FirstName
-  LastName lastName <- formField @LastName
-  Age age <- formField @Age
+  ContactForm{firstName, lastName, age} <- formData @ContactForm
   pure User{id = uid, isActive = True, firstName, lastName, age}
 
 
@@ -168,27 +181,28 @@ contactEdit :: User -> View Contact ()
 contactEdit u = do
   onRequest loading $ do
     col (gap 10 . pad 10) $ do
-      userForm Save (Just u)
+      contactForm Save (contactFromUser u)
       button View Style.btnLight (text "Cancel")
       target Contacts $ button (Delete u.id) (Style.btn' Danger) (text "Delete")
  where
   loading = el (bg Warning . pad 10) "Loading..."
 
 
-userForm :: (HyperView id) => Action id -> Maybe User -> View id ()
-userForm onSubmit mu = do
-  form @[FirstName, LastName, Age] onSubmit mempty (gap 10) $ do
-    field @FirstName (const fld) $ do
+contactForm :: (HyperView id) => Action id -> ContactForm Maybe -> View id ()
+contactForm onSubmit c = do
+  let f = genFieldsWith c
+  form @ContactForm onSubmit (gap 10) $ do
+    field f.firstName (const fld) $ do
       label "First Name:"
-      input Name (inp . valMaybe (.firstName) mu)
+      input Name (inp . valMaybe id c.firstName)
 
-    field @LastName (const fld) $ do
+    field f.lastName (const fld) $ do
       label "Last Name:"
-      input Name (inp . valMaybe (.lastName) mu)
+      input Name (inp . valMaybe id c.lastName)
 
-    field @Age (const fld) $ do
+    field f.age (const fld) $ do
       label "Age:"
-      input Number (inp . valMaybe (pack . show . (.age)) mu)
+      input Number (inp . valMaybe (pack . show) c.age)
 
     submit Style.btn "Submit"
  where

@@ -14,8 +14,9 @@ module Web.Hyperbole.Forms
   , form
   , placeholder
   , submit
-  , formFields
+  , formData
   , Form (..)
+  , genFields
   , Field
   , defaultFormOptions
   , FormOptions (..)
@@ -32,23 +33,20 @@ module Web.Hyperbole.Forms
   , Generic
   , GenFields (..)
   , GenField (..)
-  , test
-  , MyType
   )
 where
 
 import Data.Functor.Identity (Identity (..))
-import Data.Kind (Constraint, Type)
+import Data.Kind (Type)
 import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
-import GHC.TypeLits hiding (Mod)
 import Text.Casing (kebab)
 import Web.FormUrlEncoded qualified as FE
 import Web.HttpApiData (FromHttpApiData (..))
 import Web.Hyperbole.Effect
-import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..), dataTarget)
-import Web.Internal.FormUrlEncoded (FormOptions (..), defaultFormOptions, genericFromForm, parseUnique)
+import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), dataTarget)
+import Web.Internal.FormUrlEncoded (FormOptions (..), defaultFormOptions, parseUnique)
 import Web.View hiding (form, input, label)
 
 
@@ -151,6 +149,7 @@ instance Monoid (Validated a) where
 
 class ValidationState (v :: Type -> Type) where
   convert :: v a -> v b
+  isInvalid :: v a -> Bool
 
 
 instance ValidationState Validated where
@@ -158,6 +157,11 @@ instance ValidationState Validated where
   convert (Invalid t) = Invalid t
   convert NotInvalid = NotInvalid
   convert Valid = Valid
+
+
+  isInvalid :: Validated a -> Bool
+  isInvalid (Invalid _) = True
+  isInvalid _ = False
 
 
 {-
@@ -168,7 +172,7 @@ instance ValidationState Validated where
   el_ 'invalidText'
 @
 -}
-invalidText :: forall a fs id. View (Input id Validated a) ()
+invalidText :: forall a id. View (Input id Validated a) ()
 invalidText = do
   Input _ v <- context
   case v of
@@ -186,16 +190,11 @@ validate False _ = NotInvalid -- Validation [(inputName @a, NotInvalid)]
 -- validateWith v = Validation [(inputName @a, convert v)]
 
 -- eh... not sure how to do this...
-anyInvalid :: (Form Validated form) => form Validated -> Bool
-anyInvalid f = any isInvalid (collectValids f :: [Validated ()])
+anyInvalid :: forall form. (Form form, ValidationState (Val form)) => form (Val form) -> Bool
+anyInvalid f = any isInvalid (collectValids f :: [(Val form) ()])
 
 
 -- any (isInvalid . snd) vs
-
-isInvalid :: Validated a -> Bool
-isInvalid (Invalid _) = True
-isInvalid _ = False
-
 
 fieldValid :: View (Input id v a) (v a)
 fieldValid = do
@@ -265,16 +264,6 @@ placeholder :: Text -> Mod
 placeholder = att "placeholder"
 
 
-form' :: forall id. (HyperView id) => Action id -> Mod -> View (FormFields id) () -> View id ()
-form' a md cnt = do
-  vid <- context
-
-  tag "form" (onSubmit a . dataTarget vid . md . flexCol) $ addContext (FormFields vid) cnt
- where
-  onSubmit :: (ViewAction a) => a -> Mod
-  onSubmit = att "data-on-submit" . toAction
-
-
 {- | Type-safe \<form\>. Calls (Action id) on submit
 
 @
@@ -296,8 +285,15 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: forall id. (HyperView id) => Action id -> Mod -> View (FormFields id) () -> View id ()
-form = form'
+form :: forall form id. (HyperView id, Form form) => Action id -> Mod -> View (FormFields id) () -> View id ()
+form a md cnt = do
+  vid <- context
+
+  tag "form" (onSubmit a . dataTarget vid . md . flexCol) $ do
+    addContext (FormFields vid) cnt
+ where
+  onSubmit :: (ViewAction a) => a -> Mod
+  onSubmit = att "data-on-submit" . toAction
 
 
 -- | Button that submits the 'form'. Use 'button' to specify actions other than submit
@@ -310,12 +306,13 @@ type instance Field Identity a = a
 type instance Field FieldName a = FieldName a
 type instance Field (FormField v) a = FormField v a
 type instance Field Validated a = Validated a
+type instance Field Maybe a = Maybe a
 
 
-formFields :: forall form val es. (Form val form, Hyperbole :> es) => Eff es (form Identity)
-formFields = do
-  f <- formData
-  let ef = formParse @val f :: Either Text (form Identity)
+formData :: forall form es. (Form form, Hyperbole :> es) => Eff es (form Identity)
+formData = do
+  f <- formBody
+  let ef = formParse @form f :: Either Text (form Identity)
   either parseError pure ef
 
 
@@ -341,34 +338,39 @@ formAction _ SignUp = do
 -- WARNING: needs the capability to
 -- TODO: Generate an empty set of field names?
 -- TODO: Merge Validation and FieldNames
-class Form val form where
+class Form form where
+  type Val form :: Type -> Type
+
+
   formParse :: FE.Form -> Either Text (form Identity)
   default formParse :: (Generic (form Identity), GFormParse (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
   formParse f = to <$> gFormParse f
 
 
-  genFields :: (GenField val a) => form val
-  default genFields :: (Generic (form val), GenFields (Rep (form val))) => form val
-  genFields = to gGenFields
-
-
-  collectValids :: (ValidationState val) => form val -> [val ()]
-  default collectValids :: (Generic (form val), GCollect (Rep (form val)) val) => form val -> [val ()]
+  collectValids :: (ValidationState (Val form)) => form (Val form) -> [(Val form) ()]
+  default collectValids :: (Generic (form (Val form)), GCollect (Rep (form (Val form))) (Val form)) => form (Val form) -> [(Val form) ()]
   collectValids f = gCollect (from f)
 
 
-  -- TODO: we don't need this! Just make the other one handle this
-  -- genFieldNames :: form FieldName
-  -- default genFieldNames :: (Generic (form FieldName), GenFields (Rep (form FieldName))) => form FieldName
-  -- genFieldNames = to gGenFields
+  genForm :: form (Val form)
+  default genForm :: (Generic (form (Val form)), GenFields (Rep (form (Val form)))) => form (Val form)
+  genForm = to gGenFields
 
-  genFieldsFrom :: (GenFieldFrom val (FormField val) a) => form val -> form (FormField val)
-  default genFieldsFrom
-    :: (Generic (form val), Generic (form (FormField val)), GConvert (Rep (form val)) (Rep (form (FormField val))))
-    => form val
-    -> form (FormField val)
-  genFieldsFrom fv = to $ gConvert (from fv)
 
+  genFieldsWith :: form (Val form) -> form (FormField (Val form))
+  default genFieldsWith
+    :: (Generic (form (Val form)), Generic (form (FormField (Val form))), GConvert (Rep (form (Val form))) (Rep (form (FormField (Val form)))))
+    => form (Val form)
+    -> form (FormField (Val form))
+  genFieldsWith fv = to $ gConvert (from fv)
+
+
+genFields :: (Form form) => form (FormField (Val form))
+genFields = genFieldsWith genForm
+
+
+-- formFieldsWith :: (Form form) => form (Val form) -> form (FormField (Val form))
+-- formFieldsWith = genFormWith
 
 -- toFields :: form Validated -> form (FormField Validated)
 -- default toFields :: (Generic (form Validated), GenFields (Rep (form Validated))) => form Validated
@@ -478,6 +480,14 @@ instance GenField (FormField Validated) a where
   genField s = FormField (FieldName $ pack s) NotInvalid
 
 
+instance GenField (FormField Maybe) a where
+  genField s = FormField (FieldName $ pack s) Nothing
+
+
+instance GenField Maybe a where
+  genField _ = Nothing
+
+
 ------------------------------------------------------------------------------
 -- GMerge - combine two records with the same structure
 ------------------------------------------------------------------------------
@@ -550,7 +560,11 @@ class GenFieldFrom inp f a where
   genFieldFrom :: String -> inp a -> Field f a
 
 
-instance GenFieldFrom Validated (FormField Validated) a where
+-- instance GenFieldFrom Validated (FormField Validated) a where
+--   genFieldFrom s = FormField (FieldName $ pack s)
+--
+
+instance GenFieldFrom val (FormField val) a where
   genFieldFrom s = FormField (FieldName $ pack s)
 
 
@@ -579,31 +593,4 @@ instance (GCollect f v) => GCollect (M1 D d f) v where
 instance (GCollect f v) => GCollect (M1 C c f) v where
   gCollect (M1 f) = gCollect f
 
-
 ------------------------------------------------------------------------------
-------------------------------------------------------------------------------
-------------------------------------------------------------------------------
--- TODO: remove dependency on second Form instance. Hard code it somehow
--- maybe abandon generic merge, and go more specific
-data MyType f = MyType {one :: Field f Int, two :: Field f Text}
-  deriving (Generic, Form Validated)
-
-
-test :: IO ()
-test = do
-  putStrLn "TEST"
-  let vs = genFields :: MyType Validated
-      fs = genFieldsFrom vs :: MyType (FormField Validated)
-      vs' = MyType{one = NotInvalid, two = Invalid "NOPE"} :: MyType Validated
-      fs' = genFieldsFrom vs' :: MyType (FormField Validated)
-      xx = collectValids vs'
-  --   -- a = convertFields formNames :: MyType (FormField Validated)
-  --   -- b = fieldsConvert formValids :: MyType (FormField Validated)
-  --   -- c = fieldsConvert vs :: MyType (FormField Validated)
-  --
-  --   -- print (a.one, a.two)
-  print (vs.one, vs.two)
-  print (fs.one, fs.two)
-  print (fs'.one, fs'.two)
-  print xx
-  print $ anyInvalid vs'

@@ -7,7 +7,6 @@ import Data.Text qualified as T
 import Effectful
 import Example.Style qualified as Style
 import Web.Hyperbole
-import Web.Hyperbole.Forms
 
 
 page :: (Hyperbole :> es) => Page es Response
@@ -16,7 +15,7 @@ page = do
 
   load $ do
     pure $ row (pad 20) $ do
-      hyper FormView (formView genFields)
+      hyper FormView (formView genForm)
 
 
 data FormView = FormView
@@ -43,12 +42,14 @@ data UserForm f = UserForm
   , pass1 :: Field f Text
   , pass2 :: Field f Text
   }
-  deriving (Generic, Form Validated)
+  deriving (Generic)
+instance Form UserForm where
+  type Val UserForm = Validated
 
 
 formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
 formAction _ Submit = do
-  uf <- formFields @UserForm @Validated
+  uf <- formData @UserForm
 
   let vals = validateForm uf
 
@@ -93,8 +94,49 @@ validatePass p1 p2 =
 
 formView :: UserForm Validated -> View FormView ()
 formView v = do
-  let f = genFieldsFrom v
-  form Submit (gap 10 . pad 10) $ do
+  let f = genFieldsWith @UserForm v
+  form @UserForm Submit (gap 10 . pad 10) $ do
+    el Style.h1 "Sign Up"
+
+    -- what does it need from this? the field name, is the only thing, really
+    -- what about a simpler thing...
+    -- people could always just set the id... and parse the id manually
+    field f.user valStyle $ do
+      label "Username"
+      input Username (inp . placeholder "username")
+
+      fv <- fieldValid
+      case fv of
+        Invalid t -> el_ (text t)
+        Valid -> el_ "Username is available"
+        _ -> none
+
+    field f.age valStyle $ do
+      label "Age"
+      input Number (inp . placeholder "age" . value "0")
+      el_ invalidText
+
+    field f.pass1 valStyle $ do
+      label "Password"
+      input NewPassword (inp . placeholder "password")
+      el_ invalidText
+
+    field f.pass2 (const id) $ do
+      label "Repeat Password"
+      input NewPassword (inp . placeholder "repeat password")
+
+    submit Style.btn "Submit"
+ where
+  inp = Style.input
+  valStyle (Invalid _) = Style.invalid
+  valStyle Valid = Style.success
+  valStyle _ = id
+
+
+formViewEmpty :: View FormView ()
+formViewEmpty = do
+  let f = genFields @UserForm
+  form @UserForm Submit (gap 10 . pad 10) $ do
     el Style.h1 "Sign Up"
 
     field f.user valStyle $ do
