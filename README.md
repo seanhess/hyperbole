@@ -88,18 +88,13 @@ The NSO uses Hyperbole for the [L2 Data creation UI](https://github.com/DKISTDC/
 Local Development
 -----------------
 
-### Dependencies
+### Dependencies with Nix
 
-#### With nix
 
 With nix installed, you can use `nix develop` to get a shell with all dependencies installed.
 
-Tip:
-If you have `direnv` as well, you can run `direnv allow` once and every time you open a shell in this directory, it will automatically load the environment.
+### Manual dependency installation
 
-```
-
-#### Manual dependency installation
 
 Download and install [NPM](https://nodejs.org/en/download). On a mac, can be installed via homebrew:
 
@@ -112,6 +107,13 @@ Install client dependencies
 ```
 cd client
 npm install
+```
+
+Recommended: Use `direnv` to automatically load environment from .env
+
+```
+brew install direnv
+direnv allow
 ```
 
 
@@ -151,4 +153,4 @@ Contributors
 
 * [Sean Hess](seanhess)
 * [Kamil Figiela](https://github.com/kfigiela)
-
+* [Christian Georgii](https://github.com/cgeorgii)

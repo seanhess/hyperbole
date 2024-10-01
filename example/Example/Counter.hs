@@ -10,11 +10,9 @@ import Web.Hyperbole
 -- We are using a TVar to manage our state
 -- In normal web applications, state will be managed in a database, abstracted behind a custom Effect. See Example.EFfects.Users for the interface
 -- Optionally, the count could be stored in a session. See Example.Sessions
-page :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Page es Response
+page :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Page es '[Counter]
 page var = do
-  handle $ counter var
-
-  load $ do
+  handle (counter var) $ load $ do
     n <- readTVarIO var
     pure $ col (pad 20 . gap 10) $ do
       el h1 "Counter"

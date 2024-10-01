@@ -34,15 +34,25 @@
                 }
                 { });
 
+            envparse =
+              super.callHackageDirect
+                {
+                  pkg = "envparse";
+                  ver = "0.4.1";
+                  sha256 = "sha256-Xf7z9UptgkY6C0etLonsCWRh3MrWjFlnnbrLGDfpDto=";
+                }
+                { };
+
           };
         };
       in
-      {
+      rec {
         packages.default = self.packages.${system}.${packageName};
         packages.${packageName} =
           haskellPackages.callCabal2nix packageName self { };
 
         checks = {
+          hyperbole-check = packages.${packageName};
           pre-commit-check = pre-commit-hooks.lib.${system}.run {
             src = ./.;
             hooks = {

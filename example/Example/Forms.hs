@@ -9,11 +9,9 @@ import Example.Style qualified as Style
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Page es Response
+page :: (Hyperbole :> es) => Page es '[FormView]
 page = do
-  handle formAction
-
-  load $ do
+  handle formAction $ load $ do
     pure $ row (pad 20) $ do
       hyper FormView (formView genForm)
 

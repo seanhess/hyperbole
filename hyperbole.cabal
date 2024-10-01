@@ -28,6 +28,7 @@ source-repository head
 
 library
   exposed-modules:
+      Simple
       Web.Hyperbole
       Web.Hyperbole.Application
       Web.Hyperbole.Effect
@@ -36,6 +37,7 @@ library
       Web.Hyperbole.HyperView
       Web.Hyperbole.Route
       Web.Hyperbole.Session
+      Web.Hyperbole.Types
       Web.Hyperbole.View
   other-modules:
       Paths_hyperbole
@@ -105,6 +107,7 @@ test-suite test
     , containers >=0.6 && <1
     , cookie ==0.4.*
     , effectful >=2.3 && <3
+    , envparse >=0.4 && <=0.5
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
     , http-types ==0.12.*

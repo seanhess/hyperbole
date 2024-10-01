@@ -124,7 +124,7 @@ app users count = do
   lnk = Style.link
 
   -- Nested Router
-  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es Response
+  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es '[]
   hello Redirected = load $ do
     pure $ el_ "You were redirected"
   hello (Greet s) = load $ do
