@@ -255,8 +255,8 @@ reqPath = (.path) <$> request
 
 Prefer using Type-Safe 'Form's when possible
 -}
-formData :: (Hyperbole :> es) => Eff es Form
-formData = do
+formBody :: (Hyperbole :> es) => Eff es Form
+formBody = do
   b <- (.body) <$> request
   let ef = urlDecodeForm b
   -- not going to work. we need a way to `throwError` or it doesn't work...

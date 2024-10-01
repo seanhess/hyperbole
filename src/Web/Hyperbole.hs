@@ -66,7 +66,12 @@ module Web.Hyperbole
     -- * Type-Safe Forms
 
     -- | Painless forms with type-checked field names, and support for validation. See [Example.Forms](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
+  , Form (..)
+  , formFields
+  , formFieldsWith
   , FormField
+  , Field
+  , Identity
 
     -- ** Form View
   , form
@@ -78,16 +83,11 @@ module Web.Hyperbole
   , InputType (..)
 
     -- ** Handlers
-  , formField
 
     -- ** Validation
-  , Validation
-  , Validation' (..)
   , Validated (..)
   , validate
-  , validation
   , fieldValid
-  , validateWith
   , invalidText
   , anyInvalid
 
@@ -100,7 +100,9 @@ module Web.Hyperbole
   , request
   , lookupParam
   , hasParam
+  , formBody
   , formData
+  , FromHttpApiData
 
     -- ** Response
   , notFound

@@ -7,14 +7,13 @@ import Data.Text qualified as T
 import Effectful
 import Example.Style qualified as Style
 import Web.Hyperbole
-import Web.Hyperbole.Forms
 
 
 page :: (Hyperbole :> es) => Page es '[FormView]
 page = do
   handle formAction $ load $ do
     pure $ row (pad 20) $ do
-      hyper FormView (formView mempty)
+      hyper FormView (formView genForm)
 
 
 data FormView = FormView
@@ -30,75 +29,76 @@ instance HyperView FormView where
 
 
 -- Form Fields
-data User = User Text deriving (Generic, FormField)
-data Age = Age Int deriving (Generic, FormField)
-data Pass1 = Pass1 Text deriving (Generic, FormField)
-data Pass2 = Pass2 Text deriving (Generic, FormField)
+newtype User = User {username :: Text}
+  deriving (Generic)
+  deriving newtype (FromHttpApiData)
 
 
-type UserFields = [User, Age, Pass1, Pass2]
-
-
-data UserForm = UserForm
-  { user :: User
-  , age :: Age
-  , pass1 :: Pass1
-  , pass2 :: Pass2
+data UserForm f = UserForm
+  { user :: Field f User
+  , age :: Field f Int
+  , pass1 :: Field f Text
+  , pass2 :: Field f Text
   }
-  deriving (Generic, Form)
+  deriving (Generic)
+instance Form UserForm Validated
 
 
 formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
 formAction _ Submit = do
-  -- u <- formField @User
-  -- a <- formField @Age
-  -- p1 <- formField @Pass1
-  -- p2 <- formField @Pass2
-  uf <- formFields
+  uf <- formData @UserForm
 
   let vals = validateForm uf
 
   if anyInvalid vals
     then pure $ formView vals
-    else pure $ userView uf.user uf.age uf.pass1
+    else pure $ userView uf
 
 
-validateForm :: UserForm -> Validation UserFields
-validateForm uf =
-  validateUser uf.user <> validateAge uf.age <> validatePass uf.pass1 uf.pass2
+validateForm :: UserForm Identity -> UserForm Validated
+validateForm u =
+  UserForm
+    { user = validateUser u.user
+    , age = validateAge u.age
+    , pass1 = validatePass u.pass1 u.pass2
+    , pass2 = NotInvalid
+    }
 
 
-validateAge :: Age -> Validation UserFields
-validateAge (Age a) =
-  validate @Age (a < 20) "User must be at least 20 years old"
+validateAge :: Int -> Validated Int
+validateAge a =
+  validate (a < 20) "User must be at least 20 years old"
 
 
-validateUser :: User -> Validation UserFields
+validateUser :: User -> Validated User
 validateUser (User u) =
   mconcat
-    [ validate @User (T.elem ' ' u) "Username must not contain spaces"
-    , validate @User (T.length u < 4) "Username must be at least 4 chars"
-    , validateWith @User $
-        if u == "admin" || u == "guest"
-          then Invalid "Username is already in use"
-          else Valid
+    [ validate (T.elem ' ' u) "Username must not contain spaces"
+    , validate (T.length u < 4) "Username must be at least 4 chars"
+    , if u == "admin" || u == "guest"
+        then Invalid "Username is already in use"
+        else Valid
     ]
 
 
-validatePass :: Pass1 -> Pass2 -> Validation UserFields
-validatePass (Pass1 p1) (Pass2 p2) =
+validatePass :: Text -> Text -> Validated Text
+validatePass p1 p2 =
   mconcat
-    [ validate @Pass1 (p1 /= p2) "Passwords did not match"
-    , validate @Pass1 (T.length p1 < 8) "Password must be at least 8 chars"
+    [ validate (p1 /= p2) "Passwords did not match"
+    , validate (T.length p1 < 8) "Password must be at least 8 chars"
     ]
 
 
-formView :: Validation UserFields -> View FormView ()
+formView :: UserForm Validated -> View FormView ()
 formView v = do
-  form Submit v (gap 10 . pad 10) $ do
+  let f = formFieldsWith v
+  form @UserForm Submit (gap 10 . pad 10) $ do
     el Style.h1 "Sign Up"
 
-    field @User valStyle $ do
+    -- what does it need from this? the field name, is the only thing, really
+    -- what about a simpler thing...
+    -- people could always just set the id... and parse the id manually
+    field f.user valStyle $ do
       label "Username"
       input Username (inp . placeholder "username")
 
@@ -108,17 +108,17 @@ formView v = do
         Valid -> el_ "Username is available"
         _ -> none
 
-    field @Age valStyle $ do
+    field f.age valStyle $ do
       label "Age"
       input Number (inp . placeholder "age" . value "0")
       el_ invalidText
 
-    field @Pass1 valStyle $ do
+    field f.pass1 valStyle $ do
       label "Password"
       input NewPassword (inp . placeholder "password")
       el_ invalidText
 
-    field @Pass2 (const id) $ do
+    field f.pass2 (const id) $ do
       label "Repeat Password"
       input NewPassword (inp . placeholder "repeat password")
 
@@ -130,17 +130,55 @@ formView v = do
   valStyle _ = id
 
 
-userView :: User -> Age -> Pass1 -> View FormView ()
-userView (User user) (Age age) (Pass1 pass1) = do
+formViewEmpty :: View FormView ()
+formViewEmpty = do
+  let f = formFields @UserForm
+  form @UserForm Submit (gap 10 . pad 10) $ do
+    el Style.h1 "Sign Up"
+
+    field f.user valStyle $ do
+      label "Username"
+      input Username (inp . placeholder "username")
+
+      fv <- fieldValid
+      case fv of
+        Invalid t -> el_ (text t)
+        Valid -> el_ "Username is available"
+        _ -> none
+
+    field f.age valStyle $ do
+      label "Age"
+      input Number (inp . placeholder "age" . value "0")
+      el_ invalidText
+
+    field f.pass1 valStyle $ do
+      label "Password"
+      input NewPassword (inp . placeholder "password")
+      el_ invalidText
+
+    field f.pass2 (const id) $ do
+      label "Repeat Password"
+      input NewPassword (inp . placeholder "repeat password")
+
+    submit Style.btn "Submit"
+ where
+  inp = Style.input
+  valStyle (Invalid _) = Style.invalid
+  valStyle Valid = Style.success
+  valStyle _ = id
+
+
+userView :: UserForm Identity -> View FormView ()
+userView u = do
   el (bold . Style.success) "Accepted Signup"
   row (gap 5) $ do
     el_ "Username:"
-    el_ $ text user
+    el_ $ text u.user.username
 
   row (gap 5) $ do
     el_ "Age:"
-    el_ $ text $ pack (show age)
+    el_ $ text $ pack (show u.age)
 
   row (gap 5) $ do
     el_ "Password:"
-    el_ $ text pass1
+    el_ $ text u.pass1

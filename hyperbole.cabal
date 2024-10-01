@@ -61,7 +61,6 @@ library
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
     , cookie ==0.4.*
-    , data-diverse
     , effectful >=2.3 && <3
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
@@ -107,7 +106,6 @@ test-suite test
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
     , cookie ==0.4.*
-    , data-diverse
     , effectful >=2.3 && <3
     , envparse >=0.4 && <=0.5
     , file-embed >=0.0.10 && <0.1
