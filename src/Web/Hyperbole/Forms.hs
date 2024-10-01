@@ -1,5 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.Forms
@@ -16,7 +17,8 @@ module Web.Hyperbole.Forms
   , submit
   , formData
   , Form (..)
-  , genFields
+  , formFields
+  , formFieldsWith
   , Field
   , defaultFormOptions
   , FormOptions (..)
@@ -97,18 +99,28 @@ data InputType
 {- | Validation results for a 'form'
 
 @
-validateUser :: User -> Age -> Validation
-validateUser (User u) (Age a) =
-  validation
-    [ 'validate' \@Age (a < 20) "User must be at least 20 years old"
-    , 'validate' \@User (T.elem ' ' u) "Username must not contain spaces"
-    , 'validate' \@User (T.length u < 4) "Username must be at least 4 chars"
+
+data UserForm f = UserForm
+  { username :: Field f
+  , age :: Field f Int
+  }
+  deriving (Generic)
+
+
+
+validateUsername :: Username -> Validated Username
+validateUsername (Username u) =
+  mconcat
+    [ validate (T.elem ' ' u) "Username must not contain spaces"
+    , validate (T.length u < 4) "Username must be at least 4 chars"
+    , if u == "admin" || u == "guest"
+        then Invalid "Username is already in use"
+        else Valid
     ]
 
 formAction :: ('Hyperbole' :> es, 'UserDB' :> es) => FormView -> FormAction -> 'Eff' es ('View' FormView ())
 formAction _ SignUp = do
-  a <- 'formField' \@Age
-  u <- 'formField' \@User
+  u <- 'formField' \@Age
 
   case validateUser u a of
     'Validation' [] -> successView
@@ -190,8 +202,8 @@ validate False _ = NotInvalid -- Validation [(inputName @a, NotInvalid)]
 -- validateWith v = Validation [(inputName @a, convert v)]
 
 -- eh... not sure how to do this...
-anyInvalid :: forall form. (Form form, ValidationState (Val form)) => form (Val form) -> Bool
-anyInvalid f = any isInvalid (collectValids f :: [(Val form) ()])
+anyInvalid :: forall form val. (Form form val, ValidationState val) => form val -> Bool
+anyInvalid f = any isInvalid (collectValids f :: [val ()])
 
 
 -- any (isInvalid . snd) vs
@@ -285,7 +297,7 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: forall form id. (HyperView id, Form form) => Action id -> Mod -> View (FormFields id) () -> View id ()
+form :: (Form form val, HyperView id) => Action id -> Mod -> View (FormFields id) () -> View id ()
 form a md cnt = do
   vid <- context
 
@@ -307,13 +319,16 @@ type instance Field FieldName a = FieldName a
 type instance Field (FormField v) a = FormField v a
 type instance Field Validated a = Validated a
 type instance Field Maybe a = Maybe a
+type instance Field (Either String) a = Either String a
 
 
-formData :: forall form es. (Form form, Hyperbole :> es) => Eff es (form Identity)
+formData :: forall form val es. (Form form val, Hyperbole :> es) => Eff es (form Identity)
 formData = do
   f <- formBody
-  let ef = formParse @form f :: Either Text (form Identity)
-  either parseError pure ef
+  let ef = formParse @form @val f :: Either Text (form Identity)
+  case ef of
+    Left e -> parseError e
+    Right a -> pure a
 
 
 {- | Parse a 'FormField' from the request
@@ -338,68 +353,37 @@ formAction _ SignUp = do
 -- WARNING: needs the capability to
 -- TODO: Generate an empty set of field names?
 -- TODO: Merge Validation and FieldNames
-class Form form where
-  type Val form :: Type -> Type
-
-
+class Form form val | form -> val where
   formParse :: FE.Form -> Either Text (form Identity)
   default formParse :: (Generic (form Identity), GFormParse (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
   formParse f = to <$> gFormParse f
 
 
-  collectValids :: (ValidationState (Val form)) => form (Val form) -> [(Val form) ()]
-  default collectValids :: (Generic (form (Val form)), GCollect (Rep (form (Val form))) (Val form)) => form (Val form) -> [(Val form) ()]
+  collectValids :: (ValidationState val) => form val -> [val ()]
+  default collectValids :: (Generic (form val), GCollect (Rep (form val)) val) => form val -> [val ()]
   collectValids f = gCollect (from f)
 
 
-  genForm :: form (Val form)
-  default genForm :: (Generic (form (Val form)), GenFields (Rep (form (Val form)))) => form (Val form)
+  genForm :: form val
+  default genForm :: (Generic (form val), GenFields (Rep (form val))) => form val
   genForm = to gGenFields
 
 
-  genFieldsWith :: form (Val form) -> form (FormField (Val form))
+  genFieldsWith :: form val -> form (FormField val)
   default genFieldsWith
-    :: (Generic (form (Val form)), Generic (form (FormField (Val form))), GConvert (Rep (form (Val form))) (Rep (form (FormField (Val form)))))
-    => form (Val form)
-    -> form (FormField (Val form))
+    :: (Generic (form val), Generic (form (FormField val)), GConvert (Rep (form val)) (Rep (form (FormField val))))
+    => form val
+    -> form (FormField val)
   genFieldsWith fv = to $ gConvert (from fv)
 
 
-genFields :: (Form form) => form (FormField (Val form))
-genFields = genFieldsWith genForm
+formFields :: (Form form val) => form (FormField val)
+formFields = genFieldsWith genForm
 
 
--- formFieldsWith :: (Form form) => form (Val form) -> form (FormField (Val form))
--- formFieldsWith = genFormWith
+formFieldsWith :: (Form form val) => form val -> form (FormField val)
+formFieldsWith = genFieldsWith
 
--- toFields :: form Validated -> form (FormField Validated)
--- default toFields :: (Generic (form Validated), GenFields (Rep (form Validated))) => form Validated
-
--- fromForm :: FE.Form -> Either Text (form Identity)
--- default fromForm :: (Generic (form Identity), GFromForm (form Identity) (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
--- fromForm = genericFromForm defaultFormOptions
-
--- formFieldNames :: f (FieldName
--- formFieldNames = _
-
--- instance (FormField a, FormField b) => Form (a, b) where
---   formParse f = do
---     (,) <$> fieldParse f <*> fieldParse f
---
---
--- instance (FormField a, FormField b, FormField c) => Form (a, b, c) where
---   formParse f = do
---     (,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f
---
---
--- instance (FormField a, FormField b, FormField c, FormField d) => Form (a, b, c, d) where
---   formParse f = do
---     (,,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f
---
---
--- instance (FormField a, FormField b, FormField c, FormField d, FormField e) => Form (a, b, c, d, e) where
---   formParse f = do
---     (,,,,) <$> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f <*> fieldParse f
 
 -- | Automatically derive labels from form field names
 class GFormParse f where

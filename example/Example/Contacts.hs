@@ -117,8 +117,7 @@ data ContactForm f = ContactForm
   , age :: Field f Int
   }
   deriving (Generic)
-instance Form ContactForm where
-  type Val ContactForm = Maybe
+instance Form ContactForm Maybe
 
 
 contactFromUser :: User -> ContactForm Maybe

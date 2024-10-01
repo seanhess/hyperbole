@@ -43,8 +43,7 @@ data UserForm f = UserForm
   , pass2 :: Field f Text
   }
   deriving (Generic)
-instance Form UserForm where
-  type Val UserForm = Validated
+instance Form UserForm Validated
 
 
 formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
@@ -94,7 +93,7 @@ validatePass p1 p2 =
 
 formView :: UserForm Validated -> View FormView ()
 formView v = do
-  let f = genFieldsWith @UserForm v
+  let f = formFieldsWith v
   form @UserForm Submit (gap 10 . pad 10) $ do
     el Style.h1 "Sign Up"
 
@@ -135,7 +134,7 @@ formView v = do
 
 formViewEmpty :: View FormView ()
 formViewEmpty = do
-  let f = genFields @UserForm
+  let f = formFields @UserForm
   form @UserForm Submit (gap 10 . pad 10) $ do
     el Style.h1 "Sign Up"
 
