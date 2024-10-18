@@ -1,5 +1,6 @@
 module Example.Search where
 
+import Data.String (IsString)
 import Data.Text (Text, isInfixOf, toLower)
 import Example.Colors
 import Web.Hyperbole
@@ -11,14 +12,16 @@ page = do
   handle liveSearch $ load $ do
     pure $ col (pad 20) $ do
       el bold "Filter Programming Languages"
-      hyper LiveSearch $ liveSearchView allLanguages
+      hyper LiveSearch $ liveSearchView allLanguages Nothing
 
 
 data LiveSearch = LiveSearch
   deriving (Show, Read, ViewId)
 
 
-data SearchAction = GoSearch Text
+data SearchAction
+  = GoSearch Text
+  | Select ProgrammingLanguage
   deriving (Show, Read, ViewAction)
 
 
@@ -28,27 +31,50 @@ instance HyperView LiveSearch where
 
 liveSearch :: LiveSearch -> SearchAction -> Eff es (View LiveSearch ())
 liveSearch _ (GoSearch term) = do
-  let matched = filter (isInfixOf (toLower term) . toLower) allLanguages
-  pure $ liveSearchView matched
+  let matched = filter (isMatchLanguage term) allLanguages
+  pure $ liveSearchView matched Nothing
+liveSearch _ (Select lang) = do
+  pure $ liveSearchView [] (Just lang)
 
 
-liveSearchView :: [Text] -> View LiveSearch ()
-liveSearchView langs =
+liveSearchView :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View LiveSearch ()
+liveSearchView langs selected =
   col (gap 10) $ do
     search GoSearch 100 (placeholder "programming language" . border 1 . pad 10)
+    chosenView selected
     resultsTable langs
 
 
-resultsTable :: [Text] -> View c ()
+chosenView :: Maybe ProgrammingLanguage -> View LiveSearch ()
+chosenView Nothing = none
+chosenView (Just lang) = do
+  row (gap 10) $ do
+    el_ "You chose:"
+    el_ $ text lang.name
+
+
+resultsTable :: [ProgrammingLanguage] -> View LiveSearch ()
 resultsTable langs = do
-  table rows langs $ do
-    tcol none $ \l -> td cell $ text l
+  col id $ do
+    mapM_ languageRow langs
  where
-  cell = pad 4
-  rows = odd (bg White) . even (bg GrayLight) . textAlign Center . border 1 . borderColor GrayLight
+  languageRow :: ProgrammingLanguage -> View LiveSearch ()
+  languageRow lang = do
+    button (Select lang) (border 1 . hover (bg GrayLight) . rows) $ text lang.name
+
+  rows = textAlign Center . border 1 . borderColor GrayLight
 
 
-allLanguages :: [Text]
+newtype ProgrammingLanguage = ProgrammingLanguage {name :: Text}
+  deriving newtype (IsString, Show, Read)
+
+
+isMatchLanguage :: Text -> ProgrammingLanguage -> Bool
+isMatchLanguage term (ProgrammingLanguage p) =
+  isInfixOf (toLower term) . toLower $ p
+
+
+allLanguages :: [ProgrammingLanguage]
 allLanguages =
   [ "JavaScript"
   , "Java"
