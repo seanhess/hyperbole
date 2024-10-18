@@ -1,6 +1,6 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
-import  { listenChange, listenClick, listenFormSubmit, listenLoad, listenLoadDocument } from './events'
+import  { listenChange, listenClick, listenFormSubmit, listenLoad, listenLoadDocument, listenInput } from './events'
 import  { actionMessage, ActionMessage } from './action'
 
 
@@ -13,7 +13,7 @@ import  { actionMessage, ActionMessage } from './action'
 // const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole 0.4")
+console.log("Hyperbole 0.4.1")
 
 
 let rootStyles: HTMLStyleElement;
@@ -173,6 +173,17 @@ function init() {
     console.log("CHANGE", target.id, action)
     runAction(target, action)
   })
+
+  // WARNING: security flaw, unescaped output. no closing quotes allowed?
+  listenInput(async function(target:HTMLElement, actionConstructor:string, term:string) {
+    console.log("INPUT", target.id, actionConstructor, term)
+    let action = `${actionConstructor} "${sanitizeInput(term)}"`
+    runAction(target, action)
+  })
+}
+
+function sanitizeInput(input:string):string {
+  return input.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
 }
 
 document.addEventListener("DOMContentLoaded", init)

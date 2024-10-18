@@ -5,6 +5,7 @@ module Web.Hyperbole.HyperView where
 
 import Data.Kind (Constraint, Type)
 import Data.Text (Text, pack, unpack)
+import Data.Text qualified as T
 import GHC.TypeLits hiding (Mod)
 import Text.Read (readMaybe)
 import Web.Hyperbole.Route (Route (..), routeUrl)
@@ -60,6 +61,12 @@ class ViewId a where
   parseViewId :: Text -> Maybe a
   default parseViewId :: (Read a) => Text -> Maybe a
   parseViewId = readMaybe . unpack
+
+
+toActionInput :: (ViewAction a) => (Text -> a) -> Text
+toActionInput con =
+  -- remove the ' ""' at the end of the constructor
+  T.dropEnd 3 $ toAction $ con ""
 
 
 {- | Embed HyperViews into the page, or nest them into other views
@@ -228,6 +235,13 @@ data Option opt id action = Option
   { toAction :: opt -> action
   , selected :: opt -> Bool
   }
+
+
+-- | A live search field
+search :: (HyperView id) => (Text -> Action id) -> DelayMs -> Mod -> View id ()
+search onInput delay f = do
+  c <- context
+  tag "input" (att "data-on-input" (toActionInput onInput) . att "data-delay" (pack $ show delay) . dataTarget c . f) none
 
 
 {- | A hyperlink to another route

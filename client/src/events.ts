@@ -1,4 +1,6 @@
 
+import * as debounce from 'debounce'
+
 export type UrlFragment = string
 
 export function listenClick(cb:(target:HTMLElement, action:string) => void): void {
@@ -64,8 +66,6 @@ export function listenChange(cb:(target:HTMLElement, action:string) => void): vo
     // clicks can fire on internal elements. Find the parent with a click handler
     let source = el.closest("[data-on-change]") as HTMLInputElement
 
-    // console.log("CHANGE!", source.value)
-
     // they should all have an action and target
     if (source?.dataset.target && source.value) {
       e.preventDefault()
@@ -81,6 +81,41 @@ export function listenChange(cb:(target:HTMLElement, action:string) => void): vo
     }
   })
 }
+
+interface LiveInputElement extends HTMLInputElement {
+  debouncedCallback?: Function;
+}
+
+export function listenInput(cb:(target:HTMLElement, actionConstructor:string, term:string) => void): void {
+  document.addEventListener("input", function(e) {
+    let el = e.target as HTMLElement
+    let source = el.closest("[data-on-input]") as LiveInputElement
+    let delay = parseInt(source.dataset.delay) || 100
+
+
+    if (delay < 100) {
+      console.warn("Input delay < 100 can result in poor performance")
+    }
+
+    if (source?.dataset.onInput && source?.dataset.target) {
+      e.preventDefault()
+
+      let target = document.getElementById(source.dataset.target)
+
+      if (!target) {
+        console.error("Missing target: ", source.dataset.target)
+        return
+      }
+
+      if (!source.debouncedCallback) {
+        source.debouncedCallback = debounce(() => cb(target, source.dataset.onInput, source.value), delay)
+      }
+
+      source.debouncedCallback()
+    }
+  })
+}
+
 
 export function listenFormSubmit(cb:(target:HTMLElement, action:string, form:FormData) => void): void {
   document.addEventListener("submit", function(e) {

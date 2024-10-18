@@ -26,6 +26,7 @@ import Example.Errors qualified as Errors
 import Example.Forms qualified as Forms
 import Example.LazyLoading qualified as LazyLoading
 import Example.Redirects qualified as Redirects
+import Example.Search qualified as Search
 import Example.Sessions qualified as Sessions
 import Example.Simple qualified as Simple
 import Example.Style qualified as Style
@@ -61,6 +62,7 @@ data AppRoute
   | Query
   | Counter
   | Forms
+  | LiveSearch
   | Sessions
   | Redirects
   | RedirectNow
@@ -98,6 +100,7 @@ app users count = do
   router LazyLoading = page LazyLoading.page
   router Concurrent = page Concurrent.page
   router Redirects = page Redirects.page
+  router LiveSearch = page Search.page
   router Errors = page Errors.page
   router RedirectNow = do
     redirect (routeUrl $ Hello Redirected)
@@ -120,6 +123,7 @@ app users count = do
         route Redirects lnk "Redirects"
         route RedirectNow lnk "Redirect Now"
         route LazyLoading lnk "Lazy Loading"
+        route LiveSearch lnk "Live Search"
         route Contacts lnk "Contacts (Advanced)"
         route Errors lnk "Errors"
 

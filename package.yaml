@@ -1,5 +1,5 @@
 name:               hyperbole
-version:            0.4.0
+version:            0.4.1
 synopsis:           Interactive HTML apps using type-safe serverside Haskell
 homepage:           https://github.com/seanhess/hyperbole
 github:             seanhess/hyperbole

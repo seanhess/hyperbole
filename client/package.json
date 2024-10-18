@@ -19,6 +19,7 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
-    "omdomdom": "^0.3.2"
+    "omdomdom": "^0.3.2",
+    "debounce": "^2.2.0"
   }
 }

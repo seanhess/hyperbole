@@ -69,7 +69,7 @@ genMatchRoute segs = to <$> genRoute segs
 
 
 genRoutePath :: (Generic a, GenRoute (Rep a)) => a -> [Segment]
-genRoutePath = genPaths . frowhateverm
+genRoutePath = genPaths . from
 
 
 {- | Convert a 'Route' to a 'Url'

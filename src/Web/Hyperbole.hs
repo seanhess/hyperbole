@@ -52,6 +52,9 @@ module Web.Hyperbole
     -- ** Buttons
   , button
 
+    -- ** Live Search
+  , search
+
     -- ** Dropdowns
   , dropdown
   , option
