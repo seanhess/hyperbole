@@ -67,7 +67,9 @@ data AppRoute
   | LazyLoading
   | Concurrent
   | Errors
-  deriving (Eq, Generic, Route)
+  deriving (Eq, Generic)
+instance Route AppRoute where
+  baseRoute = Just Main
 
 
 data Hello

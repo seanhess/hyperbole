@@ -32,9 +32,8 @@ module Web.Hyperbole
 
     -- ** Type-Safe Routes
   , routeRequest -- maybe belongs in an application section
-  , Route
+  , Route (..)
   , routeUrl
-  , routePath
   , route
 
     -- * Pages

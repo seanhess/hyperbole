@@ -33,33 +33,43 @@ import Prelude hiding (dropWhile)
 > /user/100 -> User 100
 -}
 class Route a where
-  -- | The default route to use if attempting to match on empty segments
-  defRoute :: a
-  default defRoute :: (Generic a, GenRoute (Rep a)) => a
-  defRoute = to genFirst
+  -- | The route to use if attempting to match on empty segments
+  baseRoute :: Maybe a
+  default baseRoute :: (Generic a, GenRoute (Rep a)) => Maybe a
+  baseRoute = Nothing
 
 
   -- | Try to match segments to a route
   matchRoute :: [Segment] -> Maybe a
   default matchRoute :: (Generic a, GenRoute (Rep a)) => [Segment] -> Maybe a
   -- this will match a trailing slash, but not if it is missing
-  matchRoute [""] = pure defRoute
-  matchRoute [] = pure defRoute
-  matchRoute segs = to <$> genRoute segs
+  matchRoute segs =
+    case (segs, baseRoute) of
+      ([""], Just b) -> pure b
+      ([], Just b) -> pure b
+      (_, _) -> genMatchRoute segs
 
 
   -- | Map a route to segments
   routePath :: a -> [Segment]
   default routePath :: (Generic a, Eq a, GenRoute (Rep a)) => a -> [Segment]
   routePath p
-    | p == defRoute = []
-    | otherwise = filter (not . T.null) $ genPaths $ from p
+    | Just p == baseRoute = []
+    | otherwise = genRoutePath p
 
 
 -- | Try to match a route, use 'defRoute' if it's empty
 findRoute :: (Route a) => [Segment] -> Maybe a
-findRoute [] = Just defRoute
+findRoute [] = baseRoute
 findRoute ps = matchRoute ps
+
+
+genMatchRoute :: (Generic a, GenRoute (Rep a)) => [Segment] -> Maybe a
+genMatchRoute segs = to <$> genRoute segs
+
+
+genRoutePath :: (Generic a, GenRoute (Rep a)) => a -> [Segment]
+genRoutePath = genPaths . frowhateverm
 
 
 {- | Convert a 'Route' to a 'Url'
@@ -75,14 +85,12 @@ routeUrl = pathUrl . routePath
 class GenRoute f where
   genRoute :: [Text] -> Maybe (f p)
   genPaths :: f p -> [Text]
-  genFirst :: f p
 
 
 -- datatype metadata
 instance (GenRoute f) => GenRoute (M1 D c f) where
   genRoute ps = M1 <$> genRoute ps
   genPaths (M1 x) = genPaths x
-  genFirst = M1 genFirst
 
 
 -- Constructor names / lines
@@ -97,12 +105,9 @@ instance (Constructor c, GenRoute f) => GenRoute (M1 C c f) where
   genRoute [] = Nothing
 
 
-  genFirst = M1 genFirst
-
-
   genPaths (M1 x) =
     let name = conName (undefined :: M1 C c f x)
-     in toLower (pack name) : genPaths x
+     in filter (not . T.null) $ toLower (pack name) : genPaths x
 
 
 -- Unary constructors
@@ -110,7 +115,6 @@ instance GenRoute U1 where
   genRoute [] = pure U1
   genRoute _ = Nothing
   genPaths _ = []
-  genFirst = U1
 
 
 -- Selectors
@@ -119,16 +123,14 @@ instance (GenRoute f) => GenRoute (M1 S c f) where
     M1 <$> genRoute ps
 
 
-  genFirst = M1 genFirst
-
-
   genPaths (M1 x) = genPaths x
 
 
 -- Sum types
 instance (GenRoute a, GenRoute b) => GenRoute (a :+: b) where
   genRoute ps = L1 <$> genRoute ps <|> R1 <$> genRoute ps
-  genFirst = L1 genFirst
+
+
   genPaths (L1 a) = genPaths a
   genPaths (R1 a) = genPaths a
 
@@ -142,15 +144,13 @@ instance (GenRoute a, GenRoute b) => GenRoute (a :*: b) where
   genRoute _ = Nothing
 
 
-  genFirst = genFirst :*: genFirst
-
-
   genPaths (a :*: b) = genPaths a <> genPaths b
 
 
 instance (Route sub) => GenRoute (K1 R sub) where
   genRoute ts = K1 <$> matchRoute ts
-  genFirst = K1 defRoute
+
+
   genPaths (K1 sub) = routePath sub
 
 
@@ -164,26 +164,26 @@ instance Route Text where
   matchRoute [t] = pure t
   matchRoute _ = Nothing
   routePath t = [t]
-  defRoute = ""
+  baseRoute = Nothing
 
 
 instance Route String where
   matchRoute [t] = pure (unpack t)
   matchRoute _ = Nothing
   routePath t = [pack t]
-  defRoute = ""
+  baseRoute = Nothing
 
 
 instance Route Integer where
   matchRoute = matchRouteRead
   routePath = routePathShow
-  defRoute = 0
+  baseRoute = Nothing
 
 
 instance Route Int where
   matchRoute = matchRouteRead
   routePath = routePathShow
-  defRoute = 0
+  baseRoute = Nothing
 
 
 instance (Route a) => Route (Maybe a) where
@@ -191,7 +191,7 @@ instance (Route a) => Route (Maybe a) where
   matchRoute ps = Just <$> matchRoute ps
   routePath (Just a) = routePath a
   routePath Nothing = []
-  defRoute = Nothing
+  baseRoute = Nothing
 
 
 matchRouteRead :: (Read a) => [Segment] -> Maybe a
