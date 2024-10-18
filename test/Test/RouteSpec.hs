@@ -1,7 +1,7 @@
-module Test.RouteSpec (spec) where
+module Test.RouteSpec where
 
 import GHC.Generics
-import Test.Syd
+import Skeletest
 import Web.Hyperbole.Route
 
 

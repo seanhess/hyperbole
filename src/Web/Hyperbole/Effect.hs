@@ -209,7 +209,7 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
   RespondEarly r -> do
     s <- gets @HyperState (.session)
     send $ SendResponse s r
-    throwError r
+    throwError_ r
   SetSession k a -> do
     modify $ \st -> st{session = sessionSet k a st.session} :: HyperState
   DelSession k -> do

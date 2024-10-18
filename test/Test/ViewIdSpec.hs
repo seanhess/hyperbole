@@ -5,7 +5,7 @@ module Test.ViewIdSpec where
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import GHC.Generics
-import Test.Syd
+import Skeletest
 import Web.Hyperbole.HyperView
 import Web.View (att)
 import Web.View.Types
@@ -61,7 +61,8 @@ spec = do
 
     describe "has-string" $ do
       it "should not contain single quotes" $ do
-        toViewId (HasString "woot") `shouldNotSatisfy` containsSingleQuotes
+        toViewId (HasString "woot") `shouldBe` "HasString \"woot\""
+        containsSingleQuotes (toViewId (HasString "woot")) `shouldBe` False
 
       it "should roundtrip" $ do
         let inp = HasString "woot"

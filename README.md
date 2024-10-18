@@ -9,8 +9,10 @@ Create fully interactive HTML applications with type-safe serverside Haskell. In
 
 ```haskell
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
+module Main where
 
 import Data.Text (Text)
 import Web.Hyperbole
@@ -49,6 +51,31 @@ messageView m = do
   el_ $ text m
   button (Louder m) id "Louder"
 ```
+
+Getting Started with Cabal
+--------------------------
+
+Create a new application:
+
+    > mkdir myapp
+    > cd myapp
+    > cabal init
+
+Add hyperbole and text to your build-depends:
+
+```
+    build-depends:
+        base ^>=4.18.2.1
+      , hyperbole
+      , text
+```
+
+Paste the above example into Main.hs, and run
+
+    > cabal run
+
+Visit http://localhost:3000 to view the application
+
 
 Examples
 ---------

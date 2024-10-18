@@ -1,12 +1,9 @@
 module Test.ViewActionSpec where
 
 import Data.Text (Text)
-import Data.Text qualified as T
 import GHC.Generics
-import Test.Syd
+import Skeletest
 import Web.Hyperbole.HyperView
-import Web.View (att)
-import Web.View.Types
 
 
 data Simple = Simple

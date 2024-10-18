@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -16,6 +16,10 @@ maintainer:     seanhess@gmail.com
 license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
+tested-with:
+    GHC == 9.6.6
+  , GHC == 9.8.2
+  , GHC == 9.4.8
 extra-source-files:
     client/dist/hyperbole.js
 extra-doc-files:
@@ -97,9 +101,9 @@ test-suite test
       DataKinds
       DerivingStrategies
       DeriveAnyClass
-  ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N -F -pgmF=skeletest-preprocessor
   build-tool-depends:
-      sydtest-discover:sydtest-discover
+      skeletest:skeletest-preprocessor
   build-depends:
       base >=4.16 && <5
     , bytestring >=0.11 && <0.13
@@ -107,15 +111,14 @@ test-suite test
     , containers >=0.6 && <1
     , cookie ==0.4.*
     , effectful >=2.3 && <3
-    , envparse >=0.4 && <=0.5
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
     , http-types ==0.12.*
     , hyperbole
     , network >=3.1 && <4
+    , skeletest
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
-    , sydtest ==0.15.*
     , text >=1.2 && <3
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4

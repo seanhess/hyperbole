@@ -23,6 +23,10 @@ ghc-options:
   - -Wall
   - -fdefer-typed-holes
 
+tested-with:
+  - GHC == 9.8.2
+  - GHC == 9.6.6
+
 default-extensions:
   - OverloadedStrings
   - OverloadedRecordDot
@@ -60,16 +64,15 @@ tests:
   test:
     main:        Spec.hs
     source-dirs: test/
-    build-tools: sydtest-discover
+    build-tools: skeletest:skeletest-preprocessor
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -F -pgmF=skeletest-preprocessor
     dependencies:
       - hyperbole
-      - sydtest >= 0.15 && <0.16
-      # envparse 0.5 gives error in sydtest
-      - envparse >= 0.4 && <= 0.5
+      - skeletest
 
 
 
