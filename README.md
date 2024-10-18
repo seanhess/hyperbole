@@ -91,6 +91,7 @@ The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/
 * [Redirects](https://github.com/seanhess/hyperbole/blob/main/example/Example/Redirects.hs)
 * [Lazy Loading and Polling](https://github.com/seanhess/hyperbole/blob/main/example/Example/LazyLoading.hs)
 * [Errors](https://github.com/seanhess/hyperbole/blob/main/example/Example/Errors.hs)
+* [Live Search](https://github.com/seanhess/hyperbole/blob/main/example/Example/Search.hs)
 * [Contacts (Advanced)](https://github.com/seanhess/hyperbole/blob/main/example/Example/Contacts.hs)
 
 
