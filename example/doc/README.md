@@ -136,7 +136,7 @@ toDocument cnt =
     <head>
       <title>My Application</title>
       <script type="text/javascript">#{scriptEmbed}</script>
-      <style type type="text/css">#{cssResetEmbed}</style>
+      <style type="text/css">#{cssResetEmbed}</style>
     </head>
     <body>#{cnt}</body>
   </html>|]

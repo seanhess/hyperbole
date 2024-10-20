@@ -160,7 +160,7 @@ app users count = do
       <head>
         <title>Hyperbole Examples</title>
         <script type="text/javascript" src="/hyperbole.js"></script>
-        <style type type="text/css">#{cssResetEmbed}</style>
+        <style type="text/css">#{cssResetEmbed}</style>
       </head>
       <body>#{cnt}</body>
     </html>|]

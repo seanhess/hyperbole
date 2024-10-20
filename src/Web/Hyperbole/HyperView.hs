@@ -90,12 +90,12 @@ Views can only trigger actions that match their HyperView
 messageView :: Text -> View Message ()
 messageView m = do
   el_ (text m)
-  button (Louder m) "Louder"
+  button (Louder m) \"Louder\"
 
 otherView :: View OtherView ()
 otherView = do
   -- Type Error!
-  button (Louder \"Hi\") id "Louder"
+  button (Louder \"Hi\") id \"Louder\"
 @
 -}
 
@@ -197,7 +197,7 @@ allContactsView fil = do
     dropdown Reload (== fil) id $ do
       option Nothing ""
       option (Just Active) "Active!"
-      option (Just Inactive) "Inactive"
+      option (Just Inactive) \"Inactive\"
   ...
 @
 -}
