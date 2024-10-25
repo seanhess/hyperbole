@@ -99,13 +99,11 @@ data InputType
 {- | Validation results for a 'form'
 
 @
-
 data UserForm f = UserForm
   { username :: Field f
   , age :: Field f Int
   }
   deriving (Generic)
-
 
 
 validateUsername :: Username -> Validated Username
@@ -125,7 +123,6 @@ formAction _ SignUp = do
   case validateUser u a of
     'Validation' [] -> successView
     errs -> userForm v
-@
 @
 -}
 

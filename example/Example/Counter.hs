@@ -8,7 +8,7 @@ import Web.Hyperbole
 
 
 -- We are using a TVar to manage our state
--- In normal web applications, state will be managed in a database, abstracted behind a custom Effect. See Example.EFfects.Users for the interface
+-- In normal web applications, state will be managed in a database, abstracted behind a custom Effect. See Example.Effects.Users for the interface
 -- Optionally, the count could be stored in a session. See Example.Sessions
 page :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Page es '[Counter]
 page var = do

@@ -300,7 +300,7 @@ You may want to specify a custom document function instead:
 >     <head>
 >       <title>#{title}</title>
 >       <script type="text/javascript">#{scriptEmbed}</script>
->       <style type type="text/css">#{cssResetEmbed}</style>
+>       <style type="text/css">#{cssResetEmbed}</style>
 >     </head>
 >     <body>#{content}</body>
 >   </html>|]
@@ -311,7 +311,7 @@ basicDocument title cnt =
       <head>
         <title>#{title}</title>
         <script type="text/javascript">#{scriptEmbed}</script>
-        <style type type="text/css">#{cssResetEmbed}</style>
+        <style type="text/css">#{cssResetEmbed}</style>
       </head>
       <body>#{cnt}</body>
   </html>|]
