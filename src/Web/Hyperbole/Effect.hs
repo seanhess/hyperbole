@@ -13,7 +13,7 @@ import Data.Kind (Constraint, Type)
 import Data.List qualified as List
 import Data.Maybe (isJust)
 import Data.String.Conversions
-import Data.Text
+import Data.Text hiding (show)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Effectful
 import Effectful.Dispatch.Dynamic
