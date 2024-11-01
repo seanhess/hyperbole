@@ -19,6 +19,7 @@ import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
 import Web.Hyperbole.Effect.Request
+import Web.Hyperbole.Effect.Response
 import Web.Hyperbole.Route
 import Web.Hyperbole.Session
 import Web.View (View, renderLazyByteString, renderUrl)
