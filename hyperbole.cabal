@@ -34,13 +34,13 @@ library
       Simple
       Web.Hyperbole
       Web.Hyperbole.Application
-      Web.Hyperbole.Effect
       Web.Hyperbole.Effect.Hyperbole
       Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Server
       Web.Hyperbole.Embed
       Web.Hyperbole.Forms
+      Web.Hyperbole.Handler
       Web.Hyperbole.Handler.TypeList
       Web.Hyperbole.HyperView
       Web.Hyperbole.Page

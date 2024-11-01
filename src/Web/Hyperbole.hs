@@ -153,11 +153,11 @@ import Effectful (Eff, (:>))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Hyperbole.Application
-import Web.Hyperbole.Effect
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Response
 import Web.Hyperbole.Embed
 import Web.Hyperbole.Forms
+import Web.Hyperbole.Handler
 import Web.Hyperbole.Handler.TypeList
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Page

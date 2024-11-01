@@ -28,7 +28,6 @@ import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets (Connection, PendingConnection, defaultConnectionOptions)
 import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
-import Web.Hyperbole.Effect
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response

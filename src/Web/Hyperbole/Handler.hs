@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoFieldSelectors #-}
 
-module Web.Hyperbole.Effect
+module Web.Hyperbole.Handler
   ( Page (..)
   , load
   , handle
