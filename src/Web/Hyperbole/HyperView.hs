@@ -6,7 +6,6 @@ module Web.Hyperbole.HyperView where
 import Data.Kind (Type)
 import Data.Text (Text, pack, unpack)
 import Text.Read (readMaybe)
-import Web.Hyperbole.Page (Root (..))
 
 
 {- | HyperViews are interactive subsections of a 'Page'
@@ -43,11 +42,6 @@ class ViewAction a where
   parseAction = readMaybe . unpack
 
 
-instance HyperView (Root views) where
-  type Action (Root views) = ()
-  type Require (Root views) = views
-
-
 instance ViewAction () where
   toAction _ = ""
   parseAction _ = Just ()
@@ -64,4 +58,11 @@ class ViewId a where
   parseViewId = readMaybe . unpack
 
 
-instance ViewId (Root views)
+-- | The top-level view created by 'load'. Carries the views in its type to check that we handled all our views
+data Root (views :: [Type]) = Root
+  deriving (Show, Read, ViewId)
+
+
+instance HyperView (Root views) where
+  type Action (Root views) = ()
+  type Require (Root views) = views

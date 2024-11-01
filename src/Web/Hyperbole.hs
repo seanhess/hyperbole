@@ -160,7 +160,6 @@ import Web.Hyperbole.Forms
 import Web.Hyperbole.Handler
 import Web.Hyperbole.Handler.TypeList
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.Page
 import Web.Hyperbole.Route
 import Web.Hyperbole.View
 import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)

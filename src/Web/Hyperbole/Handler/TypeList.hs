@@ -5,7 +5,6 @@ module Web.Hyperbole.Handler.TypeList where
 import Data.Kind (Constraint, Type)
 import GHC.TypeLits hiding (Mod)
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.Page (Root)
 
 
 -- type family AllDescendents (xs :: [Type]) :: [Type] where

@@ -1,13 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE NoFieldSelectors #-}
 
 module Web.Hyperbole.Handler
   ( Page (..)
   , load
-  , handle
   , page
+  , handle
   , Hyperbole (..)
   , Handler
   )
@@ -19,7 +16,6 @@ import Effectful.Dispatch.Dynamic
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.Page
 import Web.Hyperbole.View.Target (hyperUnsafe)
 import Web.View
 
@@ -45,16 +41,6 @@ load run = Page $ do
     Nothing -> run
 
 
-loadToResponse :: Eff es (View (Root total) ()) -> Eff es Response
-loadToResponse run = do
-  vw <- run
-  let vid = TargetViewId (toViewId Root)
-  let res = Response vid $ addContext Root vw
-  pure res
-
-
--- but we actually have to run the handler here...
--- this IS the handler running
 handle
   :: forall id total es
    . (HyperView id, Hyperbole :> es)
@@ -133,20 +119,21 @@ messages (Message mid) (Louder m) = do
 @
 -}
 
--- runHandler
---   :: forall id es
---    . (Hyperbole :> es, HyperView id)
---   => (id -> Action id -> Eff es (View id ()))
---   -> Eff es ()
--- runHandler run = do
---   -- Get an event matching our type. If it doesn't match, skip to the next handler
---   mev <- getEvent @id
---   case mev of
---     Just event -> do
---       vw <- run event.viewId event.action
---       let vid = TargetViewId $ toViewId event.viewId
---       send $ RespondEarly $ Response vid $ hyperUnsafe event.viewId vw
---     _ -> pure ()
+{- | Hyperbole applications are divided into Pages. Each Page must 'load' the whole page , and 'handle' each /type/ of 'HyperView'
+
+@
+myPage :: ('Hyperbole' :> es) => 'Page' es 'Response'
+myPage = do
+  'handle' messages
+  'load' pageView
+
+pageView = do
+  el_ "My Page"
+  'hyper' (Message 1) $ messageView "Starting Message"
+@
+-}
+newtype Page (es :: [Effect]) (views :: [Type]) = Page (Eff es (View (Root views) ()))
+
 
 -- | Run a 'Page' in 'Hyperbole'
 page
@@ -154,5 +141,8 @@ page
    . (Hyperbole :> es)
   => Page es views
   -> Eff es Response
-page (Page eff) = do
-  loadToResponse eff
+page (Page run) = do
+  vw <- run
+  let vid = TargetViewId (toViewId Root)
+  let res = Response vid $ addContext Root vw
+  pure res
