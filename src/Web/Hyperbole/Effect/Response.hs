@@ -1,8 +1,7 @@
 module Web.Hyperbole.Effect.Response where
 
 import Data.Text (Text)
-import Web.Hyperbole.Route
-import Web.View (View)
+import Web.View (Url, View)
 
 
 {- | Valid responses for a 'Hyperbole' effect. Use 'notFound', etc instead. Reminds you to use 'load' in your 'Page'
