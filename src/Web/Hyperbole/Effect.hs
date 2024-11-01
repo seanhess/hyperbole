@@ -8,63 +8,24 @@ module Web.Hyperbole.Effect where
 import Control.Monad (join)
 import Data.Bifunctor (first)
 import Data.ByteString qualified as BS
-import Data.ByteString.Lazy qualified as BL
 import Data.Kind (Constraint, Type)
 import Data.List qualified as List
 import Data.Maybe (isJust)
 import Data.String.Conversions
-import Data.Text hiding (show)
+import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types hiding (Query)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
+import Web.Hyperbole.Effect.Request (Event (..), Request (..), Response (..), ResponseError (..), TargetViewId (..))
+import Web.Hyperbole.Effect.Server (Server (..))
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Route
 import Web.Hyperbole.Session as Session
 import Web.View
-
-
-newtype Host = Host {text :: BS.ByteString}
-  deriving (Show)
-
-
-data Request = Request
-  { host :: Host
-  , path :: [Segment]
-  , query :: Query
-  , body :: BL.ByteString
-  , method :: Method
-  , cookies :: [(BS.ByteString, BS.ByteString)]
-  }
-  deriving (Show)
-
-
-{- | Valid responses for a 'Hyperbole' effect. Use 'notFound', etc instead. Reminds you to use 'load' in your 'Page'
-
-> myPage :: (Hyperbole :> es) => Page es Response
-> myPage = do
->   -- compiler error: () does not equal Response
->   pure ()
--}
-data Response
-  = Response TargetViewId (View () ())
-  | NotFound
-  | Redirect Url
-  | Err ResponseError
-  | Empty
-
-
-data ResponseError
-  = ErrParse Text
-  | ErrParam Text
-  | ErrOther Text
-  | ErrNotHandled (Event Text Text)
-  | ErrAuth
-  deriving (Show)
 
 
 {- | Hyperbole applications are divided into Pages. Each Page must 'load' the whole page , and 'handle' each /type/ of 'HyperView'
@@ -152,30 +113,6 @@ runHandler run = interpret $ \_ -> \case
 
 
 -- deriving newtype (Applicative, Monad, Functor)
-
--- | Serialized ViewId
-newtype TargetViewId = TargetViewId Text
-
-
--- | An action, with its corresponding id
-data Event id act = Event
-  { viewId :: id
-  , action :: act
-  }
-
-
-instance (Show act, Show id) => Show (Event id act) where
-  show e = "Event " <> show e.viewId <> " " <> show e.action
-
-
--- | Low level effect mapping request/response to either HTTP or WebSockets
-data Server :: Effect where
-  LoadRequest :: Server m Request
-  SendResponse :: Session -> Response -> Server m ()
-
-
-type instance DispatchOf Server = 'Dynamic
-
 
 {- | In any 'load' or 'handle', you can use this Effect to get extra request information or control the response manually.
 
