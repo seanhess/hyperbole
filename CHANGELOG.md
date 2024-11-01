@@ -1,5 +1,5 @@
 # Revision history for hyperbole
 
-## 0.1.0 -- YYYY-mm-dd
+## 0.3.6 -- 2024-05-21
 
 * First version. Released on an unsuspecting world.
