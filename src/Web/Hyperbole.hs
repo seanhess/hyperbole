@@ -133,7 +133,7 @@ module Web.Hyperbole
     -- ** Web.View
 
     -- | Hyperbole is tightly integrated with [Web.View](https://hackage.haskell.org/package/web-view/docs/Web-View.html) for HTML generation
-  , module Web.Hyperbole.View
+  , module Web.View
 
     -- ** Embeds
 
@@ -160,10 +160,10 @@ import Web.Hyperbole.Embed
 import Web.Hyperbole.Forms
 import Web.Hyperbole.Handler.TypeList
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.HyperView.Class
 import Web.Hyperbole.Page
 import Web.Hyperbole.Route
 import Web.Hyperbole.View
+import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)
 
 
 -- import Web.View.Types.Url (Segment)

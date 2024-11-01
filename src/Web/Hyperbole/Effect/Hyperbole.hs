@@ -19,7 +19,7 @@ import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response
 import Web.Hyperbole.Effect.Server (Server (..))
-import Web.Hyperbole.HyperView.Class
+import Web.Hyperbole.HyperView
 import Web.Hyperbole.Route
 import Web.Hyperbole.Session as Session
 import Web.View

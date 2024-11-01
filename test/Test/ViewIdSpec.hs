@@ -6,7 +6,7 @@ import Data.Text (Text, pack)
 import Data.Text qualified as T
 import GHC.Generics
 import Skeletest
-import Web.Hyperbole.HyperView.Class
+import Web.Hyperbole.HyperView
 import Web.View (att)
 import Web.View.Types
 

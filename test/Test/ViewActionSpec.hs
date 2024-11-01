@@ -4,7 +4,6 @@ import Data.Text (Text)
 import GHC.Generics
 import Skeletest
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.HyperView.Class
 
 
 data Simple = Simple
