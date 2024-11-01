@@ -41,10 +41,12 @@ library
       Web.Hyperbole.Effect.Server
       Web.Hyperbole.Embed
       Web.Hyperbole.Forms
+      Web.Hyperbole.Handler.TypeList
       Web.Hyperbole.HyperView
+      Web.Hyperbole.HyperView.Class
+      Web.Hyperbole.Page
       Web.Hyperbole.Route
       Web.Hyperbole.Session
-      Web.Hyperbole.Types
       Web.Hyperbole.View
   other-modules:
       Paths_hyperbole

@@ -20,23 +20,9 @@ import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.HyperView.Class
+import Web.Hyperbole.Page
 import Web.View
-
-
-{- | Hyperbole applications are divided into Pages. Each Page must 'load' the whole page , and 'handle' each /type/ of 'HyperView'
-
-@
-myPage :: ('Hyperbole' :> es) => 'Page' es 'Response'
-myPage = do
-  'handle' messages
-  'load' pageView
-
-pageView = do
-  el_ "My Page"
-  'hyper' (Message 1) $ messageView "Starting Message"
-@
--}
-newtype Page (es :: [Effect]) (views :: [Type]) = Page (Eff es (View (Root views) ()))
 
 
 data Handler (view :: Type) :: Effect where
