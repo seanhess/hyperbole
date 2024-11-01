@@ -17,8 +17,7 @@ import Data.Kind (Constraint, Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Request
-import Web.Hyperbole.Effect.Response
+import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Page
 import Web.Hyperbole.View.Target (hyperUnsafe)

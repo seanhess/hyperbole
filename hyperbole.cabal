@@ -35,8 +35,6 @@ library
       Web.Hyperbole
       Web.Hyperbole.Application
       Web.Hyperbole.Effect.Hyperbole
-      Web.Hyperbole.Effect.Request
-      Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Server
       Web.Hyperbole.Embed
       Web.Hyperbole.Forms
