@@ -46,21 +46,22 @@ instance (HyperView a, HyperView b) => Handle '[a, b] where
 instance (HyperView a, HyperView b, HyperView c) => Handle '[a, b, c] where
   type Handlers es '[a, b, c] = (Handlers es '[a], Handlers es '[b], Handlers es '[c])
   runHandlers (a, b, c) = do
-    runHandler a
-    runHandler b
+    runHandlers @'[a, b] (a, b)
     runHandler c
 
 
--- instance (HyperView a, Handle b) => Handle (a : b) where
---   type Handlers es (a : b) = TupleConcat (a -> Action a -> Eff es (View a ()), Handlers es b)
---   runHandlers (ha, hb) = do
---     runHandler ha
---     runHandlers @b hb
+instance (HyperView a, HyperView b, HyperView c, HyperView d) => Handle '[a, b, c, d] where
+  type Handlers es '[a, b, c, d] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d])
+  runHandlers (a, b, c, d) = do
+    runHandlers @'[a, b, c] (a, b, c)
+    runHandler d
 
-type family TupleConcat (bs :: Type) where
-  TupleConcat () = ()
-  TupleConcat (a, (b, c)) = (a, b, c)
-  TupleConcat ((a, b), c) = (a, b, c)
+
+instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e) => Handle '[a, b, c, d, e] where
+  type Handlers es '[a, b, c, d, e] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e])
+  runHandlers (a, b, c, d, e) = do
+    runHandlers @'[a, b, c, d] (a, b, c, d)
+    runHandler e
 
 
 handle
@@ -74,47 +75,6 @@ handle handlers loadPage = Page $ do
   guardNoEvent
   loadPage
 
-
--- instance (HyperView id) => Handle '[id] where
---   type Handlers es '[id] = id -> Action id -> Eff es (View id ())
---   runHandlers action = do
---     runHandler action
-
--- instance (HyperView a, HyperView b) => Handle '[a, b] where
---   type Handlers es '[a, b] = (Handlers es '[a], Handlers es '[b])
---   runHandlers (ha, hb) = Page $ do
---     runHandler ha
---     runHandler hb
-
--- data Handler (view :: Type) :: Effect where
---   RespondEvents :: Handler view m ()
---
---
--- type instance DispatchOf (Handler view) = Dynamic
-
--- type family Handlers (views :: [Type]) (es :: [Effect]) :: Constraint where
---   Handlers '[] es = ()
---   Handlers (x ': xs) es = (Handler x :> es, Handlers xs es)
-
--- load :: (Hyperbole :> es, Handlers total es) => Eff es (View (Root total) ()) -> Page es total
--- load run = Page $ do
---   r <- request
---   case lookupEvent r.query of
---     -- Are id and action set to something?
---     Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
---     Nothing -> run
-
---
--- handle
---   :: forall id total es
---    . (HyperView id, Hyperbole :> es)
---   => (id -> Action id -> Eff es (View id ()))
---   -> Page (Handler id : es) total
---   -> Page es total
--- handle action (Page inner) = Page $ do
---   runHandler action $ do
---     send $ RespondEvents @id
---     inner
 
 runHandler
   :: forall id es
