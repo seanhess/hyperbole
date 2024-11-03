@@ -38,7 +38,7 @@ import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.WebSockets (Connection, PendingConnection, acceptRequest, defaultConnectionOptions)
 import Web.Hyperbole
-import Web.Hyperbole.Effect (Request (..))
+import Web.Hyperbole.Effect.Server (Request (..))
 
 
 -- import Network.Wai.Handler.WebSockets (websocketsOr)
@@ -131,9 +131,9 @@ app users count = do
 
   -- Nested Router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es '[]
-  hello Redirected = load $ do
+  hello Redirected = handle () $ do
     pure $ el_ "You were redirected"
-  hello (Greet s) = load $ do
+  hello (Greet s) = handle () $ do
     r <- request
     pure $ col (gap 10 . pad 10) $ do
       el_ $ do

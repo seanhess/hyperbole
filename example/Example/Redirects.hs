@@ -7,7 +7,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
-  handle contents $ load $ do
+  handle contents $ do
     pure $ row (pad 20) $ do
       hyper Contents contentsView
 

@@ -12,7 +12,7 @@ import Web.Hyperbole
 -- Optionally, the count could be stored in a session. See Example.Sessions
 page :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Page es '[Counter]
 page var = do
-  handle (counter var) $ load $ do
+  handle (counter var) $ do
     n <- readTVarIO var
     pure $ col (pad 20 . gap 10) $ do
       el h1 "Counter"

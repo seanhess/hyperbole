@@ -11,7 +11,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es '[FormView]
 page = do
-  handle formAction $ load $ do
+  handle formAction $ do
     pure $ row (pad 20) $ do
       hyper FormView (formView genForm)
 

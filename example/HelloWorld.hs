@@ -12,7 +12,7 @@ main = do
 
 messagePage :: (Hyperbole :> es) => Page es '[]
 messagePage = do
-  load $ do
+  handle () $ do
     pure $ do
       el bold "Message Page"
       messageView "Hello World"
@@ -51,7 +51,7 @@ messageView' m = do
 
 messagePage' :: (Hyperbole :> es) => Page es '[Message]
 messagePage' = do
-  handle message $ load $ do
+  handle message $ do
     pure $ do
       el bold "Message Page"
       hyper Message $ messageView' "Hello World"

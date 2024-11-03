@@ -18,7 +18,7 @@ page
    . (Hyperbole :> es, Users :> es, Debug :> es)
   => Page es '[Contacts, Contact]
 page = do
-  handle contacts $ handle contact $ load $ do
+  handle (contacts, contact) $ do
     us <- usersAll
     pure $ do
       col (pad 10 . gap 10) $ do

@@ -1,16 +1,14 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE LambdaCase #-}
 
 module Web.Hyperbole.Handler
   ( Page (..)
   , page
   , handle
   , Hyperbole (..)
-  -- , Handler
   )
 where
 
-import Data.Kind (Constraint, Type)
+import Data.Kind (Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Web.Hyperbole.Effect.Hyperbole
@@ -62,6 +60,41 @@ instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e) => Ha
   runHandlers (a, b, c, d, e) = do
     runHandlers @'[a, b, c, d] (a, b, c, d)
     runHandler e
+
+
+instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, HyperView f) => Handle '[a, b, c, d, e, f] where
+  type Handlers es '[a, b, c, d, e, f] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e], Handlers es '[f])
+  runHandlers (a, b, c, d, e, f) = do
+    runHandlers @'[a, b, c, d, e] (a, b, c, d, e)
+    runHandler f
+
+
+instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, HyperView f, HyperView g) => Handle '[a, b, c, d, e, f, g] where
+  type Handlers es '[a, b, c, d, e, f, g] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e], Handlers es '[f], Handlers es '[g])
+  runHandlers (a, b, c, d, e, f, g) = do
+    runHandlers @'[a, b, c, d, e, f] (a, b, c, d, e, f)
+    runHandler g
+
+
+instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, HyperView f, HyperView g, HyperView h) => Handle '[a, b, c, d, e, f, g, h] where
+  type Handlers es '[a, b, c, d, e, f, g, h] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e], Handlers es '[f], Handlers es '[g], Handlers es '[h])
+  runHandlers (a, b, c, d, e, f, g, h) = do
+    runHandlers @'[a, b, c, d, e, f, g] (a, b, c, d, e, f, g)
+    runHandler h
+
+
+instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, HyperView f, HyperView g, HyperView h, HyperView i) => Handle '[a, b, c, d, e, f, g, h, i] where
+  type Handlers es '[a, b, c, d, e, f, g, h, i] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e], Handlers es '[f], Handlers es '[g], Handlers es '[h], Handlers es '[i])
+  runHandlers (a, b, c, d, e, f, g, h, i) = do
+    runHandlers @'[a, b, c, d, e, f, g, h] (a, b, c, d, e, f, g, h)
+    runHandler i
+
+
+instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, HyperView f, HyperView g, HyperView h, HyperView i, HyperView j) => Handle '[a, b, c, d, e, f, g, h, i, j] where
+  type Handlers es '[a, b, c, d, e, f, g, h, i, j] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e], Handlers es '[f], Handlers es '[g], Handlers es '[h], Handlers es '[i], Handlers es '[j])
+  runHandlers (a, b, c, d, e, f, g, h, i, j) = do
+    runHandlers @'[a, b, c, d, e, f, g, h, i] (a, b, c, d, e, f, g, h, i)
+    runHandler j
 
 
 handle

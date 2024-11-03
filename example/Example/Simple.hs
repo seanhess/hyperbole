@@ -16,7 +16,7 @@ main = do
 
 simplePage :: (Hyperbole :> es) => Page es '[Message]
 simplePage = do
-  handle message $ load $ do
+  handle message $ do
     pure $ col (pad 20) $ do
       el bold "My Page"
       hyper (Message 1) $ messageView "Hello"
