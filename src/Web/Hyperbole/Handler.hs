@@ -99,12 +99,12 @@ instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, Hyper
 
 handle
   :: forall views es
-   . (Handle views, Hyperbole :> es)
-  => Handlers es views
-  -> Eff es (View (Root views) ())
+   . (Handle (TupleList views), Hyperbole :> es)
+  => Handlers es (TupleList views)
+  -> Eff es (View (Root (TupleList views)) ())
   -> Page es views
 handle handlers loadPage = Page $ do
-  runHandlers @views handlers
+  runHandlers @(TupleList views) handlers
   guardNoEvent
   loadPage
 
@@ -195,7 +195,7 @@ pageView = do
   'hyper' (Message 1) $ messageView "Starting Message"
 @
 -}
-newtype Page (es :: [Effect]) (views :: [Type]) = Page (Eff es (View (Root views) ()))
+newtype Page (es :: [Effect]) (views :: Type) = Page (Eff es (View (Root (TupleList views)) ()))
 
 
 -- | Run a 'Page' in 'Hyperbole'

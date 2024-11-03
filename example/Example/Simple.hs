@@ -14,7 +14,7 @@ main = do
     liveApp (basicDocument "Example") (page simplePage)
 
 
-simplePage :: (Hyperbole :> es) => Page es '[Message]
+simplePage :: (Hyperbole :> es) => Page es Message
 simplePage = do
   handle message $ do
     pure $ col (pad 20) $ do

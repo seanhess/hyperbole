@@ -7,7 +7,7 @@ import Web.Hyperbole
 import Prelude hiding (even, odd)
 
 
-page :: (Hyperbole :> es) => Page es '[LiveSearch]
+page :: (Hyperbole :> es) => Page es LiveSearch
 page = do
   handle liveSearch $ do
     pure $ col (pad 20) $ do

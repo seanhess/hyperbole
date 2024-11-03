@@ -6,7 +6,7 @@ import Example.Effects.Debug
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es '[Contents]
+page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es Contents
 page = do
   handle content $ do
     pure $ do

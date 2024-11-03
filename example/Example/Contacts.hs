@@ -16,7 +16,7 @@ import Web.Hyperbole
 page
   :: forall es
    . (Hyperbole :> es, Users :> es, Debug :> es)
-  => Page es '[Contacts, Contact]
+  => Page es (Contacts, Contact)
 page = do
   handle (contacts, contact) $ do
     us <- usersAll

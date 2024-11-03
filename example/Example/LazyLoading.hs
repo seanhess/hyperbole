@@ -7,7 +7,7 @@ import Web.Hyperbole
 
 
 -- this is already running in a different context
-page :: (Hyperbole :> es, Debug :> es) => Page es '[Contents]
+page :: (Hyperbole :> es, Debug :> es) => Page es Contents
 page = do
   handle content $ do
     pure $ do
