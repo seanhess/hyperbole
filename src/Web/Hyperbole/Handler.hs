@@ -1,12 +1,12 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE LambdaCase #-}
 
 module Web.Hyperbole.Handler
   ( Page (..)
-  , load
   , page
   , handle
   , Hyperbole (..)
-  , Handler
+  -- , Handler
   )
 where
 
@@ -20,56 +20,126 @@ import Web.Hyperbole.View.Target (hyperUnsafe)
 import Web.View
 
 
-data Handler (view :: Type) :: Effect where
-  RespondEvents :: Handler view m ()
+class Handle (views :: [Type]) where
+  type Handlers (es :: [Effect]) views :: Type
+  runHandlers :: (Hyperbole :> es) => Handlers es views -> Eff es ()
 
 
-type instance DispatchOf (Handler view) = Dynamic
+instance Handle '[] where
+  type Handlers es '[] = ()
+  runHandlers _ = pure ()
 
 
-type family Handlers (views :: [Type]) (es :: [Effect]) :: Constraint where
-  Handlers '[] es = ()
-  Handlers (x ': xs) es = (Handler x :> es, Handlers xs es)
+instance (HyperView id) => Handle '[id] where
+  type Handlers es '[id] = id -> Action id -> Eff es (View id ())
+  runHandlers action = do
+    runHandler action
 
 
-load :: (Hyperbole :> es, Handlers total es) => Eff es (View (Root total) ()) -> Page es total
-load run = Page $ do
+instance (HyperView a, HyperView b) => Handle '[a, b] where
+  type Handlers es '[a, b] = (Handlers es '[a], Handlers es '[b])
+  runHandlers (a, b) = do
+    runHandler a
+    runHandlers @'[b] b
+
+
+instance (HyperView a, HyperView b, HyperView c) => Handle '[a, b, c] where
+  type Handlers es '[a, b, c] = (Handlers es '[a], Handlers es '[b], Handlers es '[c])
+  runHandlers (a, b, c) = do
+    runHandler a
+    runHandler b
+    runHandler c
+
+
+-- instance (HyperView a, Handle b) => Handle (a : b) where
+--   type Handlers es (a : b) = TupleConcat (a -> Action a -> Eff es (View a ()), Handlers es b)
+--   runHandlers (ha, hb) = do
+--     runHandler ha
+--     runHandlers @b hb
+
+type family TupleConcat (bs :: Type) where
+  TupleConcat () = ()
+  TupleConcat (a, (b, c)) = (a, b, c)
+  TupleConcat ((a, b), c) = (a, b, c)
+
+
+handle
+  :: forall views es
+   . (Handle views, Hyperbole :> es)
+  => Handlers es views
+  -> Eff es (View (Root views) ())
+  -> Page es views
+handle handlers loadPage = Page $ do
+  runHandlers @views handlers
+  guardNoEvent
+  loadPage
+
+
+-- instance (HyperView id) => Handle '[id] where
+--   type Handlers es '[id] = id -> Action id -> Eff es (View id ())
+--   runHandlers action = do
+--     runHandler action
+
+-- instance (HyperView a, HyperView b) => Handle '[a, b] where
+--   type Handlers es '[a, b] = (Handlers es '[a], Handlers es '[b])
+--   runHandlers (ha, hb) = Page $ do
+--     runHandler ha
+--     runHandler hb
+
+-- data Handler (view :: Type) :: Effect where
+--   RespondEvents :: Handler view m ()
+--
+--
+-- type instance DispatchOf (Handler view) = Dynamic
+
+-- type family Handlers (views :: [Type]) (es :: [Effect]) :: Constraint where
+--   Handlers '[] es = ()
+--   Handlers (x ': xs) es = (Handler x :> es, Handlers xs es)
+
+-- load :: (Hyperbole :> es, Handlers total es) => Eff es (View (Root total) ()) -> Page es total
+-- load run = Page $ do
+--   r <- request
+--   case lookupEvent r.query of
+--     -- Are id and action set to something?
+--     Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
+--     Nothing -> run
+
+--
+-- handle
+--   :: forall id total es
+--    . (HyperView id, Hyperbole :> es)
+--   => (id -> Action id -> Eff es (View id ()))
+--   -> Page (Handler id : es) total
+--   -> Page es total
+-- handle action (Page inner) = Page $ do
+--   runHandler action $ do
+--     send $ RespondEvents @id
+--     inner
+
+runHandler
+  :: forall id es
+   . (HyperView id, Hyperbole :> es)
+  => (id -> Action id -> Eff es (View id ()))
+  -> Eff es ()
+runHandler run = do
+  -- Get an event matching our type. If it doesn't match, skip to the next handler
+  mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
+  case mev of
+    Just event -> do
+      vw <- run event.viewId event.action
+      let vid = TargetViewId $ toViewId event.viewId
+      send $ RespondEarly $ Response vid $ hyperUnsafe event.viewId vw
+    _ -> do
+      pure ()
+
+
+guardNoEvent :: (Hyperbole :> es) => Eff es ()
+guardNoEvent = do
   r <- request
   case lookupEvent r.query of
     -- Are id and action set to something?
     Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
-    Nothing -> run
-
-
-handle
-  :: forall id total es
-   . (HyperView id, Hyperbole :> es)
-  => (id -> Action id -> Eff es (View id ()))
-  -> Page (Handler id : es) total
-  -> Page es total
-handle action (Page inner) = Page $ do
-  runHandler action $ do
-    send $ RespondEvents @id
-    inner
-
-
-runHandler
-  :: forall id es a
-   . (HyperView id, Hyperbole :> es)
-  => (id -> Action id -> Eff es (View id ()))
-  -> Eff (Handler id : es) a
-  -> Eff es a
-runHandler run = interpret $ \_ -> \case
-  RespondEvents -> do
-    -- Get an event matching our type. If it doesn't match, skip to the next handler
-    mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
-    case mev of
-      Just event -> do
-        vw <- run event.viewId event.action
-        let vid = TargetViewId $ toViewId event.viewId
-        send $ RespondEarly $ Response vid $ hyperUnsafe event.viewId vw
-      _ -> do
-        pure ()
+    Nothing -> pure ()
 
 
 -- deriving newtype (Applicative, Monad, Functor)

@@ -18,13 +18,48 @@ main = do
 
 simplePage :: (Hyperbole :> es, IOE :> es) => Page es '[MainView, Status]
 simplePage = do
-  handle main' $ handle status $ load $ do
+  handle (main', status) $ do
     liftIO $ putStrLn "MAIN LOAD"
     pure $ col (pad 20) $ do
       el bold "My Page"
       hyper MainView $ do
         row (gap 10) $ do
           button GoBegin (border 1) "Start"
+
+
+simplePage1 :: (Hyperbole :> es, IOE :> es) => Page es '[Floop]
+simplePage1 = do
+  handle floop $ do
+    liftIO $ putStrLn "MAIN LOAD"
+    pure $ col (pad 20) $ do
+      el bold "My Page"
+      hyper Floop $ do
+        row (gap 10) $ do
+          button FloopA (border 1) "Start"
+
+
+simplePage0 :: (Hyperbole :> es, IOE :> es) => Page es '[]
+simplePage0 = do
+  handle () $ do
+    liftIO $ putStrLn "MAIN LOAD"
+    pure $ col (pad 20) $ do
+      el bold "My Page"
+
+
+data Floop = Floop
+  deriving (Show, Read, ViewId)
+
+
+data FloopA = FloopA
+  deriving (Show, Read, ViewAction)
+
+
+instance HyperView Floop where
+  type Action Floop = FloopA
+
+
+floop :: Floop -> FloopA -> Eff es (View Floop ())
+floop _ _ = pure none
 
 
 -- MAIN ----------------------------------------
