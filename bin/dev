@@ -12,6 +12,7 @@ compile() {
 
 client() {
   cd client
+  # npx webpack -w --mode=development
   npx webpack -w
 }
 

@@ -13,7 +13,7 @@ import  { actionMessage, ActionMessage } from './action'
 // const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole 0.4.1")
+console.log("Hyperbole 0.4.1a")
 
 
 let rootStyles: HTMLStyleElement;

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+
+# Make sure everything is working
+hpack
+cabal test
+
+
+# Compile the JS client
+cd client
+npm install
+npx webpack --mode=production
+cd ..
+
+
+# Compile the package
+cabal sdist
