@@ -38,7 +38,7 @@ import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.WebSockets (Connection, PendingConnection, acceptRequest, defaultConnectionOptions)
 import Web.Hyperbole
-import Web.Hyperbole.Effect (Request (..))
+import Web.Hyperbole.Effect.Server (Request (..))
 
 
 -- import Network.Wai.Handler.WebSockets (websocketsOr)

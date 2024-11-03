@@ -27,14 +27,19 @@ executable examples
       Simple
       Web.Hyperbole
       Web.Hyperbole.Application
-      Web.Hyperbole.Effect
+      Web.Hyperbole.Effect.Hyperbole
+      Web.Hyperbole.Effect.Server
       Web.Hyperbole.Embed
       Web.Hyperbole.Forms
+      Web.Hyperbole.Handler
+      Web.Hyperbole.Handler.TypeList
       Web.Hyperbole.HyperView
       Web.Hyperbole.Route
       Web.Hyperbole.Session
-      Web.Hyperbole.Types
       Web.Hyperbole.View
+      Web.Hyperbole.View.Element
+      Web.Hyperbole.View.Event
+      Web.Hyperbole.View.Target
       BulkUpdate
       Example.Colors
       Example.Concurrent
