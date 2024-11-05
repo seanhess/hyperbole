@@ -39,9 +39,6 @@ module Web.Hyperbole
     -- * Pages
 
     -- ** Page
-  , Page
-  -- , load
-  -- , handle
 
     -- ** HyperView
   , HyperView (..)
@@ -85,6 +82,9 @@ module Web.Hyperbole
   , InputType (..)
 
     -- ** Handlers
+  , Handler (..)
+  , Page
+  , load
 
     -- ** Validation
   , Validated (..)
@@ -122,9 +122,6 @@ module Web.Hyperbole
   , ViewId
   , ViewAction
   , Response
-  , handle
-  -- , load
-  -- , Handler
   , Root
   , HyperViewHandled
   , TupleList

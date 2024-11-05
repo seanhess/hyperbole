@@ -1,28 +1,35 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Example.Counter where
 
 import Data.Text (pack)
 import Effectful
 import Effectful.Concurrent.STM
+import Effectful.Reader.Dynamic
 import Example.Style as Style
-import Web.Hyperbole
+import Web.Hyperbole as Hyperbole
+
+
+main = do
+  count <- runEff $ runConcurrent initCounter
+  run 3000 $ do
+    liveApp (basicDocument "Example") (runReader count $ Hyperbole.page myPage)
 
 
 -- We are using a TVar to manage our state
 -- In normal web applications, state will be managed in a database, abstracted behind a custom Effect. See Example.Effects.Users for the interface
 -- Optionally, the count could be stored in a session. See Example.Sessions
-page :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Page es Counter
-page var = do
-  handle (counter var) $ do
-    n <- readTVarIO var
-    pure $ col (pad 20 . gap 10) $ do
-      el h1 "Counter"
-      hyper Counter (viewCount n)
+myPage :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es '[Counter]
+myPage = load $ do
+  var <- ask
+  n <- readTVarIO var
+  pure $ col (pad 20 . gap 10) $ do
+    el h1 "Counter"
+    hyper Counter (viewCount n)
 
 
 data Counter = Counter
   deriving (Show, Read, ViewId)
-instance HyperView Counter where
-  type Action Counter = Count
 
 
 data Count
@@ -31,13 +38,15 @@ data Count
   deriving (Show, Read, ViewAction)
 
 
-counter :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Counter -> Count -> Eff es (View Counter ())
-counter var _ Increment = do
-  n <- modify var $ \n -> n + 1
-  pure $ viewCount n
-counter var _ Decrement = do
-  n <- modify var $ \n -> n - 1
-  pure $ viewCount n
+instance HyperView Counter where
+  type Action Counter = Count
+instance (Reader (TVar Int) :> es, Concurrent :> es) => Handler Counter es where
+  handle _ Increment = do
+    n <- modify $ \n -> n + 1
+    pure $ viewCount n
+  handle _ Decrement = do
+    n <- modify $ \n -> n - 1
+    pure $ viewCount n
 
 
 viewCount :: Int -> View Counter ()
@@ -49,8 +58,9 @@ viewCount n = col (gap 10) $ do
     button Increment Style.btn "Increment"
 
 
-modify :: (Concurrent :> es) => TVar Int -> (Int -> Int) -> Eff es Int
-modify var f =
+modify :: (Concurrent :> es, Reader (TVar Int) :> es) => (Int -> Int) -> Eff es Int
+modify f = do
+  var <- ask
   atomically $ do
     modifyTVar var f
     readTVar var
