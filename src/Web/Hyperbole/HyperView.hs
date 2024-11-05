@@ -66,3 +66,10 @@ data Root (views :: [Type]) = Root
 instance HyperView (Root views) where
   type Action (Root views) = ()
   type Require (Root views) = views
+
+
+type family TupleList a where
+  TupleList () = '[]
+  TupleList (a, b) = [a, b]
+  TupleList (a, b, c) = [a, b, c]
+  TupleList a = '[a]

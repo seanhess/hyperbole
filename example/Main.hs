@@ -130,10 +130,10 @@ app users count = do
   lnk = Style.link
 
   -- Nested Router
-  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es '[]
-  hello Redirected = load $ do
+  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es ()
+  hello Redirected = handle () $ do
     pure $ el_ "You were redirected"
-  hello (Greet s) = load $ do
+  hello (Greet s) = handle () $ do
     r <- request
     pure $ col (gap 10 . pad 10) $ do
       el_ $ do

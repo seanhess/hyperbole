@@ -123,8 +123,8 @@ module Web.Hyperbole
   , ViewAction
   , Response
   , handle
-  , load
-  , Handler
+  -- , load
+  -- , Handler
   , Root
   , HyperViewHandled
 
