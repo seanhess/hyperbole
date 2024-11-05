@@ -4,6 +4,9 @@
 module Example.Contacts where
 
 import Control.Monad (forM_)
+import Data.String.Conversions
+import Data.Text (Text, pack)
+import Debug.Trace
 import Effectful
 import Example.AppRoute qualified as AppRoute
 import Example.Colors
@@ -93,7 +96,7 @@ allContactsView fil us = col (gap 20) $ do
   el bold "Add Contact"
 
   row (pad 10 . gap 10 . border 1) $ do
-    contactForm AddUser genForm
+    contactForm AddUser (ContactForm Nothing Nothing Nothing)
  where
   filterUsers Nothing _ = True
   filterUsers (Just Active) u = u.isActive

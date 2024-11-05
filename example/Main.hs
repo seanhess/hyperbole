@@ -33,6 +33,7 @@ import Example.Sessions qualified as Sessions
 import Example.Simple qualified as Simple
 import Example.Style qualified as Style
 import Example.Transitions qualified as Transitions
+import Example.Triggers qualified as Triggers
 import GHC.Generics (Generic)
 import Network.HTTP.Types (Method, QueryItem, methodPost, status200, status404)
 import Network.Wai qualified as Wai
@@ -96,6 +97,7 @@ app users count = do
         route Forms lnk "Forms"
         link "/query?key=value" lnk "Query Params"
         route Sessions lnk "Sessions"
+        route Triggers lnk "Triggers"
         route Redirects lnk "Redirects"
         route RedirectNow lnk "Redirect Now"
         route LazyLoading lnk "Lazy Loading"

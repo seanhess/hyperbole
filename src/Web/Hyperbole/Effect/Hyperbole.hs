@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Web.Hyperbole.Effect.Hyperbole where
 
@@ -34,6 +35,7 @@ data Hyperbole :: Effect where
   SetSession :: (ToHttpApiData a) => Text -> a -> Hyperbole m ()
   DelSession :: Text -> Hyperbole m ()
   GetSession :: (FromHttpApiData a) => Text -> Hyperbole m (Maybe a)
+  AddTrigger :: Trigger -> Hyperbole m ()
 
 
 type instance DispatchOf Hyperbole = 'Dynamic
@@ -48,22 +50,24 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
   GetRequest -> do
     gets @HyperState (.request)
   RespondEarly r -> do
-    s <- gets @HyperState (.session)
-    send $ SendResponse s r
+    st <- get @HyperState
+    respond st r
     throwError_ r
   SetSession k a -> do
-    modify $ \st -> st{session = sessionSet k a st.session} :: HyperState
+    modify $ \st -> stateSetSession (Session.sessionSet k a st.session) st
   DelSession k -> do
-    modify $ \st -> st{session = sessionDel k st.session} :: HyperState
+    modify $ \st -> stateSetSession (Session.sessionDel k st.session) st
   GetSession k -> do
     s <- gets @HyperState (.session)
-    pure $ sessionLookup k s
+    pure $ Session.sessionLookup k s
+  AddTrigger t -> do
+    modify $ modTriggers (t :)
  where
   runLocal :: (Server :> es) => Eff (State HyperState : Error Response : es) a -> Eff es (Either Response (a, HyperState))
   runLocal eff = do
     -- Load the request ONCE right when we start
     r <- send LoadRequest
-    let st = HyperState r (sessionFromCookies r.cookies)
+    let st = HyperState r (Session.sessionFromCookies r.cookies) []
     runErrorNoCallStack @Response . runState st $ eff
 
   combine :: (Server :> es) => Eff es (Either Response (Response, HyperState)) -> Eff es Response
@@ -74,13 +78,25 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
         -- responded early, don't need to respond again
         pure res
       Right (res, st) -> do
-        send $ SendResponse st.session res
+        respond st res
         pure res
+
+  stateSetSession :: Session -> HyperState -> HyperState
+  stateSetSession sess (HyperState r _ t) = HyperState r sess t
+
+  modTriggers :: ([Trigger] -> [Trigger]) -> HyperState -> HyperState
+  modTriggers f (HyperState r s ts) = HyperState r s (f ts)
+
+  respond :: (Server :> es) => HyperState -> Response -> Eff es ()
+  respond st res = do
+    let meta = ResponseMeta st.session st.triggers
+    send $ SendResponse meta res
 
 
 data HyperState = HyperState
   { request :: Request
   , session :: Session
+  , triggers :: [Trigger]
   }
 
 
@@ -256,3 +272,7 @@ respondEarly i vw = do
 view :: (Hyperbole :> es) => View () () -> Eff es Response
 view vw = do
   pure $ Response (TargetViewId "") vw
+
+
+trigger :: (Hyperbole :> es, HyperView id) => id -> Action id -> Eff es ()
+trigger vw action = send $ AddTrigger $ Trigger (TargetViewId $ toViewId vw) (TargetAction $ toAction action)

@@ -12,7 +12,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (HeaderName, Method, status200, status400, status401, status404, status500)
+import Network.HTTP.Types (Header, HeaderName, Method, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
 import Network.WebSockets (Connection)
@@ -26,10 +26,21 @@ import Web.View (Query, Segment, View, renderLazyByteString, renderUrl)
 -- | Low level effect mapping request/response to either HTTP or WebSockets
 data Server :: Effect where
   LoadRequest :: Server m Request
-  SendResponse :: Session -> Response -> Server m ()
+  SendResponse :: ResponseMeta -> Response -> Server m ()
 
 
 type instance DispatchOf Server = 'Dynamic
+
+
+data ResponseMeta = ResponseMeta
+  { session :: Session
+  , triggers :: [Trigger]
+  }
+  deriving (Show)
+
+
+data Trigger = Trigger TargetViewId TargetAction
+  deriving (Show)
 
 
 runServerWai
@@ -43,15 +54,15 @@ runServerWai toDoc req respond =
   reinterpret runLocal $ \_ -> \case
     LoadRequest -> do
       fromWaiRequest req
-    SendResponse sess r -> do
-      rr <- liftIO $ sendResponse sess r
+    SendResponse (ResponseMeta sess triggs) r -> do
+      rr <- liftIO $ sendResponse sess triggs r
       put (Just rr)
  where
   runLocal :: (IOE :> es) => Eff (State (Maybe ResponseReceived) : es) a -> Eff es (Maybe ResponseReceived)
   runLocal = execState Nothing
 
-  sendResponse :: Session -> Response -> IO Wai.ResponseReceived
-  sendResponse sess r =
+  sendResponse :: Session -> [Trigger] -> Response -> IO Wai.ResponseReceived
+  sendResponse sess triggs r =
     respond $ response r
    where
     response :: Response -> Wai.Response
@@ -70,18 +81,25 @@ runServerWai toDoc req respond =
       -- We have to use a 200 javascript redirect because javascript
       -- will redirect the fetch(), while we want to redirect the whole page
       -- see index.ts sendAction()
-      let headers = ("Location", cs url) : contentType ContentHtml : setCookies
+      let headers = ("Location", cs url) : standardHeaders
       Wai.responseLBS status200 headers $ "<script>window.location = '" <> cs url <> "'</script>"
 
     respError s = Wai.responseLBS s [contentType ContentText]
 
     respHtml body =
-      -- always set the session...
-      let headers = contentType ContentHtml : setCookies
+      let headers = standardHeaders <> fmap addTrigger triggs
        in Wai.responseLBS status200 headers body
 
+    standardHeaders = contentType ContentHtml : [setCookies]
+
+    setCookies :: Header
     setCookies =
-      [("Set-Cookie", sessionSetCookie sess)]
+      ("Set-Cookie", sessionSetCookie sess)
+
+    addTrigger :: Trigger -> Header
+    addTrigger t =
+      let Metadata _ val = metaTrigger t
+       in ("HYP-TRIGGER", cs val)
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
   addDocument :: Method -> BL.ByteString -> BL.ByteString
@@ -108,14 +126,14 @@ runServerSockets
   -> Eff (Server : es) Response
   -> Eff es Response
 runServerSockets conn req = reinterpret runLocal $ \_ -> \case
-  LoadRequest -> pure req -- receiveRequest conn
-  SendResponse sess res -> do
+  LoadRequest -> pure req
+  SendResponse rmeta res -> do
     case res of
-      (Response vid vw) -> sendView (sessionMeta sess) vid vw
+      (Response vid vw) -> sendView rmeta vid vw
       (Err r) -> sendError r
       Empty -> sendError $ ErrOther "Empty"
       NotFound -> sendError $ ErrOther "NotFound"
-      (Redirect url) -> sendRedirect (sessionMeta sess) url
+      (Redirect url) -> sendRedirect rmeta url
  where
   runLocal = runErrorNoCallStackWith @SocketError onSocketError
 
@@ -125,40 +143,45 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
     sendError r
     pure $ Err r
 
-  sendMessage :: (MonadIO m) => Metadata -> BL.ByteString -> m ()
-  sendMessage meta cnt = do
-    let msg = renderMetadata meta <> "\n" <> cnt
-    liftIO $ WS.sendTextData conn msg
-
   sendError :: (IOE :> es) => ResponseError -> Eff es ()
   sendError r = do
     -- TODO: better error handling!
-    sendMessage (metadata "ERROR" (pack (show r))) ""
+    sendMessage conn [Metadata "ERROR" (pack (show r))] ""
 
-  sendView :: (IOE :> es) => Metadata -> TargetViewId -> View () () -> Eff es ()
-  sendView meta vid vw = do
-    sendMessage (viewIdMeta vid <> meta) (renderLazyByteString vw)
+  sendView :: (IOE :> es) => ResponseMeta -> TargetViewId -> View () () -> Eff es ()
+  sendView rmeta vid vw = do
+    let meta = metaViewId vid : metaSession rmeta.session : fmap metaTrigger rmeta.triggers
+    sendMessage conn meta (renderLazyByteString vw)
 
-  renderMetadata :: Metadata -> BL.ByteString
-  renderMetadata (Metadata m) = BL.intercalate "\n" $ fmap (uncurry metaLine) m
+  sendRedirect :: (IOE :> es) => ResponseMeta -> Url -> Eff es ()
+  sendRedirect metas u = do
+    sendMessage conn [metaRedirect u, metaSession metas.session] ""
 
-  sendRedirect :: (IOE :> es) => Metadata -> Url -> Eff es ()
-  sendRedirect meta u = do
-    -- conn <- ask @Connection
-    let r = metadata "REDIRECT" (renderUrl u)
-    sendMessage (r <> meta) ""
+  metaSession :: Session -> Metadata
+  metaSession sess = Metadata "SESSION" (cs $ sessionSetCookie sess)
 
-  sessionMeta :: Session -> Metadata
-  sessionMeta sess = Metadata [("SESSION", cs (sessionSetCookie sess))]
+  metaViewId :: TargetViewId -> Metadata
+  metaViewId (TargetViewId vid) = Metadata "VIEW-ID" vid
 
-  viewIdMeta :: TargetViewId -> Metadata
-  viewIdMeta (TargetViewId vid) = Metadata [("VIEW-ID", cs vid)]
+  metaRedirect :: Url -> Metadata
+  metaRedirect u = Metadata "REDIRECT" (renderUrl u)
 
-  metadata :: BL.ByteString -> Text -> Metadata
-  metadata name value = Metadata [(name, value)]
 
-  metaLine :: BL.ByteString -> Text -> BL.ByteString
-  metaLine name value = "|" <> name <> "|" <> cs value
+sendMessage :: (MonadIO m) => Connection -> [Metadata] -> BL.ByteString -> m ()
+sendMessage conn metas cnt = do
+  let msg = renderMetadata metas <> "\n" <> cnt
+  liftIO $ WS.sendTextData conn msg
+ where
+  renderMetadata :: [Metadata] -> BL.ByteString
+  renderMetadata = BL.intercalate "\n" . fmap renderMetaLine
+
+  renderMetaLine :: Metadata -> BL.ByteString
+  renderMetaLine (Metadata name value) = "|" <> cs name <> "|" <> cs value
+
+
+metaTrigger :: Trigger -> Metadata
+metaTrigger (Trigger (TargetViewId viewId) (TargetAction act)) =
+  Metadata "TRIGGER" (viewId <> "|" <> act)
 
 
 errNotHandled :: Event Text Text -> String
@@ -192,8 +215,7 @@ contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
 contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
 
 
-newtype Metadata = Metadata [(BL.ByteString, Text)]
-  deriving newtype (Semigroup, Monoid)
+data Metadata = Metadata {key :: Text, value :: Text}
 
 
 newtype Host = Host {text :: BS.ByteString}
@@ -237,6 +259,12 @@ data ResponseError
 
 -- | Serialized ViewId
 newtype TargetViewId = TargetViewId Text
+  deriving (Show)
+
+
+-- | Serialized ViewAction
+newtype TargetAction = TargetAction Text
+  deriving (Show)
 
 
 -- | An action, with its corresponding id
