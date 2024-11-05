@@ -1,3 +1,1236 @@
-/*! For license information please see hyperbole.js.LICENSE.txt */
-(()=>{var e={296:e=>{function t(e,t=100,n={}){if("function"!=typeof e)throw new TypeError(`Expected the first parameter to be a function, got \`${typeof e}\`.`);if(t<0)throw new RangeError("`wait` must not be negative.");const{immediate:r}="boolean"==typeof n?{immediate:n}:n;let o,i,a,c,s;function u(){const t=o,n=i;return o=void 0,i=void 0,s=e.apply(t,n),s}function l(){const e=Date.now()-c;e<t&&e>=0?a=setTimeout(l,t-e):(a=void 0,r||(s=u()))}const d=function(...e){if(o&&this!==o&&Object.getPrototypeOf(this)===Object.getPrototypeOf(o))throw new Error("Debounced method called with different contexts of the same prototype.");o=this,i=e,c=Date.now();const n=r&&!a;return a||(a=setTimeout(l,t)),n&&(s=u()),s};return Object.defineProperty(d,"isPending",{get:()=>void 0!==a}),d.clear=()=>{a&&(clearTimeout(a),a=void 0)},d.flush=()=>{a&&d.trigger()},d.trigger=()=>{s=u(),d.clear()},d}e.exports.debounce=t,e.exports=t}},t={};function n(r){var o=t[r];if(void 0!==o)return o.exports;var i=t[r]={exports:{}};return e[r](i,i.exports,n),i.exports}(()=>{"use strict";var e=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},t=function(e,t){var n=e.length,r=-1;if(n)for(;++r<n&&!1!==t(e[r],r););},r=function(e,t,n){return e.node.insertBefore(t.node,n)};function o(e,t){return function(e){if(Array.isArray(e))return e}(e)||function(e,t){var n=null==e?null:"undefined"!=typeof Symbol&&e[Symbol.iterator]||e["@@iterator"];if(null!=n){var r,o,i,a,c=[],s=!0,u=!1;try{if(i=(n=n.call(e)).next,0===t){if(Object(n)!==n)return;s=!1}else for(;!(s=(r=i.call(n)).done)&&(c.push(r.value),c.length!==t);s=!0);}catch(e){u=!0,o=e}finally{try{if(!s&&null!=n.return&&(a=n.return(),Object(a)!==a))return}finally{if(u)throw o}}return c}}(e,t)||function(e,t){if(e){if("string"==typeof e)return i(e,t);var n=Object.prototype.toString.call(e).slice(8,-1);return"Object"===n&&e.constructor&&(n=e.constructor.name),"Map"===n||"Set"===n?Array.from(e):"Arguments"===n||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)?i(e,t):void 0}}(e,t)||function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function i(e,t){(null==t||t>e.length)&&(t=e.length);for(var n=0,r=new Array(t);n<t;n++)r[n]=e[n];return r}var a="string",c="number",s="boolean",u={},l=function(e,t,n){return{attrName:e,propName:t,type:n}};t([["style","cssText"],["class","className"]],(function(e){var t=o(e,2),n=t[0],r=t[1];u[n]=l(n,r||n,a)})),t(["autofocus","draggable","hidden","checked","multiple","muted","selected"],(function(e){u[e]=l(e,e,s)})),t([["tabindex","tabIndex"]],(function(e){var t=o(e,2),n=t[0],r=t[1];u[n]=l(n,r,c)}));var d="xlink:",f="http://www.w3.org/1999/xlink",v="xml:",h="http://www.w3.org/XML/1998/namespace",p=function(e,t,n,r){switch(t){case a:n===u.style.propName?e.style[n]=null===r?"":r:e[n]=null===r?"":r;break;case c:if(null===r){var o=n.toLowerCase();e.removeAttribute(o)}else if("0"===r)e[n]=0;else if("-1"===r)e[n]=-1;else{var i=parseInt(r,10);isNaN(i)||(e[n]=i)}break;case s:["","true"].indexOf(r)<0?e[n]=!1:e[n]=!0}},y=function n(o,i,c){if(o&&i){c=c||i.node.parentNode;var s=o.content&&o.content!==i.content;if(o.type!==i.type||s)return c.replaceChild(o.node,i.node),function(e,t){for(var n in e)t[n]=e[n]}(o,i);(function(n,r){var o=[],i={};for(var c in r.attributes){var s=r.attributes[c],l=n.attributes[c];s!==l&&void 0===l&&o.push(c)}for(var y in n.attributes){var m=r.attributes[y],g=n.attributes[y];m!==g&&void 0!==g&&(i[y]=g)}!function(n,r){t(r,(function(t){if(e(u,t)){var r=u[t];p(n.node,r.type,r.propName,null)}else t in n.node&&p(n.node,a,t,null),n.node.removeAttribute(t);delete n.attributes[t]}))}(r,o),function(t,n){for(var r in n){var o=n[r];if(t.attributes[r]=o,e(u,r)){var i=u[r];p(t.node,i.type,i.propName,o)}else r.startsWith(d)?t.node.setAttributeNS(f,r,o):r.startsWith(v)?t.node.setAttributeNS(h,r,o):(r in t.node&&p(t.node,a,r,o),t.node.setAttribute(r,o||""))}}(r,i)})(o,i),function(n,o,i){var a=n.children.length,c=o.children.length;if(a||c){var s=function(n){var r={};for(var o in t(n,(function(t){var n=t.attributes["data-key"];(function(t,n){return!(!n||e(t,n)&&(console.warn("[OmDomDom]: Children with duplicate keys detected. Children with duplicate keys will be skipped, resulting in dropped node references. Keys must be unique and non-indexed."),1))})(r,n)&&(r[n]=t)})),r)return r}(o.children),u=Array(a);t(n.children,void 0!==s?function(e,t){var n=o.node.childNodes,a=e.attributes["data-key"];if(Object.prototype.hasOwnProperty.call(s,a)){var c=s[a];Array.prototype.indexOf.call(n,c.node)!==t&&r(o,c,n[t]),u[t]=c,delete s[a],i(e,u[t])}else r(o,e,n[t]),u[t]=e}:function(e,t){var n=o.children[t];void 0!==n?(i(e,n),u[t]=n):(o.node.appendChild(e.node),u[t]=e)}),o.children=u;var l=o.node.childNodes.length,d=l-a;if(d>0)for(;d>0;)o.node.removeChild(o.node.childNodes[l-1]),l--,d--}}(o,i,n)}},m=function n(r){var o,i=arguments.length>1&&void 0!==arguments[1]&&arguments[1];"string"==typeof r&&(o=r.trim().replace(/\s+</g,"<").replace(/>\s+/g,">"),r=(new DOMParser).parseFromString(o,"text/html").body);var a="BODY"===r.tagName,c=r.childNodes,s=c?c.length:0;if(a){if(s>1)throw new Error("[OmDomDom]: Your element should not have more than one root node.");if(0===s)throw new Error("[OmDomDom]: Your element should have at least one root node.");return n(c[0])}var l=3===r.nodeType?"text":8===r.nodeType?"comment":r.tagName.toLowerCase(),d=i||"svg"===l,f=1===r.nodeType?function(t){var n=function(t){return Array.prototype.reduce.call(t.attributes,(function(t,n){return e(u,n.name)||(t[n.name]=n.value),t}),{})}(t);return function(e,t){for(var n in u){var r=u[n].propName,o=e.getAttribute(n);n===u.style.attrName?t[n]=e.style[r]:"string"==typeof o&&(t[n]=o)}}(t,n),n}(r):{},v=s>0?null:r.textContent,h=Array(s);return t(c,(function(e,t){h[t]=n(e,d)})),{type:l,attributes:f,children:h,content:v,node:r,isSVGContext:d}},g=function(e,t,n,r){return new(n||(n=Promise))((function(o,i){function a(e){try{s(r.next(e))}catch(e){i(e)}}function c(e){try{s(r.throw(e))}catch(e){i(e)}}function s(e){var t;e.done?o(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(a,c)}s((r=r.apply(e,t||[])).next())}))},w=function(e,t){var n,r,o,i,a={label:0,sent:function(){if(1&o[0])throw o[1];return o[1]},trys:[],ops:[]};return i={next:c(0),throw:c(1),return:c(2)},"function"==typeof Symbol&&(i[Symbol.iterator]=function(){return this}),i;function c(c){return function(s){return function(c){if(n)throw new TypeError("Generator is already executing.");for(;i&&(i=0,c[0]&&(a=0)),a;)try{if(n=1,r&&(o=2&c[0]?r.return:c[0]?r.throw||((o=r.return)&&o.call(r),0):r.next)&&!(o=o.call(r,c[1])).done)return o;switch(r=0,o&&(c=[2&c[0],o.value]),c[0]){case 0:case 1:o=c;break;case 4:return a.label++,{value:c[1],done:!1};case 5:a.label++,r=c[1],c=[0];continue;case 7:c=a.ops.pop(),a.trys.pop();continue;default:if(!((o=(o=a.trys).length>0&&o[o.length-1])||6!==c[0]&&2!==c[0])){a=0;continue}if(3===c[0]&&(!o||c[1]>o[0]&&c[1]<o[3])){a.label=c[1];break}if(6===c[0]&&a.label<o[1]){a.label=o[1],o=c;break}if(o&&a.label<o[2]){a.label=o[2],a.ops.push(c);break}o[2]&&a.ops.pop(),a.trys.pop();continue}c=t.call(e,a)}catch(e){c=[6,e],r=0}finally{n=o=0}if(5&c[0])throw c[1];return{value:c[0]?c[1]:void 0,done:!0}}([c,s])}}},b="https:"===window.location.protocol?"wss:":"ws:",E="".concat(b,"//").concat(window.location.host).concat(window.location.pathname),k=function(){function e(){this.reconnectDelay=0}return e.prototype.connect=function(e){var t=this;void 0===e&&(e=E);var n=new WebSocket(e);function r(e){console.log("Connection Error",e)}this.socket=n,n.addEventListener("error",r),n.addEventListener("open",(function(e){console.log("Opened",e),t.isConnected=!0,t.hasEverConnected=!0,t.reconnectDelay=0,t.socket.removeEventListener("error",r)})),n.addEventListener("close",(function(n){t.isConnected=!1,console.log("Closed"),t.hasEverConnected&&(t.reconnectDelay+=1e3,console.log("Reconnecting in "+t.reconnectDelay/1e3+"s"),setTimeout((function(){return t.connect(e)}),t.reconnectDelay))}))},e.prototype.sendAction=function(e){return g(this,void 0,void 0,(function(){var t,n;return w(this,(function(r){switch(r.label){case 0:return t=[e.url.pathname+e.url.search,"Host: "+window.location.host,"Cookie: "+document.cookie,e.form].join("\n"),[4,this.fetch(e.id,t)];case 1:return(n=r.sent()).metadata,[2,n.rest]}}))}))},e.prototype.fetch=function(e,t){return g(this,void 0,void 0,(function(){return w(this,(function(n){switch(n.label){case 0:return this.sendMessage(t),[4,this.waitMessage(e)];case 1:return[2,n.sent()]}}))}))},e.prototype.sendMessage=function(e){this.socket.send(e)},e.prototype.waitMessage=function(e){return g(this,void 0,void 0,(function(){var t=this;return w(this,(function(n){return[2,new Promise((function(n,r){var o=function(r){var i,a,c=function(e){var t=e.split("\n"),n=function(e,t){for(var n=[],r=0,o=t;r<o.length;r++){var i=e(o[r]);if(!i)break;n.push(i)}return n}(o,t),r=function(e,t){for(var n=0;n<t.length&&e(t[n]);)n++;return t.slice(n)}(o,t).join("\n");return{metadata:x(n),rest:r};function o(e){var t=e.match(/^\|([A-Z\-]+)\|(.*)$/);if(t)return{key:t[1],value:t[2]}}}(r.data),s=c.metadata,u=c.rest;if(s.error)throw i=s.error,(a=new Error).name=i.substring(0,i.indexOf(" ")),a.message=i.substring(i.indexOf(" ")+1),a;s.redirect?window.location.href=s.redirect:(s.session&&(document.cookie=s.session),s.viewId==e&&(n({metadata:s,rest:u}),t.socket.removeEventListener("message",o)))};t.socket.addEventListener("message",o),t.socket.addEventListener("error",r)}))]}))}))},e.prototype.disconnect=function(){this.socket.close()},e}();function x(e){var t,n,r,o;return{session:null===(t=e.find((function(e){return"SESSION"==e.key})))||void 0===t?void 0:t.value,redirect:null===(n=e.find((function(e){return"REDIRECT"==e.key})))||void 0===n?void 0:n.value,error:null===(r=e.find((function(e){return"ERROR"==e.key})))||void 0===r?void 0:r.value,viewId:null===(o=e.find((function(e){return"VIEW-ID"==e.key})))||void 0===o?void 0:o.value}}console.log("CONNECTING",window.location);var C=n(296);function O(e){e.querySelectorAll("[data-on-load]").forEach((function(e){var t=parseInt(e.dataset.delay)||0;setTimeout((function(){var t=new Event("hyp-load",{bubbles:!0});e.dispatchEvent(t)}),t)}))}function S(e){if(e){var t=new URLSearchParams;return e.forEach((function(e,n){t.append(n,e)})),t}}function D(e,t,n){var r=function(e,t){var n=new URL(window.location.href);return n.searchParams.append("id",e),n.searchParams.append("action",t),n}(e,t);return{id:e,url:r,form:S(n)}}var T,I=function(e,t,n,r){return new(n||(n=Promise))((function(o,i){function a(e){try{s(r.next(e))}catch(e){i(e)}}function c(e){try{s(r.throw(e))}catch(e){i(e)}}function s(e){var t;e.done?o(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(a,c)}s((r=r.apply(e,t||[])).next())}))},N=function(e,t){var n,r,o,i,a={label:0,sent:function(){if(1&o[0])throw o[1];return o[1]},trys:[],ops:[]};return i={next:c(0),throw:c(1),return:c(2)},"function"==typeof Symbol&&(i[Symbol.iterator]=function(){return this}),i;function c(c){return function(s){return function(c){if(n)throw new TypeError("Generator is already executing.");for(;i&&(i=0,c[0]&&(a=0)),a;)try{if(n=1,r&&(o=2&c[0]?r.return:c[0]?r.throw||((o=r.return)&&o.call(r),0):r.next)&&!(o=o.call(r,c[1])).done)return o;switch(r=0,o&&(c=[2&c[0],o.value]),c[0]){case 0:case 1:o=c;break;case 4:return a.label++,{value:c[1],done:!1};case 5:a.label++,r=c[1],c=[0];continue;case 7:c=a.ops.pop(),a.trys.pop();continue;default:if(!((o=(o=a.trys).length>0&&o[o.length-1])||6!==c[0]&&2!==c[0])){a=0;continue}if(3===c[0]&&(!o||c[1]>o[0]&&c[1]<o[3])){a.label=c[1];break}if(6===c[0]&&a.label<o[1]){a.label=o[1],o=c;break}if(o&&a.label<o[2]){a.label=o[2],a.ops.push(c);break}o[2]&&a.ops.pop(),a.trys.pop();continue}c=t.call(e,a)}catch(e){c=[6,e],r=0}finally{n=o=0}if(5&c[0])throw c[1];return{value:c[0]?c[1]:void 0,done:!0}}([c,s])}}};console.log("Hyperbole 0.4.1a");var L=new Set;function A(e){return I(this,void 0,void 0,(function(){function t(e){return I(this,void 0,void 0,(function(){var t,n,r;return N(this,(function(o){switch(o.label){case 0:return console.log("HTTP sendAction",e.url.toString()),[4,fetch(e.url,{method:"POST",headers:{Accept:"text/html","Content-Type":"application/x-www-form-urlencoded"},body:e.form,redirect:"manual"})];case 1:return(t=o.sent()).headers.get("location")?(console.log("Found Redirect",t.headers.get("location")),window.location.href=t.headers.get("location"),[2]):(console.log("RES",t.headers.get("location")),t.headers.get("location")?(window.location.href=t.headers.get("location"),[2]):t.ok?[3,3]:((n=new Error).name="Fetch Error "+t.status,[4,t.text()]));case 2:throw r=o.sent(),n.message=r,n;case 3:return[2,t.text()]}}))}))}return N(this,(function(n){return R.isConnected?[2,R.sendAction(e)]:[2,t(e)]}))}))}function P(e){return I(this,void 0,void 0,(function(){var t;return N(this,(function(n){switch(n.label){case 0:return n.trys.push([0,2,,3]),[4,A(e)];case 1:return[2,n.sent()];case 2:throw t=n.sent(),document.body.innerHTML=(o=[".hyp-error {background-color:#DB3524; color:white; padding: 10px}",".hyp-details {padding: 10px}"],i="<div class='hyp-error'>".concat((r=t).name,"</div>"),a="<div class='hyp-details'>".concat(r.message,"</div>"),["<style>"+o.join("\n")+"</style>",i,a].join("\n")),t;case 3:return[2]}var r,o,i,a}))}))}function M(e,t,n){return I(this,void 0,void 0,(function(){var r,o,i,a;return N(this,(function(c){switch(c.label){case 0:return r=setTimeout((function(){e.classList.add("hyp-loading")}),200),[4,P(D(e.id,t,n))];case 1:return s=c.sent(),l=(u=(new DOMParser).parseFromString(s,"text/html")).querySelector("style"),(o={content:u.querySelector("div"),css:l}).css&&o.content?(function(e){for(var t=0,n=e.sheet.cssRules;t<n.length;t++){var r=n[t];0==L.has(r.cssText)&&(T.sheet.insertRule(r.cssText),L.add(r.cssText))}}(o.css),i=m(o.content),a=m(e),y(i,a),O(document.getElementById(e.id)),clearTimeout(r),e.classList.remove("hyp-loading"),[2]):(console.error("Empty Response",o),[2])}var s,u,l}))}))}document.addEventListener("DOMContentLoaded",(function(){var e;T=document.querySelector("style"),e=function(e,t){return I(this,void 0,void 0,(function(){return N(this,(function(n){return M(e,t),[2]}))}))},document.addEventListener("hyp-load",(function(t){var n=t.target,r=n.dataset.onLoad,o=document.getElementById(n.dataset.target);o?e(o,r):console.error("Missing load target: ",o)})),O(document.body),document.addEventListener("click",(function(e){var t=e.target.closest("[data-on-click]");if((null==t?void 0:t.dataset.onClick)&&(null==t?void 0:t.dataset.target)){e.preventDefault();var n=document.getElementById(t.dataset.target);if(!n)return void console.error("Missing target: ",t.dataset.target);!function(e,t){I(this,void 0,void 0,(function(){return N(this,(function(n){return console.log("CLICK",e.id,t),M(e,t),[2]}))}))}(n,t.dataset.onClick)}})),document.addEventListener("submit",(function(e){var t=e.target;if((null==t?void 0:t.dataset.onSubmit)&&(null==t?void 0:t.dataset.target)){e.preventDefault();var n=document.getElementById(t.dataset.target);if(!n)return void console.error("Missing target: ",t.dataset.target);var r=new FormData(t);!function(e,t,n){I(this,void 0,void 0,(function(){return N(this,(function(r){return console.log("FORM",e.id,t,n),M(e,t,n),[2]}))}))}(n,t.dataset.onSubmit,r)}})),document.addEventListener("change",(function(e){var t=e.target.closest("[data-on-change]");if((null==t?void 0:t.dataset.target)&&t.value){e.preventDefault();var n=document.getElementById(t.dataset.target);if(!n)return void console.error("Missing target: ",t.dataset.target);!function(e,t){I(this,void 0,void 0,(function(){return N(this,(function(n){return console.log("CHANGE",e.id,t),M(e,t),[2]}))}))}(n,t.value)}})),document.addEventListener("input",(function(e){var t=e.target.closest("[data-on-input]"),n=parseInt(t.dataset.delay)||100;if(n<100&&console.warn("Input delay < 100 can result in poor performance"),(null==t?void 0:t.dataset.onInput)&&(null==t?void 0:t.dataset.target)){e.preventDefault();var r=document.getElementById(t.dataset.target);if(!r)return void console.error("Missing target: ",t.dataset.target);t.debouncedCallback||(t.debouncedCallback=C((function(){return function(e,t,n){return I(this,void 0,void 0,(function(){var r;return N(this,(function(o){return console.log("INPUT",e.id,t,n),r="".concat(t,' "').concat(n.replace(/\\/g,"\\\\").replace(/"/g,'\\"'),'"'),M(e,r),[2]}))}))}(r,t.dataset.onInput,t.value)}),n)),t.debouncedCallback()}}))}));var R=new k;R.connect()})()})();
+/******/ (() => { // webpackBootstrap
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./node_modules/debounce/index.js":
+/*!****************************************!*\
+  !*** ./node_modules/debounce/index.js ***!
+  \****************************************/
+/***/ ((module) => {
+
+function debounce(function_, wait = 100, options = {}) {
+	if (typeof function_ !== 'function') {
+		throw new TypeError(`Expected the first parameter to be a function, got \`${typeof function_}\`.`);
+	}
+
+	if (wait < 0) {
+		throw new RangeError('`wait` must not be negative.');
+	}
+
+	// TODO: Deprecate the boolean parameter at some point.
+	const {immediate} = typeof options === 'boolean' ? {immediate: options} : options;
+
+	let storedContext;
+	let storedArguments;
+	let timeoutId;
+	let timestamp;
+	let result;
+
+	function run() {
+		const callContext = storedContext;
+		const callArguments = storedArguments;
+		storedContext = undefined;
+		storedArguments = undefined;
+		result = function_.apply(callContext, callArguments);
+		return result;
+	}
+
+	function later() {
+		const last = Date.now() - timestamp;
+
+		if (last < wait && last >= 0) {
+			timeoutId = setTimeout(later, wait - last);
+		} else {
+			timeoutId = undefined;
+
+			if (!immediate) {
+				result = run();
+			}
+		}
+	}
+
+	const debounced = function (...arguments_) {
+		if (
+			storedContext
+			&& this !== storedContext
+			&& Object.getPrototypeOf(this) === Object.getPrototypeOf(storedContext)
+		) {
+			throw new Error('Debounced method called with different contexts of the same prototype.');
+		}
+
+		storedContext = this; // eslint-disable-line unicorn/no-this-assignment
+		storedArguments = arguments_;
+		timestamp = Date.now();
+
+		const callNow = immediate && !timeoutId;
+
+		if (!timeoutId) {
+			timeoutId = setTimeout(later, wait);
+		}
+
+		if (callNow) {
+			result = run();
+		}
+
+		return result;
+	};
+
+	Object.defineProperty(debounced, 'isPending', {
+		get() {
+			return timeoutId !== undefined;
+		},
+	});
+
+	debounced.clear = () => {
+		if (!timeoutId) {
+			return;
+		}
+
+		clearTimeout(timeoutId);
+		timeoutId = undefined;
+	};
+
+	debounced.flush = () => {
+		if (!timeoutId) {
+			return;
+		}
+
+		debounced.trigger();
+	};
+
+	debounced.trigger = () => {
+		result = run();
+
+		debounced.clear();
+	};
+
+	return debounced;
+}
+
+// Adds compatibility for ES modules
+module.exports.debounce = debounce;
+
+module.exports = debounce;
+
+
+/***/ }),
+
+/***/ "./src/action.ts":
+/*!***********************!*\
+  !*** ./src/action.ts ***!
+  \***********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   actionMessage: () => (/* binding */ actionMessage),
+/* harmony export */   actionUrl: () => (/* binding */ actionUrl),
+/* harmony export */   toSearch: () => (/* binding */ toSearch)
+/* harmony export */ });
+function actionUrl(id, action) {
+    var url = new URL(window.location.href);
+    url.searchParams.append("id", id);
+    url.searchParams.append("action", action);
+    return url;
+}
+function toSearch(form) {
+    if (!form)
+        return undefined;
+    var params = new URLSearchParams();
+    form.forEach(function (value, key) {
+        params.append(key, value);
+    });
+    return params;
+}
+function actionMessage(id, action, form) {
+    var url = actionUrl(id, action);
+    return { id: id, url: url, form: toSearch(form) };
+}
+
+
+/***/ }),
+
+/***/ "./src/events.ts":
+/*!***********************!*\
+  !*** ./src/events.ts ***!
+  \***********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   listenChange: () => (/* binding */ listenChange),
+/* harmony export */   listenClick: () => (/* binding */ listenClick),
+/* harmony export */   listenFormSubmit: () => (/* binding */ listenFormSubmit),
+/* harmony export */   listenInput: () => (/* binding */ listenInput),
+/* harmony export */   listenLoad: () => (/* binding */ listenLoad),
+/* harmony export */   listenLoadDocument: () => (/* binding */ listenLoadDocument)
+/* harmony export */ });
+/* harmony import */ var debounce__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! debounce */ "./node_modules/debounce/index.js");
+/* harmony import */ var debounce__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(debounce__WEBPACK_IMPORTED_MODULE_0__);
+
+function listenClick(cb) {
+    document.addEventListener("click", function (e) {
+        var el = e.target;
+        // clicks can fire on internal elements. Find the parent with a click handler
+        var source = el.closest("[data-on-click]");
+        // console.log("CLICK", source?.dataset.onClick)
+        // they should all have an action and target
+        if ((source === null || source === void 0 ? void 0 : source.dataset.onClick) && (source === null || source === void 0 ? void 0 : source.dataset.target)) {
+            e.preventDefault();
+            var target = document.getElementById(source.dataset.target);
+            if (!target) {
+                console.error("Missing target: ", source.dataset.target);
+                return;
+            }
+            cb(target, source.dataset.onClick);
+        }
+    });
+}
+function listenLoadDocument(cb) {
+    document.addEventListener("hyp-load", function (e) {
+        var load = e.target;
+        var action = load.dataset.onLoad;
+        var target = document.getElementById(load.dataset.target);
+        if (!target) {
+            console.error("Missing load target: ", target);
+            return;
+        }
+        cb(target, action);
+    });
+}
+function listenLoad(node) {
+    // it doesn't really matter WHO runs this except that it should have target
+    node.querySelectorAll("[data-on-load]").forEach(function (load) {
+        var delay = parseInt(load.dataset.delay) || 0;
+        setTimeout(function () {
+            var event = new Event("hyp-load", { bubbles: true });
+            load.dispatchEvent(event);
+        }, delay);
+    });
+}
+function listenChange(cb) {
+    document.addEventListener("change", function (e) {
+        var el = e.target;
+        // clicks can fire on internal elements. Find the parent with a click handler
+        var source = el.closest("[data-on-change]");
+        // they should all have an action and target
+        if ((source === null || source === void 0 ? void 0 : source.dataset.target) && source.value) {
+            e.preventDefault();
+            var target = document.getElementById(source.dataset.target);
+            if (!target) {
+                console.error("Missing target: ", source.dataset.target);
+                return;
+            }
+            cb(target, source.value);
+        }
+    });
+}
+function listenInput(cb) {
+    document.addEventListener("input", function (e) {
+        var el = e.target;
+        var source = el.closest("[data-on-input]");
+        var delay = parseInt(source.dataset.delay) || 100;
+        if (delay < 100) {
+            console.warn("Input delay < 100 can result in poor performance");
+        }
+        if ((source === null || source === void 0 ? void 0 : source.dataset.onInput) && (source === null || source === void 0 ? void 0 : source.dataset.target)) {
+            e.preventDefault();
+            var target_1 = document.getElementById(source.dataset.target);
+            if (!target_1) {
+                console.error("Missing target: ", source.dataset.target);
+                return;
+            }
+            if (!source.debouncedCallback) {
+                source.debouncedCallback = debounce__WEBPACK_IMPORTED_MODULE_0__(function () { return cb(target_1, source.dataset.onInput, source.value); }, delay);
+            }
+            source.debouncedCallback();
+        }
+    });
+}
+function listenFormSubmit(cb) {
+    document.addEventListener("submit", function (e) {
+        var form = e.target;
+        // they should all have an action and target
+        if ((form === null || form === void 0 ? void 0 : form.dataset.onSubmit) && (form === null || form === void 0 ? void 0 : form.dataset.target)) {
+            e.preventDefault();
+            var target = document.getElementById(form.dataset.target);
+            if (!target) {
+                console.error("Missing target: ", form.dataset.target);
+                return;
+            }
+            var formData = new FormData(form);
+            cb(target, form.dataset.onSubmit, formData);
+        }
+    });
+}
+
+
+/***/ }),
+
+/***/ "./src/lib.ts":
+/*!********************!*\
+  !*** ./src/lib.ts ***!
+  \********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   dropWhile: () => (/* binding */ dropWhile),
+/* harmony export */   takeWhileMap: () => (/* binding */ takeWhileMap)
+/* harmony export */ });
+function takeWhileMap(pred, lines) {
+    var output = [];
+    for (var _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
+        var line = lines_1[_i];
+        var a = pred(line);
+        if (a)
+            output.push(a);
+        else
+            break;
+    }
+    return output;
+}
+function dropWhile(pred, lines) {
+    var index = 0;
+    while (index < lines.length && pred(lines[index])) {
+        index++;
+    }
+    return lines.slice(index);
+}
+
+
+/***/ }),
+
+/***/ "./src/sockets.ts":
+/*!************************!*\
+  !*** ./src/sockets.ts ***!
+  \************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SocketConnection: () => (/* binding */ SocketConnection)
+/* harmony export */ });
+/* harmony import */ var _lib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./lib */ "./src/lib.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+
+var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+var defaultAddress = "".concat(protocol, "//").concat(window.location.host).concat(window.location.pathname);
+var SocketConnection = /** @class */ (function () {
+    function SocketConnection() {
+        this.reconnectDelay = 0;
+    }
+    // we need to faithfully transmit the 
+    SocketConnection.prototype.connect = function (addr) {
+        var _this = this;
+        if (addr === void 0) { addr = defaultAddress; }
+        var sock = new WebSocket(addr);
+        this.socket = sock;
+        function onConnectError(ev) {
+            console.log("Connection Error", ev);
+        }
+        sock.addEventListener('error', onConnectError);
+        sock.addEventListener('open', function (event) {
+            console.log("Opened", event);
+            _this.isConnected = true;
+            _this.hasEverConnected = true;
+            _this.reconnectDelay = 0;
+            _this.socket.removeEventListener('error', onConnectError);
+        });
+        // TODO: Don't reconnet if the socket server is OFF, only if we've successfully connected once
+        sock.addEventListener('close', function (_) {
+            _this.isConnected = false;
+            console.log("Closed");
+            // attempt to reconnect in 1s
+            if (_this.hasEverConnected) {
+                _this.reconnectDelay += 1000;
+                console.log("Reconnecting in " + (_this.reconnectDelay / 1000) + "s");
+                setTimeout(function () { return _this.connect(addr); }, _this.reconnectDelay);
+            }
+        });
+    };
+    SocketConnection.prototype.sendAction = function (action) {
+        return __awaiter(this, void 0, void 0, function () {
+            var msg, _a, metadata, rest;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        msg = [action.url.pathname + action.url.search,
+                            "Host: " + window.location.host,
+                            "Cookie: " + document.cookie,
+                            action.form
+                        ].join("\n");
+                        return [4 /*yield*/, this.fetch(action.id, msg)];
+                    case 1:
+                        _a = _b.sent(), metadata = _a.metadata, rest = _a.rest;
+                        return [2 /*return*/, { rest: rest, metadata: metadata }];
+                }
+            });
+        });
+    };
+    SocketConnection.prototype.fetch = function (id, msg) {
+        return __awaiter(this, void 0, void 0, function () {
+            var res;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        this.sendMessage(msg);
+                        return [4 /*yield*/, this.waitMessage(id)];
+                    case 1:
+                        res = _a.sent();
+                        return [2 /*return*/, res];
+                }
+            });
+        });
+    };
+    SocketConnection.prototype.sendMessage = function (msg) {
+        this.socket.send(msg);
+    };
+    SocketConnection.prototype.waitMessage = function (id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        var onMessage = function (event) {
+                            var data = event.data;
+                            var _a = parseMetadataResponse(data), metadata = _a.metadata, rest = _a.rest;
+                            if (metadata.error) {
+                                throw socketError(metadata.error);
+                            }
+                            if (metadata.redirect) {
+                                window.location.href = metadata.redirect;
+                                return;
+                            }
+                            if (metadata.session) {
+                                // console.log("setting cookie", metadata.session)
+                                document.cookie = metadata.session;
+                            }
+                            if (metadata.viewId != id) {
+                                // console.warn("Mismatched ids, ignoring", metadata.viewId, id)
+                                return;
+                            }
+                            resolve({ metadata: metadata, rest: rest });
+                            // we should only resolve if we have found our message
+                            _this.socket.removeEventListener('message', onMessage);
+                        };
+                        _this.socket.addEventListener('message', onMessage);
+                        _this.socket.addEventListener('error', reject);
+                    })];
+            });
+        });
+    };
+    SocketConnection.prototype.disconnect = function () {
+        this.socket.close();
+    };
+    return SocketConnection;
+}());
+
+function socketError(inp) {
+    var error = new Error();
+    error.name = inp.substring(0, inp.indexOf(' '));
+    error.message = inp.substring(inp.indexOf(' ') + 1);
+    return error;
+}
+console.log("CONNECTING", window.location);
+function parseMetadataResponse(ret) {
+    var lines = ret.split("\n");
+    var metas = (0,_lib__WEBPACK_IMPORTED_MODULE_0__.takeWhileMap)(parseMeta, lines);
+    var rest = (0,_lib__WEBPACK_IMPORTED_MODULE_0__.dropWhile)(parseMeta, lines).join("\n");
+    return {
+        metadata: parseMetas(metas),
+        rest: rest
+    };
+    function parseMeta(line) {
+        var match = line.match(/^\|([A-Z\-]+)\|(.*)$/);
+        if (match) {
+            return {
+                key: match[1],
+                value: match[2]
+            };
+        }
+    }
+}
+function parseMetas(meta) {
+    var _a, _b, _c, _d, _e;
+    return {
+        session: (_a = meta.find(function (m) { return m.key == "SESSION"; })) === null || _a === void 0 ? void 0 : _a.value,
+        redirect: (_b = meta.find(function (m) { return m.key == "REDIRECT"; })) === null || _b === void 0 ? void 0 : _b.value,
+        error: (_c = meta.find(function (m) { return m.key == "ERROR"; })) === null || _c === void 0 ? void 0 : _c.value,
+        viewId: (_d = meta.find(function (m) { return m.key == "VIEW-ID"; })) === null || _d === void 0 ? void 0 : _d.value,
+        triggers: (_e = meta.filter(function (m) { return m.key == "TRIGGER"; })) === null || _e === void 0 ? void 0 : _e.map(parseTrigger)
+    };
+}
+function parseTrigger(meta) {
+    var _a = meta.value.split("|"), view = _a[0], action = _a[1];
+    return { view: view, action: action };
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/omdomdom/lib/omdomdom.es.js":
+/*!**************************************************!*\
+  !*** ./node_modules/omdomdom/lib/omdomdom.es.js ***!
+  \**************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   create: () => (/* binding */ create),
+/* harmony export */   patch: () => (/* binding */ patch),
+/* harmony export */   render: () => (/* binding */ render)
+/* harmony export */ });
+/*!
+  * @license MIT (https://github.com/geotrev/omdomdom/blob/master/LICENSE)
+  * Omdomdom v0.3.2 (https://github.com/geotrev/omdomdom)
+  * Copyright 2023 George Treviranus <geowtrev@gmail.com>
+  */
+var DATA_KEY_ATTRIBUTE$1 = "data-key";
+var hasProperty = function hasProperty(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+};
+var keyIsValid = function keyIsValid(map, key) {
+  if (!key) return false;
+  if (hasProperty(map, key)) {
+    console.warn("[OmDomDom]: Children with duplicate keys detected. Children with duplicate keys will be skipped, resulting in dropped node references. Keys must be unique and non-indexed.");
+    return false;
+  }
+  return true;
+};
+var forEach = function forEach(items, fn) {
+  var length = items.length;
+  var idx = -1;
+  if (!length) return;
+  while (++idx < length) {
+    if (fn(items[idx], idx) === false) break;
+  }
+};
+var createKeyMap = function createKeyMap(children) {
+  var map = {};
+  forEach(children, function (child) {
+    var key = child.attributes[DATA_KEY_ATTRIBUTE$1];
+    if (keyIsValid(map, key)) {
+      map[key] = child;
+    }
+  });
+  for (var _ in map) {
+    return map;
+  }
+};
+var insertBefore = function insertBefore(parent, child, refNode) {
+  return parent.node.insertBefore(child.node, refNode);
+};
+var assignVNode = function assignVNode(template, vNode) {
+  for (var property in template) {
+    vNode[property] = template[property];
+  }
+};
+
+var toHTML = function toHTML(htmlString) {
+  var processedDOMString = htmlString.trim().replace(/\s+</g, "<").replace(/>\s+/g, ">");
+  var parser = new DOMParser();
+  var context = parser.parseFromString(processedDOMString, "text/html");
+  return context.body;
+};
+
+function _iterableToArrayLimit(arr, i) {
+  var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];
+  if (null != _i) {
+    var _s,
+      _e,
+      _x,
+      _r,
+      _arr = [],
+      _n = !0,
+      _d = !1;
+    try {
+      if (_x = (_i = _i.call(arr)).next, 0 === i) {
+        if (Object(_i) !== _i) return;
+        _n = !1;
+      } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);
+    } catch (err) {
+      _d = !0, _e = err;
+    } finally {
+      try {
+        if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;
+      } finally {
+        if (_d) throw _e;
+      }
+    }
+    return _arr;
+  }
+}
+function _slicedToArray(arr, i) {
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+}
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+  return arr2;
+}
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+
+var Types = {
+  STRING: "string",
+  INT: "number",
+  BOOL: "boolean"
+};
+var DomProperties = {};
+var createRecord = function createRecord(attrName, propName, type) {
+  return {
+    attrName: attrName,
+    propName: propName,
+    type: type
+  };
+};
+var stringProps = [["style", "cssText"], ["class", "className"]];
+forEach(stringProps, function (_ref) {
+  var _ref2 = _slicedToArray(_ref, 2),
+    attr = _ref2[0],
+    property = _ref2[1];
+  DomProperties[attr] = createRecord(attr, property || attr, Types.STRING);
+});
+var booleanProps = ["autofocus", "draggable", "hidden", "checked", "multiple", "muted", "selected"];
+forEach(booleanProps, function (attr) {
+  DomProperties[attr] = createRecord(attr, attr, Types.BOOL);
+});
+var integerProps = [["tabindex", "tabIndex"]];
+forEach(integerProps, function (_ref3) {
+  var _ref4 = _slicedToArray(_ref3, 2),
+    attr = _ref4[0],
+    property = _ref4[1];
+  DomProperties[attr] = createRecord(attr, property, Types.INT);
+});
+var Namespace = {
+  xlink: {
+    prefix: "xlink:",
+    resource: "http://www.w3.org/1999/xlink"
+  },
+  xml: {
+    prefix: "xml:",
+    resource: "http://www.w3.org/XML/1998/namespace"
+  }
+};
+
+var setProperty = function setProperty(element, type, prop, value) {
+  switch (type) {
+    case Types.STRING:
+      {
+        if (prop === DomProperties.style.propName) {
+          if (value === null) {
+            element.style[prop] = "";
+          } else {
+            element.style[prop] = value;
+          }
+        } else if (value === null) {
+          element[prop] = "";
+        } else {
+          element[prop] = value;
+        }
+        break;
+      }
+    case Types.INT:
+      {
+        if (value === null) {
+          var attr = prop.toLowerCase();
+          element.removeAttribute(attr);
+        } else if (value === "0") {
+          element[prop] = 0;
+        } else if (value === "-1") {
+          element[prop] = -1;
+        } else {
+          var parsed = parseInt(value, 10);
+          if (!isNaN(parsed)) {
+            element[prop] = parsed;
+          }
+        }
+        break;
+      }
+    case Types.BOOL:
+      {
+        if (["", "true"].indexOf(value) < 0) {
+          element[prop] = false;
+        } else {
+          element[prop] = true;
+        }
+        break;
+      }
+  }
+};
+
+var removeAttributes = function removeAttributes(vNode, attributes) {
+  forEach(attributes, function (attrName) {
+    if (hasProperty(DomProperties, attrName)) {
+      var propertyRecord = DomProperties[attrName];
+      setProperty(vNode.node, propertyRecord.type, propertyRecord.propName, null);
+    } else {
+      if (attrName in vNode.node) {
+        setProperty(vNode.node, Types.STRING, attrName, null);
+      }
+      vNode.node.removeAttribute(attrName);
+    }
+    delete vNode.attributes[attrName];
+  });
+};
+var setAttributes = function setAttributes(vNode, attributes) {
+  for (var attrName in attributes) {
+    var value = attributes[attrName];
+    vNode.attributes[attrName] = value;
+    if (hasProperty(DomProperties, attrName)) {
+      var propertyRecord = DomProperties[attrName];
+      setProperty(vNode.node, propertyRecord.type, propertyRecord.propName, value);
+      continue;
+    }
+    if (attrName.startsWith(Namespace.xlink.prefix)) {
+      vNode.node.setAttributeNS(Namespace.xlink.resource, attrName, value);
+      continue;
+    }
+    if (attrName.startsWith(Namespace.xml.prefix)) {
+      vNode.node.setAttributeNS(Namespace.xml.resource, attrName, value);
+      continue;
+    }
+    if (attrName in vNode.node) {
+      setProperty(vNode.node, Types.STRING, attrName, value);
+    }
+    vNode.node.setAttribute(attrName, value || "");
+  }
+};
+var getPropertyValues = function getPropertyValues(element, attributes) {
+  for (var attrName in DomProperties) {
+    var propertyRecord = DomProperties[attrName];
+    var propName = propertyRecord.propName;
+    var attrValue = element.getAttribute(attrName);
+    if (attrName === DomProperties.style.attrName) {
+      attributes[attrName] = element.style[propName];
+    } else if (typeof attrValue === "string") {
+      attributes[attrName] = attrValue;
+    }
+  }
+};
+var getBaseAttributes = function getBaseAttributes(element) {
+  return Array.prototype.reduce.call(element.attributes, function (attributes, attrName) {
+    if (!hasProperty(DomProperties, attrName.name)) {
+      attributes[attrName.name] = attrName.value;
+    }
+    return attributes;
+  }, {});
+};
+var getAttributes = function getAttributes(element) {
+  var attributes = getBaseAttributes(element);
+  getPropertyValues(element, attributes);
+  return attributes;
+};
+var updateAttributes = function updateAttributes(template, vNode) {
+  var removedAttributes = [];
+  var changedAttributes = {};
+  for (var attrName in vNode.attributes) {
+    var oldValue = vNode.attributes[attrName];
+    var nextValue = template.attributes[attrName];
+    if (oldValue === nextValue) continue;
+    if (typeof nextValue === "undefined") {
+      removedAttributes.push(attrName);
+    }
+  }
+  for (var _attrName in template.attributes) {
+    var _oldValue = vNode.attributes[_attrName];
+    var _nextValue = template.attributes[_attrName];
+    if (_oldValue === _nextValue) continue;
+    if (typeof _nextValue !== "undefined") {
+      changedAttributes[_attrName] = _nextValue;
+    }
+  }
+  removeAttributes(vNode, removedAttributes);
+  setAttributes(vNode, changedAttributes);
+};
+
+var DATA_KEY_ATTRIBUTE = "data-key";
+function patchChildren(template, vNode, patch) {
+  var templateChildrenLength = template.children.length;
+  var vNodeChildrenLength = vNode.children.length;
+  if (!templateChildrenLength && !vNodeChildrenLength) return;
+  var vNodeKeyMap = createKeyMap(vNode.children);
+  var nextChildren = Array(templateChildrenLength);
+  if (vNodeKeyMap !== undefined) {
+    forEach(template.children, function (templateChild, idx) {
+      var childNodes = vNode.node.childNodes;
+      var key = templateChild.attributes[DATA_KEY_ATTRIBUTE];
+      if (Object.prototype.hasOwnProperty.call(vNodeKeyMap, key)) {
+        var keyedChild = vNodeKeyMap[key];
+        if (Array.prototype.indexOf.call(childNodes, keyedChild.node) !== idx) {
+          insertBefore(vNode, keyedChild, childNodes[idx]);
+        }
+        nextChildren[idx] = keyedChild;
+        delete vNodeKeyMap[key];
+        patch(templateChild, nextChildren[idx]);
+      } else {
+        insertBefore(vNode, templateChild, childNodes[idx]);
+        nextChildren[idx] = templateChild;
+      }
+    });
+  } else {
+    forEach(template.children, function (templateChild, idx) {
+      var vNodeChild = vNode.children[idx];
+      if (typeof vNodeChild !== "undefined") {
+        patch(templateChild, vNodeChild);
+        nextChildren[idx] = vNodeChild;
+      } else {
+        vNode.node.appendChild(templateChild.node);
+        nextChildren[idx] = templateChild;
+      }
+    });
+  }
+  vNode.children = nextChildren;
+  var childNodesLength = vNode.node.childNodes.length;
+  var delta = childNodesLength - templateChildrenLength;
+  if (delta > 0) {
+    while (delta > 0) {
+      vNode.node.removeChild(vNode.node.childNodes[childNodesLength - 1]);
+      childNodesLength--;
+      delta--;
+    }
+  }
+}
+
+var patch = function patch(template, vNode, rootNode) {
+  if (!template || !vNode) return;
+  rootNode = rootNode || vNode.node.parentNode;
+  var contentChanged = template.content && template.content !== vNode.content;
+  if (template.type !== vNode.type || contentChanged) {
+    rootNode.replaceChild(template.node, vNode.node);
+    return assignVNode(template, vNode);
+  }
+  updateAttributes(template, vNode);
+  patchChildren(template, vNode, patch);
+};
+var render = function render(vNode, root) {
+  root.appendChild(vNode.node);
+};
+var create = function create(node) {
+  var isSVGContext = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  if (typeof node === "string") {
+    node = toHTML(node);
+  }
+  var isRoot = node.tagName === "BODY";
+  var childNodes = node.childNodes;
+  var numChildNodes = childNodes ? childNodes.length : 0;
+  if (isRoot) {
+    if (numChildNodes > 1) {
+      throw new Error("[OmDomDom]: Your element should not have more than one root node.");
+    } else if (numChildNodes === 0) {
+      throw new Error("[OmDomDom]: Your element should have at least one root node.");
+    } else {
+      return create(childNodes[0]);
+    }
+  }
+  var type = node.nodeType === 3 ? "text" : node.nodeType === 8 ? "comment" : node.tagName.toLowerCase();
+  var isSVG = isSVGContext || type === "svg";
+  var attributes = node.nodeType === 1 ? getAttributes(node) : {};
+  var content = numChildNodes > 0 ? null : node.textContent;
+  var children = Array(numChildNodes);
+  forEach(childNodes, function (child, idx) {
+    children[idx] = create(child, isSVG);
+  });
+  return {
+    type: type,
+    attributes: attributes,
+    children: children,
+    content: content,
+    node: node,
+    isSVGContext: isSVG
+  };
+};
+
+
+//# sourceMappingURL=omdomdom.es.js.map
+
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+/*!**********************!*\
+  !*** ./src/index.ts ***!
+  \**********************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var omdomdom_lib_omdomdom_es_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! omdomdom/lib/omdomdom.es.js */ "./node_modules/omdomdom/lib/omdomdom.es.js");
+/* harmony import */ var _sockets__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./sockets */ "./src/sockets.ts");
+/* harmony import */ var _events__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./events */ "./src/events.ts");
+/* harmony import */ var _action__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./action */ "./src/action.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+
+
+
+
+// import { listenEvents } from './events';
+// import { WEBSOCKET_ADDRESS, Messages } from './Messages'
+// import { INIT_PAGE, INIT_STATE, State, Class } from './types';
+// import { fromVDOM, VDOM } from './vdom'
+// const CONTENT_ID = "yeti-root-content"
+// console.log("VERSION 2", INIT_PAGE, INIT_STATE)
+console.log("Hyperbole 0.4.1a");
+var rootStyles;
+var addedRulesIndex = new Set();
+function sendAction(msg) {
+    return __awaiter(this, void 0, void 0, function () {
+        function sendActionHttp(msg) {
+            return __awaiter(this, void 0, void 0, function () {
+                var res, error, body;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            console.log("HTTP sendAction", msg.url.toString());
+                            return [4 /*yield*/, fetch(msg.url, {
+                                    method: "POST",
+                                    headers: { 'Accept': 'text/html', 'Content-Type': 'application/x-www-form-urlencoded' },
+                                    body: msg.form,
+                                    // we never want this to be redirected
+                                    redirect: "manual"
+                                })];
+                        case 1:
+                            res = _a.sent();
+                            if (res.headers.get('location')) {
+                                // manual redirect with status 200
+                                console.log("Found Redirect", res.headers.get('location'));
+                                window.location.href = res.headers.get('location');
+                                return [2 /*return*/];
+                            }
+                            console.log("RES", res.headers.get("location"));
+                            if (res.headers.get("location")) {
+                                window.location.href = res.headers.get("location");
+                                return [2 /*return*/];
+                            }
+                            if (!!res.ok) return [3 /*break*/, 3];
+                            error = new Error();
+                            error.name = "Fetch Error " + res.status;
+                            return [4 /*yield*/, res.text()];
+                        case 2:
+                            body = _a.sent();
+                            error.message = body;
+                            throw error;
+                        case 3: return [2 /*return*/, res.text()];
+                    }
+                });
+            });
+        }
+        return __generator(this, function (_a) {
+            if (sock.isConnected) {
+                return [2 /*return*/, sock.sendAction(msg)];
+            }
+            else {
+                return [2 /*return*/, sendActionHttp(msg)];
+            }
+            return [2 /*return*/];
+        });
+    });
+}
+function fetchAction(msg) {
+    return __awaiter(this, void 0, void 0, function () {
+        var ret, err_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, sendAction(msg)];
+                case 1:
+                    ret = _a.sent();
+                    return [2 /*return*/, ret];
+                case 2:
+                    err_1 = _a.sent();
+                    // handle error here
+                    document.body.innerHTML = errorHTML(err_1);
+                    throw err_1;
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+}
+function runAction(target, action, form) {
+    return __awaiter(this, void 0, void 0, function () {
+        var timeout, msg, ret, res, next, old, newTarget;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    timeout = setTimeout(function () {
+                        // add loading after 200ms, not right away
+                        target.classList.add("hyp-loading");
+                    }, 200);
+                    msg = (0,_action__WEBPACK_IMPORTED_MODULE_3__.actionMessage)(target.id, action, form);
+                    return [4 /*yield*/, fetchAction(msg)];
+                case 1:
+                    ret = _a.sent();
+                    res = parseResponse(ret);
+                    if (!res.css || !res.content) {
+                        console.error("Empty Response", res);
+                        return [2 /*return*/];
+                    }
+                    // First, update the stylesheet
+                    addCSS(res.css);
+                    next = (0,omdomdom_lib_omdomdom_es_js__WEBPACK_IMPORTED_MODULE_0__.create)(res.content);
+                    old = (0,omdomdom_lib_omdomdom_es_js__WEBPACK_IMPORTED_MODULE_0__.create)(target);
+                    (0,omdomdom_lib_omdomdom_es_js__WEBPACK_IMPORTED_MODULE_0__.patch)(next, old);
+                    newTarget = document.getElementById(target.id);
+                    // let event = new Event("content", {bubbles:true})
+                    // newTarget.dispatchEvent(event)
+                    // load doesn't bubble
+                    (0,_events__WEBPACK_IMPORTED_MODULE_2__.listenLoad)(newTarget);
+                    // Remove loading and clear add timeout
+                    clearTimeout(timeout);
+                    target.classList.remove("hyp-loading");
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+function addCSS(src) {
+    var rules = src.sheet.cssRules;
+    for (var _i = 0, rules_1 = rules; _i < rules_1.length; _i++) {
+        var rule = rules_1[_i];
+        if (addedRulesIndex.has(rule.cssText) == false) {
+            rootStyles.sheet.insertRule(rule.cssText);
+            addedRulesIndex.add(rule.cssText);
+        }
+    }
+}
+function parseResponse(vw) {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(vw, 'text/html');
+    var css = doc.querySelector("style");
+    var content = doc.querySelector("div");
+    return {
+        content: content,
+        css: css
+    };
+}
+function init() {
+    rootStyles = document.querySelector('style');
+    (0,_events__WEBPACK_IMPORTED_MODULE_2__.listenLoadDocument)(function (target, action) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                // console.log("INIT LOAD", target.id, action)
+                runAction(target, action);
+                return [2 /*return*/];
+            });
+        });
+    });
+    (0,_events__WEBPACK_IMPORTED_MODULE_2__.listenLoad)(document.body);
+    (0,_events__WEBPACK_IMPORTED_MODULE_2__.listenClick)(function (target, action) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                console.log("CLICK", target.id, action);
+                runAction(target, action);
+                return [2 /*return*/];
+            });
+        });
+    });
+    (0,_events__WEBPACK_IMPORTED_MODULE_2__.listenFormSubmit)(function (target, action, form) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                console.log("FORM", target.id, action, form);
+                runAction(target, action, form);
+                return [2 /*return*/];
+            });
+        });
+    });
+    (0,_events__WEBPACK_IMPORTED_MODULE_2__.listenChange)(function (target, action) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                console.log("CHANGE", target.id, action);
+                runAction(target, action);
+                return [2 /*return*/];
+            });
+        });
+    });
+    // WARNING: security flaw, unescaped output. no closing quotes allowed?
+    (0,_events__WEBPACK_IMPORTED_MODULE_2__.listenInput)(function (target, actionConstructor, term) {
+        return __awaiter(this, void 0, void 0, function () {
+            var action;
+            return __generator(this, function (_a) {
+                console.log("INPUT", target.id, actionConstructor, term);
+                action = "".concat(actionConstructor, " \"").concat(sanitizeInput(term), "\"");
+                runAction(target, action);
+                return [2 /*return*/];
+            });
+        });
+    });
+}
+function sanitizeInput(input) {
+    return input.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+document.addEventListener("DOMContentLoaded", init);
+// Should we connect to the socket or not?
+var sock = new _sockets__WEBPACK_IMPORTED_MODULE_1__.SocketConnection();
+sock.connect();
+// no it should take over the whole page...
+function errorHTML(error) {
+    // TODO: match on error.name and handle it differently
+    var style = [
+        ".hyp-error {background-color:#DB3524; color:white; padding: 10px}",
+        ".hyp-details {padding: 10px}"
+    ];
+    var content = "<div class='hyp-error'>".concat(error.name, "</div>");
+    var details = "<div class='hyp-details'>".concat(error.message, "</div>");
+    return ["<style>" + style.join("\n") + "</style>", content, details].join("\n");
+}
+
+})();
+
+/******/ })()
+;
 //# sourceMappingURL=hyperbole.js.map

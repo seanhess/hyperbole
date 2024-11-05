@@ -59,7 +59,7 @@ export class SocketConnection {
     let {metadata, rest} = await this.fetch(action.id, msg)
 
 
-    return rest
+    return {rest, metadata}
   }
 
   async fetch(id:ViewId, msg:string):Promise<SocketResponse> {
@@ -137,9 +137,11 @@ type Metadata = {
   session?: string
   redirect?: string
   error?: string
+  triggers: Trigger[]
 }
 
 type Meta = {key: string, value: string}
+type Trigger = {view: ViewId, action: string}
 
 
 function parseMetadataResponse(ret:string):SocketResponse {
@@ -168,6 +170,12 @@ function parseMetas(meta:Meta[]):Metadata {
     session: meta.find(m => m.key == "SESSION")?.value,
     redirect: meta.find(m => m.key == "REDIRECT")?.value,
     error: meta.find(m => m.key == "ERROR")?.value,
-    viewId: meta.find(m => m.key == "VIEW-ID")?.value
+    viewId: meta.find(m => m.key == "VIEW-ID")?.value,
+    triggers: meta.filter(m => m.key == "TRIGGER")?.map(parseTrigger)
   }
+}
+
+function parseTrigger(meta:Meta):Trigger {
+    let [view, action] = meta.value.split("|")
+    return {view, action}
 }

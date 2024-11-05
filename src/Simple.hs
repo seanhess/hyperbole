@@ -8,9 +8,9 @@ module Simple where
 
 import Data.Text (pack)
 import Effectful
-import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
 import Web.Hyperbole
+import Web.Hyperbole.Handler
 
 
 main = do
