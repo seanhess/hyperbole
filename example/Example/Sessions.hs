@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Example.Sessions where
 
 import Data.Maybe (fromMaybe)
@@ -10,9 +12,9 @@ import Web.Hyperbole
 
 
 -- this is already running in a different context
-page :: (Hyperbole :> es, Debug :> es) => Page es Contents
+page :: (Hyperbole :> es, Debug :> es) => Page es '[Contents]
 page = do
-  handle content $ do
+  load $ do
     -- setSession "color" Warning
     -- setSession "msg" ("________" :: Text)
     (clr :: Maybe AppColor) <- session "color"
@@ -35,17 +37,15 @@ data ContentsAction
 
 instance HyperView Contents where
   type Action Contents = ContentsAction
-
-
-content :: (Hyperbole :> es, Debug :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
-content _ (SaveColor clr) = do
-  setSession "color" clr
-  msg <- session "msg"
-  pure $ viewContent (Just clr) msg
-content _ (SaveMessage msg) = do
-  setSession "msg" msg
-  clr <- session "color"
-  pure $ viewContent clr (Just msg)
+instance (Debug :> es) => Handle Contents es where
+  handle _ (SaveColor clr) = do
+    setSession "color" clr
+    msg <- session "msg"
+    pure $ viewContent (Just clr) msg
+  handle _ (SaveMessage msg) = do
+    setSession "msg" msg
+    clr <- session "color"
+    pure $ viewContent clr (Just msg)
 
 
 viewContent :: Maybe AppColor -> Maybe Text -> View Contents ()

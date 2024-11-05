@@ -1,11 +1,11 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Web.Hyperbole.Handler
-  ( Page (..)
+  ( Page
   , page
   , load
   , Hyperbole (..)
-  , Handler (..)
+  , Handle (..)
   , Handlers (..)
   )
 where
@@ -24,7 +24,7 @@ import Web.View
 --   type Handlers (es :: [Effect]) views :: Type
 --   runHandlers :: (Hyperbole :> es) => Handlers es views -> Eff es ()
 
-class (HyperView view) => Handler view es where
+class (HyperView view) => Handle view es where
   handle :: (Hyperbole :> es) => view -> Action view -> Eff es (View view ())
 
 
@@ -36,7 +36,7 @@ instance Handlers '[] es where
   runHandlers = pure ()
 
 
-instance (HyperView view, Handler view es, Handlers views es) => Handlers (view : views) es where
+instance (HyperView view, Handle view es, Handlers views es) => Handlers (view : views) es where
   runHandlers = do
     runHandler @view (handle @view)
     runHandlers @views

@@ -1,3 +1,6 @@
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Example.Contacts where
 
 import Control.Monad (forM_)
@@ -16,9 +19,9 @@ import Web.Hyperbole
 page
   :: forall es
    . (Hyperbole :> es, Users :> es, Debug :> es)
-  => Page es (Contacts, Contact)
+  => Page es '[Contacts, Contact]
 page = do
-  handle (contacts, contact) $ do
+  load $ do
     us <- usersAll
     pure $ do
       col (pad 10 . gap 10) $ do
@@ -47,22 +50,21 @@ data Filter
 instance HyperView Contacts where
   type Action Contacts = ContactsAction
   type Require Contacts = '[Contact]
-
-
-contacts :: (Hyperbole :> es, Users :> es, Debug :> es) => Contacts -> ContactsAction -> Eff es (View Contacts ())
-contacts _ (Reload mf) = do
-  us <- usersAll
-  pure $ allContactsView mf us
-contacts _ (Delete uid) = do
-  userDelete uid
-  us <- usersAll
-  pure $ allContactsView Nothing us
-contacts _ AddUser = do
-  uid <- usersNextId
-  u <- parseUser uid
-  userSave u
-  us <- usersAll
-  pure $ allContactsView Nothing us
+instance (Users :> es, Debug :> es) => Handle Contacts es where
+  handle _ = \case
+    Reload mf -> do
+      us <- usersAll
+      pure $ allContactsView mf us
+    Delete uid -> do
+      userDelete uid
+      us <- usersAll
+      pure $ allContactsView Nothing us
+    AddUser -> do
+      uid <- usersNextId
+      u <- parseUser uid
+      userSave u
+      us <- usersAll
+      pure $ allContactsView Nothing us
 
 
 -- TODO: get the form to close when submitted
@@ -111,6 +113,20 @@ data ContactAction
 
 instance HyperView Contact where
   type Action Contact = ContactAction
+instance (Users :> es, Debug :> es) => Handle Contact es where
+  handle (Contact uid) action = do
+    -- Lookup the user in the database for all actions
+    u <- userFind uid
+    case action of
+      View -> do
+        pure $ contactView u
+      Edit -> do
+        pure $ contactEdit u
+      Save -> do
+        delay 1000
+        unew <- parseUser uid
+        userSave unew
+        pure $ contactView unew
 
 
 data ContactForm f = ContactForm
@@ -129,23 +145,6 @@ contactFromUser u =
     , lastName = Just u.lastName
     , age = Just u.age
     }
-
-
-contact :: (Hyperbole :> es, Users :> es, Debug :> es) => Contact -> ContactAction -> Eff es (View Contact ())
-contact (Contact uid) a = do
-  -- Lookup the user in the database for all actions
-  u <- userFind uid
-  action u a
- where
-  action u View = do
-    pure $ contactView u
-  action u Edit = do
-    pure $ contactEdit u
-  action _ Save = do
-    delay 1000
-    unew <- parseUser uid
-    userSave unew
-    pure $ contactView unew
 
 
 parseUser :: (Hyperbole :> es) => Int -> Eff es User

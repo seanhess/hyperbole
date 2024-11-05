@@ -10,17 +10,8 @@ import Example.Style as Style
 import Web.Hyperbole as Hyperbole
 
 
-main = do
-  count <- runEff $ runConcurrent initCounter
-  run 3000 $ do
-    liveApp (basicDocument "Example") (runReader count $ Hyperbole.page myPage)
-
-
--- We are using a TVar to manage our state
--- In normal web applications, state will be managed in a database, abstracted behind a custom Effect. See Example.Effects.Users for the interface
--- Optionally, the count could be stored in a session. See Example.Sessions
-myPage :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es '[Counter]
-myPage = load $ do
+page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es '[Counter]
+page = load $ do
   var <- ask
   n <- readTVarIO var
   pure $ col (pad 20 . gap 10) $ do
@@ -40,7 +31,7 @@ data Count
 
 instance HyperView Counter where
   type Action Counter = Count
-instance (Reader (TVar Int) :> es, Concurrent :> es) => Handler Counter es where
+instance (Reader (TVar Int) :> es, Concurrent :> es) => Handle Counter es where
   handle _ Increment = do
     n <- modify $ \n -> n + 1
     pure $ viewCount n

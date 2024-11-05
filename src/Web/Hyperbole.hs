@@ -82,7 +82,7 @@ module Web.Hyperbole
   , InputType (..)
 
     -- ** Handlers
-  , Handler (..)
+  , Handle (..)
   , Page
   , load
 

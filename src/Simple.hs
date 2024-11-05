@@ -9,7 +9,6 @@ module Simple where
 import Data.Text (pack)
 import Effectful
 import Web.Hyperbole
-import Web.Hyperbole.Handler
 
 
 main = do
@@ -57,7 +56,7 @@ data FloopA = FloopA
 
 instance HyperView Floop where
   type Action Floop = FloopA
-instance Handler Floop es where
+instance Handle Floop es where
   handle _ _ = pure none
 
 
@@ -77,7 +76,7 @@ data MainAction
 instance HyperView MainView where
   type Action MainView = MainAction
   type Require MainView = '[Status]
-instance Handler MainView es where
+instance Handle MainView es where
   handle _ = \case
     GoBegin -> pure beginStep
     GoMid -> pure middleStep
@@ -116,7 +115,7 @@ data CheckStatus
 
 instance HyperView Status where
   type Action Status = CheckStatus
-instance Handler Status es where
+instance Handle Status es where
   handle _ = \case
     CheckStatus n ->
       if n >= 5

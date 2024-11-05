@@ -15,7 +15,7 @@ import Data.Text.Lazy.Encoding qualified as L
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Dispatch.Dynamic
-import Effectful.Reader.Static
+import Effectful.Reader.Dynamic
 import Effectful.State.Static.Local
 import Example.Concurrent qualified as Concurrent
 import Example.Contacts qualified as Contacts
@@ -93,7 +93,7 @@ app users count = do
   router (Hello h) = page $ hello h
   router Simple = page Simple.simplePage
   router Contacts = page Contacts.page
-  router Counter = page $ Counter.page count
+  router Counter = runReader count $ page Counter.page
   router Transitions = page Transitions.page
   router Forms = page Forms.page
   router Sessions = page Sessions.page
@@ -130,10 +130,10 @@ app users count = do
   lnk = Style.link
 
   -- Nested Router
-  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es ()
-  hello Redirected = handle () $ do
+  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es '[]
+  hello Redirected = load $ do
     pure $ el_ "You were redirected"
-  hello (Greet s) = handle () $ do
+  hello (Greet s) = load $ do
     r <- request
     pure $ col (gap 10 . pad 10) $ do
       el_ $ do
