@@ -2,8 +2,7 @@
 
 module Web.Hyperbole.Handler
   ( Page
-  , page
-  , load
+  , runPage
   , Hyperbole (..)
   , Handle (..)
   , Handlers (..)
@@ -24,7 +23,7 @@ import Web.View
 --   type Handlers (es :: [Effect]) views :: Type
 --   runHandlers :: (Hyperbole :> es) => Handlers es views -> Eff es ()
 
-class (HyperView view) => Handle view es where
+class Handle view es where
   handle :: (Hyperbole :> es) => view -> Action view -> Eff es (View view ())
 
 
@@ -139,16 +138,18 @@ pageView = do
   'hyper' (Message 1) $ messageView "Starting Message"
 @
 -}
-type Page (es :: [Effect]) (views :: [Type]) = Eff es (View (Root views) ())
+
+-- type Page (es :: [Effect]) (views :: [Type]) = Eff es (View (Root views) ())
+type Page (views :: [Type]) = View (Root views) ()
 
 
 -- | Run a 'Page' in 'Hyperbole'
-page
+runPage
   :: forall views es
    . (Hyperbole :> es, Handlers views es)
-  => Page es views
+  => Eff es (Page views)
   -> Eff es Response
-page loadPage = do
+runPage loadPage = do
   runHandlers @views
   guardNoEvent
   loadToResponse loadPage
@@ -161,6 +162,5 @@ loadToResponse run = do
   let res = Response vid $ addContext Root vw
   pure res
 
-
-load :: (Hyperbole :> es, Handlers views es) => Eff es (View (Root views) ()) -> Page es views
-load runLoad = runLoad
+-- pageView :: (Hyperbole :> es, Handlers views es) => View (Root views) () -> Eff es (Page views)
+-- pageView = pure

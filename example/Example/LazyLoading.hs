@@ -9,13 +9,12 @@ import Web.Hyperbole
 
 
 -- this is already running in a different context
-page :: (Hyperbole :> es, Debug :> es) => Page es '[Contents]
+page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
 page = do
-  load $ do
-    pure $ do
-      row (pad 20) $ do
-        col (gap 10 . border 1 . pad 20) $ do
-          hyper Contents viewInit
+  pure $ do
+    row (pad 20) $ do
+      col (gap 10 . border 1 . pad 20) $ do
+        hyper Contents viewInit
 
 
 data Contents = Contents

@@ -8,13 +8,12 @@ import Example.Effects.Debug
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es '[Contents]
+page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Eff es (Page '[Contents])
 page = do
-  load $ do
-    pure $ do
-      col (pad 20) $ do
-        hyper (Contents 50) $ viewPoll 1
-        hyper (Contents 1000) $ viewPoll 100
+  pure $ do
+    col (pad 20) $ do
+      hyper (Contents 50) $ viewPoll 1
+      hyper (Contents 1000) $ viewPoll 100
 
 
 data Contents = Contents Milliseconds

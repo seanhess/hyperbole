@@ -7,12 +7,11 @@ import Web.Hyperbole
 import Prelude hiding (even, odd)
 
 
-page :: (Hyperbole :> es) => Page es '[LiveSearch]
+page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])
 page = do
-  load $ do
-    pure $ col (pad 20) $ do
-      el bold "Filter Programming Languages"
-      hyper LiveSearch $ liveSearchView allLanguages Nothing
+  pure $ col (pad 20) $ do
+    el bold "Filter Programming Languages"
+    hyper LiveSearch $ liveSearchView allLanguages Nothing
 
 
 data LiveSearch = LiveSearch

@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Example.Forms where
 
 import Data.Text (Text, pack)
@@ -9,11 +7,10 @@ import Example.Style qualified as Style
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Page es '[FormView]
+page :: (Hyperbole :> es) => Eff es (Page '[FormView])
 page = do
-  load $ do
-    pure $ row (pad 20) $ do
-      hyper FormView (formView genForm)
+  pure $ row (pad 20) $ do
+    hyper FormView (formView genForm)
 
 
 data FormView = FormView

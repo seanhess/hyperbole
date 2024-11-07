@@ -12,17 +12,16 @@ import Web.Hyperbole
 
 
 -- this is already running in a different context
-page :: (Hyperbole :> es, Debug :> es) => Page es '[Contents]
+page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
 page = do
-  load $ do
-    -- setSession "color" Warning
-    -- setSession "msg" ("________" :: Text)
-    (clr :: Maybe AppColor) <- session "color"
-    (msg :: Maybe Text) <- session "msg"
-    pure $ col (pad 20 . gap 10) $ do
-      el_ "Reload your browser after changing the settings below to see the session information preserved"
-      row id $ do
-        hyper Contents $ viewContent clr msg
+  -- setSession "color" Warning
+  -- setSession "msg" ("________" :: Text)
+  (clr :: Maybe AppColor) <- session "color"
+  (msg :: Maybe Text) <- session "msg"
+  pure $ col (pad 20 . gap 10) $ do
+    el_ "Reload your browser after changing the settings below to see the session information preserved"
+    row id $ do
+      hyper Contents $ viewContent clr msg
 
 
 data Contents = Contents

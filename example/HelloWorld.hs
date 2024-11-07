@@ -7,15 +7,14 @@ import Web.Hyperbole
 main :: IO ()
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Example") (page messagePage')
+    liveApp (basicDocument "Example") (runPage messagePage')
 
 
-messagePage :: (Hyperbole :> es) => Page es '[]
+messagePage :: (Hyperbole :> es) => Eff es (Page '[])
 messagePage = do
-  load $ do
-    pure $ do
-      el bold "Message Page"
-      messageView "Hello World"
+  pure $ do
+    el bold "Message Page"
+    messageView "Hello World"
 
 
 messageView :: Text -> View c ()
@@ -47,9 +46,8 @@ messageView' m = do
   button (SetMessage "Goodbye World") id "Change Message"
 
 
-messagePage' :: (Hyperbole :> es) => Page es '[Message]
+messagePage' :: (Hyperbole :> es) => Eff es (Page '[Message])
 messagePage' = do
-  load $ do
-    pure $ do
-      el bold "Message Page"
-      hyper Message $ messageView' "Hello World"
+  pure $ do
+    el bold "Message Page"
+    hyper Message $ messageView' "Hello World"

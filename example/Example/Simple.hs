@@ -11,16 +11,15 @@ import Web.Hyperbole
 
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Example") (page simplePage)
+    liveApp (basicDocument "Example") (runPage simplePage)
 
 
-simplePage :: (Hyperbole :> es) => Page es '[Message]
+simplePage :: (Hyperbole :> es) => Eff es (Page '[Message])
 simplePage = do
-  load $ do
-    pure $ col (pad 20) $ do
-      el bold "My Page"
-      hyper (Message 1) $ messageView "Hello"
-      hyper (Message 2) $ messageView "World!"
+  pure $ col (pad 20) $ do
+    el bold "My Page"
+    hyper (Message 1) $ messageView "Hello"
+    hyper (Message 2) $ messageView "World!"
 
 
 data Message = Message Int

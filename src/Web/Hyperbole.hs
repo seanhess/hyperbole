@@ -27,7 +27,7 @@ module Web.Hyperbole
     -- * Run an Application
     liveApp
   , Warp.run
-  , page
+  , runPage
   , basicDocument
 
     -- ** Type-Safe Routes
@@ -84,7 +84,6 @@ module Web.Hyperbole
     -- ** Handlers
   , Handle (..)
   , Page
-  , load
 
     -- ** Validation
   , Validated (..)

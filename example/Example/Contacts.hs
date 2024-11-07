@@ -19,13 +19,12 @@ import Web.Hyperbole
 page
   :: forall es
    . (Hyperbole :> es, Users :> es, Debug :> es)
-  => Page es '[Contacts, Contact]
+  => Eff es (Page '[Contacts, Contact])
 page = do
-  load $ do
-    us <- usersAll
-    pure $ do
-      col (pad 10 . gap 10) $ do
-        hyper Contacts $ allContactsView Nothing us
+  us <- usersAll
+  pure $ do
+    col (pad 10 . gap 10) $ do
+      hyper Contacts $ allContactsView Nothing us
 
 
 -- Contacts ----------------------------------------------

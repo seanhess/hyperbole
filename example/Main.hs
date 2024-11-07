@@ -90,18 +90,18 @@ app users count = do
   runApp = runUsersIO users . runDebugIO . runConcurrent
 
   router :: forall es. (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
-  router (Hello h) = page $ hello h
-  router Simple = page Simple.simplePage
-  router Contacts = page Contacts.page
-  router Counter = runReader count $ page Counter.page
-  router Transitions = page Transitions.page
-  router Forms = page Forms.page
-  router Sessions = page Sessions.page
-  router LazyLoading = page LazyLoading.page
-  router Concurrent = page Concurrent.page
-  router Redirects = page Redirects.page
-  router LiveSearch = page Search.page
-  router Errors = page Errors.page
+  router (Hello h) = runPage $ hello h
+  router Simple = runPage Simple.simplePage
+  router Contacts = runPage Contacts.page
+  router Counter = runReader count $ runPage Counter.page
+  router Transitions = runPage Transitions.page
+  router Forms = runPage Forms.page
+  router Sessions = runPage Sessions.page
+  router LazyLoading = runPage LazyLoading.page
+  router Concurrent = runPage Concurrent.page
+  router Redirects = runPage Redirects.page
+  router LiveSearch = runPage Search.page
+  router Errors = runPage Errors.page
   router RedirectNow = do
     redirect (routeUrl $ Hello Redirected)
   router Query = do
@@ -130,10 +130,10 @@ app users count = do
   lnk = Style.link
 
   -- Nested Router
-  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es '[]
-  hello Redirected = load $ do
+  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Eff es (Page '[])
+  hello Redirected = do
     pure $ el_ "You were redirected"
-  hello (Greet s) = load $ do
+  hello (Greet s) = do
     r <- request
     pure $ col (gap 10 . pad 10) $ do
       el_ $ do
