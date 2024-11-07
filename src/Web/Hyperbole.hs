@@ -127,6 +127,7 @@ module Web.Hyperbole
   -- , Handler
   , Root
   , HyperViewHandled
+  , TupleList
 
     -- * Exports
 
