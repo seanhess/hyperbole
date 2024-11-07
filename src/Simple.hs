@@ -17,7 +17,11 @@ import Web.Hyperbole
 main = do
   count <- runEff $ runConcurrent initCounter
   run 3000 $ do
-    liveApp (basicDocument "Example") (runReader count $ runPage page)
+    liveApp (basicDocument "Example") (response count)
+
+
+response :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Eff es Response
+response count = runReader count $ runPage page
 
 
 page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Eff es (Page '[Counter])
