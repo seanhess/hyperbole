@@ -1,7 +1,8 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
-import  { listenChange, listenClick, listenFormSubmit, listenLoad, listenLoadDocument, listenInput } from './events'
-import  { actionMessage, ActionMessage } from './action'
+import { listenChange, listenClick, listenFormSubmit, listenLoad, listenLoadDocument, listenInput } from './events'
+import { actionMessage, ActionMessage, ActionResponse, Trigger, parseResponse } from './action'
+import { parseTrigger } from './meta'
 
 
 // import { listenEvents } from './events';
@@ -10,7 +11,6 @@ import  { actionMessage, ActionMessage } from './action'
 // import { fromVDOM, VDOM } from './vdom'
 
 
-// const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
 console.log("Hyperbole 0.4.1a")
@@ -20,13 +20,13 @@ let rootStyles: HTMLStyleElement;
 let addedRulesIndex = new Set();
 
 
-async function sendAction(msg:ActionMessage) {
-  async function sendActionHttp(msg:ActionMessage) {
+async function sendAction(msg: ActionMessage): Promise<ActionResponse> {
+  async function sendActionHttp(msg: ActionMessage): Promise<ActionResponse> {
     console.log("HTTP sendAction", msg.url.toString())
 
     let res = await fetch(msg.url, {
       method: "POST",
-      headers: { 'Accept': 'text/html', 'Content-Type': 'application/x-www-form-urlencoded'},
+      headers: { 'Accept': 'text/html', 'Content-Type': 'application/x-www-form-urlencoded' },
       body: msg.form,
       // we never want this to be redirected
       redirect: "manual"
@@ -54,7 +54,16 @@ async function sendAction(msg:ActionMessage) {
       throw error
     }
 
-    return res.text()
+    let triggers: Trigger[] = []
+
+    if (res.headers.get('hyp-trigger')) {
+      triggers = res.headers.get('hyp-trigger').split("||").map(parseTrigger)
+    }
+
+    let html = await res.text()
+
+    // TODO: parse triggers from headers
+    return { content: html, triggers }
   }
 
   if (sock.isConnected) {
@@ -68,7 +77,7 @@ async function sendAction(msg:ActionMessage) {
 
 
 
-async function fetchAction(msg:ActionMessage): Promise<string> {
+async function fetchAction(msg: ActionMessage): Promise<ActionResponse> {
   try {
     let ret = await sendAction(msg)
     return ret
@@ -81,7 +90,7 @@ async function fetchAction(msg:ActionMessage): Promise<string> {
   }
 }
 
-async function runAction(target:HTMLElement, action:string, form?:FormData) {
+async function runAction(target: HTMLElement, action: string, form?: FormData) {
 
   let timeout = setTimeout(() => {
     // add loading after 200ms, not right away
@@ -103,8 +112,8 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   addCSS(res.css)
 
   // Patch the node
-  const next:VNode = create(res.content)
-  const old:VNode = create(target)
+  const next: VNode = create(res.content)
+  const old: VNode = create(target)
   patch(next, old)
 
   // Emit relevant events
@@ -118,71 +127,65 @@ async function runAction(target:HTMLElement, action:string, form?:FormData) {
   // Remove loading and clear add timeout
   clearTimeout(timeout)
   target.classList.remove("hyp-loading")
+
+  // Run any triggers
+  setTimeout(() => ret.triggers.forEach(runTrigger), 10)
 }
 
 
-function addCSS(src:HTMLStyleElement) {
-  const rules:any = src.sheet.cssRules
+async function runTrigger(trigger: Trigger) {
+  console.log("RUNNING TRIGGER", trigger)
+  let target = document.getElementById(trigger.view)
+  runAction(target, trigger.action)
+}
+
+
+function addCSS(src: HTMLStyleElement) {
+  const rules: any = src.sheet.cssRules
   for (const rule of rules) {
-    if(addedRulesIndex.has(rule.cssText) == false) {
+    if (addedRulesIndex.has(rule.cssText) == false) {
       rootStyles.sheet.insertRule(rule.cssText);
       addedRulesIndex.add(rule.cssText);
     }
   }
 }
 
-type Response = {
-  content: HTMLElement
-  css: HTMLStyleElement
-}
-
-function parseResponse(vw:string):Response {
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(vw, 'text/html')
-  const css = doc.querySelector("style") as HTMLStyleElement
-  const content = doc.querySelector("div") as HTMLElement
-
-  return {
-    content: content,
-    css: css
-  }
-}
 
 
 function init() {
   rootStyles = document.querySelector('style')
 
-  listenLoadDocument(async function(target:HTMLElement, action:string) {
+  listenLoadDocument(async function(target: HTMLElement, action: string) {
     // console.log("INIT LOAD", target.id, action)
     runAction(target, action)
   })
 
   listenLoad(document.body)
 
-  listenClick(async function(target:HTMLElement, action:string) {
+  listenClick(async function(target: HTMLElement, action: string) {
     console.log("CLICK", target.id, action)
     runAction(target, action)
   })
 
-  listenFormSubmit(async function(target:HTMLElement, action:string, form:FormData) {
-    console.log("FORM", target.id, action,form)
+  listenFormSubmit(async function(target: HTMLElement, action: string, form: FormData) {
+    console.log("FORM", target.id, action, form)
     runAction(target, action, form)
   })
 
-  listenChange(async function(target:HTMLElement, action:string) {
+  listenChange(async function(target: HTMLElement, action: string) {
     console.log("CHANGE", target.id, action)
     runAction(target, action)
   })
 
   // WARNING: security flaw, unescaped output. no closing quotes allowed?
-  listenInput(async function(target:HTMLElement, actionConstructor:string, term:string) {
+  listenInput(async function(target: HTMLElement, actionConstructor: string, term: string) {
     console.log("INPUT", target.id, actionConstructor, term)
     let action = `${actionConstructor} "${sanitizeInput(term)}"`
     runAction(target, action)
   })
 }
 
-function sanitizeInput(input:string):string {
+function sanitizeInput(input: string): string {
   return input.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
 }
 
@@ -226,13 +229,13 @@ type VNode = {
 
 
 // no it should take over the whole page...
-function errorHTML(error:Error):string {
+function errorHTML(error: Error): string {
 
   // TODO: match on error.name and handle it differently
   let style = [
     ".hyp-error {background-color:#DB3524; color:white; padding: 10px}",
     ".hyp-details {padding: 10px}"
-    ]
+  ]
   let content = `<div class='hyp-error'>${error.name}</div>`
   let details = `<div class='hyp-details'>${error.message}</div>`
 

@@ -101,7 +101,7 @@ instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, Hyper
 
 handle
   :: forall views es
-   . (Handle (TupleList views), Hyperbole :> es, HyperViewHandler view es)
+   . (Handle (TupleList views), Hyperbole :> es)
   => Handlers es (TupleList views)
   -> Eff es (View (Root (TupleList views)) ())
   -> Page es views

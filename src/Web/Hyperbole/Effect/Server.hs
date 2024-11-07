@@ -87,7 +87,7 @@ runServerWai toDoc req respond =
     respError s = Wai.responseLBS s [contentType ContentText]
 
     respHtml body =
-      let headers = standardHeaders <> fmap addTrigger triggs
+      let headers = standardHeaders <> addTriggers triggs
        in Wai.responseLBS status200 headers body
 
     standardHeaders = contentType ContentHtml : [setCookies]
@@ -96,10 +96,13 @@ runServerWai toDoc req respond =
     setCookies =
       ("Set-Cookie", sessionSetCookie sess)
 
-    addTrigger :: Trigger -> Header
-    addTrigger t =
+    addTriggers :: [Trigger] -> [Header]
+    addTriggers ts =
+      [("HYP-TRIGGER", BS.intercalate "||" $ fmap triggerLine ts)]
+
+    triggerLine t =
       let Metadata _ val = metaTrigger t
-       in ("HYP-TRIGGER", cs val)
+       in cs val
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
   addDocument :: Method -> BL.ByteString -> BL.ByteString

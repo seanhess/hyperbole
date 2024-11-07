@@ -8,8 +8,8 @@ import Web.Hyperbole
 import Web.Hyperbole.Effect.Hyperbole
 
 
-page :: (Hyperbole :> es, Concurrent :> es) => Page es '[Controls, Message]
-page = handle controls $ handle message $ load $ do
+page :: (Hyperbole :> es, Concurrent :> es) => Page es (Controls, Message)
+page = handle (controls, message) $ do
   pure $ col (pad 20 . gap 10) $ do
     el bold "Triggers"
 

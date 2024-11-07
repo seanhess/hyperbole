@@ -44,7 +44,7 @@ import Web.Hyperbole
 import Web.Hyperbole.Effect.Server (Request (..))
 
 
--- import Network.Wai.Handler.WebSockets (websocketsOr)
+-- import Web.Hyperbole.Application (waiApp)
 
 main :: IO ()
 main = do
