@@ -134,8 +134,13 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
 
 
 async function runTrigger(trigger: Trigger) {
-  console.log("RUNNING TRIGGER", trigger)
   let target = document.getElementById(trigger.view)
+
+  if (!target) {
+    console.error("Triggered View Not Found:", trigger)
+    return
+  }
+
   runAction(target, trigger.action)
 }
 

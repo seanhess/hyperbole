@@ -24,6 +24,7 @@ data Controls = Controls
   deriving (Show, Read, ViewId)
 instance HyperView Controls where
   type Action Controls = ControlsAction
+  type Require Controls = '[]
 
 
 data ControlsAction
@@ -37,6 +38,7 @@ controls _ (Broadcast t) = do
   trigger (Message 0) (Say t)
   trigger (Message 1) (Say t)
   trigger (Message 2) (Say t)
+  trigger NotHandledView OhNo
   pure viewControls
 controls _ Clear = do
   trigger (Message 0) (Say "")
@@ -74,3 +76,16 @@ viewMessage msg = col (gap 10) $ do
   row (gap 10) $ do
     button (Say "Hi") Style.btnLight "Say Hi"
     button (Say "Bye") Style.btnLight "Say Bye"
+
+
+data NotHandledView = NotHandledView
+  deriving (Show, Read, ViewId)
+
+
+data OhNo
+  = OhNo
+  deriving (Show, Read, ViewAction)
+
+
+instance HyperView NotHandledView where
+  type Action NotHandledView = OhNo
