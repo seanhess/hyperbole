@@ -7,7 +7,7 @@ import Web.Hyperbole
 import Prelude hiding (even, odd)
 
 
-page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])
+page :: (Hyperbole :> es) => Page es '[LiveSearch]
 page = do
   pure $ col (pad 20) $ do
     el bold "Filter Programming Languages"
@@ -27,10 +27,10 @@ data SearchAction
 instance HyperView LiveSearch where
   type Action LiveSearch = SearchAction
 instance Handle LiveSearch es where
-  handle _ (GoSearch term) = do
+  handle (GoSearch term) = do
     let matched = filter (isMatchLanguage term) allLanguages
     pure $ liveSearchView matched Nothing
-  handle _ (Select lang) = do
+  handle (Select lang) = do
     pure $ liveSearchView [] (Just lang)
 
 

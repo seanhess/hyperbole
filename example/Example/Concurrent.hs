@@ -8,7 +8,7 @@ import Example.Effects.Debug
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Eff es (Page '[Contents])
+page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es '[Contents]
 page = do
   pure $ do
     col (pad 20) $ do
@@ -28,7 +28,8 @@ data ContentsAction
 instance HyperView Contents where
   type Action Contents = ContentsAction
 instance (Debug :> es) => Handle Contents es where
-  handle (Contents dl) (Load n) = do
+  handle (Load n) = do
+    Contents dl <- viewId
     -- BUG: this is blocking the thread, so the short poll has to wait for the long to finish before continuing
     delay dl
     pure $ viewPoll (n + 1)

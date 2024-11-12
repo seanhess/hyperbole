@@ -17,7 +17,9 @@ import Effectful.Concurrent.STM
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
 import Effectful.State.Static.Local
+import Example.AppRoute
 import Example.Concurrent qualified as Concurrent
+import Example.Contact qualified as Contact
 import Example.Contacts qualified as Contacts
 import Example.Counter qualified as Counter
 import Example.Effects.Debug as Debug
@@ -53,33 +55,6 @@ main = do
       app users count
 
 
-data AppRoute
-  = Main
-  | Simple
-  | Hello Hello
-  | Contacts
-  | Transitions
-  | Query
-  | Counter
-  | Forms
-  | LiveSearch
-  | Sessions
-  | Redirects
-  | RedirectNow
-  | LazyLoading
-  | Concurrent
-  | Errors
-  deriving (Eq, Generic)
-instance Route AppRoute where
-  baseRoute = Just Main
-
-
-data Hello
-  = Greet Text
-  | Redirected
-  deriving (Eq, Generic, Route)
-
-
 app :: UserStore -> TVar Int -> Application
 app users count = do
   liveApp
@@ -92,7 +67,8 @@ app users count = do
   router :: forall es. (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
   router (Hello h) = runPage $ hello h
   router Simple = runPage Simple.simplePage
-  router Contacts = runPage Contacts.page
+  router (Contacts ContactsAll) = runPage Contacts.page
+  router (Contacts (Contact uid)) = Contact.response uid
   router Counter = runReader count $ runPage Counter.page
   router Transitions = runPage Transitions.page
   router Forms = runPage Forms.page
@@ -124,13 +100,13 @@ app users count = do
         route RedirectNow lnk "Redirect Now"
         route LazyLoading lnk "Lazy Loading"
         route LiveSearch lnk "Live Search"
-        route Contacts lnk "Contacts (Advanced)"
+        route (Contacts ContactsAll) lnk "Contacts (Advanced)"
         route Errors lnk "Errors"
 
   lnk = Style.link
 
   -- Nested Router
-  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Eff es (Page '[])
+  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es '[]
   hello Redirected = do
     pure $ el_ "You were redirected"
   hello (Greet s) = do

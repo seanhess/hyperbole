@@ -10,19 +10,6 @@ main = do
     liveApp (basicDocument "Example") (runPage messagePage')
 
 
-messagePage :: (Hyperbole :> es) => Eff es (Page '[])
-messagePage = do
-  pure $ do
-    el bold "Message Page"
-    messageView "Hello World"
-
-
-messageView :: Text -> View c ()
-messageView m = do
-  el_ "Message:"
-  el_ (text m)
-
-
 data Message = Message
   deriving (Show, Read, ViewId)
 
@@ -34,7 +21,7 @@ data MessageAction = SetMessage Text
 instance HyperView Message where
   type Action Message = MessageAction
 instance Handle Message es where
-  handle _ (SetMessage m) = do
+  handle (SetMessage m) = do
     -- side effects
     pure $ messageView' m
 
@@ -46,7 +33,7 @@ messageView' m = do
   button (SetMessage "Goodbye World") id "Change Message"
 
 
-messagePage' :: (Hyperbole :> es) => Eff es (Page '[Message])
+messagePage' :: (Hyperbole :> es) => Page es '[Message]
 messagePage' = do
   pure $ do
     el bold "Message Page"

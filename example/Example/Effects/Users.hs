@@ -8,10 +8,14 @@ import Data.Map.Strict qualified as M
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
+import Web.Hyperbole (Hyperbole, notFound)
+
+
+type UserId = Int
 
 
 data User = User
-  { id :: Int
+  { id :: UserId
   , firstName :: Text
   , lastName :: Text
   , age :: Int
@@ -22,18 +26,18 @@ data User = User
 
 -- Load a user AND do next if missing?
 data Users :: Effect where
-  LoadUser :: Int -> Users m (Maybe User)
+  LoadUser :: UserId -> Users m (Maybe User)
   LoadUsers :: Users m [User]
   SaveUser :: User -> Users m ()
-  ModifyUser :: Int -> (User -> User) -> Users m ()
-  DeleteUser :: Int -> Users m ()
-  NextId :: Users m Int
+  ModifyUser :: UserId -> (User -> User) -> Users m ()
+  DeleteUser :: UserId -> Users m ()
+  NextId :: Users m UserId
 
 
 type instance DispatchOf Users = 'Dynamic
 
 
-type UserStore = MVar (Map Int User)
+type UserStore = MVar (Map UserId User)
 
 
 runUsersIO
@@ -42,38 +46,29 @@ runUsersIO
   -> Eff (Users : es) a
   -> Eff es a
 runUsersIO var = interpret $ \_ -> \case
-  LoadUser uid -> load uid
+  LoadUser uid -> do
+    us <- liftIO $ readMVar var
+    pure $ M.lookup uid us
   LoadUsers -> loadAll
-  SaveUser u -> save u
-  ModifyUser uid f -> modify uid f
-  DeleteUser uid -> delete uid
+  SaveUser u -> do
+    modify $ \us -> pure $ M.insert u.id u us
+  ModifyUser uid f -> do
+    modify $ \us -> do
+      pure $ M.adjust f uid us
+  DeleteUser uid -> do
+    modify $ \us -> pure $ M.delete uid us
   NextId -> do
     us <- loadAll
     let umax = maximum $ fmap (.id) us
     pure (umax + 1)
  where
-  load :: (MonadIO m) => Int -> m (Maybe User)
-  load uid = do
-    us <- liftIO $ readMVar var
-    pure $ M.lookup uid us
-
-  save :: (MonadIO m) => User -> m ()
-  save u = do
-    liftIO $ modifyMVar_ var $ \us -> pure $ M.insert u.id u us
-
   loadAll :: (MonadIO m) => m [User]
   loadAll = do
     us <- liftIO $ readMVar var
     pure $ M.elems us
 
-  modify :: (MonadIO m) => Int -> (User -> User) -> m ()
-  modify uid f = liftIO $ do
-    modifyMVar_ var $ \us -> do
-      pure $ M.adjust f uid us
-
-  delete :: (MonadIO m) => Int -> m ()
-  delete uid = do
-    liftIO $ modifyMVar_ var $ \us -> pure $ M.delete uid us
+  modify :: (MonadIO m) => (Map UserId User -> IO (Map UserId User)) -> m ()
+  modify f = liftIO $ modifyMVar_ var f
 
 
 initUsers :: (MonadIO m) => m UserStore
@@ -86,3 +81,25 @@ initUsers =
     , User 3 "Billy" "Bob" 48 False
     , User 4 "Felicia" "Korvus" 84 True
     ]
+
+
+find :: (Hyperbole :> es, Users :> es) => Int -> Eff es User
+find uid = do
+  mu <- send (LoadUser uid)
+  maybe notFound pure mu
+
+
+all :: (Users :> es) => Eff es [User]
+all = send LoadUsers
+
+
+save :: (Users :> es) => User -> Eff es ()
+save = send . SaveUser
+
+
+delete :: (Users :> es) => Int -> Eff es ()
+delete = send . DeleteUser
+
+
+nextId :: (Users :> es) => Eff es Int
+nextId = send NextId

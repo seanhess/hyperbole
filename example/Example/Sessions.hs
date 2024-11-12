@@ -12,7 +12,7 @@ import Web.Hyperbole
 
 
 -- this is already running in a different context
-page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
+page :: (Hyperbole :> es, Debug :> es) => Page es '[Contents]
 page = do
   -- setSession "color" Warning
   -- setSession "msg" ("________" :: Text)
@@ -37,11 +37,11 @@ data ContentsAction
 instance HyperView Contents where
   type Action Contents = ContentsAction
 instance (Debug :> es) => Handle Contents es where
-  handle _ (SaveColor clr) = do
+  handle (SaveColor clr) = do
     setSession "color" clr
     msg <- session "msg"
     pure $ viewContent (Just clr) msg
-  handle _ (SaveMessage msg) = do
+  handle (SaveMessage msg) = do
     setSession "msg" msg
     clr <- session "color"
     pure $ viewContent clr (Just msg)

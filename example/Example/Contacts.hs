@@ -4,13 +4,13 @@
 module Example.Contacts where
 
 import Control.Monad (forM_)
-import Data.String.Conversions
-import Data.Text (Text, pack)
 import Effectful
-import Effectful.Dispatch.Dynamic
+import Effectful.Reader.Dynamic
+import Example.AppRoute qualified as AppRoute
 import Example.Colors
+import Example.Contact
 import Example.Effects.Debug
-import Example.Effects.Users (User (..), Users)
+import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
 import Web.Hyperbole
@@ -19,9 +19,9 @@ import Web.Hyperbole
 page
   :: forall es
    . (Hyperbole :> es, Users :> es, Debug :> es)
-  => Eff es (Page '[Contacts, Contact])
+  => Page es '[Contacts, InlineContact]
 page = do
-  us <- usersAll
+  us <- Users.all
   pure $ do
     col (pad 10 . gap 10) $ do
       hyper Contacts $ allContactsView Nothing us
@@ -35,8 +35,8 @@ data Contacts = Contacts
 
 data ContactsAction
   = Reload (Maybe Filter)
-  | Delete Int
   | AddUser
+  | DeleteUser UserId
   deriving (Show, Read, ViewAction)
 
 
@@ -48,21 +48,21 @@ data Filter
 
 instance HyperView Contacts where
   type Action Contacts = ContactsAction
-  type Require Contacts = '[Contact]
+  type Require Contacts = '[InlineContact]
 instance (Users :> es, Debug :> es) => Handle Contacts es where
-  handle _ = \case
+  handle = \case
     Reload mf -> do
-      us <- usersAll
+      us <- Users.all
       pure $ allContactsView mf us
-    Delete uid -> do
-      userDelete uid
-      us <- usersAll
-      pure $ allContactsView Nothing us
     AddUser -> do
-      uid <- usersNextId
+      uid <- Users.nextId
       u <- parseUser uid
-      userSave u
-      us <- usersAll
+      Users.save u
+      us <- Users.all
+      pure $ allContactsView Nothing us
+    DeleteUser uid -> do
+      Users.delete uid
+      us <- Users.all
       pure $ allContactsView Nothing us
 
 
@@ -80,8 +80,11 @@ allContactsView fil us = col (gap 20) $ do
   row (gap 10) $ do
     let filtered = filter (filterUsers fil) us
     forM_ filtered $ \u -> do
-      el (border 1) $ do
-        hyper (Contact u.id) $ contactView u
+      el (border 1 . pad 10) $ do
+        hyper (InlineContact $ Contact u.id) $ contactView' u
+        row id $ do
+          space
+          link (routeUrl $ AppRoute.Contacts $ AppRoute.Contact u.id) Style.link "details"
 
   row (gap 10) $ do
     button (Reload Nothing) Style.btnLight "Reload"
@@ -96,138 +99,44 @@ allContactsView fil us = col (gap 20) $ do
   filterUsers (Just Active) u = u.isActive
   filterUsers (Just Inactive) u = not u.isActive
 
-
--- Contact ----------------------------------------------------
-
-data Contact = Contact Int
-  deriving (Show, Read, ViewId)
-
-
-data ContactAction
-  = Edit
-  | Save
-  | View
-  deriving (Show, Read, ViewAction)
+  contactView' :: User -> View InlineContact ()
+  contactView' u = do
+    InlineContact c <- context
+    addContext c $ contactView u
 
 
-instance HyperView Contact where
-  type Action Contact = ContactAction
-instance (Users :> es, Debug :> es) => Handle Contact es where
-  handle (Contact uid) action = do
-    -- Lookup the user in the database for all actions
-    u <- userFind uid
-    case action of
-      View -> do
-        pure $ contactView u
-      Edit -> do
-        pure $ contactEdit u
-      Save -> do
-        delay 1000
-        unew <- parseUser uid
-        userSave unew
-        pure $ contactView unew
+-- Reuse Contact View ----------------------------------
+
+-- Make a newtype so we can customize the behavior of the handler
+newtype InlineContact = InlineContact Contact
+  deriving newtype (ViewId)
 
 
-data ContactForm f = ContactForm
-  { firstName :: Field f Text
-  , lastName :: Field f Text
-  , age :: Field f Int
-  }
-  deriving (Generic)
-instance Form ContactForm Maybe
+instance HyperView InlineContact where
+  type Action InlineContact = ContactAction
+instance (Users :> es, Debug :> es) => Handle InlineContact es where
+  handle Edit = do
+    -- Edit will show the normal view, plus a delete button
+    InlineContact (Contact uid) <- viewId
+    u <- Users.find uid
+    pure $ inlineEdit u
+  handle other = do
+    -- all the other views are handled by `Handle Contact es`
+    InlineContact c <- viewId
+    asdf <- runReader c $ handle @Contact other
+    pure $ addContext c asdf
 
 
-contactFromUser :: User -> ContactForm Maybe
-contactFromUser u =
-  ContactForm
-    { firstName = Just u.firstName
-    , lastName = Just u.lastName
-    , age = Just u.age
-    }
-
-
-parseUser :: (Hyperbole :> es) => Int -> Eff es User
-parseUser uid = do
-  ContactForm{firstName, lastName, age} <- formData @ContactForm
-  pure User{id = uid, isActive = True, firstName, lastName, age}
-
-
-contactView :: User -> View Contact ()
-contactView u = do
-  col (pad 10 . gap 10) $ do
-    row fld $ do
-      el id (text "First Name:")
-      text u.firstName
-
-    row fld $ do
-      el id (text "Last Name:")
-      text u.lastName
-
-    row fld $ do
-      el id (text "Age:")
-      text (cs $ show u.age)
-
-    row fld $ do
-      el id (text "Active:")
-      text (cs $ show u.isActive)
-
-    button Edit Style.btn "Edit"
+inlineEdit :: User -> View InlineContact ()
+inlineEdit u = onRequest contactLoading $ col (gap 10) $ do
+  inlineContactView $ contactEdit' u
+  target Contacts $ deleteContactBtn u.id
  where
-  fld = gap 10
+  inlineContactView :: View Contact () -> View InlineContact ()
+  inlineContactView vw = do
+    InlineContact c <- context
+    addContext c vw
 
-
-contactEdit :: User -> View Contact ()
-contactEdit u = do
-  onRequest loading $ do
-    col (gap 10 . pad 10) $ do
-      contactForm Save (contactFromUser u)
-      button View Style.btnLight (text "Cancel")
-      target Contacts $ button (Delete u.id) (Style.btn' Danger) (text "Delete")
- where
-  loading = el (bg Warning . pad 10) "Loading..."
-
-
-contactForm :: (HyperView id) => Action id -> ContactForm Maybe -> View id ()
-contactForm onSubmit c = do
-  let f = genFieldsWith c
-  form @ContactForm onSubmit (gap 10) $ do
-    field f.firstName (const fld) $ do
-      label "First Name:"
-      input Name (inp . valMaybe id c.firstName)
-
-    field f.lastName (const fld) $ do
-      label "Last Name:"
-      input Name (inp . valMaybe id c.lastName)
-
-    field f.age (const fld) $ do
-      label "Age:"
-      input Number (inp . valMaybe (pack . show) c.age)
-
-    submit Style.btn "Submit"
- where
-  fld = flexRow . gap 10
-  inp = Style.input
-  valMaybe _ Nothing = id
-  valMaybe f (Just a) = value (f a)
-
-
-userFind :: (Hyperbole :> es, Users :> es) => Int -> Eff es User
-userFind uid = do
-  mu <- send (Users.LoadUser uid)
-  maybe notFound pure mu
-
-
-usersAll :: (Users :> es) => Eff es [User]
-usersAll = send Users.LoadUsers
-
-
-userSave :: (Users :> es) => User -> Eff es ()
-userSave = send . Users.SaveUser
-
-
-userDelete :: (Users :> es) => Int -> Eff es ()
-userDelete = send . Users.DeleteUser
-
-
-usersNextId :: (Users :> es) => Eff es Int
-usersNextId = send Users.NextId
+  deleteContactBtn :: UserId -> View Contacts ()
+  deleteContactBtn uid =
+    button (DeleteUser uid) (Style.btn' Danger . pad (XY 10 0)) (text "Delete")

@@ -14,7 +14,7 @@ main = do
     liveApp (basicDocument "Example") (runPage simplePage)
 
 
-simplePage :: (Hyperbole :> es) => Eff es (Page '[Message])
+simplePage :: (Hyperbole :> es) => Page es '[Message]
 simplePage = do
   pure $ col (pad 20) $ do
     el bold "My Page"
@@ -33,7 +33,7 @@ data MessageAction = Louder Text
 instance HyperView Message where
   type Action Message = MessageAction
 instance Handle Message es where
-  handle _ (Louder m) = do
+  handle (Louder m) = do
     let new = m <> "!"
     pure $ messageView new
 

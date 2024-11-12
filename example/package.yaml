@@ -4,7 +4,6 @@ synopsis:           Interactive HTML apps using type-safe serverside Haskell
 homepage:           https://github.com/seanhess/hyperbole
 github:             seanhess/hyperbole
 license:            BSD-3-Clause
-license-file:       LICENSE
 author:             Sean Hess
 maintainer:         seanhess@gmail.com
 category:           Web, Network

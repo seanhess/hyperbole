@@ -9,7 +9,7 @@ import Web.Hyperbole
 
 
 -- this is already running in a different context
-page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
+page :: (Hyperbole :> es, Debug :> es) => Page es '[Contents]
 page = do
   pure $ do
     row (pad 20) $ do
@@ -30,12 +30,12 @@ data ContentsAction
 
 
 instance (Debug :> es) => Handle Contents es where
-  handle _ Load = do
+  handle Load = do
     -- Pretend the initial Load takes 1s to complete
     delay 1000
     pure $ onLoad (Reload 1) 1000 $ do
       el id "Loaded, should reload once more..."
-  handle _ (Reload n) = do
+  handle (Reload n) = do
     -- then reload after a 1s delay (client-side)
     pure $ onLoad (Reload (n + 1)) 1000 $ do
       col (gap 10) $ do

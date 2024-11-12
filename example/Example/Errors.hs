@@ -6,7 +6,7 @@ import Web.Hyperbole
 
 
 -- this is already running in a different context
-page :: (Hyperbole :> es) => Eff es (Page '[Contents])
+page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
   pure $ row (pad 20) $ do
     col (gap 10 . border 1) $ do
@@ -25,7 +25,7 @@ data ContentsAction
 instance HyperView Contents where
   type Action Contents = ContentsAction
 instance Handle Contents es where
-  handle _ CauseError = do
+  handle CauseError = do
     -- Return a not found error 404
     notFound
 

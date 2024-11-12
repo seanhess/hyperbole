@@ -7,7 +7,7 @@ import Example.Style qualified as Style
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Eff es (Page '[FormView])
+page :: (Hyperbole :> es) => Page es '[FormView]
 page = do
   pure $ row (pad 20) $ do
     hyper FormView (formView genForm)
@@ -24,7 +24,7 @@ data FormAction = Submit
 instance HyperView FormView where
   type Action FormView = FormAction
 instance Handle FormView es where
-  handle _ Submit = do
+  handle Submit = do
     uf <- formData @UserForm
 
     let vals = validateForm uf

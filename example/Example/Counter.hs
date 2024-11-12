@@ -10,7 +10,7 @@ import Example.Style as Style
 import Web.Hyperbole as Hyperbole
 
 
-page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Eff es (Page '[Counter])
+page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es '[Counter]
 page = do
   n <- getCount
   pure $ col (pad 20 . gap 10) $ do
@@ -31,10 +31,10 @@ data Count
 instance HyperView Counter where
   type Action Counter = Count
 instance (Reader (TVar Int) :> es, Concurrent :> es) => Handle Counter es where
-  handle _ Increment = do
+  handle Increment = do
     n <- modify (+ 1)
     pure $ viewCount n
-  handle _ Decrement = do
+  handle Decrement = do
     n <- modify (subtract 1)
     pure $ viewCount n
 
