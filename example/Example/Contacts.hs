@@ -129,14 +129,6 @@ instance (Users :> es, Debug :> es) => Handle InlineContact es where
 
 inlineEdit :: User -> View InlineContact ()
 inlineEdit u = onRequest contactLoading $ col (gap 10) $ do
-  inlineContactView $ contactEdit' u
-  target Contacts $ deleteContactBtn u.id
- where
-  inlineContactView :: View Contact () -> View InlineContact ()
-  inlineContactView vw = do
-    InlineContact c <- context
-    addContext c vw
-
-  deleteContactBtn :: UserId -> View Contacts ()
-  deleteContactBtn uid =
-    button (DeleteUser uid) (Style.btn' Danger . pad (XY 10 0)) (text "Delete")
+  InlineContact c <- context
+  addContext c $ contactEdit' u
+  target Contacts $ button (DeleteUser u.id) (Style.btn' Danger . pad (XY 10 0)) (text "Delete")

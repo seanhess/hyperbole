@@ -48,7 +48,7 @@ instance HyperView Counter where
 
 instance (Reader (TVar Int) :> es, Concurrent :> es) => Handle Counter es where
   handle Increment = do
-    -- counter <- viewId
+    Counter <- viewId
     n <- modify $ \n -> n + 1
     pure $ viewCount n
   handle Decrement = do
