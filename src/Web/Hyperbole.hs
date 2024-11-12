@@ -83,7 +83,6 @@ module Web.Hyperbole
 
     -- ** Handlers
   , Handle (..)
-  , viewId
   , Page
 
     -- ** Validation

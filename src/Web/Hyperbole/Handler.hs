@@ -17,8 +17,8 @@ class Handle view es where
   handle :: (Hyperbole :> es) => Action view -> Eff (Reader view : es) (View view ())
 
 
--- viewId :: Eff (Reader view : es) view
--- viewId = ask @view
+  viewId :: Eff (Reader view : es) view
+  viewId = ask @view
 
 class RunHandlers (views :: [Type]) es where
   runHandlers :: (Hyperbole :> es) => Eff es ()
@@ -34,8 +34,6 @@ instance (HyperView view, Handle view es, RunHandlers views es) => RunHandlers (
     runHandlers @views
 
 
-viewId :: forall view es. (Reader view :> es) => Eff es view
-viewId = ask @view
 
 
 
