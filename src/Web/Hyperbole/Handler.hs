@@ -1,17 +1,11 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
-module Web.Hyperbole.Handler
-  ( Page
-  , runPage
-  , Hyperbole (..)
-  , Handle (..)
-  , Handlers (..)
-  )
-where
+module Web.Hyperbole.Handler where
 
 import Data.Kind (Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
+import Effectful.Reader.Dynamic
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
@@ -19,23 +13,23 @@ import Web.Hyperbole.View.Target (hyperUnsafe)
 import Web.View
 
 
--- class Handle (views :: [Type]) where
---   type Handlers (es :: [Effect]) views :: Type
---   runHandlers :: (Hyperbole :> es) => Handlers es views -> Eff es ()
-
 class Handle view es where
-  handle :: (Hyperbole :> es) => view -> Action view -> Eff es (View view ())
+  handle :: (Hyperbole :> es) => Action view -> Eff (Reader view : es) (View view ())
 
 
-class Handlers (views :: [Type]) es where
+  viewId :: Eff (Reader view : es) view
+  viewId = ask @view
+
+
+class RunHandlers (views :: [Type]) es where
   runHandlers :: (Hyperbole :> es) => Eff es ()
 
 
-instance Handlers '[] es where
+instance RunHandlers '[] es where
   runHandlers = pure ()
 
 
-instance (HyperView view, Handle view es, Handlers views es) => Handlers (view : views) es where
+instance (HyperView view, Handle view es, RunHandlers views es) => RunHandlers (view : views) es where
   runHandlers = do
     runHandler @view (handle @view)
     runHandlers @views
@@ -55,14 +49,14 @@ instance (HyperView view, Handle view es, Handlers views es) => Handlers (view :
 runHandler
   :: forall id es
    . (HyperView id, Hyperbole :> es)
-  => (id -> Action id -> Eff es (View id ()))
+  => (Action id -> Eff (Reader id : es) (View id ()))
   -> Eff es ()
 runHandler run = do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
   mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
   case mev of
     Just event -> do
-      vw <- run event.viewId event.action
+      vw <- runReader event.viewId $ run event.action
       let vid = TargetViewId $ toViewId event.viewId
       send $ RespondEarly $ Response vid $ hyperUnsafe event.viewId vw
     _ -> do
@@ -76,6 +70,25 @@ guardNoEvent = do
     -- Are id and action set to something?
     Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
     Nothing -> pure ()
+
+
+runLoad
+  :: forall views es
+   . (Hyperbole :> es, RunHandlers views es)
+  => Eff es (View (Root views) ())
+  -> Eff es Response
+runLoad loadPage = do
+  runHandlers @views
+  guardNoEvent
+  loadToResponse loadPage
+
+
+loadToResponse :: Eff es (View (Root total) ()) -> Eff es Response
+loadToResponse run = do
+  vw <- run
+  let vid = TargetViewId (toViewId Root)
+  let res = Response vid $ addContext Root vw
+  pure res
 
 
 -- deriving newtype (Applicative, Monad, Functor)
@@ -138,29 +151,6 @@ pageView = do
   'hyper' (Message 1) $ messageView "Starting Message"
 @
 -}
-
--- type Page (es :: [Effect]) (views :: [Type]) = Eff es (View (Root views) ())
-type Page (views :: [Type]) = View (Root views) ()
-
-
--- | Run a 'Page' in 'Hyperbole'
-runPage
-  :: forall views es
-   . (Hyperbole :> es, Handlers views es)
-  => Eff es (Page views)
-  -> Eff es Response
-runPage loadPage = do
-  runHandlers @views
-  guardNoEvent
-  loadToResponse loadPage
-
-
-loadToResponse :: Eff es (View (Root total) ()) -> Eff es Response
-loadToResponse run = do
-  vw <- run
-  let vid = TargetViewId (toViewId Root)
-  let res = Response vid $ addContext Root vw
-  pure res
 
 -- pageView :: (Hyperbole :> es, Handlers views es) => View (Root views) () -> Eff es (Page views)
 -- pageView = pure

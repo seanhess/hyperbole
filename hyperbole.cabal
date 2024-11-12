@@ -41,6 +41,7 @@ library
       Web.Hyperbole.Handler
       Web.Hyperbole.Handler.TypeList
       Web.Hyperbole.HyperView
+      Web.Hyperbole.Page
       Web.Hyperbole.Route
       Web.Hyperbole.Session
       Web.Hyperbole.View

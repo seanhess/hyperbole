@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -24,7 +23,7 @@ response :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Eff es Response
 response count = runReader count $ runPage page
 
 
-page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Eff es (Page '[Counter])
+page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es '[Counter]
 page = do
   var <- ask
   n <- readTVarIO var
@@ -45,11 +44,14 @@ data Count
 
 instance HyperView Counter where
   type Action Counter = Count
+
+
 instance (Reader (TVar Int) :> es, Concurrent :> es) => Handle Counter es where
-  handle _ Increment = do
+  handle Increment = do
+    -- counter <- viewId
     n <- modify $ \n -> n + 1
     pure $ viewCount n
-  handle _ Decrement = do
+  handle Decrement = do
     n <- modify $ \n -> n - 1
     pure $ viewCount n
 
