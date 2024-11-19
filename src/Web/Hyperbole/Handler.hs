@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.Handler where
 
@@ -17,8 +18,44 @@ class Handle view es where
   handle :: (Hyperbole :> es) => Action view -> Eff (Reader view : es) (View view ())
 
 
-  viewId :: Eff (Reader view : es) view
-  viewId = ask @view
+class HasViewId m view where
+  viewId :: m view
+instance HasViewId (View ctx) ctx where
+  viewId = context
+instance HasViewId (Eff (Reader view : es)) view where
+  viewId = ask
+
+
+type Handler es view a = Eff (Reader view : es) a
+
+
+-- If the actions are the same (newtype), map the views and have the inner handler process it
+delegate
+  :: forall view inner es
+   . (Action view ~ Action inner, Handle inner (Reader view : es), Hyperbole :> es)
+  => (view -> inner)
+  -> Action view
+  -> Eff (Reader view : es) (View view ())
+delegate f action = do
+  c <- viewId
+  let inner = f c
+  innerView <- runReader inner $ handle @inner action
+  pure $ addContext inner innerView
+
+
+mapView :: (view -> inner) -> View inner () -> View view ()
+mapView f inner = do
+  view1 <- viewId
+  addContext (f view1) inner
+
+
+-- class SetContext (f :: Type -> Type -> Type) es cnew cold where
+--   setViewId :: cnew -> (f es) cnew () -> (f es) cold ()
+-- instance SetContext (View Identity) a b where
+--   setViewId = addContext
+-- instance (f es view ~ Eff (Reader view : es), Handle view es) => SetContext (f es) cnew cold where
+--   setViewId :: cnew -> (f es) cnew () -> (f es) cold ()
+--   setViewId cnew action = runReader cnew action
 
 class RunHandlers (views :: [Type]) es where
   runHandlers :: (Hyperbole :> es) => Eff es ()
@@ -32,9 +69,6 @@ instance (HyperView view, Handle view es, RunHandlers views es) => RunHandlers (
   runHandlers = do
     runHandler @view (handle @view)
     runHandlers @views
-
-
-
 
 
 -- handle

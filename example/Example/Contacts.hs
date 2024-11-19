@@ -5,7 +5,6 @@ module Example.Contacts where
 
 import Control.Monad (forM_)
 import Effectful
-import Effectful.Reader.Dynamic
 import Example.AppRoute qualified as AppRoute
 import Example.Colors
 import Example.Contact
@@ -14,6 +13,7 @@ import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
 import Web.Hyperbole
+import Web.Hyperbole.Handler
 
 
 page
@@ -101,14 +101,14 @@ allContactsView fil us = col (gap 20) $ do
 
   contactView' :: User -> View InlineContact ()
   contactView' u = do
-    InlineContact c <- context
+    InlineContact c <- viewId
     addContext c $ contactView u
 
 
 -- Reuse Contact View ----------------------------------
 
 -- Make a newtype so we can customize the behavior of the handler
-newtype InlineContact = InlineContact Contact
+newtype InlineContact = InlineContact {contact :: Contact}
   deriving newtype (ViewId)
 
 
@@ -121,14 +121,10 @@ instance (Users :> es, Debug :> es) => Handle InlineContact es where
     u <- Users.find uid
     pure $ inlineEdit u
   handle other = do
-    -- all the other views are handled by `Handle Contact es`
-    InlineContact c <- viewId
-    asdf <- runReader c $ handle @Contact other
-    pure $ addContext c asdf
+    delegate (.contact) other
 
 
 inlineEdit :: User -> View InlineContact ()
 inlineEdit u = onRequest contactLoading $ col (gap 10) $ do
-  InlineContact c <- context
-  addContext c $ contactEdit' u
+  mapView (.contact) $ contactEdit' u
   target Contacts $ button (DeleteUser u.id) (Style.btn' Danger . pad (XY 10 0)) (text "Delete")

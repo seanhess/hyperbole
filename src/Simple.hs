@@ -11,6 +11,7 @@ import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
 import Web.Hyperbole
+import Web.Hyperbole.Handler (HasViewId (viewId))
 
 
 main = do
