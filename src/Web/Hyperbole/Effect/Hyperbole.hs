@@ -20,6 +20,7 @@ import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Route
 import Web.Hyperbole.Session as Session
+import Web.Hyperbole.View.Target (hyperUnsafe)
 import Web.View
 
 
@@ -247,7 +248,7 @@ redirect = send . RespondEarly . Redirect
 respondEarly :: (Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
 respondEarly i vw = do
   let vid = TargetViewId (toViewId i)
-  let res = Response vid $ addContext i vw
+  let res = Response vid $ hyperUnsafe i vw
   send $ RespondEarly res
 
 
