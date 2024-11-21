@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Example.Forms where
 
 import Data.Text (Text, pack)
@@ -9,11 +7,10 @@ import Example.Style qualified as Style
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Page es FormView
+page :: (Hyperbole :> es) => Page es '[FormView]
 page = do
-  handle formAction $ do
-    pure $ row (pad 20) $ do
-      hyper FormView (formView genForm)
+  pure $ row (pad 20) $ do
+    hyper FormView (formView genForm)
 
 
 data FormView = FormView
@@ -26,6 +23,15 @@ data FormAction = Submit
 
 instance HyperView FormView where
   type Action FormView = FormAction
+instance Handle FormView es where
+  handle Submit = do
+    uf <- formData @UserForm
+
+    let vals = validateForm uf
+
+    if anyInvalid vals
+      then pure $ formView vals
+      else pure $ userView uf
 
 
 -- Form Fields
@@ -42,17 +48,6 @@ data UserForm f = UserForm
   }
   deriving (Generic)
 instance Form UserForm Validated
-
-
-formAction :: (Hyperbole :> es) => FormView -> FormAction -> Eff es (View FormView ())
-formAction _ Submit = do
-  uf <- formData @UserForm
-
-  let vals = validateForm uf
-
-  if anyInvalid vals
-    then pure $ formView vals
-    else pure $ userView uf
 
 
 validateForm :: UserForm Identity -> UserForm Validated

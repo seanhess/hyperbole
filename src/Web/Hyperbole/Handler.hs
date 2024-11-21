@@ -1,16 +1,12 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-module Web.Hyperbole.Handler
-  ( Page (..)
-  , page
-  , handle
-  , Hyperbole (..)
-  )
-where
+module Web.Hyperbole.Handler where
 
 import Data.Kind (Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
+import Effectful.Reader.Dynamic
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
@@ -18,108 +14,85 @@ import Web.Hyperbole.View.Target (hyperUnsafe)
 import Web.View
 
 
-class Handle (views :: [Type]) where
-  type Handlers (es :: [Effect]) views :: Type
-  runHandlers :: (Hyperbole :> es) => Handlers es views -> Eff es ()
+class Handle view es where
+  handle :: (Hyperbole :> es) => Action view -> Eff (Reader view : es) (View view ())
 
 
-instance Handle '[] where
-  type Handlers es '[] = ()
-  runHandlers _ = pure ()
+class HasViewId m view where
+  viewId :: m view
+instance HasViewId (View ctx) ctx where
+  viewId = context
+instance HasViewId (Eff (Reader view : es)) view where
+  viewId = ask
 
 
-instance (HyperView id) => Handle '[id] where
-  type Handlers es '[id] = id -> Action id -> Eff es (View id ())
-  runHandlers action = do
-    runHandler action
+type Handler es view a = Eff (Reader view : es) a
 
 
-instance (HyperView a, HyperView b) => Handle '[a, b] where
-  type Handlers es '[a, b] = (Handlers es '[a], Handlers es '[b])
-  runHandlers (a, b) = do
-    runHandler a
-    runHandlers @'[b] b
+-- If the actions are the same (newtype), map the views and have the inner handler process it
+delegate
+  :: forall view inner es
+   . (Action view ~ Action inner, Handle inner (Reader view : es), Hyperbole :> es)
+  => (view -> inner)
+  -> Action view
+  -> Eff (Reader view : es) (View view ())
+delegate f action = do
+  c <- viewId
+  let inner = f c
+  innerView <- runReader inner $ handle @inner action
+  pure $ addContext inner innerView
 
 
-instance (HyperView a, HyperView b, HyperView c) => Handle '[a, b, c] where
-  type Handlers es '[a, b, c] = (Handlers es '[a], Handlers es '[b], Handlers es '[c])
-  runHandlers (a, b, c) = do
-    runHandlers @'[a, b] (a, b)
-    runHandler c
+mapView :: (view -> inner) -> View inner () -> View view ()
+mapView f inner = do
+  view1 <- viewId
+  addContext (f view1) inner
 
 
-instance (HyperView a, HyperView b, HyperView c, HyperView d) => Handle '[a, b, c, d] where
-  type Handlers es '[a, b, c, d] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d])
-  runHandlers (a, b, c, d) = do
-    runHandlers @'[a, b, c] (a, b, c)
-    runHandler d
+-- class SetContext (f :: Type -> Type -> Type) es cnew cold where
+--   setViewId :: cnew -> (f es) cnew () -> (f es) cold ()
+-- instance SetContext (View Identity) a b where
+--   setViewId = addContext
+-- instance (f es view ~ Eff (Reader view : es), Handle view es) => SetContext (f es) cnew cold where
+--   setViewId :: cnew -> (f es) cnew () -> (f es) cold ()
+--   setViewId cnew action = runReader cnew action
+
+class RunHandlers (views :: [Type]) es where
+  runHandlers :: (Hyperbole :> es) => Eff es ()
 
 
-instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e) => Handle '[a, b, c, d, e] where
-  type Handlers es '[a, b, c, d, e] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e])
-  runHandlers (a, b, c, d, e) = do
-    runHandlers @'[a, b, c, d] (a, b, c, d)
-    runHandler e
+instance RunHandlers '[] es where
+  runHandlers = pure ()
 
 
-instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, HyperView f) => Handle '[a, b, c, d, e, f] where
-  type Handlers es '[a, b, c, d, e, f] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e], Handlers es '[f])
-  runHandlers (a, b, c, d, e, f) = do
-    runHandlers @'[a, b, c, d, e] (a, b, c, d, e)
-    runHandler f
+instance (HyperView view, Handle view es, RunHandlers views es) => RunHandlers (view : views) es where
+  runHandlers = do
+    runHandler @view (handle @view)
+    runHandlers @views
 
 
-instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, HyperView f, HyperView g) => Handle '[a, b, c, d, e, f, g] where
-  type Handlers es '[a, b, c, d, e, f, g] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e], Handlers es '[f], Handlers es '[g])
-  runHandlers (a, b, c, d, e, f, g) = do
-    runHandlers @'[a, b, c, d, e, f] (a, b, c, d, e, f)
-    runHandler g
-
-
-instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, HyperView f, HyperView g, HyperView h) => Handle '[a, b, c, d, e, f, g, h] where
-  type Handlers es '[a, b, c, d, e, f, g, h] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e], Handlers es '[f], Handlers es '[g], Handlers es '[h])
-  runHandlers (a, b, c, d, e, f, g, h) = do
-    runHandlers @'[a, b, c, d, e, f, g] (a, b, c, d, e, f, g)
-    runHandler h
-
-
-instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, HyperView f, HyperView g, HyperView h, HyperView i) => Handle '[a, b, c, d, e, f, g, h, i] where
-  type Handlers es '[a, b, c, d, e, f, g, h, i] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e], Handlers es '[f], Handlers es '[g], Handlers es '[h], Handlers es '[i])
-  runHandlers (a, b, c, d, e, f, g, h, i) = do
-    runHandlers @'[a, b, c, d, e, f, g, h] (a, b, c, d, e, f, g, h)
-    runHandler i
-
-
-instance (HyperView a, HyperView b, HyperView c, HyperView d, HyperView e, HyperView f, HyperView g, HyperView h, HyperView i, HyperView j) => Handle '[a, b, c, d, e, f, g, h, i, j] where
-  type Handlers es '[a, b, c, d, e, f, g, h, i, j] = (Handlers es '[a], Handlers es '[b], Handlers es '[c], Handlers es '[d], Handlers es '[e], Handlers es '[f], Handlers es '[g], Handlers es '[h], Handlers es '[i], Handlers es '[j])
-  runHandlers (a, b, c, d, e, f, g, h, i, j) = do
-    runHandlers @'[a, b, c, d, e, f, g, h, i] (a, b, c, d, e, f, g, h, i)
-    runHandler j
-
-
-handle
-  :: forall views es
-   . (Handle (TupleList views), Hyperbole :> es)
-  => Handlers es (TupleList views)
-  -> Eff es (View (Root (TupleList views)) ())
-  -> Page es views
-handle handlers loadPage = Page $ do
-  runHandlers @(TupleList views) handlers
-  guardNoEvent
-  loadPage
-
+-- handle
+--   :: forall views es
+--    . (Handle (TupleList views), Hyperbole :> es)
+--   => Handlers es (TupleList views)
+--   -> Eff es (View (Root (TupleList views)) ())
+--   -> Page es views
+-- handle handlers loadPage = Page $ do
+--   runHandlers @(TupleList views) handlers
+--   guardNoEvent
+--   loadPage
 
 runHandler
   :: forall id es
    . (HyperView id, Hyperbole :> es)
-  => (id -> Action id -> Eff es (View id ()))
+  => (Action id -> Eff (Reader id : es) (View id ()))
   -> Eff es ()
 runHandler run = do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
   mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
   case mev of
     Just event -> do
-      vw <- run event.viewId event.action
+      vw <- runReader event.viewId $ run event.action
       let vid = TargetViewId $ toViewId event.viewId
       send $ RespondEarly $ Response vid $ hyperUnsafe event.viewId vw
     _ -> do
@@ -133,6 +106,25 @@ guardNoEvent = do
     -- Are id and action set to something?
     Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
     Nothing -> pure ()
+
+
+runLoad
+  :: forall views es
+   . (Hyperbole :> es, RunHandlers views es)
+  => Eff es (View (Root views) ())
+  -> Eff es Response
+runLoad loadPage = do
+  runHandlers @views
+  guardNoEvent
+  loadToResponse loadPage
+
+
+loadToResponse :: Eff es (View (Root total) ()) -> Eff es Response
+loadToResponse run = do
+  vw <- run
+  let vid = TargetViewId (toViewId Root)
+  let res = Response vid $ addContext Root vw
+  pure res
 
 
 -- deriving newtype (Applicative, Monad, Functor)
@@ -195,17 +187,6 @@ pageView = do
   'hyper' (Message 1) $ messageView "Starting Message"
 @
 -}
-newtype Page (es :: [Effect]) (views :: Type) = Page (Eff es (View (Root (TupleList views)) ()))
 
-
--- | Run a 'Page' in 'Hyperbole'
-page
-  :: forall views es
-   . (Hyperbole :> es)
-  => Page es views
-  -> Eff es Response
-page (Page run) = do
-  vw <- run
-  let vid = TargetViewId (toViewId Root)
-  let res = Response vid $ addContext Root vw
-  pure res
+-- pageView :: (Hyperbole :> es, Handlers views es) => View (Root views) () -> Eff es (Page views)
+-- pageView = pure

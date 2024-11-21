@@ -27,7 +27,7 @@ module Web.Hyperbole
     -- * Run an Application
     liveApp
   , Warp.run
-  , page
+  , runPage
   , basicDocument
 
     -- ** Type-Safe Routes
@@ -39,9 +39,6 @@ module Web.Hyperbole
     -- * Pages
 
     -- ** Page
-  , Page
-  -- , load
-  -- , handle
 
     -- ** HyperView
   , HyperView (..)
@@ -85,6 +82,9 @@ module Web.Hyperbole
   , InputType (..)
 
     -- ** Handlers
+  , Handle (..)
+  , viewId
+  , Page
 
     -- ** Validation
   , Validated (..)
@@ -122,9 +122,6 @@ module Web.Hyperbole
   , ViewId
   , ViewAction
   , Response
-  , handle
-  -- , load
-  -- , Handler
   , Root
   , HyperViewHandled
   , TupleList
@@ -161,6 +158,7 @@ import Web.Hyperbole.Forms
 import Web.Hyperbole.Handler
 import Web.Hyperbole.Handler.TypeList
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.Page (Page, runPage)
 import Web.Hyperbole.Route
 import Web.Hyperbole.View
 import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)

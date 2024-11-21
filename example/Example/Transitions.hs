@@ -5,11 +5,10 @@ import Example.Style as Style
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Page es Contents
+page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
-  handle content $ do
-    pure $ row (pad 20) $ do
-      hyper Contents viewSmall
+  pure $ row (pad 20) $ do
+    hyper Contents viewSmall
 
 
 data Contents = Contents
@@ -24,13 +23,11 @@ data ContentsAction
 
 instance HyperView Contents where
   type Action Contents = ContentsAction
-
-
-content :: (Hyperbole :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
-content _ Expand = do
-  pure viewBig
-content _ Collapse = do
-  pure viewSmall
+instance Handle Contents es where
+  handle Expand = do
+    pure viewBig
+  handle Collapse = do
+    pure viewSmall
 
 
 viewSmall :: View Contents ()

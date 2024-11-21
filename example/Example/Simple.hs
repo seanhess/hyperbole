@@ -11,16 +11,15 @@ import Web.Hyperbole
 
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Example") (page simplePage)
+    liveApp (basicDocument "Example") (runPage simplePage)
 
 
-simplePage :: (Hyperbole :> es) => Page es Message
+simplePage :: (Hyperbole :> es) => Page es '[Message]
 simplePage = do
-  handle message $ do
-    pure $ col (pad 20) $ do
-      el bold "My Page"
-      hyper (Message 1) $ messageView "Hello"
-      hyper (Message 2) $ messageView "World!"
+  pure $ col (pad 20) $ do
+    el bold "My Page"
+    hyper (Message 1) $ messageView "Hello"
+    hyper (Message 2) $ messageView "World!"
 
 
 data Message = Message Int
@@ -33,12 +32,10 @@ data MessageAction = Louder Text
 
 instance HyperView Message where
   type Action Message = MessageAction
-
-
-message :: Message -> MessageAction -> Eff es (View Message ())
-message _ (Louder m) = do
-  let new = m <> "!"
-  pure $ messageView new
+instance Handle Message es where
+  handle (Louder m) = do
+    let new = m <> "!"
+    pure $ messageView new
 
 
 messageView m = do

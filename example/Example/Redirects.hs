@@ -5,11 +5,10 @@ import Example.Style as Style
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Page es Contents
+page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
-  handle contents $ do
-    pure $ row (pad 20) $ do
-      hyper Contents contentsView
+  pure $ row (pad 20) $ do
+    hyper Contents contentsView
 
 
 data Contents = Contents
@@ -23,11 +22,9 @@ data ContentsAction
 
 instance HyperView Contents where
   type Action Contents = ContentsAction
-
-
-contents :: (Hyperbole :> es) => Contents -> ContentsAction -> Eff es (View Contents ())
-contents _ RedirectAsAction = do
-  redirect "/hello/redirected"
+instance Handle Contents es where
+  handle RedirectAsAction = do
+    redirect "/hello/redirected"
 
 
 contentsView :: View Contents ()
