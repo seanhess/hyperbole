@@ -110,7 +110,8 @@ test-suite test
   build-tool-depends:
       skeletest:skeletest-preprocessor
   build-depends:
-      base >=4.16 && <5
+      Diff >=0.5 && <1.0
+    , base >=4.16 && <5
     , bytestring >=0.11 && <0.13
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
