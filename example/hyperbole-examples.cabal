@@ -59,6 +59,7 @@ executable examples
       Example.Style
       Example.Transitions
       Example.Triggers
+      Example.Triggers.Nested
       HelloWorld
       Paths_hyperbole_examples
   autogen-modules:

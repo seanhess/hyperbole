@@ -1,5 +1,4 @@
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Web.Hyperbole.Effect.Hyperbole where
 
@@ -14,10 +13,12 @@ import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
+import Effectful.Reader.Dynamic
 import Effectful.State.Static.Local
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
 import Web.Hyperbole.Effect.Server
+import Web.Hyperbole.Handler.TypeList (HyperViewHandled)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Route
 import Web.Hyperbole.Session as Session
@@ -274,5 +275,7 @@ view vw = do
   pure $ Response (TargetViewId "") vw
 
 
-trigger :: (Hyperbole :> es, HyperView id) => id -> Action id -> Eff es ()
-trigger vw action = send $ AddTrigger $ Trigger (TargetViewId $ toViewId vw) (TargetAction $ toAction action)
+-- | Trigger an action in another view
+trigger :: (Hyperbole :> es, HyperView id, HyperViewHandled id view) => id -> Action id -> Eff (Reader view : es) ()
+trigger vw action =
+  send $ AddTrigger $ Trigger (TargetViewId $ toViewId vw) (TargetAction $ toAction action)

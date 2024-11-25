@@ -1,12 +1,16 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module Simple where
 
 import Data.Text (pack)
 import Effectful
+import Effectful.Concurrent
+import Effectful.Concurrent.STM
+import Effectful.Reader.Dynamic
 import Web.Hyperbole
 
 

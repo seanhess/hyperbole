@@ -8,8 +8,8 @@ import Web.Hyperbole
 import Web.Hyperbole.Effect.Hyperbole
 
 
-page :: (Hyperbole :> es, Concurrent :> es) => Page es (Controls, Message)
-page = handle (controls, message) $ do
+page :: (Hyperbole :> es, Concurrent :> es) => Page es '[Controls, Message]
+page = do
   pure $ col (pad 20 . gap 10) $ do
     el bold "Triggers"
 
@@ -22,9 +22,6 @@ page = handle (controls, message) $ do
 
 data Controls = Controls
   deriving (Show, Read, ViewId)
-instance HyperView Controls where
-  type Action Controls = ControlsAction
-  type Require Controls = '[]
 
 
 data ControlsAction
@@ -33,18 +30,25 @@ data ControlsAction
   deriving (Show, Read, ViewAction)
 
 
-controls :: (Hyperbole :> es) => Controls -> ControlsAction -> Eff es (View Controls ())
-controls _ (Broadcast t) = do
-  trigger (Message 0) (Say t)
-  trigger (Message 1) (Say t)
-  trigger (Message 2) (Say t)
-  trigger NotHandledView OhNo
-  pure viewControls
-controls _ Clear = do
-  trigger (Message 0) (Say "")
-  trigger (Message 1) (Say "")
-  trigger (Message 2) (Say "")
-  pure viewControls
+instance HyperView Controls where
+  type Action Controls = ControlsAction
+  type Require Controls = '[Message]
+instance Handle Controls es where
+  handle (Broadcast t) = do
+    -- `trigger` does not guarantee that the view exists on the page
+    trigger (Message 0) (Say t)
+    trigger (Message 1) (Say t)
+    trigger (Message 2) (Say t)
+
+    -- Error: HyperView NotHandledView not found in (Require Controls)
+    -- trigger NotHandledView OhNo
+
+    pure viewControls
+  handle Clear = do
+    trigger (Message 0) (Say "")
+    trigger (Message 1) (Say "")
+    trigger (Message 2) (Say "")
+    pure viewControls
 
 
 viewControls :: View Controls ()
@@ -58,16 +62,16 @@ data Message = Message Int
   deriving (Show, Read, ViewId)
 
 
-instance HyperView Message where
-  type Action Message = MessageAction
 data MessageAction
   = Say Text
   deriving (Show, Read, ViewAction)
 
 
-message :: (Hyperbole :> es, Concurrent :> es) => Message -> MessageAction -> Eff es (View Message ())
-message _ (Say t) = do
-  pure $ viewMessage t
+instance HyperView Message where
+  type Action Message = MessageAction
+instance Handle Message es where
+  handle (Say t) = do
+    pure $ viewMessage t
 
 
 viewMessage :: Text -> View Message ()
@@ -77,6 +81,8 @@ viewMessage msg = col (gap 10) $ do
     button (Say "Hi") Style.btnLight "Say Hi"
     button (Say "Bye") Style.btnLight "Say Bye"
 
+
+-- If you try to trigger an action for a view that isn't handled in your page you will get an error
 
 data NotHandledView = NotHandledView
   deriving (Show, Read, ViewId)

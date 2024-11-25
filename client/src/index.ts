@@ -116,12 +116,9 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   const old: VNode = create(target)
   patch(next, old)
 
-  // Emit relevant events
-  let newTarget = document.getElementById(target.id)
-  // let event = new Event("content", {bubbles:true})
-  // newTarget.dispatchEvent(event)
 
-  // load doesn't bubble
+  // load doesn't bubble, so we have to listen manually to the new element
+  let newTarget = document.getElementById(target.id)
   listenLoad(newTarget)
 
   // Remove loading and clear add timeout

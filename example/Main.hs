@@ -33,7 +33,9 @@ import Example.Sessions qualified as Sessions
 import Example.Simple qualified as Simple
 import Example.Style qualified as Style
 import Example.Transitions qualified as Transitions
-import Example.Triggers qualified as Triggers
+
+-- import Example.Triggers qualified as Triggers
+import Example.Triggers.Nested qualified as Triggers
 import GHC.Generics (Generic)
 import Network.HTTP.Types (Method, QueryItem, methodPost, status200, status404)
 import Network.Wai qualified as Wai
@@ -67,25 +69,26 @@ app users count = do
 
   router :: forall es. (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
   router (Hello h) = runPage $ hello h
-  router Simple = runPage Simple.simplePage
-  router (Contacts ContactsAll) = runPage Contacts.page
   router (Contacts (Contact uid)) = Contact.response uid
-  router Counter = runReader count $ runPage Counter.page
-  router Transitions = runPage Transitions.page
-  router Forms = runPage Forms.page
-  router Sessions = runPage Sessions.page
-  router LazyLoading = runPage LazyLoading.page
+  router (Contacts ContactsAll) = runPage Contacts.page
   router Concurrent = runPage Concurrent.page
-  router Redirects = runPage Redirects.page
-  router LiveSearch = runPage Search.page
+  router Counter = runReader count $ runPage Counter.page
   router Errors = runPage Errors.page
+  router Forms = runPage Forms.page
+  router LazyLoading = runPage LazyLoading.page
+  router LiveSearch = runPage Search.page
   router RedirectNow = do
     redirect (routeUrl $ Hello Redirected)
+  router Redirects = runPage Redirects.page
   router Query = do
     p <- reqParam "key"
     view $ el (pad 20) $ do
       text "key: "
       text p
+  router Sessions = runPage Sessions.page
+  router Simple = runPage Simple.simplePage
+  router Transitions = runPage Transitions.page
+  router Triggers = runPage Triggers.page
   router Main = do
     view $ do
       col (gap 10 . pad 20) $ do

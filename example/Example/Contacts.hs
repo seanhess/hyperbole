@@ -4,9 +4,6 @@
 module Example.Contacts where
 
 import Control.Monad (forM_)
-import Data.String.Conversions
-import Data.Text (Text, pack)
-import Debug.Trace
 import Effectful
 import Example.AppRoute qualified as AppRoute
 import Example.Colors

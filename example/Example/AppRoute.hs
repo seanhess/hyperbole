@@ -7,20 +7,21 @@ import Web.Hyperbole
 
 data AppRoute
   = Main
-  | Simple
-  | Hello Hello
-  | Contacts ContactRoute
-  | Transitions
-  | Query
-  | Counter
-  | Forms
-  | LiveSearch
-  | Sessions
-  | Redirects
-  | RedirectNow
-  | LazyLoading
   | Concurrent
+  | Contacts ContactRoute
+  | Counter
   | Errors
+  | Forms
+  | Hello Hello
+  | LazyLoading
+  | LiveSearch
+  | Query
+  | RedirectNow
+  | Redirects
+  | Sessions
+  | Simple
+  | Transitions
+  | Triggers
   deriving (Eq, Generic)
 instance Route AppRoute where
   baseRoute = Just Main

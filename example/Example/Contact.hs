@@ -142,7 +142,7 @@ contactForm onSubmit c = do
  where
   fld = flexRow . gap 10
   inp = Style.input
-  valMaybe _ Nothing = id
+  valMaybe _ Nothing = value ""
   valMaybe f (Just a) = value (f a)
 
 
