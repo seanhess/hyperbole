@@ -36,7 +36,7 @@ page = do
 
 
 data Counter = Counter
-  deriving (Show, Read, ViewId, HyperView)
+  deriving (Show, Read, ViewId)
 
 
 instance Component Counter where

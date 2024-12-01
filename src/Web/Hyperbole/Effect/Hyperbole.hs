@@ -27,13 +27,13 @@ import Web.View
 
 
 hyper
-  :: forall id ctx
-   . ( HyperViewHandled id ctx
-     , ViewId id
-     , Component id
+  :: forall c ctx
+   . ( HyperViewHandled c ctx
+     , ViewId c
+     , Component c
      )
-  => id
-  -> View id ()
+  => c
+  -> View c ()
   -> View ctx ()
 hyper = hyperUnsafe
 
@@ -135,13 +135,13 @@ formBody = do
   either (send . RespondEarly . Err . ErrParse) pure ef
 
 
-getEvent :: (Read (Msg id), HyperView id, Hyperbole :> es) => Eff es (Maybe (Event id (Msg id)))
+getEvent :: (Read (Msg id), Component id, Hyperbole :> es, ViewId id) => Eff es (Maybe (Event id (Msg id)))
 getEvent = do
   q <- reqParams
   pure $ parseEvent q
 
 
-parseEvent :: (Read (Msg id), HyperView id) => Query -> Maybe (Event id (Msg id))
+parseEvent :: (Read (Msg id), Component id, ViewId id) => Query -> Maybe (Event id (Msg id))
 parseEvent q = do
   Event ti ta <- lookupEvent q
   vid <- parseViewId ti
@@ -270,7 +270,7 @@ redirect = send . RespondEarly . Redirect
 
 
 -- | Respond with the given view, and stop execution
-respondEarly :: (Component id, Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
+respondEarly :: (Component id, Hyperbole :> es, ViewId id) => id -> View id () -> Eff es ()
 respondEarly i vw = do
   let vid = TargetViewId (toViewId i)
   let res = Response vid $ hyperUnsafe i vw

@@ -22,7 +22,7 @@ page = do
 
 
 data MainView = MainView
-  deriving (Show, Read, ViewId, HyperView)
+  deriving (Show, Read, ViewId)
 
 
 instance Component MainView where
@@ -66,7 +66,7 @@ mainControls = col (gap 5) $ do
 
 
 data Listener = Listener Int
-  deriving (Show, Read, ViewId, HyperView)
+  deriving (Show, Read, ViewId)
 
 
 instance Handle Listener es where

@@ -85,8 +85,8 @@ type NotInPage x total =
 
 
 type HyperViewHandled id ctx =
-  ( HyperView id
-  , HyperView ctx
+  ( Component id
+  , Component ctx
   , -- the id must be found in the children of the context
     ElemOr id (Import ctx) (NotHandled id ctx (Import ctx))
   , -- Make sure the descendents of id are in the context for the root page

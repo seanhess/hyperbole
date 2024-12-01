@@ -14,7 +14,7 @@ import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, labe
 
 > button SomeAction (border 1) "Click Me"
 -}
-button :: (HyperView id, Show (Msg id)) => Msg id -> Mod -> View id () -> View id ()
+button :: (ViewId id, Show (Msg id)) => Msg id -> Mod -> View id () -> View id ()
 button a f cd = do
   c <- context
   tag "button" (att "data-on-click" (toAction a) . dataTarget c . f) cd
@@ -40,7 +40,7 @@ allContactsView fil = do
 @
 -}
 dropdown
-  :: (HyperView id)
+  :: (ViewId id)
   => (opt -> Msg id)
   -> (opt -> Bool) -- check if selec
   -> Mod
@@ -54,7 +54,7 @@ dropdown act isSel f options = do
 
 -- | An option for a 'dropdown'. First argument is passed to (opt -> Action id) in the 'dropdown', and to the selected predicate
 option
-  :: (HyperView id, Eq opt, Show (Msg id))
+  :: (ViewId id, Eq opt, Show (Msg id))
   => opt
   -> View (Option opt id (Msg id)) ()
   -> View (Option opt id (Msg id)) ()
@@ -76,7 +76,7 @@ data Option opt id action = Option
 
 
 -- | A live search field
-search :: (HyperView id, Show (Msg id)) => (Text -> Msg id) -> DelayMs -> Mod -> View id ()
+search :: (ViewId id, Show (Msg id)) => (Text -> Msg id) -> DelayMs -> Mod -> View id ()
 search onInput delay f = do
   c <- context
   tag "input" (att "data-on-input" (toActionInput onInput) . att "data-delay" (pack $ show delay) . dataTarget c . f) none

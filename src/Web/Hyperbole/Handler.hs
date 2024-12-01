@@ -66,7 +66,7 @@ instance RunHandlers '[] es where
   runHandlers = pure ()
 
 
-instance (Component view, Read (Msg view), HyperView view, Handle view es, RunHandlers views es) => RunHandlers (view : views) es where
+instance (Component view, Read (Msg view), Handle view es, RunHandlers views es, ViewId view) => RunHandlers (view : views) es where
   runHandlers = do
     runHandler @view (handle @view)
     runHandlers @views
@@ -85,7 +85,7 @@ instance (Component view, Read (Msg view), HyperView view, Handle view es, RunHa
 
 runHandler
   :: forall id es
-   . (Component id, Read (Msg id), HyperView id, Hyperbole :> es)
+   . (Component id, Read (Msg id), ViewId id, Hyperbole :> es)
   => (Msg id -> Eff (Reader id : es) (View id ()))
   -> Eff es ()
 runHandler run = do

@@ -41,7 +41,6 @@ module Web.Hyperbole
     -- ** Page
 
     -- ** HyperView
-  , HyperView (..)
   , hyper
 
     -- * Interactive Elements

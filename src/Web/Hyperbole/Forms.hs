@@ -294,7 +294,7 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: (Show (Msg id), Form form val, HyperView id) => Msg id -> Mod -> View (FormFields id) () -> View id ()
+form :: (Show (Msg id), Form form val, ViewId id) => Msg id -> Mod -> View (FormFields id) () -> View id ()
 form a md cnt = do
   vid <- context
 

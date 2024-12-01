@@ -61,5 +61,5 @@ dataTarget = att "data-target" . toViewId
 >     el_ "Now we can trigger a MessageAction which will update our Message HyperView, not this one"
 >     button ClearMessage id "Clear Message #2"
 -}
-target :: (HyperView id) => id -> View id () -> View a ()
+target :: (Component id) => id -> View id () -> View a ()
 target = addContext
