@@ -117,7 +117,6 @@ module Web.Hyperbole
     -- * Advanced
   , target
   , view
-  , ViewId
   , Response
   , Root
   , HyperViewHandled

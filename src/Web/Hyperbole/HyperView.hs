@@ -1,31 +1,9 @@
-{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.HyperView where
 
 import Data.Kind (Type)
-import Data.Text (Text, pack, unpack)
-import Text.Read (readMaybe)
-import Web.Hyperbole.Component (Component (..))
-
-
-toAction :: (Show a) => a -> Text
-toAction = pack . show
-
-
-parseAction :: (Read a) => Text -> Maybe a
-parseAction = readMaybe . unpack
-
-
-class ViewId a where
-  toViewId :: a -> Text
-  default toViewId :: (Show a) => a -> Text
-  toViewId = pack . show
-
-
-  parseViewId :: Text -> Maybe a
-  default parseViewId :: (Read a) => Text -> Maybe a
-  parseViewId = readMaybe . unpack
+import Web.Hyperbole.Component (Component (..), IsAction, ViewId)
 
 
 -- | The top-level view created by 'load'. Carries the views in its type to check that we handled all our views
@@ -35,7 +13,7 @@ data Root (views :: [Type]) = Root
 
 instance Component (Root views) es where
   data Action (Root views) = RootAction
-    deriving (Show, Read)
+    deriving (Show, Read, IsAction)
 
 
   data Model (Root views) = RootModel

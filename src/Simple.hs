@@ -12,7 +12,7 @@ import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
 import Web.Hyperbole
-import Web.Hyperbole.Component (Component (..))
+import Web.Hyperbole.Component (Component (..), IsAction, ViewId)
 import Web.Hyperbole.Effect.Hyperbole (start)
 
 
@@ -48,7 +48,7 @@ instance Component Counter es where
   data Action Counter
     = Increment
     | Decrement
-    deriving (Show, Read)
+    deriving (Show, Read, IsAction)
 
 
   -- Add additional effects required by the component. Can be omitted if there are none.
@@ -67,6 +67,8 @@ instance Component Counter es where
   -- Ideally the update function would only run effects and update the model without having to render the view manually. Its signature could change to receive the previous model and the action instead of just the action.
   update = \case
     Increment -> do
+      -- Inside the update function we have access to the effects defined in the
+      -- associated type 'Effects c es':
       n <- modify $ \n -> n + 1
       pure $ render $ CounterModel{count = n}
     Decrement -> do

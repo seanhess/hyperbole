@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Page.Triggers.Nested where
+module Nested where
 
 import Control.Monad (forM_)
 import Data.Maybe (fromMaybe)
@@ -9,7 +9,7 @@ import Data.Text qualified as Text
 import Effectful
 import Effectful.Concurrent.STM
 import Web.Hyperbole
-import Web.Hyperbole.Component (Component (..))
+import Web.Hyperbole.Component (Component (..), IsAction, ViewId)
 import Web.Hyperbole.Effect.Hyperbole (start)
 
 
@@ -28,7 +28,7 @@ instance Component MainView es where
   data Action MainView
     = Broadcast Text
     | ClearAll
-    deriving (Show, Read)
+    deriving (Show, Read, IsAction)
 
 
   data Model MainView = MainViewModel
@@ -40,13 +40,13 @@ instance Component MainView es where
 
 
   render model = do
-    let msg = fromMaybe "ready" model.broadcast
     row (gap 10) $ do
       col (gap 5) $ do
         button ClearAll Prelude.id "Clear"
         button (Broadcast "hello") Prelude.id "Broadcast hello"
         button (Broadcast "goodbye") Prelude.id "Broadcast goodbye"
 
+      let msg = fromMaybe "ready" model.broadcast
       forM_ [0 .. 4] $ \i -> do
         start (Listener i) ListenerModel{msg}
 
@@ -71,11 +71,7 @@ instance Component Listener es where
   data Action Listener
     = Display Text
     | Shout Text
-    deriving (Show, Read)
-
-
-  -- Add additional effects required by the component
-  type Effects Listener es = ()
+    deriving (Show, Read, IsAction)
 
 
   render :: Model Listener -> View Listener ()

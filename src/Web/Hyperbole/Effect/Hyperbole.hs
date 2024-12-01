@@ -17,7 +17,7 @@ import Effectful.Error.Static
 import Effectful.State.Static.Local
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
-import Web.Hyperbole.Component (Component (..))
+import Web.Hyperbole.Component (Component (..), IsAction (..), ViewId (..))
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.Handler.TypeList (HyperViewHandled)
 import Web.Hyperbole.HyperView
@@ -30,7 +30,6 @@ import Web.View
 hyper
   :: forall c ctx es
    . ( HyperViewHandled c ctx es
-     , ViewId c
      , Component c es
      )
   => c
@@ -43,7 +42,6 @@ hyper = hyperUnsafe @c @es
 start
   :: forall c ctx es
    . ( HyperViewHandled c ctx es
-     , ViewId c
      , Component c es
      )
   => c
@@ -138,13 +136,13 @@ formBody = do
   either (send . RespondEarly . Err . ErrParse) pure ef
 
 
-getEvent :: forall id es. (Read (Action id), Component id es, Hyperbole :> es, ViewId id) => Eff es (Maybe (Event id (Action id)))
+getEvent :: forall id es. (Component id es, Hyperbole :> es) => Eff es (Maybe (Event id (Action id)))
 getEvent = do
   q <- reqParams
   pure $ parseEvent @id @es q
 
 
-parseEvent :: (Read (Action id), Component id es, ViewId id) => Query -> Maybe (Event id (Action id))
+parseEvent :: (Component id es) => Query -> Maybe (Event id (Action id))
 parseEvent q = do
   Event ti ta <- lookupEvent q
   vid <- parseViewId ti
@@ -273,7 +271,7 @@ redirect = send . RespondEarly . Redirect
 
 
 -- | Respond with the given view, and stop execution
-respondEarly :: forall id es. (Component id es, Hyperbole :> es, ViewId id) => id -> View id () -> Eff es ()
+respondEarly :: forall id es. (Component id es, Hyperbole :> es) => id -> View id () -> Eff es ()
 respondEarly i vw = do
   let vid = TargetViewId (toViewId i)
   let res = Response vid $ hyperUnsafe @id @es i vw

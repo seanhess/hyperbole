@@ -2,8 +2,7 @@
 
 module Web.Hyperbole.View.Target where
 
-import Web.Hyperbole.Component (Component (..))
-import Web.Hyperbole.HyperView
+import Web.Hyperbole.Component (Component (..), ViewId (..))
 import Web.View (Mod, View, addContext, att, el, flexCol)
 
 

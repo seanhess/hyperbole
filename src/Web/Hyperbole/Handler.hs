@@ -17,8 +17,12 @@ import Web.View
 
 class HasViewId m view where
   viewId :: m view
+
+
 instance HasViewId (View ctx) ctx where
   viewId = context
+
+
 instance HasViewId (Eff (Reader view : es)) view where
   viewId = ask
 
@@ -58,7 +62,14 @@ instance RunHandlers '[] es where
   runHandlers = pure ()
 
 
-instance (Effects view es, Component view es, Read (Action view), RunHandlers views es, ViewId view) => RunHandlers (view : views) es where
+instance
+  ( Component view es
+  , Effects view es
+  , Read (Action view)
+  , RunHandlers views es
+  )
+  => RunHandlers (view : views) es
+  where
   runHandlers = do
     runHandler @view (update @view @es)
     runHandlers @views
@@ -77,7 +88,10 @@ instance (Effects view es, Component view es, Read (Action view), RunHandlers vi
 
 runHandler
   :: forall id es
-   . (Component id es, Read (Action id), ViewId id, Hyperbole :> es)
+   . ( Component id es
+     , Read (Action id)
+     , Hyperbole :> es
+     )
   => (Action id -> Eff (Reader id : es) (View id ()))
   -> Eff es ()
 runHandler run = do
@@ -127,9 +141,9 @@ loadToResponse run = do
 @
 myPage :: (Hyperbole :> es) => UserId -> Page es Response
 myPage userId = do
-  'load' $ do
-    user <- loadUserFromDatabase userId
-    pure $ userPageView user
+ 'load' $ do
+   user <- loadUserFromDatabase userId
+   pure $ userPageView user
 @
 -}
 
@@ -152,18 +166,18 @@ myPage userId = do
 @
 myPage :: ('Hyperbole' :> es) => 'Page' es 'Response'
 myPage = do
-  'handle' messages
-  'load' pageView
+ 'handle' messages
+ 'load' pageView
 
 messages :: ('Hyperbole' :> es, MessageDatabase) => Message -> MessageAction -> 'Eff' es ('View' Message ())
 messages (Message mid) ClearMessage = do
-  deleteMessageSideEffect mid
-  pure $ messageView ""
+ deleteMessageSideEffect mid
+ pure $ messageView ""
 
 messages (Message mid) (Louder m) = do
-  let new = m <> "!"
-  saveMessageSideEffect mid new
-  pure $ messageView new
+ let new = m <> "!"
+ saveMessageSideEffect mid new
+ pure $ messageView new
 @
 -}
 
@@ -172,12 +186,12 @@ messages (Message mid) (Louder m) = do
 @
 myPage :: ('Hyperbole' :> es) => 'Page' es 'Response'
 myPage = do
-  'handle' messages
-  'load' pageView
+ 'handle' messages
+ 'load' pageView
 
 pageView = do
-  el_ "My Page"
-  'hyper' (Message 1) $ messageView "Starting Message"
+ el_ "My Page"
+ 'hyper' (Message 1) $ messageView "Starting Message"
 @
 -}
 

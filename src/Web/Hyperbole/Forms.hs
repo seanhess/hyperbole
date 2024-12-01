@@ -46,6 +46,7 @@ import Text.Casing (kebab)
 import Web.FormUrlEncoded (FormOptions (..), defaultFormOptions, parseUnique)
 import Web.FormUrlEncoded qualified as FE
 import Web.HttpApiData (FromHttpApiData (..))
+import Web.Hyperbole.Component (IsAction (..), ViewId)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.View.Target (dataTarget)
@@ -294,14 +295,14 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: (Show (Action id), Form form val, ViewId id) => Action id -> Mod -> View (FormFields id) () -> View id ()
+form :: (IsAction (Action id), Form form val, ViewId id) => Action id -> Mod -> View (FormFields id) () -> View id ()
 form a md cnt = do
   vid <- context
 
   tag "form" (onSubmit a . dataTarget vid . md . flexCol) $ do
     addContext (FormFields vid) cnt
  where
-  onSubmit :: (Show (Action a)) => Action a -> Mod
+  onSubmit :: (IsAction (Action a)) => Action a -> Mod
   onSubmit = att "data-on-submit" . toAction
 
 
