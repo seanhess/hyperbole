@@ -34,7 +34,7 @@ data Root (views :: [Type]) = Root
 
 
 instance Component (Root views) es where
-  data Msg (Root views) = RootMsg
+  data Action (Root views) = RootAction
     deriving (Show, Read)
 
 
@@ -42,7 +42,7 @@ instance Component (Root views) es where
     deriving (Show, Read)
 
 
-  type Import (Root views) = views
+  type Require (Root views) = views
   render _ = pure ()
   update _ = undefined -- TODO: Never called? How to best handle this?
 

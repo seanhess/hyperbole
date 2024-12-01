@@ -39,6 +39,7 @@ hyper
 hyper = hyperUnsafe @c @es
 
 
+-- | Initialize a given component giving it an initial value.
 start
   :: forall c ctx es
    . ( HyperViewHandled c ctx es
@@ -137,13 +138,13 @@ formBody = do
   either (send . RespondEarly . Err . ErrParse) pure ef
 
 
-getEvent :: forall id es. (Read (Msg id), Component id es, Hyperbole :> es, ViewId id) => Eff es (Maybe (Event id (Msg id)))
+getEvent :: forall id es. (Read (Action id), Component id es, Hyperbole :> es, ViewId id) => Eff es (Maybe (Event id (Action id)))
 getEvent = do
   q <- reqParams
   pure $ parseEvent @id @es q
 
 
-parseEvent :: (Read (Msg id), Component id es, ViewId id) => Query -> Maybe (Event id (Msg id))
+parseEvent :: (Read (Action id), Component id es, ViewId id) => Query -> Maybe (Event id (Action id))
 parseEvent q = do
   Event ti ta <- lookupEvent q
   vid <- parseViewId ti

@@ -26,14 +26,14 @@ instance HasViewId (Eff (Reader view : es)) view where
 -- -- If the actions are the same (newtype), map the views and have the inner handler process it
 -- delegate
 --   :: forall view inner es
---    . (Msg view ~ Msg inner, Component inner (Reader view : es ), Hyperbole :> es)
+--    . (Action view ~ Action inner, Component inner (Reader view : es ), Hyperbole :> es)
 --   => (view -> inner)
---   -> Msg view
+--   -> Action view
 --   -> Eff (Reader view : es) (View view ())
 -- delegate f action = do
 --   c <- viewId
 --   let inner = f c
---   innerView <- runReader inner $ update @inner @(_) action
+--   innerView <- runReader inner $ update @inner @(Reader view : es) action
 --   pure $ addContext inner innerView
 
 mapView :: (view -> inner) -> View inner () -> View view ()
@@ -58,7 +58,7 @@ instance RunHandlers '[] es where
   runHandlers = pure ()
 
 
-instance (Effects view es, Component view es, Read (Msg view), RunHandlers views es, ViewId view) => RunHandlers (view : views) es where
+instance (Effects view es, Component view es, Read (Action view), RunHandlers views es, ViewId view) => RunHandlers (view : views) es where
   runHandlers = do
     runHandler @view (update @view @es)
     runHandlers @views
@@ -77,12 +77,12 @@ instance (Effects view es, Component view es, Read (Msg view), RunHandlers views
 
 runHandler
   :: forall id es
-   . (Component id es, Read (Msg id), ViewId id, Hyperbole :> es)
-  => (Msg id -> Eff (Reader id : es) (View id ()))
+   . (Component id es, Read (Action id), ViewId id, Hyperbole :> es)
+  => (Action id -> Eff (Reader id : es) (View id ()))
   -> Eff es ()
 runHandler run = do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
-  mev <- getEvent @id :: Eff es (Maybe (Event id (Msg id)))
+  mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
   case mev of
     Just event -> do
       vw <- runReader event.viewId $ run event.action

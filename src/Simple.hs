@@ -45,7 +45,7 @@ instance Component Counter es where
     }
 
 
-  data Msg Counter
+  data Action Counter
     = Increment
     | Decrement
     deriving (Show, Read)

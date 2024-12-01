@@ -19,7 +19,7 @@ pollMessageView m = do
     'el_' ('text' m)
 @
 -}
-onLoad :: (Show (Msg id), ViewId id) => Msg id -> DelayMs -> View id () -> View id ()
+onLoad :: (Show (Action id), ViewId id) => Action id -> DelayMs -> View id () -> View id ()
 onLoad a delay initContent = do
   c <- context
   el (att "data-on-load" (toAction a) . att "data-delay" (pack $ show delay) . dataTarget c) initContent

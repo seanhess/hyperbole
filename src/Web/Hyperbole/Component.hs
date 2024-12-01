@@ -15,7 +15,7 @@ class Component c es where
 
 
   -- | The possible messages supported by the component
-  data Msg c
+  data Action c
 
 
   -- | Additional effects required by the component. Can be omitted if none are needed.
@@ -27,10 +27,10 @@ class Component c es where
 
   -- | Other components nested in the component.
   -- Can be omitted if none are needed.
-  type Import c :: [Type]
+  type Require c :: [Type]
 
 
-  type Import c = '[]
+  type Require c = '[]
 
 
   -- | Render the component
@@ -38,4 +38,4 @@ class Component c es where
 
 
   -- | Update the component based on a message. Ideally would only change the data model and leave rendering to the 'render' function.
-  update :: (Effects c es) => Msg c -> Eff (Reader c : es) (View c ())
+  update :: (Effects c es) => Action c -> Eff (Reader c : es) (View c ())

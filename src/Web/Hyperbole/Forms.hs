@@ -294,14 +294,14 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: (Show (Msg id), Form form val, ViewId id) => Msg id -> Mod -> View (FormFields id) () -> View id ()
+form :: (Show (Action id), Form form val, ViewId id) => Action id -> Mod -> View (FormFields id) () -> View id ()
 form a md cnt = do
   vid <- context
 
   tag "form" (onSubmit a . dataTarget vid . md . flexCol) $ do
     addContext (FormFields vid) cnt
  where
-  onSubmit :: (Show (Msg a)) => Msg a -> Mod
+  onSubmit :: (Show (Action a)) => Action a -> Mod
   onSubmit = att "data-on-submit" . toAction
 
 

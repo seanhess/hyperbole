@@ -25,7 +25,7 @@ data MainView = MainView
 
 
 instance Component MainView es where
-  data Msg MainView
+  data Action MainView
     = Broadcast Text
     | ClearAll
     deriving (Show, Read)
@@ -36,7 +36,7 @@ instance Component MainView es where
     }
 
 
-  type Import MainView = '[Listener]
+  type Require MainView = '[Listener]
 
 
   render model = do
@@ -68,7 +68,7 @@ instance Component Listener es where
     }
 
 
-  data Msg Listener
+  data Action Listener
     = Display Text
     | Shout Text
     deriving (Show, Read)

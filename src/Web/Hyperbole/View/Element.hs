@@ -14,7 +14,7 @@ import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, labe
 
 > button SomeAction (border 1) "Click Me"
 -}
-button :: (ViewId id, Show (Msg id)) => Msg id -> Mod -> View id () -> View id ()
+button :: (ViewId id, Show (Action id)) => Action id -> Mod -> View id () -> View id ()
 button a f cd = do
   c <- context
   tag "button" (att "data-on-click" (toAction a) . dataTarget c . f) cd
@@ -41,10 +41,10 @@ allContactsView fil = do
 -}
 dropdown
   :: (ViewId id)
-  => (opt -> Msg id)
+  => (opt -> Action id)
   -> (opt -> Bool) -- check if selec
   -> Mod
-  -> View (Option opt id (Msg id)) ()
+  -> View (Option opt id (Action id)) ()
   -> View id ()
 dropdown act isSel f options = do
   c <- context
@@ -54,10 +54,10 @@ dropdown act isSel f options = do
 
 -- | An option for a 'dropdown'. First argument is passed to (opt -> Action id) in the 'dropdown', and to the selected predicate
 option
-  :: (ViewId id, Eq opt, Show (Msg id))
+  :: (ViewId id, Eq opt, Show (Action id))
   => opt
-  -> View (Option opt id (Msg id)) ()
-  -> View (Option opt id (Msg id)) ()
+  -> View (Option opt id (Action id)) ()
+  -> View (Option opt id (Action id)) ()
 option opt cnt = do
   os <- context
   tag "option" (att "value" (toAction (os.toAction opt)) . selected (os.selected opt)) cnt
@@ -76,14 +76,14 @@ data Option opt id action = Option
 
 
 -- | A live search field
-search :: (ViewId id, Show (Msg id)) => (Text -> Msg id) -> DelayMs -> Mod -> View id ()
+search :: (ViewId id, Show (Action id)) => (Text -> Action id) -> DelayMs -> Mod -> View id ()
 search onInput delay f = do
   c <- context
   tag "input" (att "data-on-input" (toActionInput onInput) . att "data-delay" (pack $ show delay) . dataTarget c . f) none
 
 
 -- | Serialize a constructor that expects a single 'Text', like `data MyAction = GoSearch Text`
-toActionInput :: (Show (Msg a)) => (Text -> Msg a) -> Text
+toActionInput :: (Show (Action a)) => (Text -> Action a) -> Text
 toActionInput con =
   -- remove the ' ""' at the end of the constructor
   T.dropEnd 3 $ toAction $ con ""
