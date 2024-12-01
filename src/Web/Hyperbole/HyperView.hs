@@ -17,10 +17,6 @@ parseAction :: (Read a) => Text -> Maybe a
 parseAction = readMaybe . unpack
 
 
--- instance ViewAction () where
---   toAction _ = ""
---   parseAction _ = Just ()
-
 class ViewId a where
   toViewId :: a -> Text
   default toViewId :: (Show a) => a -> Text
@@ -47,8 +43,8 @@ instance Component (Root views) es where
 
 
   type Import (Root views) = views
-  render = undefined
-  update = undefined
+  render _ = pure ()
+  update _ = undefined -- TODO: Never called? How to best handle this?
 
 
 type family TupleList a where

@@ -74,10 +74,6 @@ instance Component Counter es where
       pure $ render $ CounterModel{count = n}
 
 
--- -- | This instance becomes trivial, and ideally the Handle class can be eliminated
--- instance (Reader (TVar Int) :> es, Concurrent :> es) => Handle Counter es where
---   handle = update
-
 viewCount :: Int -> View Counter ()
 viewCount n = col (gap 10) $ do
   row id $ do
