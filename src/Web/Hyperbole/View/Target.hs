@@ -1,6 +1,6 @@
 module Web.Hyperbole.View.Target where
 
-import Web.Hyperbole.Handler.TypeList (HyperViewHandled)
+import Web.Hyperbole.Component (Component (..))
 import Web.Hyperbole.HyperView
 import Web.View (Mod, View, addContext, att, el, flexCol)
 
@@ -38,16 +38,8 @@ otherView = do
 -- TODO: if I'm going to limit it, it's going to happen here
 -- AND all their children have to be there
 -- , All (Elem (Require ctx)) (Require id)
-hyper
-  :: forall id ctx
-   . (HyperViewHandled id ctx)
-  => id
-  -> View id ()
-  -> View ctx ()
-hyper = hyperUnsafe
 
-
-hyperUnsafe :: (ViewId id) => id -> View id () -> View ctx ()
+hyperUnsafe :: (ViewId c, Component c) => c -> View c () -> View ctx ()
 hyperUnsafe vid vw = do
   el (att "id" (toViewId vid) . flexCol) $
     addContext vid vw

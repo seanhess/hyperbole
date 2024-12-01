@@ -16,7 +16,9 @@ import Effectful.Error.Static
 import Effectful.State.Static.Local
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
+import Web.Hyperbole.Component (Component (..))
 import Web.Hyperbole.Effect.Server
+import Web.Hyperbole.Handler.TypeList (HyperViewHandled)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Route
 import Web.Hyperbole.Session as Session
@@ -24,9 +26,32 @@ import Web.Hyperbole.View.Target (hyperUnsafe)
 import Web.View
 
 
-{- | In any 'load' or 'handle', you can use this Effect to get extra request information or control the response manually.
+hyper
+  :: forall id ctx
+   . ( HyperViewHandled id ctx
+     , ViewId id
+     , Component id
+     )
+  => id
+  -> View id ()
+  -> View ctx ()
+hyper = hyperUnsafe
 
-For most 'Page's, you won't need to use this effect directly. Use custom 'Route's for request info, and return 'View's to respond
+
+start
+  :: ( HyperViewHandled c ctx
+     , ViewId c
+     , Component c
+     )
+  => c
+  -> Model c
+  -> View ctx ()
+start componentId model =
+  hyperUnsafe componentId $ render model
+
+
+{- | In any 'load' or 'handle', you can use this Effect to get extra request information or control the response manually.
+    For most 'Page's, you won't need to use this effect directly. Use custom 'Route's for request info, and return 'View's to respond
 -}
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
@@ -110,13 +135,13 @@ formBody = do
   either (send . RespondEarly . Err . ErrParse) pure ef
 
 
-getEvent :: (HyperView id, Hyperbole :> es) => Eff es (Maybe (Event id (Action id)))
+getEvent :: (Read (Msg id), HyperView id, Hyperbole :> es) => Eff es (Maybe (Event id (Msg id)))
 getEvent = do
   q <- reqParams
   pure $ parseEvent q
 
 
-parseEvent :: (HyperView id) => Query -> Maybe (Event id (Action id))
+parseEvent :: (Read (Msg id), HyperView id) => Query -> Maybe (Event id (Msg id))
 parseEvent q = do
   Event ti ta <- lookupEvent q
   vid <- parseViewId ti
@@ -162,13 +187,13 @@ clearSession k = send $ DelSession k
 @
 myPage :: 'Page' es 'Response'
 myPage = do
-  'load' $ do
-    q <- reqParams
-    case 'lookupParam' "token" q of
-      Nothing -> pure $ errorView "Missing Token in Query String"
-      Just t -> do
-        sideEffectUsingToken token
-        pure myPageView
+ 'load' $ do
+   q <- reqParams
+   case 'lookupParam' "token" q of
+     Nothing -> pure $ errorView "Missing Token in Query String"
+     Just t -> do
+       sideEffectUsingToken token
+       pure myPageView
 @
 -}
 reqParams :: (Hyperbole :> es) => Eff es Query
@@ -180,10 +205,10 @@ reqParams = (.query) <$> request
 @
 myPage :: 'Page' es 'Response'
 myPage = do
-  'load' $ do
-    token <- reqParam "token"
-    sideEffectUsingToken token
-    pure myPageView
+ 'load' $ do
+   token <- reqParam "token"
+   sideEffectUsingToken token
+   pure myPageView
 @
 -}
 reqParam :: forall a es. (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es a
@@ -219,15 +244,15 @@ hasParam p q =
 @
 userLoad :: (Hyperbole :> es, Users :> es) => UserId -> Eff es User
 userLoad uid = do
-  mu <- send (LoadUser uid)
-  maybe notFound pure mu
+ mu <- send (LoadUser uid)
+ maybe notFound pure mu
 
 myPage :: (Hyperbole :> es, Users :> es) => Eff es View
 myPage = do
-  load $ do
-    u <- userLoad 100
-    -- skipped if user = Nothing
-    pure $ userView u
+ load $ do
+   u <- userLoad 100
+   -- skipped if user = Nothing
+   pure $ userView u
 @
 -}
 notFound :: (Hyperbole :> es) => Eff es a
@@ -245,7 +270,7 @@ redirect = send . RespondEarly . Redirect
 
 
 -- | Respond with the given view, and stop execution
-respondEarly :: (Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
+respondEarly :: (Component id, Hyperbole :> es, HyperView id) => id -> View id () -> Eff es ()
 respondEarly i vw = do
   let vid = TargetViewId (toViewId i)
   let res = Response vid $ hyperUnsafe i vw

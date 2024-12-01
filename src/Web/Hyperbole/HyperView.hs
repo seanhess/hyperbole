@@ -6,6 +6,7 @@ module Web.Hyperbole.HyperView where
 import Data.Kind (Type)
 import Data.Text (Text, pack, unpack)
 import Text.Read (readMaybe)
+import Web.Hyperbole.Component (Component (..))
 
 
 {- | HyperViews are interactive subsections of a 'Page'
@@ -25,27 +26,22 @@ instance HyperView Message where
   type Action Message = MessageAction
 @
 -}
-class (ViewId id, ViewAction (Action id)) => HyperView id where
-  type Action id :: Type
+class (ViewId id) => HyperView id where
   type Require id :: [Type]
   type Require id = '[]
 
 
-class ViewAction a where
-  toAction :: a -> Text
-  default toAction :: (Show a) => a -> Text
-  toAction = pack . show
+toAction :: (Show a) => a -> Text
+toAction = pack . show
 
 
-  parseAction :: Text -> Maybe a
-  default parseAction :: (Read a) => Text -> Maybe a
-  parseAction = readMaybe . unpack
+parseAction :: (Read a) => Text -> Maybe a
+parseAction = readMaybe . unpack
 
 
-instance ViewAction () where
-  toAction _ = ""
-  parseAction _ = Just ()
-
+-- instance ViewAction () where
+--   toAction _ = ""
+--   parseAction _ = Just ()
 
 class ViewId a where
   toViewId :: a -> Text
@@ -64,8 +60,21 @@ data Root (views :: [Type]) = Root
 
 
 instance HyperView (Root views) where
-  type Action (Root views) = ()
   type Require (Root views) = views
+
+
+instance Component (Root views) where
+  data Msg (Root views) = RootMsg
+    deriving (Show, Read)
+
+
+  data Model (Root views) = RootModel
+    deriving (Show, Read)
+
+
+  type Import (Root views) = views
+  render = undefined
+  update = undefined
 
 
 type family TupleList a where

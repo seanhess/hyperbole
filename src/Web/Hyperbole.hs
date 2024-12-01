@@ -120,7 +120,6 @@ module Web.Hyperbole
   , target
   , view
   , ViewId
-  , ViewAction
   , Response
   , Root
   , HyperViewHandled

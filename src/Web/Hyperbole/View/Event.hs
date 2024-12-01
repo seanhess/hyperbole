@@ -1,6 +1,7 @@
 module Web.Hyperbole.View.Event where
 
 import Data.Text (pack)
+import Web.Hyperbole.Component (Component (..))
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.View.Target
 import Web.View (View, att, context, el, flexCol, hide, parent)
@@ -19,7 +20,7 @@ pollMessageView m = do
     'el_' ('text' m)
 @
 -}
-onLoad :: (HyperView id) => Action id -> DelayMs -> View id () -> View id ()
+onLoad :: (Show (Msg id), HyperView id) => Msg id -> DelayMs -> View id () -> View id ()
 onLoad a delay initContent = do
   c <- context
   el (att "data-on-load" (toAction a) . att "data-delay" (pack $ show delay) . dataTarget c) initContent

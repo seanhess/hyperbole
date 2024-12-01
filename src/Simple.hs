@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -11,6 +12,8 @@ import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
 import Web.Hyperbole
+import Web.Hyperbole.Component (Component (..))
+import Web.Hyperbole.Effect.Hyperbole (start)
 
 
 main = do
@@ -29,31 +32,51 @@ page = do
   n <- readTVarIO var
   pure $ col (pad 20 . gap 10) $ do
     el id "Counter"
-    hyper Counter (viewCount n)
+    start Counter CounterModel{count = n}
 
 
 data Counter = Counter
-  deriving (Show, Read, ViewId)
+  deriving (Show, Read, ViewId, HyperView)
 
 
-data Count
-  = Increment
-  | Decrement
-  deriving (Show, Read, ViewAction)
+instance Component Counter where
+  data Model Counter = CounterModel
+    { count :: Int
+    }
 
 
-instance HyperView Counter where
-  type Action Counter = Count
+  data Msg Counter
+    = Increment
+    | Decrement
+    deriving (Show, Read)
 
 
+  -- Add additional effects required by the component. Can be omitted if there are none.
+  type Effects Counter es = (Reader (TVar Int) :> es, Concurrent :> es)
+
+
+  render :: Model Counter -> View Counter ()
+  render model = col (gap 10) $ do
+    row id $ do
+      el (bold . fontSize 48 . border 1 . pad (XY 20 0)) $ text $ pack $ show model.count
+    row (gap 10) $ do
+      button Decrement id "Decrement"
+      button Increment id "Increment"
+
+
+  -- Ideally the update function would only run effects and update the model without having to render the view manually. Its signature could change to receive the previous model and the action instead of just the action.
+  update = \case
+    Increment -> do
+      n <- modify $ \n -> n + 1
+      pure $ render $ CounterModel{count = n}
+    Decrement -> do
+      n <- modify $ \n -> n - 1
+      pure $ render $ CounterModel{count = n}
+
+
+-- | This instance becomes trivial, and ideally the Handle class can be eliminated
 instance (Reader (TVar Int) :> es, Concurrent :> es) => Handle Counter es where
-  handle Increment = do
-    Counter <- viewId
-    n <- modify $ \n -> n + 1
-    pure $ viewCount n
-  handle Decrement = do
-    n <- modify $ \n -> n - 1
-    pure $ viewCount n
+  handle = update
 
 
 viewCount :: Int -> View Counter ()

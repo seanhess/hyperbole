@@ -1,10 +1,10 @@
 module Web.Hyperbole.View
-  ( hyper
-  , target
+  ( target
   , module Web.Hyperbole.View.Element
   , module Web.Hyperbole.View.Event
   , module Web.View
-  ) where
+  )
+where
 
 import Web.Hyperbole.View.Element
 import Web.Hyperbole.View.Event

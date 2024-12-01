@@ -7,6 +7,7 @@ import Data.Kind (Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
+import Web.Hyperbole.Component
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
@@ -15,7 +16,7 @@ import Web.View
 
 
 class Handle view es where
-  handle :: (Hyperbole :> es) => Action view -> Eff (Reader view : es) (View view ())
+  handle :: (Hyperbole :> es) => Msg view -> Eff (Reader view : es) (View view ())
 
 
 class HasViewId m view where
@@ -32,9 +33,9 @@ type Handler es view a = Eff (Reader view : es) a
 -- If the actions are the same (newtype), map the views and have the inner handler process it
 delegate
   :: forall view inner es
-   . (Action view ~ Action inner, Handle inner (Reader view : es), Hyperbole :> es)
+   . (Msg view ~ Msg inner, Handle inner (Reader view : es), Hyperbole :> es)
   => (view -> inner)
-  -> Action view
+  -> Msg view
   -> Eff (Reader view : es) (View view ())
 delegate f action = do
   c <- viewId
@@ -65,7 +66,7 @@ instance RunHandlers '[] es where
   runHandlers = pure ()
 
 
-instance (HyperView view, Handle view es, RunHandlers views es) => RunHandlers (view : views) es where
+instance (Component view, Read (Msg view), HyperView view, Handle view es, RunHandlers views es) => RunHandlers (view : views) es where
   runHandlers = do
     runHandler @view (handle @view)
     runHandlers @views
@@ -84,12 +85,12 @@ instance (HyperView view, Handle view es, RunHandlers views es) => RunHandlers (
 
 runHandler
   :: forall id es
-   . (HyperView id, Hyperbole :> es)
-  => (Action id -> Eff (Reader id : es) (View id ()))
+   . (Component id, Read (Msg id), HyperView id, Hyperbole :> es)
+  => (Msg id -> Eff (Reader id : es) (View id ()))
   -> Eff es ()
 runHandler run = do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
-  mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
+  mev <- getEvent @id :: Eff es (Maybe (Event id (Msg id)))
   case mev of
     Just event -> do
       vw <- runReader event.viewId $ run event.action

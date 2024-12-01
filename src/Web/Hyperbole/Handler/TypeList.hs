@@ -4,6 +4,7 @@ module Web.Hyperbole.Handler.TypeList where
 
 import Data.Kind (Constraint, Type)
 import GHC.TypeLits hiding (Mod)
+import Web.Hyperbole.Component (Component (..))
 import Web.Hyperbole.HyperView
 
 
@@ -17,8 +18,8 @@ type family ValidDescendents x :: [Type] where
 type family NextDescendents (ex :: [Type]) (xs :: [Type]) where
   NextDescendents _ '[] = '[]
   NextDescendents ex (x ': xs) =
-    RemoveAll (x : ex) (Require x)
-      <++> NextDescendents ((x : ex) <++> Require x) (RemoveAll (x : ex) (Require x))
+    RemoveAll (x : ex) (Import x)
+      <++> NextDescendents ((x : ex) <++> Import x) (RemoveAll (x : ex) (Import x))
       <++> NextDescendents (x : ex) (RemoveAll (x : ex) xs)
 
 
@@ -45,14 +46,14 @@ type NotHandled id ctx (views :: [Type]) =
   TypeError
     ( 'Text "HyperView "
         :<>: 'ShowType id
-        :<>: 'Text " not found in (Require "
+        :<>: 'Text " not found in (Import "
         :<>: 'ShowType ctx
         :<>: 'Text ")"
         :$$: 'Text "  " :<>: 'ShowType views
         :$$: 'Text "Try adding it to the HyperView instance:"
         :$$: 'Text "  instance HyperView " :<>: 'ShowType ctx :<>: 'Text " where"
-        :$$: 'Text "    type Action " :<>: 'ShowType ctx :<>: 'Text " = " :<>: ShowType (Action id) :<>: 'Text ""
-        :$$: 'Text "    type Require " :<>: 'ShowType ctx :<>: 'Text " = [" :<>: ShowType id :<>: 'Text ", ...]"
+        :$$: 'Text "    type Action " :<>: 'ShowType ctx :<>: 'Text " = " :<>: ShowType (Msg id) :<>: 'Text ""
+        :$$: 'Text "    type Import " :<>: 'ShowType ctx :<>: 'Text " = [" :<>: ShowType id :<>: 'Text ", ...]"
     )
 
 
@@ -64,7 +65,7 @@ type NotDesc id ctx x cs =
         :<>: 'ShowType id
         :<>: 'Text ", not handled by context "
         :<>: 'ShowType ctx
-        :$$: ('Text " Require = " ':<>: 'ShowType cs)
+        :$$: ('Text " Import = " ':<>: 'ShowType cs)
         -- ':$$: 'ShowType x
         -- ':$$: 'ShowType cs
     )
@@ -87,7 +88,7 @@ type HyperViewHandled id ctx =
   ( HyperView id
   , HyperView ctx
   , -- the id must be found in the children of the context
-    ElemOr id (Require ctx) (NotHandled id ctx (Require ctx))
+    ElemOr id (Import ctx) (NotHandled id ctx (Import ctx))
   , -- Make sure the descendents of id are in the context for the root page
     CheckDescendents id ctx
   )
