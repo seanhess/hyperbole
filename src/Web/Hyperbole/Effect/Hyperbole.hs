@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE LambdaCase #-}
 
 module Web.Hyperbole.Effect.Hyperbole where
@@ -27,27 +28,28 @@ import Web.View
 
 
 hyper
-  :: forall c ctx
-   . ( HyperViewHandled c ctx
+  :: forall c ctx es
+   . ( HyperViewHandled c ctx es
      , ViewId c
-     , Component c
+     , Component c es
      )
   => c
   -> View c ()
   -> View ctx ()
-hyper = hyperUnsafe
+hyper = hyperUnsafe @c @es
 
 
 start
-  :: ( HyperViewHandled c ctx
+  :: forall c ctx es
+   . ( HyperViewHandled c ctx es
      , ViewId c
-     , Component c
+     , Component c es
      )
   => c
   -> Model c
   -> View ctx ()
 start componentId model =
-  hyperUnsafe componentId $ render model
+  hyperUnsafe @c @es componentId $ render @c @es model
 
 
 {- | In any 'load' or 'handle', you can use this Effect to get extra request information or control the response manually.
@@ -135,13 +137,13 @@ formBody = do
   either (send . RespondEarly . Err . ErrParse) pure ef
 
 
-getEvent :: (Read (Msg id), Component id, Hyperbole :> es, ViewId id) => Eff es (Maybe (Event id (Msg id)))
+getEvent :: forall id es. (Read (Msg id), Component id es, Hyperbole :> es, ViewId id) => Eff es (Maybe (Event id (Msg id)))
 getEvent = do
   q <- reqParams
-  pure $ parseEvent q
+  pure $ parseEvent @id @es q
 
 
-parseEvent :: (Read (Msg id), Component id, ViewId id) => Query -> Maybe (Event id (Msg id))
+parseEvent :: (Read (Msg id), Component id es, ViewId id) => Query -> Maybe (Event id (Msg id))
 parseEvent q = do
   Event ti ta <- lookupEvent q
   vid <- parseViewId ti
@@ -270,10 +272,10 @@ redirect = send . RespondEarly . Redirect
 
 
 -- | Respond with the given view, and stop execution
-respondEarly :: (Component id, Hyperbole :> es, ViewId id) => id -> View id () -> Eff es ()
+respondEarly :: forall id es. (Component id es, Hyperbole :> es, ViewId id) => id -> View id () -> Eff es ()
 respondEarly i vw = do
   let vid = TargetViewId (toViewId i)
-  let res = Response vid $ hyperUnsafe i vw
+  let res = Response vid $ hyperUnsafe @id @es i vw
   send $ RespondEarly res
 
 

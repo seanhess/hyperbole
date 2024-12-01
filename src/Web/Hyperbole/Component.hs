@@ -1,3 +1,5 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Web.Hyperbole.Component where
 
 import Data.Kind (Constraint, Type)
@@ -7,7 +9,7 @@ import Web.View
 
 
 -- | A 'Component' is a self-contained piece of a 'Page'.
-class Component c where
+class Component c es where
   data Model c
   data Msg c
 

@@ -15,10 +15,6 @@ import Web.Hyperbole.View.Target (hyperUnsafe)
 import Web.View
 
 
-class Handle view es where
-  handle :: (Hyperbole :> es) => Msg view -> Eff (Reader view : es) (View view ())
-
-
 class HasViewId m view where
   viewId :: m view
 instance HasViewId (View ctx) ctx where
@@ -27,22 +23,18 @@ instance HasViewId (Eff (Reader view : es)) view where
   viewId = ask
 
 
-type Handler es view a = Eff (Reader view : es) a
-
-
--- If the actions are the same (newtype), map the views and have the inner handler process it
-delegate
-  :: forall view inner es
-   . (Msg view ~ Msg inner, Handle inner (Reader view : es), Hyperbole :> es)
-  => (view -> inner)
-  -> Msg view
-  -> Eff (Reader view : es) (View view ())
-delegate f action = do
-  c <- viewId
-  let inner = f c
-  innerView <- runReader inner $ handle @inner action
-  pure $ addContext inner innerView
-
+-- -- If the actions are the same (newtype), map the views and have the inner handler process it
+-- delegate
+--   :: forall view inner es
+--    . (Msg view ~ Msg inner, Component inner (Reader view : es ), Hyperbole :> es)
+--   => (view -> inner)
+--   -> Msg view
+--   -> Eff (Reader view : es) (View view ())
+-- delegate f action = do
+--   c <- viewId
+--   let inner = f c
+--   innerView <- runReader inner $ update @inner @(_) action
+--   pure $ addContext inner innerView
 
 mapView :: (view -> inner) -> View inner () -> View view ()
 mapView f inner = do
@@ -66,9 +58,9 @@ instance RunHandlers '[] es where
   runHandlers = pure ()
 
 
-instance (Component view, Read (Msg view), Handle view es, RunHandlers views es, ViewId view) => RunHandlers (view : views) es where
+instance (Effects view es, Component view es, Read (Msg view), RunHandlers views es, ViewId view) => RunHandlers (view : views) es where
   runHandlers = do
-    runHandler @view (handle @view)
+    runHandler @view (update @view @es)
     runHandlers @views
 
 
@@ -85,7 +77,7 @@ instance (Component view, Read (Msg view), Handle view es, RunHandlers views es,
 
 runHandler
   :: forall id es
-   . (Component id, Read (Msg id), ViewId id, Hyperbole :> es)
+   . (Component id es, Read (Msg id), ViewId id, Hyperbole :> es)
   => (Msg id -> Eff (Reader id : es) (View id ()))
   -> Eff es ()
 runHandler run = do
@@ -95,7 +87,7 @@ runHandler run = do
     Just event -> do
       vw <- runReader event.viewId $ run event.action
       let vid = TargetViewId $ toViewId event.viewId
-      send $ RespondEarly $ Response vid $ hyperUnsafe event.viewId vw
+      send $ RespondEarly $ Response vid $ hyperUnsafe @id @es event.viewId vw
     _ -> do
       pure ()
 

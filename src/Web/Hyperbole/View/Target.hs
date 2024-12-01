@@ -1,3 +1,5 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Web.Hyperbole.View.Target where
 
 import Web.Hyperbole.Component (Component (..))
@@ -39,7 +41,7 @@ otherView = do
 -- AND all their children have to be there
 -- , All (Elem (Require ctx)) (Require id)
 
-hyperUnsafe :: (ViewId c, Component c) => c -> View c () -> View ctx ()
+hyperUnsafe :: (ViewId c, Component c es) => c -> View c () -> View ctx ()
 hyperUnsafe vid vw = do
   el (att "id" (toViewId vid) . flexCol) $
     addContext vid vw
@@ -61,5 +63,5 @@ dataTarget = att "data-target" . toViewId
 >     el_ "Now we can trigger a MessageAction which will update our Message HyperView, not this one"
 >     button ClearMessage id "Clear Message #2"
 -}
-target :: (Component id) => id -> View id () -> View a ()
+target :: (Component id es) => id -> View id () -> View a ()
 target = addContext

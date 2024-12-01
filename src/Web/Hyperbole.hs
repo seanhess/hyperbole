@@ -81,7 +81,6 @@ module Web.Hyperbole
   , InputType (..)
 
     -- ** Handlers
-  , Handle (..)
   , viewId
   , Page
 

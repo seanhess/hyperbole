@@ -37,7 +37,7 @@ data Root (views :: [Type]) = Root
   deriving (Show, Read, ViewId)
 
 
-instance Component (Root views) where
+instance Component (Root views) es where
   data Msg (Root views) = RootMsg
     deriving (Show, Read)
 
