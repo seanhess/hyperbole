@@ -17,12 +17,12 @@ data FormView = FormView
   deriving (Show, Read, ViewId)
 
 
-data FormAction = Submit
-  deriving (Show, Read, ViewAction)
-
-
 instance HyperView FormView where
-  type Action FormView = FormAction
+  data Action FormView
+    = Submit
+    deriving (Show, Read, ViewAction)
+
+
 instance Handle FormView es where
   handle Submit = do
     uf <- formData @UserForm

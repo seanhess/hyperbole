@@ -29,26 +29,6 @@ instance HasViewId (Eff (Reader view : es)) view where
 type Handler es view a = Eff (Reader view : es) a
 
 
--- If the actions are the same (newtype), map the views and have the inner handler process it
-delegate
-  :: forall view inner es
-   . (Action view ~ Action inner, Handle inner (Reader view : es), Hyperbole :> es)
-  => (view -> inner)
-  -> Action view
-  -> Eff (Reader view : es) (View view ())
-delegate f action = do
-  c <- viewId
-  let inner = f c
-  innerView <- runReader inner $ handle @inner action
-  pure $ addContext inner innerView
-
-
-mapView :: (view -> inner) -> View inner () -> View view ()
-mapView f inner = do
-  view1 <- viewId
-  addContext (f view1) inner
-
-
 -- class SetContext (f :: Type -> Type -> Type) es cnew cold where
 --   setViewId :: cnew -> (f es) cnew () -> (f es) cold ()
 -- instance SetContext (View Identity) a b where

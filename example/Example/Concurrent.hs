@@ -20,13 +20,12 @@ data Contents = Contents Milliseconds
   deriving (Show, Read, ViewId)
 
 
-data ContentsAction
-  = Load Int
-  deriving (Show, Read, ViewAction)
-
-
 instance HyperView Contents where
-  type Action Contents = ContentsAction
+  data Action Contents
+    = Load Int
+    deriving (Show, Read, ViewAction)
+
+
 instance (Debug :> es) => Handle Contents es where
   handle (Load n) = do
     Contents dl <- viewId

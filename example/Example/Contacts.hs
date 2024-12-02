@@ -7,13 +7,12 @@ import Control.Monad (forM_)
 import Effectful
 import Example.AppRoute qualified as AppRoute
 import Example.Colors
-import Example.Contact
+import Example.Contact (contactEdit', contactForm, contactLoading, contactView', parseUser)
 import Example.Effects.Debug
 import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
 import Web.Hyperbole
-import Web.Hyperbole.Handler
 
 
 page
@@ -33,13 +32,6 @@ data Contacts = Contacts
   deriving (Show, Read, ViewId)
 
 
-data ContactsAction
-  = Reload (Maybe Filter)
-  | AddUser
-  | DeleteUser UserId
-  deriving (Show, Read, ViewAction)
-
-
 data Filter
   = Active
   | Inactive
@@ -47,7 +39,11 @@ data Filter
 
 
 instance HyperView Contacts where
-  type Action Contacts = ContactsAction
+  data Action Contacts
+    = Reload (Maybe Filter)
+    | AddUser
+    | DeleteUser UserId
+    deriving (Show, Read, ViewAction)
   type Require Contacts = '[InlineContact]
 instance (Users :> es, Debug :> es) => Handle Contacts es where
   handle = \case
@@ -81,14 +77,14 @@ allContactsView fil us = col (gap 20) $ do
     let filtered = filter (filterUsers fil) us
     forM_ filtered $ \u -> do
       el (border 1 . pad 10) $ do
-        hyper (InlineContact $ Contact u.id) $ contactView' u
+        hyper (InlineContact u.id) $ contactView u
         row id $ do
           space
           link (routeUrl $ AppRoute.Contacts $ AppRoute.Contact u.id) Style.link "details"
 
   row (gap 10) $ do
     button (Reload Nothing) Style.btnLight "Reload"
-    target (Contact 2) $ button Edit Style.btnLight "Edit Sara"
+    target (InlineContact 2) $ button Edit Style.btnLight "Edit Sara"
 
   el bold "Add Contact"
 
@@ -99,32 +95,46 @@ allContactsView fil us = col (gap 20) $ do
   filterUsers (Just Active) u = u.isActive
   filterUsers (Just Inactive) u = not u.isActive
 
-  contactView' :: User -> View InlineContact ()
-  contactView' u = do
-    InlineContact c <- viewId
-    addContext c $ contactView u
-
 
 -- Reuse Contact View ----------------------------------
+-- We want to use the same view as Example.Contact, but customize the edit view to have a delete button
+-- Note that we re-implement the actions and the handler
+-- Just create functions to deduplicate code and use them here
 
--- Make a newtype so we can customize the behavior of the handler
-newtype InlineContact = InlineContact {contact :: Contact}
-  deriving newtype (ViewId)
+data InlineContact = InlineContact UserId
+  deriving (Show, Read, ViewId)
 
 
 instance HyperView InlineContact where
-  type Action InlineContact = ContactAction
+  data Action InlineContact
+    = Edit
+    | View
+    | Save
+    deriving (Show, Read, ViewAction)
 instance (Users :> es, Debug :> es) => Handle InlineContact es where
-  handle Edit = do
-    -- Edit will show the normal view, plus a delete button
-    InlineContact (Contact uid) <- viewId
+  handle action = do
+    InlineContact uid <- viewId
     u <- Users.find uid
-    pure $ inlineEdit u
-  handle other = do
-    delegate (.contact) other
+    case action of
+      View ->
+        pure $ contactView u
+      Edit ->
+        pure $ contactEdit u
+      Save -> do
+        delay 1000
+        unew <- parseUser uid
+        Users.save unew
+        pure $ contactView unew
 
 
-inlineEdit :: User -> View InlineContact ()
-inlineEdit u = onRequest contactLoading $ col (gap 10) $ do
-  mapView (.contact) $ contactEdit' u
-  target Contacts $ button (DeleteUser u.id) (Style.btn' Danger . pad (XY 10 0)) (text "Delete")
+-- See how we reuse the contactView' from Example.Contact
+contactView :: User -> View InlineContact ()
+contactView = contactView' Edit
+
+
+-- See how we reuse the contactEdit' and contactLoading from Example.Contact
+contactEdit :: User -> View InlineContact ()
+contactEdit u = do
+  onRequest contactLoading $ col (gap 10) $ do
+    contactEdit' View Save u
+    target Contacts $ button (DeleteUser u.id) (Style.btn' Danger . pad (XY 10 0)) (text "Delete")

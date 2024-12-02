@@ -36,14 +36,11 @@ data Counter = Counter
   deriving (Show, Read, ViewId)
 
 
-data Count
-  = Increment
-  | Decrement
-  deriving (Show, Read, ViewAction)
-
-
 instance HyperView Counter where
-  type Action Counter = Count
+  data Action Counter
+    = Increment
+    | Decrement
+    deriving (Show, Read, ViewAction)
 
 
 instance (Reader (TVar Int) :> es, Concurrent :> es) => Handle Counter es where

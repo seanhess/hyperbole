@@ -20,13 +20,10 @@ page = do
 data Contents = Contents
   deriving (Show, Read, ViewId)
 instance HyperView Contents where
-  type Action Contents = ContentsAction
-
-
-data ContentsAction
-  = Load
-  | Reload Int
-  deriving (Show, Read, ViewAction)
+  data Action Contents
+    = Load
+    | Reload Int
+    deriving (Show, Read, ViewAction)
 
 
 instance (Debug :> es) => Handle Contents es where
