@@ -19,13 +19,13 @@ data LiveSearch = LiveSearch
 
 
 data SearchAction
-  = GoSearch Text
-  | Select ProgrammingLanguage
-  deriving (Show, Read, ViewAction)
 
 
 instance HyperView LiveSearch where
-  type Action LiveSearch = SearchAction
+  data Action LiveSearch
+    = GoSearch Text
+    | Select ProgrammingLanguage
+    deriving (Show, Read, ViewAction)
 instance Handle LiveSearch es where
   handle (GoSearch term) = do
     let matched = filter (isMatchLanguage term) allLanguages

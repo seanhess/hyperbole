@@ -37,6 +37,7 @@ module Web.Hyperbole.Forms
   )
 where
 
+import Data.Function ((&))
 import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
 import Data.Text (Text, pack)
@@ -50,6 +51,7 @@ import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.View.Target (dataTarget)
 import Web.View hiding (form, input, label)
+import Web.View.Style (addClass, cls, prop)
 
 
 -- | The only time we can use Fields is inside a form
@@ -297,12 +299,17 @@ userForm v = do
 form :: (Form form val, HyperView id) => Action id -> Mod -> View (FormFields id) () -> View id ()
 form a md cnt = do
   vid <- context
-
-  tag "form" (onSubmit a . dataTarget vid . md . flexCol) $ do
+  tag "form" (onSubmit a . dataTarget vid . md . flexCol . marginEnd0) $ do
     addContext (FormFields vid) cnt
  where
   onSubmit :: (ViewAction a) => a -> Mod
   onSubmit = att "data-on-submit" . toAction
+
+  -- not sure why chrome is adding margin-block-end: 16 to forms? Add to web-view?
+  marginEnd0 =
+    addClass $
+      cls "mg-end-0"
+        & prop @PxRem "margin-block-end" 0
 
 
 -- | Button that submits the 'form'. Use 'button' to specify actions other than submit

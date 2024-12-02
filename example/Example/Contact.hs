@@ -38,15 +38,14 @@ data Contact = Contact UserId
   deriving (Show, Read, ViewId)
 
 
-data ContactAction
-  = Edit
-  | Save
-  | View
-  deriving (Show, Read, ViewAction)
-
-
 instance HyperView Contact where
-  type Action Contact = ContactAction
+  data Action Contact
+    = Edit
+    | Save
+    | View
+    deriving (Show, Read, ViewAction)
+
+
 instance (Users :> es, Debug :> es) => Handle Contact es where
   handle action = do
     -- No matter which action we are performing, let's look up the user to make sure it exists
@@ -80,7 +79,11 @@ parseUser uid = do
 
 
 contactView :: User -> View Contact ()
-contactView u = do
+contactView = contactView' Edit
+
+
+contactView' :: (HyperView c) => Action c -> User -> View c ()
+contactView' edit u = do
   col (gap 10) $ do
     row fld $ do
       el id (text "First Name:")
@@ -98,20 +101,20 @@ contactView u = do
       el id (text "Active:")
       text (cs $ show u.isActive)
 
-    button Edit Style.btn "Edit"
+    button edit Style.btn "Edit"
  where
   fld = gap 10
 
 
 contactEdit :: User -> View Contact ()
-contactEdit u = onRequest contactLoading $ contactEdit' u
+contactEdit u = onRequest contactLoading $ contactEdit' View Save u
 
 
-contactEdit' :: User -> View Contact ()
-contactEdit' u = do
-  contactForm Save contactFromUser
+contactEdit' :: (HyperView c) => Action c -> Action c -> User -> View c ()
+contactEdit' onView onSave u = do
+  contactForm onSave contactFromUser
   col (gap 10) $ do
-    button View Style.btnLight (text "Cancel")
+    button onView Style.btnLight (text "Cancel")
  where
   contactFromUser :: ContactForm Maybe
   contactFromUser =

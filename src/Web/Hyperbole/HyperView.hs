@@ -26,7 +26,7 @@ instance HyperView Message where
 @
 -}
 class (ViewId id, ViewAction (Action id)) => HyperView id where
-  type Action id :: Type
+  data Action id :: Type
   type Require id :: [Type]
   type Require id = '[]
 
@@ -64,7 +64,8 @@ data Root (views :: [Type]) = Root
 
 
 instance HyperView (Root views) where
-  type Action (Root views) = ()
+  data Action (Root views) = RootNone
+    deriving (Show, Read, ViewAction)
   type Require (Root views) = views
 
 

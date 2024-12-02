@@ -14,12 +14,12 @@ data Message = Message
   deriving (Show, Read, ViewId)
 
 
-data MessageAction = SetMessage Text
-  deriving (Show, Read, ViewAction)
-
-
 instance HyperView Message where
-  type Action Message = MessageAction
+  data Action Message
+    = SetMessage Text
+    deriving (Show, Read, ViewAction)
+
+
 instance Handle Message es where
   handle (SetMessage m) = do
     -- side effects

@@ -16,13 +16,13 @@ data Contents = Contents
 
 
 data ContentsAction
-  = Expand
-  | Collapse
-  deriving (Show, Read, ViewAction)
 
 
 instance HyperView Contents where
-  type Action Contents = ContentsAction
+  data Action Contents
+    = Expand
+    | Collapse
+    deriving (Show, Read, ViewAction)
 instance Handle Contents es where
   handle Expand = do
     pure viewBig

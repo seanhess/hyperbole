@@ -28,14 +28,12 @@ data Contents = Contents
   deriving (Show, Read, ViewId)
 
 
-data ContentsAction
-  = SaveColor AppColor
-  | SaveMessage Text
-  deriving (Show, Read, ViewAction)
-
 
 instance HyperView Contents where
-  type Action Contents = ContentsAction
+  data Action Contents
+    = SaveColor AppColor
+    | SaveMessage Text
+    deriving (Show, Read, ViewAction)
 instance (Debug :> es) => Handle Contents es where
   handle (SaveColor clr) = do
     setSession "color" clr

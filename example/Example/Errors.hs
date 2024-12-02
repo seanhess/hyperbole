@@ -17,13 +17,12 @@ data Contents = Contents
   deriving (Show, Read, ViewId)
 
 
-data ContentsAction
-  = CauseError
-  deriving (Show, Read, ViewAction)
-
-
 instance HyperView Contents where
-  type Action Contents = ContentsAction
+  data Action Contents
+    = CauseError
+    deriving (Show, Read, ViewAction)
+
+
 instance Handle Contents es where
   handle CauseError = do
     -- Return a not found error 404
