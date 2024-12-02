@@ -14,13 +14,9 @@ data Message = Message
   deriving (Show, Read, ViewId)
 
 
-instance HyperView Message where
-  data Action Message
-    = SetMessage Text
+instance HyperView Message es where
+  data Action Message = SetMessage Text
     deriving (Show, Read, ViewAction)
-
-
-instance Handle Message es where
   handle (SetMessage m) = do
     -- side effects
     pure $ messageView' m

@@ -15,11 +15,9 @@ data Contents = Contents
   deriving (Show, Read, ViewId)
 
 
-instance HyperView Contents where
-  data Action Contents
-    = RedirectAsAction
+instance HyperView Contents es where
+  data Action Contents = RedirectAsAction
     deriving (Show, Read, ViewAction)
-instance Handle Contents es where
   handle RedirectAsAction = do
     redirect "/hello/redirected"
 

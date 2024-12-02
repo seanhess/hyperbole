@@ -10,12 +10,7 @@ import Effectful.Reader.Dynamic
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.View.Target (hyperUnsafe)
 import Web.View
-
-
-class Handle view es where
-  handle :: (Hyperbole :> es) => Action view -> Eff (Reader view : es) (View view ())
 
 
 class HasViewId m view where
@@ -45,7 +40,7 @@ instance RunHandlers '[] es where
   runHandlers = pure ()
 
 
-instance (HyperView view, Handle view es, RunHandlers views es) => RunHandlers (view : views) es where
+instance (HyperView view es, RunHandlers views es) => RunHandlers (view : views) es where
   runHandlers = do
     runHandler @view (handle @view)
     runHandlers @views
@@ -64,7 +59,7 @@ instance (HyperView view, Handle view es, RunHandlers views es) => RunHandlers (
 
 runHandler
   :: forall id es
-   . (HyperView id, Hyperbole :> es)
+   . (HyperView id es, Hyperbole :> es)
   => (Action id -> Eff (Reader id : es) (View id ()))
   -> Eff es ()
 runHandler run = do

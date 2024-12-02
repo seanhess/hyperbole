@@ -43,6 +43,8 @@ module Web.Hyperbole
     -- ** HyperView
   , HyperView (..)
   , hyper
+  , viewId
+  , Page
 
     -- * Interactive Elements
 
@@ -82,9 +84,6 @@ module Web.Hyperbole
   , InputType (..)
 
     -- ** Handlers
-  , Handle (..)
-  , viewId
-  , Page
 
     -- ** Validation
   , Validated (..)
@@ -156,7 +155,7 @@ import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.Embed
 import Web.Hyperbole.Forms
 import Web.Hyperbole.Handler
-import Web.Hyperbole.Handler.TypeList
+import Web.Hyperbole.Handler.TypeList ()
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Page (Page, runPage)
 import Web.Hyperbole.Route

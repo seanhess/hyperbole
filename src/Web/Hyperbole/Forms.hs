@@ -49,7 +49,6 @@ import Web.FormUrlEncoded qualified as FE
 import Web.HttpApiData (FromHttpApiData (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.View.Target (dataTarget)
 import Web.View hiding (form, input, label)
 import Web.View.Style (addClass, cls, prop)
 
@@ -296,7 +295,7 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: (Form form val, HyperView id) => Action id -> Mod -> View (FormFields id) () -> View id ()
+form :: (Form form val, ViewId id, ViewAction (Action id)) => Action id -> Mod -> View (FormFields id) () -> View id ()
 form a md cnt = do
   vid <- context
   tag "form" (onSubmit a . dataTarget vid . md . flexCol . marginEnd0) $ do

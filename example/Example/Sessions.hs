@@ -28,13 +28,11 @@ data Contents = Contents
   deriving (Show, Read, ViewId)
 
 
-
-instance HyperView Contents where
+instance (Debug :> es) => HyperView Contents es where
   data Action Contents
     = SaveColor AppColor
     | SaveMessage Text
     deriving (Show, Read, ViewAction)
-instance (Debug :> es) => Handle Contents es where
   handle (SaveColor clr) = do
     setSession "color" clr
     msg <- session "msg"

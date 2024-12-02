@@ -19,14 +19,13 @@ page = do
 
 data Contents = Contents
   deriving (Show, Read, ViewId)
-instance HyperView Contents where
+
+
+instance (Debug :> es) => HyperView Contents es where
   data Action Contents
     = Load
     | Reload Int
     deriving (Show, Read, ViewAction)
-
-
-instance (Debug :> es) => Handle Contents es where
   handle Load = do
     -- Pretend the initial Load takes 1s to complete
     delay 1000

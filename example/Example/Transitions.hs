@@ -18,12 +18,11 @@ data Contents = Contents
 data ContentsAction
 
 
-instance HyperView Contents where
+instance HyperView Contents es where
   data Action Contents
     = Expand
     | Collapse
     deriving (Show, Read, ViewAction)
-instance Handle Contents es where
   handle Expand = do
     pure viewBig
   handle Collapse = do

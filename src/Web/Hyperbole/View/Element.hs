@@ -2,10 +2,10 @@ module Web.Hyperbole.View.Element where
 
 import Data.Text (Text, pack)
 import Data.Text qualified as T
-import Web.Hyperbole.HyperView
+import Web.Hyperbole.Effect.Hyperbole (HyperView (..), dataTarget)
+import Web.Hyperbole.HyperView (ViewAction (..), ViewId (..))
 import Web.Hyperbole.Route (Route (..), routeUrl)
 import Web.Hyperbole.View.Event (DelayMs)
-import Web.Hyperbole.View.Target (dataTarget)
 import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)
 
 
@@ -13,7 +13,7 @@ import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, labe
 
 > button SomeAction (border 1) "Click Me"
 -}
-button :: (HyperView id) => Action id -> Mod -> View id () -> View id ()
+button :: (ViewId id, ViewAction (Action id)) => Action id -> Mod -> View id () -> View id ()
 button a f cd = do
   c <- context
   tag "button" (att "data-on-click" (toAction a) . dataTarget c . f) cd
@@ -39,7 +39,7 @@ allContactsView fil = do
 @
 -}
 dropdown
-  :: (HyperView id)
+  :: (ViewId id, ViewAction (Action id))
   => (opt -> Action id)
   -> (opt -> Bool) -- check if selec
   -> Mod
@@ -53,7 +53,7 @@ dropdown act isSel f options = do
 
 -- | An option for a 'dropdown'. First argument is passed to (opt -> Action id) in the 'dropdown', and to the selected predicate
 option
-  :: (HyperView id, Eq opt)
+  :: (ViewId id, ViewAction (Action id), Eq opt)
   => opt
   -> View (Option opt id (Action id)) ()
   -> View (Option opt id (Action id)) ()
@@ -75,7 +75,7 @@ data Option opt id action = Option
 
 
 -- | A live search field
-search :: (HyperView id) => (Text -> Action id) -> DelayMs -> Mod -> View id ()
+search :: (ViewId id, ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod -> View id ()
 search onInput delay f = do
   c <- context
   tag "input" (att "data-on-input" (toActionInput onInput) . att "data-delay" (pack $ show delay) . dataTarget c . f) none

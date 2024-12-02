@@ -36,14 +36,13 @@ data Counter = Counter
   deriving (Show, Read, ViewId)
 
 
-instance HyperView Counter where
+instance (Reader (TVar Int) :> es, Concurrent :> es) => HyperView Counter es where
   data Action Counter
     = Increment
     | Decrement
     deriving (Show, Read, ViewAction)
 
 
-instance (Reader (TVar Int) :> es, Concurrent :> es) => Handle Counter es where
   handle Increment = do
     Counter <- viewId
     n <- modify $ \n -> n + 1
