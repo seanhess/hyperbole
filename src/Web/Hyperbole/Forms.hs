@@ -48,6 +48,7 @@ import Web.FormUrlEncoded (FormOptions (..), defaultFormOptions, parseUnique)
 import Web.FormUrlEncoded qualified as FE
 import Web.HttpApiData (FromHttpApiData (..))
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Respond (parseError)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.View.Event (dataTarget)

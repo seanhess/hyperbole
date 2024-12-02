@@ -6,9 +6,6 @@ import Data.Kind (Constraint, Type)
 import GHC.TypeLits hiding (Mod)
 
 
--- type family AllDescendents (xs :: [Type]) :: [Type] where
---   AllDescendents xs = xs <++> RemoveAll xs (NextDescendents '[] xs)
-
 -- concat lists
 type family (<++>) xs ys where
   '[] <++> ys = ys

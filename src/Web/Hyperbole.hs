@@ -150,6 +150,7 @@ import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Hyperbole.Application
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Effect.Request (formBody, hasParam, lookupParam, reqParam, reqParams, request)
 import Web.Hyperbole.Effect.Respond (notFound, redirect, respondEarly, view)
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.Embed

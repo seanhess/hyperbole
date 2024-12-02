@@ -37,6 +37,7 @@ library
       Web.Hyperbole.Effect.Event
       Web.Hyperbole.Effect.Handler
       Web.Hyperbole.Effect.Hyperbole
+      Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Respond
       Web.Hyperbole.Effect.Server
       Web.Hyperbole.Embed
