@@ -2,7 +2,6 @@ module Web.Hyperbole.Effect.Event where
 
 import Data.Text (Text)
 import Effectful
-import Effectful.Dispatch.Dynamic
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole, lookupParam, reqParams)
 import Web.Hyperbole.Effect.Server (Event (..))
 import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..))

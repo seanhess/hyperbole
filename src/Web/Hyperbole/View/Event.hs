@@ -1,7 +1,6 @@
 module Web.Hyperbole.View.Event where
 
 import Data.Text (pack)
-import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.HyperView
 import Web.View (Mod, View, att, context, el, flexCol, hide, parent)
 

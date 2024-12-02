@@ -18,7 +18,6 @@ import Effectful.State.Static.Local
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..), parseQueryParam)
 import Web.Hyperbole.Effect.Server
-import Web.Hyperbole.Route
 import Web.Hyperbole.Session as Session
 import Web.View
 
@@ -190,39 +189,3 @@ lookupParam p q =
 hasParam :: BS.ByteString -> Query -> Bool
 hasParam p q =
   isJust $ lookup p q
-
-
-{- | Respond immediately with 404 Not Found
-
-@
-userLoad :: (Hyperbole :> es, Users :> es) => UserId -> Eff es User
-userLoad uid = do
-  mu <- send (LoadUser uid)
-  maybe notFound pure mu
-
-myPage :: (Hyperbole :> es, Users :> es) => Eff es View
-myPage = do
-  load $ do
-    u <- userLoad 100
-    -- skipped if user = Nothing
-    pure $ userView u
-@
--}
-notFound :: (Hyperbole :> es) => Eff es a
-notFound = send $ RespondEarly NotFound
-
-
--- | Respond immediately with a parse error
-parseError :: (Hyperbole :> es) => Text -> Eff es a
-parseError = send . RespondEarly . Err . ErrParse
-
-
--- | Redirect immediately to the 'Url'
-redirect :: (Hyperbole :> es) => Url -> Eff es a
-redirect = send . RespondEarly . Redirect
-
-
--- | Manually set the response to the given view. Normally you return a 'View' from 'load' or 'handle' instead of using this
-view :: (Hyperbole :> es) => View () () -> Eff es Response
-view vw = do
-  pure $ Response (TargetViewId "") vw

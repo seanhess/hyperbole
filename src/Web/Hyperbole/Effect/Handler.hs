@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Web.Hyperbole.Handler where
+module Web.Hyperbole.Effect.Handler where
 
 import Data.Kind (Type)
 import Effectful
@@ -9,18 +9,11 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
 import Web.Hyperbole.Effect.Event (getEvent, lookupEvent)
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Effect.Respond (respondEarly)
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
 import Web.View
 
-
--- class SetContext (f :: Type -> Type -> Type) es cnew cold where
---   setViewId :: cnew -> (f es) cnew () -> (f es) cold ()
--- instance SetContext (View Identity) a b where
---   setViewId = addContext
--- instance (f es view ~ Eff (Reader view : es), Handle view es) => SetContext (f es) cnew cold where
---   setViewId :: cnew -> (f es) cnew () -> (f es) cold ()
---   setViewId cnew action = runReader cnew action
 
 class RunHandlers (views :: [Type]) es where
   runHandlers :: (Hyperbole :> es) => Eff es ()
@@ -36,17 +29,6 @@ instance (HyperView view es, RunHandlers views es) => RunHandlers (view : views)
     runHandlers @views
 
 
--- handle
---   :: forall views es
---    . (Handle (TupleList views), Hyperbole :> es)
---   => Handlers es (TupleList views)
---   -> Eff es (View (Root (TupleList views)) ())
---   -> Page es views
--- handle handlers loadPage = Page $ do
---   runHandlers @(TupleList views) handlers
---   guardNoEvent
---   loadPage
-
 runHandler
   :: forall id es
    . (HyperView id es, Hyperbole :> es)
@@ -58,19 +40,9 @@ runHandler run = do
   case mev of
     Just event -> do
       vw <- runReader event.viewId $ run event.action
-      let vid = TargetViewId $ toViewId event.viewId
-      send $ RespondEarly $ Response vid $ hyperUnsafe event.viewId vw
+      respondEarly event.viewId vw
     _ -> do
       pure ()
-
-
-guardNoEvent :: (Hyperbole :> es) => Eff es ()
-guardNoEvent = do
-  r <- request
-  case lookupEvent r.query of
-    -- Are id and action set to something?
-    Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
-    Nothing -> pure ()
 
 
 runLoad
@@ -82,6 +54,15 @@ runLoad loadPage = do
   runHandlers @views
   guardNoEvent
   loadToResponse loadPage
+
+
+guardNoEvent :: (Hyperbole :> es) => Eff es ()
+guardNoEvent = do
+  r <- request
+  case lookupEvent r.query of
+    -- Are id and action set to something?
+    Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
+    Nothing -> pure ()
 
 
 loadToResponse :: Eff es (View (Root total) ()) -> Eff es Response
