@@ -7,21 +7,11 @@ import Data.Kind (Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
+import Web.Hyperbole.Effect.Event (getEvent, lookupEvent)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
 import Web.View
-
-
-class HasViewId m view where
-  viewId :: m view
-instance HasViewId (View ctx) ctx where
-  viewId = context
-instance HasViewId (Eff (Reader view : es)) view where
-  viewId = ask
-
-
-type Handler es view a = Eff (Reader view : es) a
 
 
 -- class SetContext (f :: Type -> Type -> Type) es cnew cold where

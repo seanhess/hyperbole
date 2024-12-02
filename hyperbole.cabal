@@ -34,6 +34,7 @@ library
       Simple
       Web.Hyperbole
       Web.Hyperbole.Application
+      Web.Hyperbole.Effect.Event
       Web.Hyperbole.Effect.Hyperbole
       Web.Hyperbole.Effect.Server
       Web.Hyperbole.Embed

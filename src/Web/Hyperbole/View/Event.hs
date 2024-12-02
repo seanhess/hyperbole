@@ -3,7 +3,7 @@ module Web.Hyperbole.View.Event where
 import Data.Text (pack)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.HyperView
-import Web.View (View, att, context, el, flexCol, hide, parent)
+import Web.View (Mod, View, att, context, el, flexCol, hide, parent)
 
 
 type DelayMs = Int
@@ -39,3 +39,8 @@ onRequest :: View id () -> View id () -> View id ()
 onRequest a b = do
   el (parent "hyp-loading" flexCol . hide) a
   el (parent "hyp-loading" hide . flexCol) b
+
+
+-- | Internal
+dataTarget :: (ViewId a) => a -> Mod
+dataTarget = att "data-target" . toViewId

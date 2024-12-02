@@ -6,7 +6,7 @@ module Web.Hyperbole.View
   , module Web.View
   ) where
 
-import Web.Hyperbole.Effect.Hyperbole (hyper, target)
+import Web.Hyperbole.HyperView (hyper, target)
 import Web.Hyperbole.View.Element
 import Web.Hyperbole.View.Event
 import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)

@@ -123,7 +123,6 @@ module Web.Hyperbole
   , Response
   , Root
   , HyperViewHandled
-  , TupleList
 
     -- * Exports
 
@@ -151,11 +150,10 @@ import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Hyperbole.Application
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Effect.Respond (respondEarly)
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.Embed
 import Web.Hyperbole.Forms
-import Web.Hyperbole.Handler
-import Web.Hyperbole.Handler.TypeList ()
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Page (Page, runPage)
 import Web.Hyperbole.Route

@@ -2,10 +2,9 @@ module Web.Hyperbole.View.Element where
 
 import Data.Text (Text, pack)
 import Data.Text qualified as T
-import Web.Hyperbole.Effect.Hyperbole (HyperView (..), dataTarget)
-import Web.Hyperbole.HyperView (ViewAction (..), ViewId (..))
+import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..))
 import Web.Hyperbole.Route (Route (..), routeUrl)
-import Web.Hyperbole.View.Event (DelayMs)
+import Web.Hyperbole.View.Event (DelayMs, dataTarget)
 import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)
 
 
