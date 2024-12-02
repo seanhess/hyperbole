@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Web.Hyperbole.Handler.TypeList where
+module Web.Hyperbole.TypeList where
 
 import Data.Kind (Constraint, Type)
 import GHC.TypeLits hiding (Mod)

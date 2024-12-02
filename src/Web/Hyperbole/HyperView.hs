@@ -10,7 +10,7 @@ import Effectful.Reader.Dynamic
 import GHC.TypeLits hiding (Mod)
 import Text.Read (readMaybe)
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
-import Web.Hyperbole.Handler.TypeList
+import Web.Hyperbole.TypeList
 import Web.View (View, addContext, att, context, el, flexCol, none)
 
 
@@ -201,7 +201,6 @@ class ViewId a where
   parseViewId :: Text -> Maybe a
   default parseViewId :: (Read a) => Text -> Maybe a
   parseViewId = readMaybe . unpack
-
 
 
 class HasViewId m view where
