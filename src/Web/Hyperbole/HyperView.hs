@@ -3,32 +3,8 @@
 
 module Web.Hyperbole.HyperView where
 
-import Data.Kind (Type)
 import Data.Text (Text, pack, unpack)
 import Text.Read (readMaybe)
-
-
-{- | HyperViews are interactive subsections of a 'Page'
-
-Create an instance with a unique view id type and a sum type describing the actions the HyperView supports. The View Id can contain context (a database id, for example)
-
-@
-data Message = Message Int
-  deriving (Generic, 'Param')
-
-data MessageAction
-  = Louder Text
-  | ClearMessage
-  deriving (Generic, 'Param')
-
-instance HyperView Message where
-  type Action Message = MessageAction
-@
--}
-class (ViewId id, ViewAction (Action id)) => HyperView id where
-  data Action id :: Type
-  type Require id :: [Type]
-  type Require id = '[]
 
 
 class ViewAction a where
@@ -56,17 +32,6 @@ class ViewId a where
   parseViewId :: Text -> Maybe a
   default parseViewId :: (Read a) => Text -> Maybe a
   parseViewId = readMaybe . unpack
-
-
--- | The top-level view created by 'load'. Carries the views in its type to check that we handled all our views
-data Root (views :: [Type]) = Root
-  deriving (Show, Read, ViewId)
-
-
-instance HyperView (Root views) where
-  data Action (Root views) = RootNone
-    deriving (Show, Read, ViewAction)
-  type Require (Root views) = views
 
 
 type family TupleList a where

@@ -38,14 +38,13 @@ data Filter
   deriving (Eq, Show, Read)
 
 
-instance HyperView Contacts where
+instance (Users :> es, Debug :> es) => HyperView Contacts es where
   data Action Contacts
     = Reload (Maybe Filter)
     | AddUser
     | DeleteUser UserId
     deriving (Show, Read, ViewAction)
   type Require Contacts = '[InlineContact]
-instance (Users :> es, Debug :> es) => Handle Contacts es where
   handle = \case
     Reload mf -> do
       us <- Users.all
@@ -105,13 +104,17 @@ data InlineContact = InlineContact UserId
   deriving (Show, Read, ViewId)
 
 
-instance HyperView InlineContact where
+instance (Users :> es, Debug :> es) => HyperView InlineContact es where
   data Action InlineContact
     = Edit
     | View
     | Save
     deriving (Show, Read, ViewAction)
-instance (Users :> es, Debug :> es) => Handle InlineContact es where
+
+
+  type Require InlineContact = '[Contacts]
+
+
   handle action = do
     InlineContact uid <- viewId
     u <- Users.find uid

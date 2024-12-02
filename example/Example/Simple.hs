@@ -26,13 +26,11 @@ data Message = Message Int
   deriving (Show, Read, ViewId)
 
 
-instance HyperView Message where
-  data Action Message
-    = Louder Text
+
+
+instance HyperView Message es where
+  data Action Message = Louder Text
     deriving (Show, Read, ViewAction)
-
-
-instance Handle Message es where
   handle (Louder m) = do
     let new = m <> "!"
     pure $ messageView new

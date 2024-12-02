@@ -17,13 +17,12 @@ data Contents = Contents
   deriving (Show, Read, ViewId)
 
 
-instance HyperView Contents where
+instance HyperView Contents es where
   data Action Contents
     = CauseError
     deriving (Show, Read, ViewAction)
 
 
-instance Handle Contents es where
   handle CauseError = do
     -- Return a not found error 404
     notFound
@@ -33,3 +32,5 @@ viewContent :: View Contents ()
 viewContent = do
   col (gap 10 . pad 20) $ do
     button CauseError Style.btn "Not Found Error"
+
+-- Compile Errors (Uncomment)

@@ -38,15 +38,12 @@ data Contact = Contact UserId
   deriving (Show, Read, ViewId)
 
 
-instance HyperView Contact where
+instance (Users :> es, Debug :> es) => HyperView Contact es where
   data Action Contact
     = Edit
     | Save
     | View
     deriving (Show, Read, ViewAction)
-
-
-instance (Users :> es, Debug :> es) => Handle Contact es where
   handle action = do
     -- No matter which action we are performing, let's look up the user to make sure it exists
     Contact uid <- viewId
@@ -82,7 +79,7 @@ contactView :: User -> View Contact ()
 contactView = contactView' Edit
 
 
-contactView' :: (HyperView c) => Action c -> User -> View c ()
+contactView' :: (ViewId c, ViewAction (Action c)) => Action c -> User -> View c ()
 contactView' edit u = do
   col (gap 10) $ do
     row fld $ do
@@ -110,7 +107,7 @@ contactEdit :: User -> View Contact ()
 contactEdit u = onRequest contactLoading $ contactEdit' View Save u
 
 
-contactEdit' :: (HyperView c) => Action c -> Action c -> User -> View c ()
+contactEdit' :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
 contactEdit' onView onSave u = do
   contactForm onSave contactFromUser
   col (gap 10) $ do
@@ -125,7 +122,7 @@ contactEdit' onView onSave u = do
       }
 
 
-contactForm :: (HyperView id) => Action id -> ContactForm Maybe -> View id ()
+contactForm :: (ViewId id, ViewAction (Action id)) => Action id -> ContactForm Maybe -> View id ()
 contactForm onSubmit c = do
   let f = genFieldsWith c
   form @ContactForm onSubmit (gap 10) $ do
