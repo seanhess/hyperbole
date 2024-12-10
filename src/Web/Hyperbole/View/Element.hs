@@ -1,9 +1,9 @@
 module Web.Hyperbole.View.Element where
 
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..))
 import Web.Hyperbole.Route (Route (..), routeUrl)
-import Web.Hyperbole.View.Event (DelayMs, toActionInput)
+import Web.Hyperbole.View.Event (DelayMs, onClick, onInput)
 import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)
 
 
@@ -12,8 +12,8 @@ import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, labe
 > button SomeAction (border 1) "Click Me"
 -}
 button :: (ViewId id, ViewAction (Action id)) => Action id -> Mod id -> View id () -> View id ()
-button a f cd = do
-  tag "button" (att "data-on-click" (toAction a) . f) cd
+button action f cd = do
+  tag "button" (onClick action . f) cd
 
 
 {- | Type-safe dropdown. Sends (opt -> Action id) when selected. The selection predicate (opt -> Bool) controls which option is selected. See [Example.Contacts](https://github.com/seanhess/hyperbole/blob/main/example/Example/Contacts.hs)
@@ -72,8 +72,8 @@ data Option opt id action = Option
 
 -- | A live search field
 search :: (ViewId id, ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod id -> View id ()
-search onInput delay f = do
-  tag "input" (att "data-on-input" (toActionInput onInput) . att "data-delay" (pack $ show delay) . f) none
+search go delay f = do
+  tag "input" (onInput go delay . f) none
 
 
 {- | A hyperlink to another route

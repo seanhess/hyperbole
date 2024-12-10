@@ -51,6 +51,7 @@ import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Respond (parseError)
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.View.Event (onSubmit)
 import Web.View hiding (form, input, label)
 import Web.View.Style (addClass, cls, prop)
 
@@ -303,8 +304,6 @@ form a md cnt = do
   tag "form" (onSubmit a . md . flexCol . marginEnd0) $ do
     addContext (FormFields vid) cnt
  where
-  onSubmit = att "data-on-submit" . toAction
-
   -- not sure why chrome is adding margin-block-end: 16 to forms? Add to web-view?
   marginEnd0 =
     addClass $

@@ -38,6 +38,11 @@ onInput a delay = do
   att "data-on-input" (toActionInput a) . att "data-delay" (pack $ show delay)
 
 
+onSubmit :: (ViewId id, ViewAction (Action id)) => Action id -> Mod id
+onSubmit act = do
+  att "data-on-submit" (toAction act)
+
+
 -- | Serialize a constructor that expects a single 'Text', like `data MyAction = GoSearch Text`
 toActionInput :: (ViewAction a) => (Text -> a) -> Text
 toActionInput con =
