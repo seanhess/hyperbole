@@ -51,7 +51,6 @@ import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Respond (parseError)
 import Web.Hyperbole.HyperView
-import Web.Hyperbole.View.Event (dataTarget)
 import Web.View hiding (form, input, label)
 import Web.View.Style (addClass, cls, prop)
 
@@ -301,7 +300,7 @@ userForm v = do
 form :: (Form form val, ViewId id, ViewAction (Action id)) => Action id -> Mod id -> View (FormFields id) () -> View id ()
 form a md cnt = do
   vid <- context
-  tag "form" (onSubmit a . dataTarget vid . md . flexCol . marginEnd0) $ do
+  tag "form" (onSubmit a . md . flexCol . marginEnd0) $ do
     addContext (FormFields vid) cnt
  where
   onSubmit = att "data-on-submit" . toAction

@@ -1,10 +1,9 @@
 module Web.Hyperbole.View.Element where
 
 import Data.Text (Text, pack)
-import Data.Text qualified as T
 import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..))
 import Web.Hyperbole.Route (Route (..), routeUrl)
-import Web.Hyperbole.View.Event (DelayMs, dataTarget)
+import Web.Hyperbole.View.Event (DelayMs, toActionInput)
 import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)
 
 
@@ -14,8 +13,7 @@ import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, labe
 -}
 button :: (ViewId id, ViewAction (Action id)) => Action id -> Mod id -> View id () -> View id ()
 button a f cd = do
-  c <- context
-  tag "button" (att "data-on-click" (toAction a) . dataTarget c . f) cd
+  tag "button" (att "data-on-click" (toAction a) . f) cd
 
 
 {- | Type-safe dropdown. Sends (opt -> Action id) when selected. The selection predicate (opt -> Bool) controls which option is selected. See [Example.Contacts](https://github.com/seanhess/hyperbole/blob/main/example/Example/Contacts.hs)
@@ -45,8 +43,7 @@ dropdown
   -> View (Option opt id (Action id)) ()
   -> View id ()
 dropdown act isSel f options = do
-  c <- context
-  tag "select" (att "data-on-change" "" . dataTarget c . f) $ do
+  tag "select" (att "data-on-change" "" . f) $ do
     addContext (Option act isSel) options
 
 
@@ -76,15 +73,7 @@ data Option opt id action = Option
 -- | A live search field
 search :: (ViewId id, ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod id -> View id ()
 search onInput delay f = do
-  c <- context
-  tag "input" (att "data-on-input" (toActionInput onInput) . att "data-delay" (pack $ show delay) . dataTarget c . f) none
-
-
--- | Serialize a constructor that expects a single 'Text', like `data MyAction = GoSearch Text`
-toActionInput :: (ViewAction a) => (Text -> a) -> Text
-toActionInput con =
-  -- remove the ' ""' at the end of the constructor
-  T.dropEnd 3 $ toAction $ con ""
+  tag "input" (att "data-on-input" (toActionInput onInput) . att "data-delay" (pack $ show delay) . f) none
 
 
 {- | A hyperlink to another route

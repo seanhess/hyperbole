@@ -161,20 +161,6 @@ hyperUnsafe vid vw = do
     addContext vid vw
 
 
-{- | Trigger actions for another view. They will update the view specified
-
-> otherView :: View OtherView ()
-> otherView = do
->   el_ "This is not a message view"
->   button OtherAction id "Do Something"
->
->   target (Message 2) $ do
->     el_ "Now we can trigger a MessageAction which will update our Message HyperView, not this one"
->     button ClearMessage id "Clear Message #2"
--}
-target :: (HyperViewHandled id ctx) => id -> View id () -> View ctx ()
-target = addContext
-
 
 class ViewAction a where
   toAction :: a -> Text
