@@ -128,22 +128,20 @@ contactForm onSubmit c = do
   form @ContactForm onSubmit (gap 10) $ do
     field f.firstName (const fld) $ do
       label "First Name:"
-      input Name (inp . valMaybe id c.firstName)
+      input Name (inp . maybe id value c.firstName)
 
     field f.lastName (const fld) $ do
       label "Last Name:"
-      input Name (inp . valMaybe id c.lastName)
+      input Name (inp . maybe id value c.lastName)
 
     field f.age (const fld) $ do
       label "Age:"
-      input Number (inp . valMaybe (pack . show) c.age)
+      input Number (inp . maybe id (value . pack . show) c.age)
 
     submit Style.btn "Submit"
  where
   fld = flexRow . gap 10
   inp = Style.input
-  valMaybe _ Nothing = id
-  valMaybe f (Just a) = value (f a)
 
 
 contactLoading :: View id ()
