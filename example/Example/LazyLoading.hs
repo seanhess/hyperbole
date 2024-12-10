@@ -29,17 +29,16 @@ instance (Debug :> es) => HyperView Contents es where
   handle Load = do
     -- Pretend the initial Load takes 1s to complete
     delay 1000
-    pure $ onLoad (Reload 1) 1000 $ do
-      el id "Loaded, should reload once more..."
+    pure $ do
+      el (onLoad (Reload 1) 1000) "Loaded, should reload once more..."
   handle (Reload n) = do
     -- then reload after a 1s delay (client-side)
-    pure $ onLoad (Reload (n + 1)) 1000 $ do
-      col (gap 10) $ do
+    pure $ do
+      col (gap 10 . onLoad (Reload (n + 1)) 1000) $ do
         el_ "Reloaded! polling..."
         el_ $ text $ pack $ show n
 
 
 viewInit :: View Contents ()
 viewInit = do
-  onLoad Load 0 $ do
-    el id "Lazy Loading..."
+  el (onLoad Load 0) "Lazy Loading..."

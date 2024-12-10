@@ -33,7 +33,6 @@ instance (Debug :> es) => HyperView Poller es where
 
 viewPoll :: Int -> View Poller ()
 viewPoll n = do
-  onLoad (Load n) 0 $ do
-    row (gap 10) $ do
-      el_ "Polling:"
-      text $ pack (show n)
+  row (gap 10 . onLoad (Load n) 0) $ do
+    el_ "Polling:"
+    text $ pack (show n)

@@ -2,7 +2,7 @@ module Web.Hyperbole.View.Event where
 
 import Data.Text (pack)
 import Web.Hyperbole.HyperView
-import Web.View (Mod, View, att, context, el, flexCol, hide, parent)
+import Web.View (Mod, View, att, el, flexCol, hide, parent)
 
 
 type DelayMs = Int
@@ -18,10 +18,9 @@ pollMessageView m = do
     'el_' ('text' m)
 @
 -}
-onLoad :: (ViewId id, ViewAction (Action id)) => Action id -> DelayMs -> View id () -> View id ()
-onLoad a delay initContent = do
-  c <- context
-  el (att "data-on-load" (toAction a) . att "data-delay" (pack $ show delay) . dataTarget c) initContent
+onLoad :: (ViewId id, ViewAction (Action id)) => Action id -> DelayMs -> Mod id
+onLoad a delay = do
+  att "data-on-load" (toAction a) . att "data-delay" (pack $ show delay)
 
 
 {- | Give visual feedback when an action is in-flight.
