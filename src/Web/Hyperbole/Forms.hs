@@ -243,7 +243,7 @@ myForm = do
 field
   :: forall v a id
    . FormField v a
-  -> (v a -> Mod)
+  -> (v a -> Mod (FormFields id))
   -> View (Input id v a) ()
   -> View (FormFields id) ()
 field fld md cnt = do
@@ -257,7 +257,7 @@ label = text
 
 
 -- | input for a 'field'
-input :: InputType -> Mod -> View (Input id v a) ()
+input :: InputType -> Mod (Input id v a) -> View (Input id v a) ()
 input ft f = do
   Input (FieldName nm) _ <- context
   tag "input" (f . name nm . att "type" (inpType ft) . att "autocomplete" (auto ft)) none
@@ -273,7 +273,7 @@ input ft f = do
   auto = pack . kebab . show
 
 
-placeholder :: Text -> Mod
+placeholder :: Text -> Mod id
 placeholder = att "placeholder"
 
 
@@ -298,13 +298,12 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: (Form form val, ViewId id, ViewAction (Action id)) => Action id -> Mod -> View (FormFields id) () -> View id ()
+form :: (Form form val, ViewId id, ViewAction (Action id)) => Action id -> Mod id -> View (FormFields id) () -> View id ()
 form a md cnt = do
   vid <- context
   tag "form" (onSubmit a . dataTarget vid . md . flexCol . marginEnd0) $ do
     addContext (FormFields vid) cnt
  where
-  onSubmit :: (ViewAction a) => a -> Mod
   onSubmit = att "data-on-submit" . toAction
 
   -- not sure why chrome is adding margin-block-end: 16 to forms? Add to web-view?
@@ -315,7 +314,7 @@ form a md cnt = do
 
 
 -- | Button that submits the 'form'. Use 'button' to specify actions other than submit
-submit :: Mod -> View (FormFields id) () -> View (FormFields id) ()
+submit :: Mod (FormFields id) -> View (FormFields id) () -> View (FormFields id) ()
 submit f = tag "button" (att "type" "submit" . f)
 
 

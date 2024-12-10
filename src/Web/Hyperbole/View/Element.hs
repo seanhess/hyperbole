@@ -12,7 +12,7 @@ import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, labe
 
 > button SomeAction (border 1) "Click Me"
 -}
-button :: (ViewId id, ViewAction (Action id)) => Action id -> Mod -> View id () -> View id ()
+button :: (ViewId id, ViewAction (Action id)) => Action id -> Mod id -> View id () -> View id ()
 button a f cd = do
   c <- context
   tag "button" (att "data-on-click" (toAction a) . dataTarget c . f) cd
@@ -41,7 +41,7 @@ dropdown
   :: (ViewId id, ViewAction (Action id))
   => (opt -> Action id)
   -> (opt -> Bool) -- check if selec
-  -> Mod
+  -> Mod id
   -> View (Option opt id (Action id)) ()
   -> View id ()
 dropdown act isSel f options = do
@@ -62,7 +62,7 @@ option opt cnt = do
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
-selected :: Bool -> Mod
+selected :: Bool -> Mod id
 selected b = if b then att "selected" "true" else id
 
 
@@ -74,7 +74,7 @@ data Option opt id action = Option
 
 
 -- | A live search field
-search :: (ViewId id, ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod -> View id ()
+search :: (ViewId id, ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod id -> View id ()
 search onInput delay f = do
   c <- context
   tag "input" (att "data-on-input" (toActionInput onInput) . att "data-delay" (pack $ show delay) . dataTarget c . f) none
@@ -92,5 +92,5 @@ toActionInput con =
 >>> route (User 100) id "View User"
 <a href="/user/100">View User</a>
 -}
-route :: (Route a) => a -> Mod -> View c () -> View c ()
+route :: (Route a) => a -> Mod c -> View c () -> View c ()
 route r = link (routeUrl r)

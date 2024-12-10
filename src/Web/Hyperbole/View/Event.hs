@@ -41,5 +41,5 @@ onRequest a b = do
 
 
 -- | Internal
-dataTarget :: (ViewId a) => a -> Mod
+dataTarget :: (ViewId a) => a -> Mod a
 dataTarget = att "data-target" . toViewId
