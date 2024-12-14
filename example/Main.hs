@@ -64,7 +64,11 @@ app users count = do
   runApp :: (IOE :> es) => Eff (Concurrent : Debug : Users : es) a -> Eff es a
   runApp = runUsersIO users . runDebugIO . runConcurrent
 
-  router :: forall es. (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
+  router
+    :: forall es
+     . (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es)
+    => AppRoute
+    -> Eff es Response
   router (Hello h) = runPage $ hello h
   router Simple = runPage Simple.simplePage
   router (Contacts ContactsAll) = runPage Contacts.page

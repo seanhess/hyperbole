@@ -116,10 +116,45 @@ The NSO uses Hyperbole for the [L2 Data creation UI](https://github.com/DKISTDC/
 Local Development
 -----------------
 
-### Dependencies with Nix
+### Nix
 
+With nix installed, you can use `nix develop` to get a shell with all dependencies installed. 
 
-With nix installed, you can use `nix develop` to get a shell with all dependencies installed.
+You can also try out the example project with:
+
+```
+cd example
+nix develop ../#example
+cabal run
+```
+
+You can import this flake's overlay to add `hyperbole` to all package sets.
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    hyperbole.url = "github:seanhess/hyperbole"; # or "path:/path/to/cloned/hyperbole";
+  };
+
+  outputs = { self, nixpkgs, hyperbole }: {
+    # Apply the overlay to your packages
+    packages.x86_64-linux = import nixpkgs {
+      system = "x86_64-linux";
+      overlays = [ hyperbole.overlays.default ];
+    };
+    haskellPackagesOverride = pkgs.haskellPackages.override (old: {
+      overrides = pkgs.lib.composeExtensions (old.overrides or (_: _: {})) (hfinal: hprev: {
+        ...
+      });
+    });
+    haskellPackagesExtend = pkgs.haskellPackages.extend (hfinal: hprev: {
+      ...
+    });
+  };
+}
+```
+
 
 ### Manual dependency installation
 

@@ -26,8 +26,6 @@ data Message = Message Int
   deriving (Show, Read, ViewId)
 
 
-
-
 instance HyperView Message es where
   data Action Message = Louder Text
     deriving (Show, Read, ViewAction)

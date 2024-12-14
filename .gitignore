@@ -6,7 +6,7 @@ node_modules
 .pre-commit-config.yaml
 # Nix output dir
 result
-
+.direnv
 client/dist/hyperbole.js.LICENSE.txt
 client/dist/hyperbole.js.map
 

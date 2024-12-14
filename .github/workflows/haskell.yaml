@@ -11,38 +11,33 @@ permissions:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
-    container:
-      image: haskell:9.8.2
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-    # - uses: actions/setup-haskell@v1
-    #   with:
-    #     ghc-version: '9.6'
-    #     cabal-version: '3.2'
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
-    # - name: Cache
-    #   uses: actions/cache@v3
-    #   env:
-    #     cache-name: cache-cabal
-    #   with:
-    #     path: ~/.cabal
-    #     key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/cabal.project') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-build-${{ env.cache-name }}-
-    #       ${{ runner.os }}-build-
-    #       ${{ runner.os }}-
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
-    - name: Install dependencies
-      run: |
-        cabal update
-        cabal build --only-dependencies --enable-tests --enable-benchmarks
-    - name: Build
-      run: cabal build --enable-tests --enable-benchmarks all
-    - name: Test
-      run: cabal test
+      - name: Check packages
+        run: |
+          nix flake check
+
+      - name: Build packages
+        run: |
+          # Build all packages for the current system
+          nix build .#
+
+      - name: Build devShells
+        run: |
+          # Build all devShells for the current system
+          nix develop .# -c cabal test
+          cd example
+          nix develop ..#example -c cabal build
 

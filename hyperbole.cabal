@@ -109,8 +109,6 @@ test-suite test
       DerivingStrategies
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N -F -pgmF=skeletest-preprocessor
-  build-tool-depends:
-      skeletest:skeletest-preprocessor
   build-depends:
       Diff >=0.5 && <1.0
     , base >=4.16 && <5
