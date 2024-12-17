@@ -82,19 +82,19 @@ spec = do
 
   describe "Param Attributes" $ do
     it "should serialize basic id" $ do
-      let atts = mempty :: Attributes
+      let atts = mempty :: Attributes id
       (setId "woot" atts).other `shouldBe` [("id", "woot")]
 
     it "should serialize compound id" $ do
-      let atts = mempty :: Attributes
+      let atts = mempty :: Attributes id
       (setId (toViewId $ Two Thing) atts).other `shouldBe` [("id", pack $ show $ Two Thing)]
 
     it "should serialize stringy id" $ do
-      let atts = mempty :: Attributes
+      let atts = mempty :: Attributes id
       (setId (toViewId $ HasString "woot") atts).other `shouldBe` [("id", pack $ show $ HasString "woot")]
 
     it "should serialize with Id" $ do
-      let atts = mempty :: Attributes
+      let atts = mempty :: Attributes id
       (setId (toViewId $ WithId (Id "woot")) atts).other `shouldBe` [("id", "WithId \"woot\"")]
 
 
@@ -102,5 +102,5 @@ containsSingleQuotes :: Text -> Bool
 containsSingleQuotes = T.elem '\''
 
 
-setId :: Text -> Mod
+setId :: Text -> Mod id
 setId = att "id"

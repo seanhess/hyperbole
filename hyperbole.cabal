@@ -83,7 +83,7 @@ library
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
-    , web-view >=0.4 && <=0.6
+    , web-view >=0.6 && <=1.0
     , websockets >=0.12 && <0.14
   default-language: GHC2021
 
@@ -131,6 +131,6 @@ test-suite test
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
-    , web-view >=0.4 && <=0.6
+    , web-view >=0.6 && <=1.0
     , websockets >=0.12 && <0.14
   default-language: GHC2021
