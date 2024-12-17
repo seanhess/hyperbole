@@ -2,6 +2,7 @@
 
 module Example.Contact where
 
+import Data.Function ((&))
 import Data.String.Conversions
 import Data.Text (Text, pack)
 import Effectful
@@ -12,6 +13,7 @@ import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
 import Web.Hyperbole
+import Web.View.Style (addClass, cls, prop)
 
 
 -- Example adding a reader context to the page, based on an argument from the AppRoute
@@ -104,7 +106,9 @@ contactView' edit u = do
 
 
 contactEdit :: User -> View Contact ()
-contactEdit u = onRequest contactLoading $ contactEdit' View Save u
+contactEdit u = do
+  el (hide . onRequest flexCol) contactLoading
+  el (onRequest hide) $ contactEdit' View Save u
 
 
 contactEdit' :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()

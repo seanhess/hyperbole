@@ -5,7 +5,7 @@ module Web.Hyperbole.View.Event where
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import Web.Hyperbole.HyperView
-import Web.View (Mod, View, addContext, att, el, flexCol, hide, parent)
+import Web.View (Mod, View, addContext, att, parent)
 import Web.View.Types (Content (Node), Element (..))
 import Web.View.View (viewModContents)
 
@@ -50,20 +50,17 @@ toActionInput con =
   T.dropEnd 3 $ toAction $ con ""
 
 
-{- | Give visual feedback when an action is in flight.
+{- | Apply a Mod only when a request is in flight
 
 @
 myView = do
-  onRequest loadingIndicator $ do
-    'el_' \"Loaded\"
-  where
-    loadingIndicator = 'el_' "Loading..."
+  el (hide . onRequest flexCol) 'el_' "Loading..."
+  el (onRequest hide) "Loaded"
 @
 -}
-onRequest :: View id () -> View id () -> View id ()
-onRequest a b = do
-  el (parent "hyp-loading" flexCol . hide) a
-  el (parent "hyp-loading" hide . flexCol) b
+onRequest :: Mod id -> Mod id
+onRequest f = do
+  parent "hyp-loading" f
 
 
 -- | Internal

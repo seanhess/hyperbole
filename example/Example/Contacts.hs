@@ -44,7 +44,11 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
     | AddUser
     | DeleteUser UserId
     deriving (Show, Read, ViewAction)
+
+
   type Require Contacts = '[InlineContact]
+
+
   handle = \case
     Reload mf -> do
       us <- Users.all
@@ -138,6 +142,7 @@ contactView = contactView' Edit
 -- See how we reuse the contactEdit' and contactLoading from Example.Contact
 contactEdit :: User -> View InlineContact ()
 contactEdit u = do
-  onRequest contactLoading $ col (gap 10) $ do
+  el (hide . onRequest flexCol) contactLoading
+  col (onRequest hide . gap 10) $ do
     contactEdit' View Save u
     target Contacts $ button (DeleteUser u.id) (Style.btn' Danger . pad (XY 10 0)) (text "Delete")
