@@ -1,14 +1,16 @@
 module Example.Errors where
 
 import Effectful
+import Example.AppRoute qualified as Route
 import Example.Style as Style
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
 -- this is already running in a different context
 page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
-  pure $ row (pad 20) $ do
+  pure $ exampleLayout Route.Errors $ row (pad 20) $ do
     col (gap 10 . border 1) $ do
       hyper Contents viewContent
 

@@ -2,16 +2,17 @@
 
 module Example.Contact where
 
-import Data.Function ((&))
 import Data.String.Conversions
 import Data.Text (Text, pack)
 import Effectful
 import Effectful.Reader.Dynamic
+import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Effects.Debug
 import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
@@ -28,7 +29,7 @@ page
 page = do
   uid <- ask
   u <- Users.find uid
-  pure $ do
+  pure $ exampleLayout (Route.Contacts $ Route.Contact 0) $ do
     col (pad 10 . gap 10) $ do
       hyper (Contact uid) $ contactView u
 

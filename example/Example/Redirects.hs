@@ -1,13 +1,15 @@
 module Example.Redirects where
 
 import Effectful
+import Example.AppRoute qualified as Route
 import Example.Style as Style
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
 page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
-  pure $ row (pad 20) $ do
+  pure $ exampleLayout Route.Redirects $ row (pad 20) $ do
     hyper Contents contentsView
 
 

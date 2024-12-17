@@ -15,3 +15,5 @@ cd ..
 
 # Compile the package
 cabal sdist
+
+# TODO: Update the latest tag and push

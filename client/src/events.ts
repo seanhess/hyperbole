@@ -39,7 +39,6 @@ export function listenLoad(node:HTMLElement): void {
 
     setTimeout(() => {
       const event = new CustomEvent("hyp-load", {bubbles:true, detail: {target: nearestTarget(load)}})
-      console.log("DISPATCH", event)
       load.dispatchEvent(event)
     }, delay)
   })

@@ -4,14 +4,16 @@ module Example.LazyLoading where
 
 import Data.Text (pack)
 import Effectful
+import Example.AppRoute as Route
 import Example.Effects.Debug
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
 -- this is already running in a different context
 page :: (Hyperbole :> es, Debug :> es) => Page es '[Contents]
 page = do
-  pure $ do
+  pure $ exampleLayout LazyLoading $ do
     row (pad 20) $ do
       col (gap 10 . border 1 . pad 20) $ do
         hyper Contents viewInit

@@ -5,9 +5,11 @@ module Example.Sessions where
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Effectful
+import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Effects.Debug
 import Example.Style as Style
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
@@ -18,7 +20,7 @@ page = do
   -- setSession "msg" ("________" :: Text)
   (clr :: Maybe AppColor) <- session "color"
   (msg :: Maybe Text) <- session "msg"
-  pure $ col (pad 20 . gap 10) $ do
+  pure $ exampleLayout Route.Sessions $ col (pad 20 . gap 10) $ do
     el_ "Reload your browser after changing the settings below to see the session information preserved"
     row id $ do
       hyper Contents $ viewContent clr msg

@@ -5,13 +5,14 @@ module Example.Contacts where
 
 import Control.Monad (forM_)
 import Effectful
-import Example.AppRoute qualified as AppRoute
+import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Contact (contactEdit', contactForm, contactLoading, contactView', parseUser)
 import Example.Effects.Debug
 import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
@@ -21,7 +22,7 @@ page
   => Page es '[Contacts, InlineContact]
 page = do
   us <- Users.all
-  pure $ do
+  pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
     col (pad 10 . gap 10) $ do
       hyper Contacts $ allContactsView Nothing us
 
@@ -83,7 +84,7 @@ allContactsView fil us = col (gap 20) $ do
         hyper (InlineContact u.id) $ contactView u
         row id $ do
           space
-          link (routeUrl $ AppRoute.Contacts $ AppRoute.Contact u.id) Style.link "details"
+          link (routeUrl $ Route.Contacts $ Route.Contact u.id) Style.link "details"
 
   row (gap 10) $ do
     button (Reload Nothing) Style.btnLight "Reload"

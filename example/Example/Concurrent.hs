@@ -4,15 +4,17 @@ module Example.Concurrent where
 
 import Data.Text (pack)
 import Effectful
+import Example.AppRoute
 import Example.Effects.Debug
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
 page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es '[Poller]
 page = do
-  pure $ do
+  pure $ exampleLayout Concurrent $ do
     col (pad 20) $ do
-      hyper (Poller 50) $ viewPoll 1
+      hyper (Poller 250) $ viewPoll 1
       hyper (Poller 1000) $ viewPoll 100
 
 

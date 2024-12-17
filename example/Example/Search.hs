@@ -2,14 +2,16 @@ module Example.Search where
 
 import Data.String (IsString)
 import Data.Text (Text, isInfixOf, toLower)
+import Example.AppRoute qualified as Route
 import Example.Colors
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
 
 page :: (Hyperbole :> es) => Page es '[LiveSearch]
 page = do
-  pure $ col (pad 20) $ do
+  pure $ exampleLayout Route.LiveSearch $ col (pad 20) $ do
     el bold "Filter Programming Languages"
     hyper LiveSearch $ liveSearchView allLanguages Nothing
 
