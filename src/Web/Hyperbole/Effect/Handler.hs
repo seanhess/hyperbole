@@ -26,7 +26,7 @@ instance RunHandlers '[] es where
 
 instance (HyperView view es, RunHandlers views es) => RunHandlers (view : views) es where
   runHandlers = do
-    runHandler @view (handle @view)
+    runHandler @view (update @view)
     runHandlers @views
 
 

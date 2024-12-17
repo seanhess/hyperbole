@@ -13,7 +13,6 @@ import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
 import Web.Hyperbole
-import Web.View.Style (addClass, cls, prop)
 
 
 -- Example adding a reader context to the page, based on an argument from the AppRoute
@@ -46,7 +45,7 @@ instance (Users :> es, Debug :> es) => HyperView Contact es where
     | Save
     | View
     deriving (Show, Read, ViewAction)
-  handle action = do
+  update action = do
     -- No matter which action we are performing, let's look up the user to make sure it exists
     Contact uid <- viewId
     u <- Users.find uid

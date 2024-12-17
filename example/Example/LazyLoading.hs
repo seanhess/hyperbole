@@ -26,12 +26,12 @@ instance (Debug :> es) => HyperView Contents es where
     = Load
     | Reload Int
     deriving (Show, Read, ViewAction)
-  handle Load = do
+  update Load = do
     -- Pretend the initial Load takes 1s to complete
     delay 1000
     pure $ do
       el (onLoad (Reload 1) 1000) "Loaded, should reload once more..."
-  handle (Reload n) = do
+  update (Reload n) = do
     -- then reload after a 1s delay (client-side)
     pure $ do
       col (gap 10 . onLoad (Reload (n + 1)) 1000) $ do

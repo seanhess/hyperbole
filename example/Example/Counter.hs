@@ -29,10 +29,10 @@ instance (Reader (TVar Int) :> es, Concurrent :> es) => HyperView Counter es whe
     deriving (Show, Read, ViewAction)
 
 
-  handle Increment = do
+  update Increment = do
     n <- modify (+ 1)
     pure $ viewCount n
-  handle Decrement = do
+  update Decrement = do
     n <- modify (subtract 1)
     pure $ viewCount n
 

@@ -23,7 +23,7 @@ instance HyperView Contents es where
     deriving (Show, Read, ViewAction)
 
 
-  handle CauseError = do
+  update CauseError = do
     -- Return a not found error 404
     notFound
 

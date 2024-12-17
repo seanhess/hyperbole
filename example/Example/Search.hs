@@ -25,10 +25,10 @@ instance HyperView LiveSearch es where
     deriving (Show, Read, ViewAction)
 
 
-  handle (GoSearch term) = do
+  update (GoSearch term) = do
     let matched = filter (isMatchLanguage term) allLanguages
     pure $ liveSearchView matched Nothing
-  handle (Select lang) = do
+  update (Select lang) = do
     pure $ liveSearchView [] (Just lang)
 
 

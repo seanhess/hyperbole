@@ -18,7 +18,7 @@ data Contents = Contents
 instance HyperView Contents es where
   data Action Contents = RedirectAsAction
     deriving (Show, Read, ViewAction)
-  handle RedirectAsAction = do
+  update RedirectAsAction = do
     redirect "/hello/redirected"
 
 

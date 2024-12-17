@@ -23,9 +23,9 @@ instance HyperView Contents es where
     = Expand
     | Collapse
     deriving (Show, Read, ViewAction)
-  handle Expand = do
+  update Expand = do
     pure viewBig
-  handle Collapse = do
+  update Collapse = do
     pure viewSmall
 
 

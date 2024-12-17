@@ -23,7 +23,7 @@ instance HyperView FormView es where
     deriving (Show, Read, ViewAction)
 
 
-  handle Submit = do
+  update Submit = do
     uf <- formData @UserForm
 
     let vals = validateForm uf

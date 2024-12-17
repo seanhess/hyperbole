@@ -39,7 +39,7 @@ class (ViewId id, ViewAction (Action id)) => HyperView id es where
   type Require id = '[]
 
 
-  handle :: (Hyperbole :> es) => Action id -> Eff (Reader id : es) (View id ())
+  update :: (Hyperbole :> es) => Action id -> Eff (Reader id : es) (View id ())
 
 
 -- | The top-level view created by 'load'. Carries the views in its type to check that we handled all our views
@@ -51,7 +51,7 @@ instance HyperView (Root views) es where
   data Action (Root views) = RootNone
     deriving (Show, Read, ViewAction)
   type Require (Root views) = views
-  handle _ = pure none
+  update _ = pure none
 
 
 type family ValidDescendents x :: [Type] where
@@ -159,7 +159,6 @@ hyperUnsafe :: (ViewId id) => id -> View id () -> View ctx ()
 hyperUnsafe vid vw = do
   el (att "id" (toViewId vid) . flexCol) $
     addContext vid vw
-
 
 
 class ViewAction a where

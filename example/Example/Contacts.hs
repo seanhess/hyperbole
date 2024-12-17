@@ -49,7 +49,7 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
   type Require Contacts = '[InlineContact]
 
 
-  handle = \case
+  update = \case
     Reload mf -> do
       us <- Users.all
       pure $ allContactsView mf us
@@ -119,10 +119,10 @@ instance (Users :> es, Debug :> es) => HyperView InlineContact es where
   type Require InlineContact = '[Contacts]
 
 
-  handle action = do
+  update a = do
     InlineContact uid <- viewId
     u <- Users.find uid
-    case action of
+    case a of
       View ->
         pure $ contactView u
       Edit ->

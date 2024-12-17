@@ -33,11 +33,11 @@ instance (Debug :> es) => HyperView Contents es where
     = SaveColor AppColor
     | SaveMessage Text
     deriving (Show, Read, ViewAction)
-  handle (SaveColor clr) = do
+  update (SaveColor clr) = do
     setSession "color" clr
     msg <- session "msg"
     pure $ viewContent (Just clr) msg
-  handle (SaveMessage msg) = do
+  update (SaveMessage msg) = do
     setSession "msg" msg
     clr <- session "color"
     pure $ viewContent clr (Just msg)
