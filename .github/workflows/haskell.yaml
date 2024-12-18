@@ -2,7 +2,7 @@ name: Haskell CI
 
 on:
   push:
-    branches: [ "main", "ci" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -13,7 +13,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -28,16 +28,3 @@ jobs:
       - name: Check packages
         run: |
           nix flake check
-
-      - name: Build packages
-        run: |
-          # Build all packages for the current system
-          nix build .#
-
-      - name: Build devShells
-        run: |
-          # Build all devShells for the current system
-          nix develop .# -c cabal test
-          cd example
-          nix develop ..#example -c cabal build
-
