@@ -7,7 +7,9 @@ import Example.Colors (AppColor (..))
 import Web.Hyperbole
 import Data.String.Conversions (cs)
 import Text.Casing (toWords, fromHumps)
+import Data.Function ((&))
 import Example.Style qualified as Style
+import Web.View.Style (addClass, cls, prop)
 import Example.AppRoute
 
 
@@ -27,10 +29,19 @@ exampleLayout rt pageView =
 
 
   sidebar = do
-    nav (bg Dark . color White) $ do
+    nav (bg Dark . color White . minWidth 250) $ do
       col id $ do
-        link "https://github.com/seanhess/hyperbole" (bold . fontSize 24 . pad 20) "HYPERBOLE"
+        link "https://github.com/seanhess/hyperbole" (bold . fontSize 24 . pad 20 . logo) $ do
+          "HYPERBOLE"
         exampleMenu rt
+
+
+
+  -- https://www.fontspace.com/super-brigade-font-f96444
+  logo =
+    addClass $ cls "logo"
+      & prop @Text "background" "no-repeat center/90% url(/logo-robot.png)"
+      & prop @Text "color" "transparent"
 
 
   routeSource :: AppRoute -> Url

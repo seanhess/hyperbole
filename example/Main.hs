@@ -57,7 +57,8 @@ main = do
   count <- runEff $ runConcurrent Counter.initCounter
   Warp.run 3000 $
     staticPolicy (addBase "client/dist") $
-      app users count
+      staticPolicy (addBase "static") $
+        app users count
 
 
 app :: UserStore -> TVar Int -> Application
