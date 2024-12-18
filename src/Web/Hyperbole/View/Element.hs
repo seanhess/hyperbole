@@ -1,7 +1,7 @@
 module Web.Hyperbole.View.Element where
 
 import Data.Text (Text)
-import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..))
+import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..))
 import Web.Hyperbole.Route (Route (..), routeUrl)
 import Web.Hyperbole.View.Event (DelayMs, onClick, onInput)
 import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)
