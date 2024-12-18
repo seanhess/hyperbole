@@ -7,7 +7,6 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
--- this is already running in a different context
 page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
   pure $ exampleLayout Route.Errors $ row (pad 20) $ do

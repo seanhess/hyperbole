@@ -298,7 +298,7 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: (Form form val, ViewId id, ViewAction (Action id)) => Action id -> Mod id -> View (FormFields id) () -> View id ()
+form :: (Form form val, ViewAction (Action id)) => Action id -> Mod id -> View (FormFields id) () -> View id ()
 form a md cnt = do
   vid <- context
   tag "form" (onSubmit a . md . flexCol . marginEnd0) $ do
