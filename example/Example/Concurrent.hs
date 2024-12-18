@@ -4,15 +4,17 @@ module Example.Concurrent where
 
 import Data.Text (pack)
 import Effectful
+import Example.AppRoute
 import Example.Effects.Debug
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
 page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es '[Poller]
 page = do
-  pure $ do
+  pure $ exampleLayout Concurrent $ do
     col (pad 20) $ do
-      hyper (Poller 50) $ viewPoll 1
+      hyper (Poller 250) $ viewPoll 1
       hyper (Poller 1000) $ viewPoll 100
 
 
@@ -24,7 +26,7 @@ instance (Debug :> es) => HyperView Poller es where
   data Action Poller
     = Load Int
     deriving (Show, Read, ViewAction)
-  handle (Load n) = do
+  update (Load n) = do
     Poller dl <- viewId
     -- BUG: this is blocking the thread, so the short poll has to wait for the long to finish before continuing
     delay dl
@@ -33,7 +35,6 @@ instance (Debug :> es) => HyperView Poller es where
 
 viewPoll :: Int -> View Poller ()
 viewPoll n = do
-  onLoad (Load n) 0 $ do
-    row (gap 10) $ do
-      el_ "Polling:"
-      text $ pack (show n)
+  row (gap 10 . onLoad (Load n) 0) $ do
+    el_ "Polling:"
+    text $ pack (show n)

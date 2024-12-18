@@ -17,7 +17,7 @@ data Message = Message
 instance HyperView Message es where
   data Action Message = SetMessage Text
     deriving (Show, Read, ViewAction)
-  handle (SetMessage m) = do
+  update (SetMessage m) = do
     -- side effects
     pure $ messageView' m
 

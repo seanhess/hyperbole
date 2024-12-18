@@ -4,11 +4,11 @@ import Example.Colors
 import Web.View
 
 
-btn :: Mod
+btn :: Mod id
 btn = btn' Primary
 
 
-btn' :: AppColor -> Mod
+btn' :: AppColor -> Mod id
 btn' clr = bg clr . hover (bg (hovClr clr)) . color (txtClr clr) . pad 10
  where
   hovClr Primary = PrimaryLight
@@ -16,7 +16,7 @@ btn' clr = bg clr . hover (bg (hovClr clr)) . color (txtClr clr) . pad 10
   txtClr _ = White
 
 
-btnLight :: Mod
+btnLight :: Mod id
 btnLight =
   base
     . border 2
@@ -27,21 +27,21 @@ btnLight =
   base = pad (XY 15 8)
 
 
-h1 :: Mod
+h1 :: Mod id
 h1 = bold . fontSize 32
 
 
-invalid :: Mod
+invalid :: Mod id
 invalid = color Danger
 
 
-success :: Mod
+success :: Mod id
 success = color Success
 
 
-link :: Mod
+link :: Mod id
 link = color Primary
 
 
-input :: Mod
+input :: Mod id
 input = border 1 . pad 8

@@ -6,16 +6,18 @@ import Data.Text (pack)
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
+import Example.AppRoute qualified as Route
 import Example.Style as Style
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole as Hyperbole
 
 
 page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es '[Counter]
 page = do
   n <- getCount
-  pure $ col (pad 20 . gap 10) $ do
-    el h1 "Counter"
-    hyper Counter (viewCount n)
+  pure $ exampleLayout Route.Counter $ do
+    col (pad 20 . gap 10) $ do
+      hyper Counter (viewCount n)
 
 
 data Counter = Counter
@@ -29,10 +31,10 @@ instance (Reader (TVar Int) :> es, Concurrent :> es) => HyperView Counter es whe
     deriving (Show, Read, ViewAction)
 
 
-  handle Increment = do
+  update Increment = do
     n <- modify (+ 1)
     pure $ viewCount n
-  handle Decrement = do
+  update Decrement = do
     n <- modify (subtract 1)
     pure $ viewCount n
 

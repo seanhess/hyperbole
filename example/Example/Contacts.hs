@@ -5,13 +5,14 @@ module Example.Contacts where
 
 import Control.Monad (forM_)
 import Effectful
-import Example.AppRoute qualified as AppRoute
+import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Contact (contactEdit', contactForm, contactLoading, contactView', parseUser)
 import Example.Effects.Debug
 import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
@@ -21,7 +22,7 @@ page
   => Page es '[Contacts, InlineContact]
 page = do
   us <- Users.all
-  pure $ do
+  pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
     col (pad 10 . gap 10) $ do
       hyper Contacts $ allContactsView Nothing us
 
@@ -44,8 +45,12 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
     | AddUser
     | DeleteUser UserId
     deriving (Show, Read, ViewAction)
+
+
   type Require Contacts = '[InlineContact]
-  handle = \case
+
+
+  update = \case
     Reload mf -> do
       us <- Users.all
       pure $ allContactsView mf us
@@ -79,7 +84,7 @@ allContactsView fil us = col (gap 20) $ do
         hyper (InlineContact u.id) $ contactView u
         row id $ do
           space
-          link (routeUrl $ AppRoute.Contacts $ AppRoute.Contact u.id) Style.link "details"
+          link (routeUrl $ Route.Contacts $ Route.Contact u.id) Style.link "details"
 
   row (gap 10) $ do
     button (Reload Nothing) Style.btnLight "Reload"
@@ -115,10 +120,10 @@ instance (Users :> es, Debug :> es) => HyperView InlineContact es where
   type Require InlineContact = '[Contacts]
 
 
-  handle action = do
+  update a = do
     InlineContact uid <- viewId
     u <- Users.find uid
-    case action of
+    case a of
       View ->
         pure $ contactView u
       Edit ->
@@ -138,6 +143,7 @@ contactView = contactView' Edit
 -- See how we reuse the contactEdit' and contactLoading from Example.Contact
 contactEdit :: User -> View InlineContact ()
 contactEdit u = do
-  onRequest contactLoading $ col (gap 10) $ do
+  el (hide . onRequest flexCol) contactLoading
+  col (onRequest hide . gap 10) $ do
     contactEdit' View Save u
     target Contacts $ button (DeleteUser u.id) (Style.btn' Danger . pad (XY 10 0)) (text "Delete")

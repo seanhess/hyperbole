@@ -3,13 +3,15 @@ module Example.Forms where
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import Effectful
+import Example.AppRoute qualified as Route
 import Example.Style qualified as Style
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
 page :: (Hyperbole :> es) => Page es '[FormView]
 page = do
-  pure $ row (pad 20) $ do
+  pure $ exampleLayout Route.Forms $ row (pad 20) $ do
     hyper FormView (formView genForm)
 
 
@@ -23,7 +25,7 @@ instance HyperView FormView es where
     deriving (Show, Read, ViewAction)
 
 
-  handle Submit = do
+  update Submit = do
     uf <- formData @UserForm
 
     let vals = validateForm uf

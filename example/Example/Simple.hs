@@ -6,6 +6,8 @@
 module Example.Simple where
 
 import Data.Text (Text)
+import Example.AppRoute qualified as Route
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
@@ -16,7 +18,7 @@ main = do
 
 simplePage :: (Hyperbole :> es) => Page es '[Message]
 simplePage = do
-  pure $ col (pad 20) $ do
+  pure $ exampleLayout Route.Simple $ col (pad 20 . gap 10) $ do
     el bold "My Page"
     hyper (Message 1) $ messageView "Hello"
     hyper (Message 2) $ messageView "World!"
@@ -29,7 +31,7 @@ data Message = Message Int
 instance HyperView Message es where
   data Action Message = Louder Text
     deriving (Show, Read, ViewAction)
-  handle (Louder m) = do
+  update (Louder m) = do
     let new = m <> "!"
     pure $ messageView new
 

@@ -43,11 +43,11 @@ instance (Reader (TVar Int) :> es, Concurrent :> es) => HyperView Counter es whe
     deriving (Show, Read, ViewAction)
 
 
-  handle Increment = do
+  update Increment = do
     Counter <- viewId
     n <- modify $ \n -> n + 1
     pure $ viewCount n
-  handle Decrement = do
+  update Decrement = do
     n <- modify $ \n -> n - 1
     pure $ viewCount n
 
@@ -109,7 +109,7 @@ initCounter = newTVarIO 0
 --
 -- instance HyperView Floop where
 --   type Action Floop = FloopA
--- instance Handle Floop es where
+-- instance update Floop es where
 --   handle _ _ = pure none
 --
 --

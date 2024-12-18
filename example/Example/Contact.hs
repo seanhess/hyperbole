@@ -6,11 +6,13 @@ import Data.String.Conversions
 import Data.Text (Text, pack)
 import Effectful
 import Effectful.Reader.Dynamic
+import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Effects.Debug
 import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
@@ -27,7 +29,7 @@ page
 page = do
   uid <- ask
   u <- Users.find uid
-  pure $ do
+  pure $ exampleLayout (Route.Contacts $ Route.Contact 0) $ do
     col (pad 10 . gap 10) $ do
       hyper (Contact uid) $ contactView u
 
@@ -44,7 +46,7 @@ instance (Users :> es, Debug :> es) => HyperView Contact es where
     | Save
     | View
     deriving (Show, Read, ViewAction)
-  handle action = do
+  update action = do
     -- No matter which action we are performing, let's look up the user to make sure it exists
     Contact uid <- viewId
     u <- Users.find uid
@@ -104,7 +106,9 @@ contactView' edit u = do
 
 
 contactEdit :: User -> View Contact ()
-contactEdit u = onRequest contactLoading $ contactEdit' View Save u
+contactEdit u = do
+  el (hide . onRequest flexCol) contactLoading
+  el (onRequest hide) $ contactEdit' View Save u
 
 
 contactEdit' :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
@@ -128,22 +132,20 @@ contactForm onSubmit c = do
   form @ContactForm onSubmit (gap 10) $ do
     field f.firstName (const fld) $ do
       label "First Name:"
-      input Name (inp . valMaybe id c.firstName)
+      input Name (inp . maybe id value c.firstName)
 
     field f.lastName (const fld) $ do
       label "Last Name:"
-      input Name (inp . valMaybe id c.lastName)
+      input Name (inp . maybe id value c.lastName)
 
     field f.age (const fld) $ do
       label "Age:"
-      input Number (inp . valMaybe (pack . show) c.age)
+      input Number (inp . maybe id (value . pack . show) c.age)
 
     submit Style.btn "Submit"
  where
   fld = flexRow . gap 10
   inp = Style.input
-  valMaybe _ Nothing = id
-  valMaybe f (Just a) = value (f a)
 
 
 contactLoading :: View id ()

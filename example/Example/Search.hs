@@ -2,14 +2,16 @@ module Example.Search where
 
 import Data.String (IsString)
 import Data.Text (Text, isInfixOf, toLower)
+import Example.AppRoute qualified as Route
 import Example.Colors
+import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
 
 page :: (Hyperbole :> es) => Page es '[LiveSearch]
 page = do
-  pure $ col (pad 20) $ do
+  pure $ exampleLayout Route.LiveSearch $ col (pad 20) $ do
     el bold "Filter Programming Languages"
     hyper LiveSearch $ liveSearchView allLanguages Nothing
 
@@ -25,10 +27,10 @@ instance HyperView LiveSearch es where
     deriving (Show, Read, ViewAction)
 
 
-  handle (GoSearch term) = do
+  update (GoSearch term) = do
     let matched = filter (isMatchLanguage term) allLanguages
     pure $ liveSearchView matched Nothing
-  handle (Select lang) = do
+  update (Select lang) = do
     pure $ liveSearchView [] (Just lang)
 
 

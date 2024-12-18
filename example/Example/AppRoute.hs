@@ -17,12 +17,13 @@ data AppRoute
   | Forms
   | LiveSearch
   | Sessions
+  | Requests
   | Redirects
   | RedirectNow
   | LazyLoading
   | Concurrent
   | Errors
-  deriving (Eq, Generic)
+  deriving (Eq, Generic, Show)
 instance Route AppRoute where
   baseRoute = Just Main
 
@@ -30,7 +31,7 @@ instance Route AppRoute where
 data ContactRoute
   = ContactsAll
   | Contact UserId
-  deriving (Eq, Generic)
+  deriving (Eq, Generic, Show)
 instance Route ContactRoute where
   baseRoute = Just ContactsAll
   matchRoute [] = pure ContactsAll
@@ -44,4 +45,4 @@ instance Route ContactRoute where
 data Hello
   = Greet Text
   | Redirected
-  deriving (Eq, Generic, Route)
+  deriving (Eq, Generic, Route, Show)
