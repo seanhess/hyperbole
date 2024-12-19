@@ -7,7 +7,7 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Page es '[Contents]
+page :: (Hyperbole :> es) => Eff es (Page '[Contents])
 page = do
   pure $ exampleLayout Route.Errors $ row (pad 20) $ do
     col (gap 10 . border 1) $ do

@@ -1,0 +1,5 @@
+.git
+.stack-work
+client/node_modules
+Dockerfile
+dist-newstyle

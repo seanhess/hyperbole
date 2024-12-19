@@ -16,7 +16,7 @@ main = do
     liveApp (basicDocument "Example") (runPage simplePage)
 
 
-simplePage :: (Hyperbole :> es) => Page es '[Message]
+simplePage :: (Hyperbole :> es) => Eff es (Page '[Message])
 simplePage = do
   pure $ exampleLayout Route.Simple $ col (pad 20 . gap 10) $ do
     el bold "My Page"

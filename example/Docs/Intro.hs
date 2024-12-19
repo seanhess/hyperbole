@@ -22,11 +22,11 @@ findTopLevel definition source =
   let rest = dropWhile (not . isTopLevel definition) source
    in takeWhile (not . isBlankLine) rest
  where
-  isTopLevel def line = BS.isPrefixOf def line
+  isTopLevel = BS.isPrefixOf
   isBlankLine line = BS.null $ BS.dropSpace line
 
 
-page :: (Hyperbole :> es) => Page es '[]
+page :: (Hyperbole :> es) => Eff es (Page '[])
 page = do
   pure $ exampleLayout (Docs Route.Intro) $ do
     col (pad 20 . gap 10) $ do
@@ -43,58 +43,3 @@ page = do
   sample lns =
     pre Style.code $ do
       cs $ BS.unlines lns
-
-
-messagePage = do
-  run 3000 $ do
-    liveApp (basicDocument "Example") (page messagePage)
-
-
-main = do
-  run 3000 $ do
-    liveApp (basicDocument "Example") (page messagePage)
-
-
-
--- data Counter = Counter
---   deriving (Show, Read, ViewId)
---
---
--- instance (Reader (TVar Int) :> es, Concurrent :> es) => HyperView Counter es where
---   data Action Counter
---     = Increment
---     | Decrement
---     deriving (Show, Read, ViewAction)
---
---
---   update Increment = do
---     n <- modify (+ 1)
---     pure $ viewCount n
---   update Decrement = do
---     n <- modify (subtract 1)
---     pure $ viewCount n
---
---
--- viewCount :: Int -> View Counter ()
--- viewCount n = col (gap 10) $ do
---   row id $ do
---     el (bold . fontSize 48 . border 1 . pad (XY 20 0)) $ text $ pack $ show n
---   row (gap 10) $ do
---     button Decrement Style.btn "Decrement"
---     button Increment Style.btn "Increment"
---
---
--- modify :: (Concurrent :> es, Reader (TVar Int) :> es) => (Int -> Int) -> Eff es Int
--- modify f = do
---   var <- ask
---   atomically $ do
---     modifyTVar var f
---     readTVar var
---
---
--- getCount :: (Concurrent :> es, Reader (TVar Int) :> es) => Eff es Int
--- getCount = readTVarIO =<< ask
---
---
--- initCounter :: (Concurrent :> es) => Eff es (TVar Int)
--- initCounter = newTVarIO 0

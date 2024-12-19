@@ -13,7 +13,7 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es, Debug :> es) => Page es '[Contents]
+page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
 page = do
   -- setSession "color" Warning
   -- setSession "msg" ("________" :: Text)

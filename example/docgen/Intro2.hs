@@ -1,26 +1,21 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Intro where
+module Intro2 where
 
 import Data.Text (Text)
 import Web.Hyperbole
-
-
-main = do
-  run 3000 $ do
-    liveApp (basicDocument "Example") (runPage messagePage)
-
-
-messagePage :: Eff es (Page '[])
-messagePage = do
-  pure $ do
-    el bold "Hello World"
 
 
 messageView :: Text -> View Message ()
 messageView m = do
   el bold $ text $ "Message: " <> m
   button (SetMessage "Goodbye") (border 1) "Say Goodbye"
+
+
+messagePage :: Eff es (Page '[Message])
+messagePage = do
+  pure $ do
+    hyper Message $ messageView "Hello"
 
 
 data Message = Message
@@ -34,12 +29,4 @@ instance HyperView Message es where
 
 
   update (SetMessage t) =
-    pure $ el_ (text t)
-
-
-messagePage' :: Eff es (Page '[Message])
-messagePage' = do
-  pure $ do
-    hyper Message $ do
-      el bold "Hello World"
-      button (SetMessage "Goodbye") (border 1) "Say Goodbye"
+    pure $ messageView t

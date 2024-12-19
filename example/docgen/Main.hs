@@ -1,20 +1,30 @@
 module Main where
 
 import Control.Exception (SomeException, try)
+import Data.Char (isSpace)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
+import Debug.Trace (traceM)
 import System.Directory
 import System.FilePath
 
 
 main :: IO ()
 main = do
-  putStrLn "DONE"
   let tmpDir = "/tmp/docs"
   copyExtraFilesTo tmpDir
   expandSourcesTo tmpDir
+
+
+test :: IO ()
+test = do
+  putStrLn "TEST"
+  src <- readSource "../src/Web/Hyperbole.hs"
+  SourceCode lns <- expandFile src
+  mapM_ print lns
+  pure ()
 
 
 expandSourcesTo :: FilePath -> IO ()
@@ -88,10 +98,12 @@ data Embed = Embed
   , prefix :: Text
   , sourceFile :: FilePath
   }
+  deriving (Show, Eq)
 newtype SourceCode = SourceCode {lines :: [Text]}
 
 
 newtype TopLevelDefinition = TopLevelDefinition Text
+  deriving (Show, Eq)
 
 
 expandFile :: SourceCode -> IO SourceCode
@@ -102,7 +114,8 @@ expandFile (SourceCode lns) =
 expandLine :: Text -> IO [Text]
 expandLine line = do
   case parseEmbed line of
-    Nothing -> pure [line]
+    Nothing -> do
+      pure [line]
     Just emb -> expandEmbed emb
  where
   parseEmbed inp = do
@@ -117,26 +130,46 @@ expandLine line = do
       _ -> Nothing
 
   splitSrcDef inp =
-    case T.splitOn " " inp of
-      [src, def] -> pure (cs src, TopLevelDefinition def)
-      _ -> Nothing
+    let (src, def) = T.breakOn " " inp
+     in pure (cs src, TopLevelDefinition $ T.drop 1 def)
 
 
 expandEmbed :: Embed -> IO [Text]
 expandEmbed embed = do
+  print embed
   source <- T.readFile embed.sourceFile
-  pure $ fmap (addPrefix . cleanSourceLine) $ findTopLevel embed.definition (SourceCode $ T.lines source)
+  pure $ fmap markupLine $ findTopLevel embed.definition (SourceCode $ T.lines source)
  where
   addPrefix line = embed.prefix <> line
-  cleanSourceLine =
+  markupLine :: Text -> Text
+  markupLine line =
+    case embed.prefix of
+      "" -> markupLineAt line
+      _ -> markupLinePrefix line
+  markupLineAt =
     T.replace "\"" "\\\""
+  markupLinePrefix line =
+    embed.prefix <> line
 
 
 -- returns lines of a top-level definition
 findTopLevel :: TopLevelDefinition -> SourceCode -> [Text]
 findTopLevel (TopLevelDefinition definition) source =
-  let rest = dropWhile (not . isTopLevel definition) source.lines
-   in takeWhile (not . isBlankLine) rest
+  let rest = dropWhile (not . isTopLevel) source.lines
+   in dropWhileEnd isEmpty $ takeWhile isCurrentDefinition rest
  where
-  isTopLevel = T.isPrefixOf
+  isTopLevel = T.isPrefixOf definition
+  isEmpty = T.null
   isBlankLine line = T.null $ T.strip line
+  isCurrentDefinition line =
+    isTopLevel line || not (isFullyOutdented line)
+  dropWhileEnd p as =
+    reverse $ dropWhile p $ reverse as
+
+
+isFullyOutdented :: Text -> Bool
+isFullyOutdented line =
+  case cs (T.take 1 line) of
+    "" -> False
+    [c] -> not $ isSpace c
+    _ -> False

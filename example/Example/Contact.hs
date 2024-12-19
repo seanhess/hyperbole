@@ -25,7 +25,7 @@ response uid = runReader uid $ runPage page
 page
   :: forall es
    . (Hyperbole :> es, Users :> es, Debug :> es, Reader UserId :> es)
-  => Page es '[Contact]
+  => Eff es (Page '[Contact])
 page = do
   uid <- ask
   u <- Users.find uid

@@ -18,6 +18,9 @@ module Web.Hyperbole
     -- ** Interactivity
     -- $interactive
 
+    -- ** View Functions
+    -- $view-functions
+
     -- ** Independent Updates
     -- $multi
 
@@ -199,90 +202,76 @@ Depends heavily on the following frameworks
 
 Hyperbole applications run via [Warp](https://hackage.haskell.org/package/warp) and [WAI](https://hackage.haskell.org/package/wai)
 
-They are divided into top-level 'Page's. We use 'load' to handle the initial page load
+They are divided into top-level 'Page's, which can run side effects (like loading data), then respond with a 'View'
 
 @
 #EMBED docgen/Intro.hs main
 
 #EMBED docgen/Intro.hs messagePage
-
-#EMBED docgen/Intro.hs messageView
 @
 -}
 
 
 {- $interactive
 
-Embed 'HyperView's to add type-safe interactivity to subsections of a 'Page'.
-
-To do this, first we connect a view id type to the actions it supports
+We can include one or more 'HyperView's to add type-safe interactivity to live subsections of the 'Page'. Define a data type that uniquely identifies it.
 
 @
-data Message = Message
-  deriving (Generic, 'Param')
-
-data MessageAction = Louder Text
-  deriving (Generic, 'Param')
-
-instance 'HyperView' Message where
-  type Action Message = MessageAction
+#EMBED docgen/Intro.hs data Message
 @
 
--- > #EMBED Main.hs main
+Make our 'ViewId' an instance of 'HyperView'.
 
-
-Next we add a 'handle'r for our view type. It performs side effects, and returns a new view of the same type
-
-@
-message :: Message -> MessageAction -> Eff es (View Message ())
-message _ (Louder m) = do
-  -- side effects
-  let new = m <> "!"
-  pure $ messageView new
-@
-
-We update our parent page view to make the messageView interactive using 'hyper', and add our 'handle'r to the 'Page'
+1. Specify every interactive 'Action' possible
+2. Write an 'update' function which replaces the contents of the 'HyperView'
 
 @
-messagePage = do
-  'handle' message
-  'load' $ do
-    pure $ do
-      'el' 'bold' "Message Page"
-      'hyper' Message $ messageView "Hello World"
+{\-# LANGUAGE UndecidableInstances #-\}
+
+#EMBED docgen/Intro.hs instance HyperView Message
 @
 
-Finally, let's add a 'button' to our view. When clicked, Hyperbole will run the `message` handler, and update our view, leaving the page header untouched
+
+Embed the new 'HyperView' in the 'Page' using the 'hyper' function, and add our 'ViewId' to the 'Page'. Then add a 'button 'to trigger the 'Action'
 
 @
-messageView :: Text -> 'View' Message ()
-messageView m = do
-  'el_' (text m)
-  'button' (Louder m) id "Change Message"
+#EMBED docgen/Intro.hs messagePage'
+@
+
+Clicking the button will replace the contents with the result of the 'update'
+-}
+
+
+{- $view-functions
+
+The best way to organize our 'View's is with "View Functions". These are pure functions with state as parameters, returning a View with our 'ViewId' as the 'context'
+
+> #EMBED docgen/Intro.hs messageView
+
+Now we can refactor our 'Page' and 'update' to use the same view function
+
+@
+#EMBED docgen/Intro2.hs messagePage
+
+#EMBED docgen/Intro2.hs instance HyperView Message
 @
 -}
 
 
 {- $multi
 
-Multiple views update independently, as long as they have different values for their View Id. Add an Int identifier to Message
-
-@
-data Message = Message Int
-  deriving (Generic, 'Param')
-@
-
-We can embed multiple HyperViews on the same page with different ids. Each button will update its view independently
+'HyperView's update independently. We can make completely new 'HyperViews', but we can also reuse the same one as long as the value of 'ViewId' is unique. Let's update our 'ViewId' to allow for more than one value.
 
 
 @
-messagePage = do
-  'handle' message
-  'load' $ do
-    pure $ do
-      'el' bold "Message Page"
-      'hyper' (Message 1) $ messageView \"Hello\"
-      'hyper' (Message 2) $ messageView \"World\"
+#EMBED docgen/IntroMulti.hs data Message
+@
+
+Now we can use the same 'HyperView' multiple times in a page. Each button will update its view independently
+
+
+@
+#EMBED docgen/IntroMulti.hs messagePage
 @
 -}
 
@@ -372,3 +361,17 @@ Hyperbole is tighly integrated with [Effectful](https://hackage.haskell.org/pack
 -- -- how can we specify this?
 -- -- certain views are allowed in others?
 --
+
+{-
+
+#EMBED docgen/Intro.hs main
+
+#EMBED docgen/Intro.hs messagePage
+
+#EMBED docgen/Intro.hs data Message
+
+#EMBED docgen/Intro.hs instance HyperView Message
+
+> #EMBED docgen/Intro.hs messageView
+
+-}

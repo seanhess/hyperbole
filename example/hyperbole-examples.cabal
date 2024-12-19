@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           hyperbole-examples
-version:        0.3.6
+version:        0.4.2
 synopsis:       Interactive HTML apps using type-safe serverside Haskell
 description:    Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
 category:       Web, Network
@@ -24,6 +24,8 @@ executable docgen
   main-is: Main.hs
   other-modules:
       Intro
+      Intro2
+      IntroMulti
       Paths_hyperbole_examples
   autogen-modules:
       Paths_hyperbole_examples

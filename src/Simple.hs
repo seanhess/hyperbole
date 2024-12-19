@@ -23,7 +23,7 @@ response :: (Hyperbole :> es, Concurrent :> es) => TVar Int -> Eff es Response
 response count = runReader count $ runPage page
 
 
-page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es '[Counter]
+page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Eff es (Page '[Counter])
 page = do
   var <- ask
   n <- readTVarIO var

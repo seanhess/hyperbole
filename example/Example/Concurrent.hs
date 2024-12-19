@@ -10,7 +10,7 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es '[Poller]
+page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Eff es (Page '[Poller])
 page = do
   pure $ exampleLayout Concurrent $ do
     col (pad 20) $ do
