@@ -13,7 +13,6 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as L
 import Data.Text.Lazy.Encoding qualified as L
-import Docs.Intro qualified as Intro
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Dispatch.Dynamic
@@ -73,7 +72,6 @@ app users count = do
 
   router :: forall es. (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
   router (Hello h) = runPage $ hello h
-  router (Docs Intro) = runPage Intro.page
   router Simple = runPage Simple.simplePage
   router (Contacts ContactsAll) = runPage Contacts.page
   router (Contacts (Contact uid)) = Contact.response uid

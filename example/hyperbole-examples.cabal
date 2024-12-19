@@ -88,7 +88,6 @@ executable examples
       Web.Hyperbole.View.Element
       Web.Hyperbole.View.Event
       BulkUpdate
-      Docs.Intro
       Example.AppRoute
       Example.Colors
       Example.Concurrent
