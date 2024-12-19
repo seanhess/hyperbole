@@ -41,8 +41,8 @@ FROM debian:10 AS app
 WORKDIR /opt/app
 
 COPY --from=build /opt/build/bin/examples ./examples
-COPY --from=build /opt/build/client ./client
-COPY --from=build /opt/build/examples/static ./static
+ADD ./client ./client
+ADD ./example/static ./static
 
 # ENV DYNAMO_LOCAL=False
 ENTRYPOINT ["/opt/app/examples"]
