@@ -300,15 +300,15 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1734574950,
-        "narHash": "sha256-54wKLEePTubAbjVGXkAnrh2b8VuNPjxahjEJCyB+QzU=",
-        "owner": "Skyfold",
+        "lastModified": 1734542501,
+        "narHash": "sha256-M8SlVVTEWU098LScnVtxRxZgqnLEUAP+mRIUFmZUv+4=",
+        "owner": "seanhess",
         "repo": "web-view",
-        "rev": "abc9eddd03c6e45fd5c47e80143467c5115e5e88",
+        "rev": "110c758fea1a0c0e8beb9c343d29c18d55e93f16",
         "type": "github"
       },
       "original": {
-        "owner": "Skyfold",
+        "owner": "seanhess",
         "repo": "web-view",
         "type": "github"
       }

@@ -9,8 +9,7 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter/main";
-    # FIXME
-    web-view.url = "github:Skyfold/web-view";
+    web-view.url = "github:seanhess/web-view";
   };
 
   outputs =
@@ -189,7 +188,6 @@
               };
             }) ghcVersions
           );
-        inherit pkgs;
 
         packages =
           {
