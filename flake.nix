@@ -84,10 +84,12 @@
           inherit system;
         };
 
-        pkgsOverlayed = import nixpkgs {
-          inherit system;
-          overlays = [ self.overlays.default ];
-        };
+        # Create an attrset of GHC packages
+        ghcPkgs =
+          (import nixpkgs {
+            inherit system;
+            overlays = [ self.overlays.default ];
+          }).haskell.packages;
 
         # Define GHC versions list
         ghcVersions = [
@@ -95,16 +97,23 @@
           "982"
         ];
 
-        # Create an attrset of GHC packages
-        ghcPkgs = builtins.listToAttrs (
-          map (version: {
-            name = "ghc${version}";
-            value = pkgsOverlayed.haskell.packages."ghc${version}";
-          }) ghcVersions
-        );
+        pre-commit = pre-commit-hooks.lib.${system}.run {
+          src = src;
+          hooks = {
+            hlint.enable = true;
+            fourmolu.enable = true;
+            hpack.enable = true;
+            nixfmt-rfc-style.enable = true;
+            flake-checker = {
+              enable = true;
+              args = [ "--no-telemetry" ];
+            };
+            check-merge-conflicts.enable = true;
+          };
+        };
 
         shellCommon = version: {
-          inherit (self.checks.${system}.pre-commit-check) shellHook;
+          inherit (pre-commit) shellHook;
 
           # Programs that will be available in the development shell
           buildInputs = with pkgs.haskell.packages."ghc${version}"; [
@@ -149,42 +158,22 @@
 
       in
       {
-        checks =
-          pkgs.lib.recursiveUpdate
+        checks = builtins.listToAttrs (
+          builtins.concatMap (version: [
             {
-              pre-commit-check = pre-commit-hooks.lib.${system}.run {
-                src = ./.;
-                hooks = {
-                  # hlint.enable = true;
-                  # fourmolu.enable = true;
-                  hpack.enable = true;
-                  nixfmt-rfc-style.enable = true;
-                  flake-checker = {
-                    enable = true;
-                    args = [ "--no-telemetry" ];
-                  };
-                  check-merge-conflicts.enable = true;
-                };
-              };
+              name = "ghc${version}-check-${packageName}";
+              value = pkgs.runCommand "ghc${version}-check-${packageName}" {
+                buildInputs = [ self.packages.${system}."ghc${version}-${packageName}" ];
+              } "touch $out";
             }
-            (
-              builtins.listToAttrs (
-                builtins.concatMap (version: [
-                  {
-                    name = "ghc${version}-check-${packageName}";
-                    value = pkgs.runCommand "ghc${version}-check-${packageName}" {
-                      buildInputs = [ self.packages.${system}."ghc${version}-${packageName}" ];
-                    } "touch $out";
-                  }
-                  {
-                    name = "ghc${version}-check-example";
-                    value = pkgs.runCommand "ghc${version}-check-example" {
-                      buildInputs = [ (examples-exe version) ];
-                    } "type examples; touch $out";
-                  }
-                ]) ghcVersions
-              )
-            );
+            {
+              name = "ghc${version}-check-example";
+              value = pkgs.runCommand "ghc${version}-check-example" {
+                buildInputs = [ (examples-exe version) ];
+              } "type examples; touch $out";
+            }
+          ]) ghcVersions
+        );
 
         apps =
           {

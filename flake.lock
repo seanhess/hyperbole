@@ -300,11 +300,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1734526219,
-        "narHash": "sha256-kAG3rpjO5sXwKzTzhDjrx1JeY2lS27FGmR45I1Yoq5Y=",
+        "lastModified": 1734574950,
+        "narHash": "sha256-54wKLEePTubAbjVGXkAnrh2b8VuNPjxahjEJCyB+QzU=",
         "owner": "Skyfold",
         "repo": "web-view",
-        "rev": "430f0393af959a90014ae8788b0da6609b1f1c7f",
+        "rev": "abc9eddd03c6e45fd5c47e80143467c5115e5e88",
         "type": "github"
       },
       "original": {
