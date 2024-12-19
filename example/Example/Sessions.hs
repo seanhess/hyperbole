@@ -20,9 +20,7 @@ page = do
   (clr :: Maybe AppColor) <- session "color"
   (msg :: Maybe Text) <- session "msg"
   pure $ exampleLayout Route.Sessions $ col (pad 20 . gap 10) $ do
-    el_ "Reload your browser after changing the settings below to see the session information preserved"
-    row id $ do
-      hyper Contents $ viewContent clr msg
+    hyper Contents $ viewContent clr msg
 
 
 data Contents = Contents
@@ -54,7 +52,7 @@ viewContent mclr mmsg =
 viewColorPicker :: Maybe AppColor -> View Contents ()
 viewColorPicker mc = do
   let clr = fromMaybe White mc
-  col (gap 10 . pad 20 . bg clr) $ do
+  col (gap 10 . pad 20 . bg clr . border 1) $ do
     el (fontSize 24 . bold) "Session Background"
     row (gap 10) $ do
       button (SaveColor Success) (Style.btn' Success . border 1) "Successs"

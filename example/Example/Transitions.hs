@@ -41,6 +41,7 @@ viewSmall = do
 
 
 viewBig :: View Contents ()
-viewBig = col (gap 10 . transition 300 (Width 400)) $ do
-  el_ "Expanded"
-  button Collapse Style.btn "Collapse"
+viewBig =
+  col (gap 10 . transition 300 (Width 400)) $ do
+    el_ "Expanded"
+    button Collapse Style.btn "Collapse"

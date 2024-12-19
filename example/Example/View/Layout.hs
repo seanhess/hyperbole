@@ -19,12 +19,11 @@ exampleLayout rt pageView =
     row grow $ do
       sidebar
       col (pad 20 . gap 20 . grow) $ do
+        link sourceUrl Style.link "View Source"
+        row (bg White) $ do
+          pageView
+          space
         pageDescription rt
-        col (gap 10 . grow) $ do
-          row (bg White) $ do
-            pageView
-            space
-          link sourceUrl Style.link "View Source"
  where
   sourceUrl = "https://github.com/seanhess/hyperbole/blob/latest/example/" <> routeSource rt
 
@@ -104,4 +103,8 @@ pageDescription = \case
   Counter -> do
     el_ "Pages and update functions can run side effects before rendering. Here we use a `Reader (TVar Int)` to track the count"
     el_ "Notice how the view function expects the current state as a parameter"
+  Transitions -> do
+    el_ "We can use web-view to animate transitions"
+  Sessions -> do
+    el_ "Reload your browser after changing these settings to see the session information preserved"
   _ -> none
