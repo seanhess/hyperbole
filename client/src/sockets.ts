@@ -83,14 +83,15 @@ export class SocketConnection {
           throw socketError(metadata.error)
         }
 
-        if (metadata.redirect) {
-          window.location.href = metadata.redirect
-          return
-        }
 
         if (metadata.session) {
           // console.log("setting cookie", metadata.session)
           document.cookie = metadata.session
+        }
+
+        if (metadata.redirect) {
+          window.location.href = metadata.redirect
+          return
         }
 
         if (metadata.viewId != id) {

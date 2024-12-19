@@ -10,7 +10,6 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
--- this is already running in a different context
 page :: (Hyperbole :> es, Debug :> es) => Page es '[Contents]
 page = do
   pure $ exampleLayout LazyLoading $ do

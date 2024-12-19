@@ -23,22 +23,22 @@ pollMessageView m = do
     'el_' ('text' m)
 @
 -}
-onLoad :: (ViewId id, ViewAction (Action id)) => Action id -> DelayMs -> Mod id
+onLoad :: (ViewAction (Action id)) => Action id -> DelayMs -> Mod id
 onLoad a delay = do
   att "data-on-load" (toAction a) . att "data-delay" (pack $ show delay)
 
 
-onClick :: (ViewId id, ViewAction (Action id)) => Action id -> Mod id
+onClick :: (ViewAction (Action id)) => Action id -> Mod id
 onClick a = do
   att "data-on-click" (toAction a)
 
 
-onInput :: (ViewId id, ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod id
+onInput :: (ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod id
 onInput a delay = do
   att "data-on-input" (toActionInput a) . att "data-delay" (pack $ show delay)
 
 
-onSubmit :: (ViewId id, ViewAction (Action id)) => Action id -> Mod id
+onSubmit :: (ViewAction (Action id)) => Action id -> Mod id
 onSubmit act = do
   att "data-on-submit" (toAction act)
 
