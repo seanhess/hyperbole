@@ -39,7 +39,6 @@ async function sendAction(msg:ActionMessage) {
       return
     }
 
-    console.log("RES", res.headers.get("location"))
 
     if (res.headers.get("location")) {
       window.location.href = res.headers.get("location")

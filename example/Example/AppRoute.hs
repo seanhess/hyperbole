@@ -8,6 +8,7 @@ import Web.Hyperbole
 
 data AppRoute
   = Main
+  | Docs DocRoute
   | Simple
   | Hello Hello
   | Contacts ContactRoute
@@ -45,4 +46,9 @@ instance Route ContactRoute where
 data Hello
   = Greet Text
   | Redirected
+  deriving (Eq, Generic, Route, Show)
+
+
+data DocRoute
+  = Intro
   deriving (Eq, Generic, Route, Show)

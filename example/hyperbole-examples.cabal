@@ -20,6 +20,49 @@ source-repository head
   type: git
   location: https://github.com/seanhess/hyperbole
 
+executable docgen
+  main-is: Main.hs
+  other-modules:
+      Intro
+      Paths_hyperbole_examples
+  autogen-modules:
+      Paths_hyperbole_examples
+  hs-source-dirs:
+      ./docgen
+  default-extensions:
+      OverloadedStrings
+      OverloadedRecordDot
+      DuplicateRecordFields
+      NoFieldSelectors
+      TypeFamilies
+      DataKinds
+      DerivingStrategies
+      DeriveAnyClass
+  ghc-options: -Wall -fdefer-typed-holes
+  build-depends:
+      base
+    , bytestring
+    , casing
+    , containers
+    , cookie
+    , directory
+    , effectful
+    , file-embed
+    , filepath
+    , http-api-data
+    , http-types
+    , hyperbole
+    , network
+    , string-conversions
+    , string-interpolate
+    , text
+    , wai
+    , wai-websockets
+    , warp
+    , web-view
+    , websockets
+  default-language: GHC2021
+
 executable examples
   main-is: Main.hs
   other-modules:
@@ -43,6 +86,7 @@ executable examples
       Web.Hyperbole.View.Element
       Web.Hyperbole.View.Event
       BulkUpdate
+      Docs.Intro
       Example.AppRoute
       Example.Colors
       Example.Concurrent
@@ -55,11 +99,13 @@ executable examples
       Example.Forms
       Example.LazyLoading
       Example.Redirects
+      Example.Requests
       Example.Search
       Example.Sessions
       Example.Simple
       Example.Style
       Example.Transitions
+      Example.View.Layout
       HelloWorld
       Paths_hyperbole_examples
   autogen-modules:

@@ -45,3 +45,7 @@ link = color Primary
 
 input :: Mod id
 input = border 1 . pad 8
+
+
+code :: Mod id
+code = bg Light . pad 10 . fontSize 12

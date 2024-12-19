@@ -47,6 +47,7 @@ exampleLayout rt pageView =
   routeSource :: AppRoute -> Url
   routeSource = \case
     Simple -> "Example/Simple.hs"
+    Docs Intro -> "Docs/Intro.hs"
     Contacts ContactsAll -> "Example/Contacts.hs"
     Contacts (Contact _) -> "Example/Contact.hs"
     Counter -> "Example/Counter.hs"

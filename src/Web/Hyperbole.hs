@@ -36,15 +36,19 @@ module Web.Hyperbole
   , routeUrl
   , route
 
-    -- * Pages
+    -- * Create Pages
 
-    -- ** Page
+    -- | Applications are made up of Pages, which have zero dependencies between them. WE start with a page load, etc
+  , Page
 
-    -- ** HyperView
+    -- * Add HyperViews
   , HyperView (..)
   , hyper
-  , viewId
-  , Page
+  , HasViewId (..)
+
+    -- * Write View Functions
+
+    -- | You need to create a view function for every HyperView
 
     -- * Interactive Elements
 
@@ -198,19 +202,11 @@ Hyperbole applications run via [Warp](https://hackage.haskell.org/package/warp) 
 They are divided into top-level 'Page's. We use 'load' to handle the initial page load
 
 @
-main = do
-  'run' 3000 $ do
-    'liveApp' ('basicDocument' \"Example\") ('page' messagePage)
+#EMBED docgen/Intro.hs main
 
-messagePage = do
-  'load' $ do
-    pure $ do
-      'el' 'bold' "Message Page"
-      messageView "Hello World"
+#EMBED docgen/Intro.hs messagePage
 
-messageView m = do
-  el_ "Message:"
-  el_ (text m)
+#EMBED docgen/Intro.hs messageView
 @
 -}
 
@@ -231,6 +227,8 @@ data MessageAction = Louder Text
 instance 'HyperView' Message where
   type Action Message = MessageAction
 @
+
+-- > #EMBED Main.hs main
 
 
 Next we add a 'handle'r for our view type. It performs side effects, and returns a new view of the same type
@@ -373,3 +371,4 @@ Hyperbole is tighly integrated with [Effectful](https://hackage.haskell.org/pack
 -- -- TODO: woot is allowed to appear in our page
 -- -- how can we specify this?
 -- -- certain views are allowed in others?
+--

@@ -57,3 +57,11 @@ executables:
       - ./
     dependencies:
     - wai-middleware-static
+  docgen:
+    main:                Main.hs
+    source-dirs:
+      - ./docgen
+    dependencies:
+      - hyperbole
+      - directory
+      - filepath

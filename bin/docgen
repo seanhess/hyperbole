@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+cd example
+hpack
+cabal run docgen
+
+cd /tmp/docs
+cabal haddock
+
