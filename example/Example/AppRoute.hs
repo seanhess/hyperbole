@@ -22,6 +22,7 @@ data AppRoute
   | RedirectNow
   | LazyLoading
   | Concurrent
+  | Examples
   | Errors
   deriving (Eq, Generic, Show)
 instance Route AppRoute where

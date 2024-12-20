@@ -8,38 +8,24 @@ import Data.Text (Text)
 import Example.AppRoute
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
+import Example.View.Icon as Icon (hamburger)
 import Text.Casing (fromHumps, toWords)
 import Web.Hyperbole
-import Web.View.Style (addClass, cls, prop)
+import Web.View
+import Web.View.Style (Display (..), addClass, cls, prop)
+import Web.View.Types (ChildCombinator (..), Class (..), ClassName (..), Selector (..), className, selector)
 
 
 exampleLayout :: AppRoute -> View c () -> View c ()
-exampleLayout rt pageView =
-  layout id $ do
-    row grow $ do
-      sidebar
-      col (pad 20 . gap 20 . grow) $ do
-        link sourceUrl Style.link "View Source"
-        row (bg White) $ do
-          pageView
-          space
-        pageDescription rt
+exampleLayout rt pageView = do
+  rootLayout rt $ do
+    link sourceUrl Style.link "View Source"
+    row (bg White) $ do
+      pageView
+      space
+    pageDescription rt
  where
   sourceUrl = "https://github.com/seanhess/hyperbole/blob/latest/example/" <> routeSource rt
-
-  sidebar = do
-    nav (bg Dark . color White . minWidth 250) $ do
-      col id $ do
-        link "https://github.com/seanhess/hyperbole" (bold . fontSize 24 . pad 20 . logo) $ do
-          "HYPERBOLE"
-        exampleMenu rt
-
-  -- https://www.fontspace.com/super-brigade-font-f96444
-  logo =
-    addClass $
-      cls "logo"
-        & prop @Text "background" "no-repeat center/90% url(/logo-robot.png)"
-        & prop @Text "color" "transparent"
 
   routeSource :: AppRoute -> Url
   routeSource = \case
@@ -61,7 +47,23 @@ exampleLayout rt pageView =
     Query -> "Main.hs"
     Hello _ -> "Main.hs"
     Main -> "Main.hs"
+    Examples -> "Example/View/Layout.hs"
 
+
+rootLayout :: AppRoute -> View c () -> View c ()
+rootLayout rt content =
+  layout id $ do
+    el (grow . flexRow . onMobile flexCol) $ do
+      navigation rt
+      col (pad 20 . gap 20 . grow) $ do
+        content
+ where
+  sidebar = width 250 . flexCol
+
+  topbar = flexRow
+
+
+-- https://www.fontspace.com/super-brigade-font-f96444
 
 exampleMenu :: AppRoute -> View c ()
 exampleMenu current = do
@@ -108,3 +110,47 @@ pageDescription = \case
   Sessions -> do
     el_ "Reload your browser after changing these settings to see the session information preserved"
   _ -> none
+
+
+examplesView :: View c ()
+examplesView = rootLayout Examples $ do
+  col (bg Dark) $ do
+    exampleMenu Examples
+
+
+navigation :: AppRoute -> View c ()
+navigation rt = do
+  nav (bg Dark . color White . flexCol . onMobile flexRow) $ do
+    col id $
+      link "https://github.com/seanhess/hyperbole" (bold . pad 20 . logo . minWidth 200) $ do
+        "HYPERBOLE"
+    col (onMobile hide) $ do
+      exampleMenu rt
+    space
+
+    col (hide . onMobile (display Block) . hover showMenu) $ do
+      row id $ do
+        space
+        route Examples id $ do
+          el (color White . width 50 . height 50) Icon.hamburger
+      col (grow . hide . addClass (cls "woot")) $ do
+        exampleMenu Examples
+ where
+  -- col (bg Dark) $ exampleMenu Examples
+
+  showMenu =
+    addClass $
+      Class wootChild mempty
+        & prop @Text "display" "flex"
+
+  wootChild = (selector "woot-parent"){child = Just (ChildWithName "woot")}
+
+  logo =
+    addClass $
+      cls "logo"
+        & prop @Text "background" "no-repeat center/90% url(/logo-robot.png)"
+        & prop @Text "color" "transparent"
+
+
+onMobile :: Mod c -> Mod c
+onMobile = media (MaxWidth 650)

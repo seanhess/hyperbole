@@ -7,7 +7,7 @@ package() {
 
 compile() {
   cd example
-  ghcid -T main -W
+  ghcid -T main -W --command="cabal repl examples"
 }
 
 client() {
