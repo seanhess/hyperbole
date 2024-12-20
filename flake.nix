@@ -137,10 +137,11 @@
         example-src = nix-filter.lib {
           root = ./example;
           include = [
-            (nix-filter.lib.inDirectory "Example")
+            "Example"
             (nix-filter.lib.matchExt "hs")
             ./example/hyperbole-examples.cabal
             ./example/cabal.project
+            "docgen"
           ];
         };
 
@@ -169,7 +170,7 @@
               name = "ghc${version}-check-example";
               value = pkgs.runCommand "ghc${version}-check-example" {
                 buildInputs = [ (examples-exe version) ];
-              } "type examples; touch $out";
+              } "type examples; type docgen; touch $out";
             }
           ]) ghcVersions
         );
@@ -177,16 +178,27 @@
         apps =
           {
             default = self.apps.${system}.ghc966-example;
+            docgen = self.apps.${system}.ghc966-docgen;
           }
           // builtins.listToAttrs (
             # Generate apps
-            map (version: {
-              name = "ghc${version}-example";
-              value = {
-                type = "app";
-                program = "${examples-exe version}/bin/examples";
-              };
-            }) ghcVersions
+            builtins.concatMap (version: [
+              {
+                name = "ghc${version}-example";
+                value = {
+                  type = "app";
+                  program = "${examples-exe version}/bin/examples";
+                };
+              }
+              {
+                name = "ghc${version}-docgen";
+                value = {
+                  type = "app";
+                  program = "${examples-exe version}/bin/docgen";
+                };
+              }
+
+            ]) ghcVersions
           );
 
         packages =
