@@ -11,9 +11,8 @@ import Example.Style qualified as Style
 import Example.View.Icon as Icon (hamburger)
 import Text.Casing (fromHumps, toWords)
 import Web.Hyperbole
-import Web.View
-import Web.View.Style (Display (..), addClass, cls, prop)
-import Web.View.Types (ChildCombinator (..), Class (..), ClassName (..), Selector (..), className, selector)
+import Web.View.Style (addClass, cls, prop)
+import Web.View.Types (ChildCombinator (..), Class (..), Selector (..), selector)
 
 
 exampleLayout :: AppRoute -> View c () -> View c ()
@@ -57,13 +56,7 @@ rootLayout rt content =
       navigation rt
       col (pad 20 . gap 20 . grow) $ do
         content
- where
-  sidebar = width 250 . flexCol
 
-  topbar = flexRow
-
-
--- https://www.fontspace.com/super-brigade-font-f96444
 
 exampleMenu :: AppRoute -> View c ()
 exampleMenu current = do
@@ -120,31 +113,26 @@ examplesView = rootLayout Examples $ do
 
 navigation :: AppRoute -> View c ()
 navigation rt = do
-  nav (bg Dark . color White . flexCol . onMobile flexRow) $ do
-    col id $
-      link "https://github.com/seanhess/hyperbole" (bold . pad 20 . logo . minWidth 200) $ do
-        "HYPERBOLE"
-    col (onMobile hide) $ do
-      exampleMenu rt
-    space
-
-    col (hide . onMobile (display Block) . hover showMenu) $ do
-      row id $ do
-        space
-        route Examples id $ do
+  nav (bg Dark . color White . flexCol . hover showMenu) $ do
+    row id $ do
+      link "https://github.com/seanhess/hyperbole" (bold . pad 20 . logo . width 200) "HYPERBOLE"
+      space
+      el (hide . onMobile flexCol) $ do
+        route Examples (pad 6) $ do
           el (color White . width 50 . height 50) Icon.hamburger
-      col (grow . hide . addClass (cls "woot")) $ do
-        exampleMenu Examples
+    col (onMobile hide . menuTarget) $ do
+      exampleMenu rt
  where
-  -- col (bg Dark) $ exampleMenu Examples
-
   showMenu =
     addClass $
-      Class wootChild mempty
+      Class menuSelector mempty
         & prop @Text "display" "flex"
 
-  wootChild = (selector "woot-parent"){child = Just (ChildWithName "woot")}
+  menuTarget = addClass $ cls "menu"
 
+  menuSelector = (selector "menu-parent"){child = Just (ChildWithName "menu")}
+
+  -- https://www.fontspace.com/super-brigade-font-f96444
   logo =
     addClass $
       cls "logo"
