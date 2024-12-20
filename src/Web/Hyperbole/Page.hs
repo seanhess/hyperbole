@@ -10,13 +10,13 @@ import Web.View (View)
 
 
 -- type Page (es :: [Effect]) (views :: [Type]) = Eff es (View (Root views) ())
-type Page es (views :: [Type]) = Eff es (View (Root views) ())
+type Page (views :: [Type]) = View (Root views) ()
 
 
 -- | Run a 'Page' in 'Hyperbole'
 runPage
   :: forall views es
    . (Hyperbole :> es, RunHandlers views es)
-  => Page es views
+  => Eff es (Page views)
   -> Eff es Response
 runPage = runLoad

@@ -1,14 +1,14 @@
 module Example.Requests where
 
+import Data.String.Conversions (cs)
 import Effectful
 import Example.AppRoute qualified as Route
-import Data.String.Conversions (cs)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
-import Web.Hyperbole.Effect.Server (Request(..))
+import Web.Hyperbole.Effect.Server (Request (..))
 
 
-page :: (Hyperbole :> es) => Page es '[]
+page :: (Hyperbole :> es) => Eff es (Page '[])
 page = do
   r <- request
   pure $ exampleLayout Route.Requests $ do
@@ -25,4 +25,3 @@ page = do
       el_ $ do
         text "Cookies: "
         text $ cs $ show $ fmap fst r.cookies
-

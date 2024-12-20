@@ -19,7 +19,7 @@ import Web.Hyperbole
 page
   :: forall es
    . (Hyperbole :> es, Users :> es, Debug :> es)
-  => Page es '[Contacts, InlineContact]
+  => Eff es (Page '[Contacts, InlineContact])
 page = do
   us <- Users.all
   pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do

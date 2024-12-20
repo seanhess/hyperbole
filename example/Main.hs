@@ -100,7 +100,7 @@ app users count = do
     redirect (routeUrl Simple)
 
   -- Nested Router
-  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es '[]
+  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Eff es (Page '[])
   hello (Greet who) = do
     pure $ exampleLayout (Hello $ Greet who) $ do
       row (gap 6 . pad 10) $ do

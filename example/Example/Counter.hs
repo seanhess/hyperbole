@@ -12,7 +12,7 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole as Hyperbole
 
 
-page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es '[Counter]
+page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Eff es (Page '[Counter])
 page = do
   n <- getCount
   pure $ exampleLayout Route.Counter $ do

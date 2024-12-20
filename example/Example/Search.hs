@@ -9,7 +9,7 @@ import Web.Hyperbole
 import Prelude hiding (even, odd)
 
 
-page :: (Hyperbole :> es) => Page es '[LiveSearch]
+page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])
 page = do
   pure $ exampleLayout Route.LiveSearch $ col (pad 20) $ do
     el bold "Filter Programming Languages"

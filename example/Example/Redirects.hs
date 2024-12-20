@@ -7,7 +7,7 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Page es '[Contents]
+page :: (Hyperbole :> es) => Eff es (Page '[Contents])
 page = do
   pure $ exampleLayout Route.Redirects $ row (pad 20) $ do
     hyper Contents contentsView

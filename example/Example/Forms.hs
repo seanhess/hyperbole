@@ -9,7 +9,7 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es) => Page es '[FormView]
+page :: (Hyperbole :> es) => Eff es (Page '[FormView])
 page = do
   pure $ exampleLayout Route.Forms $ row (pad 20) $ do
     hyper FormView (formView genForm)

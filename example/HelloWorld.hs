@@ -29,7 +29,7 @@ messageView' m = do
   button (SetMessage "Goodbye World") id "Change Message"
 
 
-messagePage' :: (Hyperbole :> es) => Page es '[Message]
+messagePage' :: (Hyperbole :> es) => Eff es (Page '[Message])
 messagePage' = do
   pure $ do
     el bold "Message Page"

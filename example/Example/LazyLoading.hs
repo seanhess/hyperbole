@@ -10,7 +10,7 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
-page :: (Hyperbole :> es, Debug :> es) => Page es '[Contents]
+page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
 page = do
   pure $ exampleLayout LazyLoading $ do
     row (pad 20) $ do

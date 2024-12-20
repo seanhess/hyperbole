@@ -16,10 +16,9 @@ main = do
     liveApp (basicDocument "Example") (runPage simplePage)
 
 
-simplePage :: (Hyperbole :> es) => Page es '[Message]
+simplePage :: (Hyperbole :> es) => Eff es (Page '[Message])
 simplePage = do
   pure $ exampleLayout Route.Simple $ col (pad 20 . gap 10) $ do
-    el bold "My Page"
     hyper (Message 1) $ messageView "Hello"
     hyper (Message 2) $ messageView "World!"
 
@@ -37,5 +36,6 @@ instance HyperView Message es where
 
 
 messageView m = do
-  el_ $ text m
-  button (Louder m) (border 1) "Louder"
+  row (gap 10) $ do
+    button (Louder m) (border 1 . pad 5) "Louder"
+    el (pad 5) $ text m

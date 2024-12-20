@@ -46,3 +46,7 @@ data Hello
   = Greet Text
   | Redirected
   deriving (Eq, Generic, Route, Show)
+
+-- data DocRoute
+--   = Intro
+--   deriving (Eq, Generic, Route, Show)
