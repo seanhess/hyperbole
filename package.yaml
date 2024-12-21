@@ -85,6 +85,7 @@ executables:
       - example
     dependencies:
       - wai-middleware-static
+      - foreign-store
       - hyperbole
   docgen:
     main:                Main.hs

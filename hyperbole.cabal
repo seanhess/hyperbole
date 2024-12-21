@@ -180,6 +180,7 @@ executable examples
     , cookie ==0.4.*
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
+    , foreign-store
     , http-api-data ==0.6.*
     , http-types ==0.12.*
     , hyperbole

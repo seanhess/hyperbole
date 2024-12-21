@@ -5,8 +5,18 @@
 
 module Main where
 
-import Control.Monad (forever)
+import Control.Concurrent
+  ( MVar
+  , ThreadId
+  , forkFinally
+  , killThread
+  , newEmptyMVar
+  , putMVar
+  , takeMVar
+  )
+import Control.Monad (forever, (>=>))
 import Data.ByteString.Lazy qualified as BL
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import Data.String.Conversions (cs)
 import Data.String.Interpolate (i)
 import Data.Text (Text)
@@ -37,6 +47,13 @@ import Example.Simple qualified as Simple
 import Example.Style qualified as Style
 import Example.Transitions qualified as Transitions
 import Example.View.Layout as Layout (exampleLayout, examplesView)
+import Foreign.Store
+  ( Store (..)
+  , lookupStore
+  , readStore
+  , storeAction
+  , withStore
+  )
 import GHC.Generics (Generic)
 import Network.HTTP.Types (Method, QueryItem, methodPost, status200, status404)
 import Network.Wai qualified as Wai
@@ -46,6 +63,11 @@ import Network.WebSockets (Connection, PendingConnection, acceptRequest, default
 import Web.Hyperbole
 import Web.Hyperbole.Effect.Handler (RunHandlers)
 import Web.Hyperbole.Effect.Server (Request (..))
+
+-- import System.Process (callCommand)
+
+-- import Network.Wai.Handler.Warp
+import GHC.Word (Word32)
 
 
 -- import Network.Wai.Handler.WebSockets (websocketsOr)
@@ -125,3 +147,73 @@ app users count = do
       </head>
       <body>#{cnt}</body>
     </html>|]
+
+
+{- | Made for local development
+ -
+ - ghcid --setup=Main.update --command="cabal repl exe:examples lib:hyperbole test" --run=Main.update --warnings
+ -
+ - Start or restart the server.
+newStore is from foreign-store.
+A Store holds onto some data across ghci reloads
+-}
+update :: IO ()
+update = do
+  mtidStore <- lookupStore tidStoreNum
+  case mtidStore of
+    -- no server running
+    Nothing -> do
+      done <- storeAction doneStore newEmptyMVar
+      tid <- start done
+      _ <- storeAction (Store tidStoreNum) (newIORef tid)
+      return ()
+    -- server is already running
+    Just tidStore -> do
+      restartAppInNewThread tidStore
+ where
+  -- callCommand "xmonadctl refreshFirefox"
+
+  doneStore :: Store (MVar ())
+  doneStore = Store 0
+
+  -- shut the server down with killThread and wait for the done signal
+  restartAppInNewThread :: Store (IORef ThreadId) -> IO ()
+  restartAppInNewThread tidStore = modifyStoredIORef tidStore $ \tid -> do
+    killThread tid
+    withStore doneStore takeMVar
+    readStore doneStore >>= start
+
+  -- \| Start the server in a separate thread.
+  start
+    :: MVar ()
+    -- \^ Written to when the thread is killed.
+    -> IO ThreadId
+  start done = do
+    forkFinally
+      main
+      -- Note that this implies concurrency
+      -- between shutdownApp and the next app that is starting.
+      -- Normally this should be fine
+      (\_ -> putMVar done ())
+
+
+-- | kill the server
+shutdown :: IO ()
+shutdown = do
+  mtidStore <- lookupStore tidStoreNum
+  case mtidStore of
+    -- no server running
+    Nothing -> putStrLn "no Yesod app running"
+    Just tidStore -> do
+      withStore tidStore $ readIORef >=> killThread
+      putStrLn "Yesod app is shutdown"
+
+
+tidStoreNum :: Word32
+tidStoreNum = 1
+
+
+modifyStoredIORef :: Store (IORef a) -> (a -> IO a) -> IO ()
+modifyStoredIORef store f = withStore store $ \ref -> do
+  v <- readIORef ref
+  f v >>= writeIORef ref

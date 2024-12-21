@@ -34,6 +34,7 @@
           "example/BulkUpdate.hs"
           "example/HelloWorld.hs"
           "example/Main.hs"
+          "example/DevelMain.hs"
           ./${packageName}.cabal
           ./cabal.project
           ./package.yaml
