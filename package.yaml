@@ -63,7 +63,7 @@ library:
 tests:
   test:
     main:        Spec.hs
-    source-dirs: test/
+    source-dirs: test
     ghc-options:
     - -threaded
     - -rtsopts
@@ -74,5 +74,23 @@ tests:
       - Diff >= 0.5 && <1.0
       - skeletest
 
-
-
+executables:
+  examples:
+    main:                Main.hs
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    source-dirs:
+      - example
+    dependencies:
+      - wai-middleware-static
+      - hyperbole
+  docgen:
+    main:                Main.hs
+    source-dirs:
+      - example/docgen
+    dependencies:
+      - directory
+      - filepath
+      - hyperbole

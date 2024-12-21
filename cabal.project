@@ -1,4 +1,5 @@
 tests: True
+multi-repl: True
 packages:
   .
   -- ../web-view/

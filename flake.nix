@@ -29,6 +29,11 @@
           "src"
           "client/dist"
           "test"
+          "example/Example"
+          "example/docgen"
+          "example/BulkUpdate.hs"
+          "example/HelloWorld.hs"
+          "example/Main.hs"
           ./${packageName}.cabal
           ./cabal.project
           ./package.yaml
@@ -36,7 +41,6 @@
           ./README.md
           ./CHANGELOG.md
           ./LICENSE
-
         ];
       };
 
@@ -134,27 +138,9 @@
           LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.libz ];
         };
 
-        example-src = nix-filter.lib {
-          root = ./example;
-          include = [
-            "Example"
-            (nix-filter.lib.matchExt "hs")
-            ./example/hyperbole-examples.cabal
-            ./example/cabal.project
-            "docgen"
-          ];
-        };
-
-        # Create examples for each GHC version
-        examples = builtins.listToAttrs (
-          map (version: {
-            name = "ghc${version}-example";
-            value = ghcPkgs."ghc${version}".callCabal2nix "example" example-src { };
-          }) ghcVersions
-        );
-
-        examples-exe =
-          version: pkgs.haskell.lib.justStaticExecutables self.packages.${system}."ghc${version}-example";
+        exe =
+          version:
+          pkgs.haskell.lib.justStaticExecutables self.packages.${system}."ghc${version}-${packageName}";
 
       in
       {
@@ -169,7 +155,7 @@
             {
               name = "ghc${version}-check-example";
               value = pkgs.runCommand "ghc${version}-check-example" {
-                buildInputs = [ (examples-exe version) ];
+                buildInputs = [ (exe version) ];
               } "type examples; type docgen; touch $out";
             }
           ]) ghcVersions
@@ -187,14 +173,14 @@
                 name = "ghc${version}-example";
                 value = {
                   type = "app";
-                  program = "${examples-exe version}/bin/examples";
+                  program = "${exe version}/bin/examples";
                 };
               }
               {
                 name = "ghc${version}-docgen";
                 value = {
                   type = "app";
-                  program = "${examples-exe version}/bin/docgen";
+                  program = "${exe version}/bin/docgen";
                 };
               }
 
@@ -212,10 +198,6 @@
                 name = "ghc${version}-${packageName}";
                 value = ghcPkgs."ghc${version}".${packageName};
               }
-              {
-                name = "ghc${version}-example";
-                value = examples."ghc${version}-example";
-              }
             ]) ghcVersions
           );
 
@@ -230,12 +212,6 @@
                 name = "ghc${version}-${packageName}";
                 value = ghcPkgs."ghc${version}".shellFor (
                   shellCommon version // { packages = p: [ p.${packageName} ]; }
-                );
-              }
-              {
-                name = "ghc${version}-example";
-                value = ghcPkgs."ghc${version}".shellFor (
-                  shellCommon version // { packages = _: [ examples."ghc${version}-example" ]; }
                 );
               }
             ]) ghcVersions
