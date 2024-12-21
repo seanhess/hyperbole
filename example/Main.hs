@@ -36,7 +36,7 @@ import Example.Sessions qualified as Sessions
 import Example.Simple qualified as Simple
 import Example.Style qualified as Style
 import Example.Transitions qualified as Transitions
-import Example.View.Layout (exampleLayout)
+import Example.View.Layout as Layout (exampleLayout, examplesView)
 import GHC.Generics (Generic)
 import Network.HTTP.Types (Method, QueryItem, methodPost, status200, status404)
 import Network.Wai qualified as Wai
@@ -76,6 +76,7 @@ app users count = do
     => AppRoute
     -> Eff es Response
   router (Hello h) = runPage $ hello h
+  router Examples = view Layout.examplesView
   router Simple = runPage Simple.simplePage
   router (Contacts ContactsAll) = runPage Contacts.page
   router (Contacts (Contact uid)) = Contact.response uid
@@ -116,6 +117,8 @@ app users count = do
     [i|<html>
       <head>
         <title>Hyperbole Examples</title>
+        <meta httpEquiv="Content-Type" content="text/html" charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript" src="/hyperbole.js"></script>
         <style type="text/css">#{cssResetEmbed}</style>
         <style type="text/css">body { background-color: \#d3dceb }</style>

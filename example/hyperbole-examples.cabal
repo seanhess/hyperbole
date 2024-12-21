@@ -87,6 +87,7 @@ executable examples
       Example.Simple
       Example.Style
       Example.Transitions
+      Example.View.Icon
       Example.View.Layout
       HelloWorld
       Paths_hyperbole_examples
