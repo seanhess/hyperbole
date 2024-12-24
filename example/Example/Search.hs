@@ -9,7 +9,7 @@ import Data.Text qualified as T
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
-import Example.Filter as Filter (ProgrammingLanguage (..), allLanguages, chosenView, clearButton, isMatchLanguage, resultsTable)
+import Example.Filter as Filter (ProgrammingLanguage (..), allLanguages, chosenView, isMatchLanguage, resultsTable)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 import Web.Hyperbole.View.Event
@@ -54,8 +54,8 @@ liveSearchView :: [ProgrammingLanguage] -> Int -> Term -> View LiveSearch ()
 liveSearchView langs current term = do
   col (gap 10) $ do
     stack id $ do
-      layer $ search (SearchTerm current) 100 (searchKeys . placeholder "search programming languages" . border 1 . pad 10 . value term)
-      Filter.clearButton (SearchTerm current) term
+      layer $ search (SearchTerm current) 200 (searchKeys . placeholder "search programming languages" . border 1 . pad 10)
+      -- Filter.clearButton (SearchTerm current) term
       searchPopup matchedLanguages currentSearchLang shownIfTerm
     Filter.resultsTable (Select . Just) langs
  where

@@ -281,7 +281,7 @@ placeholder = att "placeholder"
 
 -- | textarea for a 'field'
 textarea :: Mod (Input id v a) -> Maybe Text -> View (Input id v a) ()
-textarea f mDefaultText = do 
+textarea f mDefaultText = do
   Input (FieldName nm) _ <- context
   tag "textarea" (f . name nm) (text $ fromMaybe "" mDefaultText)
 
@@ -389,10 +389,27 @@ class Form form val | form -> val where
   genFieldsWith fv = to $ gConvert (from fv)
 
 
+{- | Generate FormFields for the given instance of 'Form', with no validation information
+
+> let f = formFields @UserForm
+> form @UserForm Submit id $ do
+>   field f.user id $ do
+>     label "Username"
+>     input Username (placeholder "Username")
+-}
 formFields :: (Form form val) => form (FormField val)
 formFields = genFieldsWith genForm
 
 
+{- | Generate FormFields for the givne instance of 'Form' from validation data
+
+> let valids = UserForm { user = Valid, age = Invalid "must be 20 years old" }
+> let f = formFieldsWith @UserForm valids
+> form @UserForm Submit id $ do
+>   field f.user id $ do
+>     label "Username"
+>     input Username (placeholder "Username")
+-}
 formFieldsWith :: (Form form val) => form val -> form (FormField val)
 formFieldsWith = genFieldsWith
 

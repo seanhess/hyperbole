@@ -35,6 +35,12 @@ onClick a = do
   att "data-on-click" (toAction a)
 
 
+{- | Run an action when the user types into an 'input' or 'textarea'.
+
+WARNING: a short delay can result in poor performance. It is not recommended to set the 'value' of the input
+
+> input (onInput OnSearch) 250 id
+-}
 onInput :: (ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod id
 onInput a delay = do
   att "data-on-input" (toActionInput a) . att "data-delay" (cs $ show delay)
