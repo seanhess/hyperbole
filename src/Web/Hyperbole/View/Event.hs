@@ -2,11 +2,14 @@
 
 module Web.Hyperbole.View.Event where
 
-import Data.Text (Text, pack)
+import Data.Map qualified as M
+import Data.String.Conversions (cs)
+import Data.Text (Text)
 import Data.Text qualified as T
+import Text.Casing (kebab)
 import Web.Hyperbole.HyperView
 import Web.View (Mod, View, addContext, att, parent)
-import Web.View.Types (Content (Node), Element (..))
+import Web.View.Types (AttValue, Attributes (..), Content (Node), Element (..))
 import Web.View.View (viewModContents)
 
 
@@ -25,7 +28,7 @@ pollMessageView m = do
 -}
 onLoad :: (ViewAction (Action id)) => Action id -> DelayMs -> Mod id
 onLoad a delay = do
-  att "data-on-load" (toAction a) . att "data-delay" (pack $ show delay)
+  att "data-on-load" (toAction a) . att "data-delay" (cs $ show delay)
 
 
 onClick :: (ViewAction (Action id)) => Action id -> Mod id
@@ -35,7 +38,7 @@ onClick a = do
 
 onInput :: (ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod id
 onInput a delay = do
-  att "data-on-input" (toActionInput a) . att "data-delay" (pack $ show delay)
+  att "data-on-input" (toActionInput a) . att "data-delay" (cs $ show delay)
 
 
 onSubmit :: (ViewAction (Action id)) => Action id -> Mod id
@@ -43,12 +46,65 @@ onSubmit act = do
   att "data-on-submit" (toAction act)
 
 
+onKeyDown :: (ViewAction (Action id)) => Key -> Action id -> Mod id
+onKeyDown key act = do
+  att ("data-on-keydown-" <> keyDataAttribute key) (toAction act)
+
+
+onKeyUp :: (ViewAction (Action id)) => Key -> Action id -> Mod id
+onKeyUp key act = do
+  att ("data-on-keyup-" <> keyDataAttribute key) (toAction act)
+
+
+keyDataAttribute :: Key -> Text
+keyDataAttribute = cs . kebab . showKey
+ where
+  showKey (OtherKey t) = cs t
+  showKey k = show k
+
+
+-- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
+data Key
+  = ArrowDown
+  | ArrowUp
+  | ArrowLeft
+  | ArrowRight
+  | Enter
+  | Space
+  | Escape
+  | Alt
+  | CapsLock
+  | Control
+  | Fn
+  | Meta
+  | Shift
+  | OtherKey Text
+  deriving (Show, Read)
+
+
+-- addDataKey :: Key -> Mod c
+-- addDataKey k atts =
+--   atts{other = M.alter merge "data-key" atts.other}
+--  where
+--   merge :: Maybe AttValue -> Maybe AttValue
+--   merge Nothing = pure $ toKeyValue k
+--   merge (Just keys) = pure $ toKeyValue k <> " " <> keys
+
+-- let keyAtt = "data-" <> keyDataAttribute key
+
 -- | Serialize a constructor that expects a single 'Text', like `data MyAction = GoSearch Text`
 toActionInput :: (ViewAction a) => (Text -> a) -> Text
 toActionInput con =
   -- remove the ' ""' at the end of the constructor
   T.dropEnd 3 $ toAction $ con ""
 
+
+{- | Serialize a constructor that expects a single 'Text', like `data MyAction = GoSearch Text`
+toActionKey :: (ViewAction a) => (Key -> a) -> Text
+toActionKey con =
+  -- "MyAction Space" -> "MyAction"
+  T.dropEnd 6 $ toAction $ con Space
+-}
 
 {- | Apply a Mod only when a request is in flight
 
