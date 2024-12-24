@@ -12,6 +12,7 @@ module Web.Hyperbole.Forms
   , label
   , input
   , form
+  , textarea
   , placeholder
   , submit
   , formData
@@ -40,6 +41,7 @@ where
 import Data.Function ((&))
 import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
@@ -275,6 +277,13 @@ input ft f = do
 
 placeholder :: Text -> Mod id
 placeholder = att "placeholder"
+
+
+-- | textarea for a 'field'
+textarea :: Mod (Input id v a) -> Maybe Text -> View (Input id v a) ()
+textarea f mDefaultText = do 
+  Input (FieldName nm) _ <- context
+  tag "textarea" (f . name nm) (text $ fromMaybe "" mDefaultText)
 
 
 {- | Type-safe \<form\>. Calls (Action id) on submit

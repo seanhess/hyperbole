@@ -19,6 +19,7 @@ data User = User
   , firstName :: Text
   , lastName :: Text
   , age :: Int
+  , info :: Text
   , isActive :: Bool
   }
   deriving (Show)
@@ -76,10 +77,10 @@ initUsers =
   liftIO $ newMVar $ M.fromList $ map (\u -> (u.id, u)) users
  where
   users =
-    [ User 1 "Joe" "Blow" 32 True
-    , User 2 "Sara" "Dane" 24 False
-    , User 3 "Billy" "Bob" 48 False
-    , User 4 "Felicia" "Korvus" 84 True
+    [ User 1 "Joe" "Blow" 32 "" True
+    , User 2 "Sara" "Dane" 24 "" False
+    , User 3 "Billy" "Bob" 48 "" False
+    , User 4 "Felicia" "Korvus" 84 "" True
     ]
 
 

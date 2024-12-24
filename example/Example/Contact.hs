@@ -66,6 +66,7 @@ data ContactForm f = ContactForm
   { firstName :: Field f Text
   , lastName :: Field f Text
   , age :: Field f Int
+  , info :: Field f Text
   }
   deriving (Generic)
 instance Form ContactForm Maybe
@@ -73,8 +74,8 @@ instance Form ContactForm Maybe
 
 parseUser :: (Hyperbole :> es) => Int -> Eff es User
 parseUser uid = do
-  ContactForm{firstName, lastName, age} <- formData @ContactForm
-  pure User{id = uid, isActive = True, firstName, lastName, age}
+  ContactForm{firstName, lastName, age, info} <- formData @ContactForm
+  pure User{id = uid, isActive = True, firstName, lastName, age, info}
 
 
 contactView :: User -> View Contact ()
@@ -95,6 +96,10 @@ contactView' edit u = do
     row fld $ do
       el id (text "Age:")
       text (cs $ show u.age)
+    
+    row fld $ do
+      el id (text "Info:")
+      text u.info
 
     row fld $ do
       el id (text "Active:")
@@ -123,6 +128,7 @@ contactEdit' onView onSave u = do
       { firstName = Just u.firstName
       , lastName = Just u.lastName
       , age = Just u.age
+      , info = Just u.info
       }
 
 
@@ -138,6 +144,10 @@ contactForm onSubmit c = do
       label "Last Name:"
       input Name (inp . maybe id value c.lastName)
 
+    field f.info (const fld) $ do
+      label "Info:"
+      textarea inp c.info
+    
     field f.age (const fld) $ do
       label "Age:"
       input Number (inp . maybe id (value . pack . show) c.age)
