@@ -182,3 +182,4 @@ Contributors
 * [Sean Hess](seanhess)
 * [Kamil Figiela](https://github.com/kfigiela)
 * [Christian Georgii](https://github.com/cgeorgii)
+* [Tushar Adhatrao](https://github.com/tusharad)
