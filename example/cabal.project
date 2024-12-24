@@ -1,4 +1,5 @@
 packages:
   .
   ../
-  ../../web-view/
+  -- ../../web-view/
+  -- https://hackage.haskell.org/package/web-view-0.6.2/candidate/web-view-0.6.2.tar.gz

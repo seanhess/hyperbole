@@ -1,5 +1,5 @@
 tests: True
 packages:
   .
-  ../web-view/
-  -- https://hackage.haskell.org/package/web-view-0.6.0/candidate/web-view-0.6.0.tar.gz
+  -- ../web-view/
+  -- https://hackage.haskell.org/package/web-view-0.6.2/candidate/web-view-0.6.2.tar.gz

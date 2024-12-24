@@ -97,6 +97,7 @@ executable examples
       Example.Effects.Debug
       Example.Effects.Users
       Example.Errors
+      Example.Filter
       Example.Forms
       Example.LazyLoading
       Example.Redirects
