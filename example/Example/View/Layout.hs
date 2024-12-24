@@ -18,11 +18,10 @@ import Web.View.Types (ChildCombinator (..), Class (..), Selector (..), selector
 exampleLayout :: AppRoute -> View c () -> View c ()
 exampleLayout rt pageView = do
   rootLayout rt $ do
+    pageDescription rt
     link sourceUrl Style.link "View Source"
     row (bg White) $ do
       pageView
-      space
-    pageDescription rt
  where
   sourceUrl = "https://github.com/seanhess/hyperbole/blob/latest/example/" <> routeSource rt
 
@@ -40,6 +39,7 @@ exampleLayout rt pageView = do
     Concurrent -> "Example/Concurrent.hs"
     Redirects -> "Example/Redirects.hs"
     Requests -> "Example/Requests.hs"
+    Filter -> "Example/Filter.hs"
     LiveSearch -> "Example/LiveSearch.hs"
     Errors -> "Example/Errors.hs"
     RedirectNow -> "Main.hs"
@@ -70,6 +70,7 @@ exampleMenu current = do
   example RedirectNow
   example LazyLoading
   example Concurrent
+  example Filter
   example LiveSearch
   example (Contacts ContactsAll)
   example Errors
@@ -87,6 +88,8 @@ exampleMenu current = do
 routeTitle :: AppRoute -> Text
 routeTitle (Hello _) = "Hello World"
 routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
+routeTitle Filter = "Search - Basic Filter"
+routeTitle LiveSearch = "Search - Autocomplete"
 routeTitle r = cs $ toWords $ fromHumps $ show r
 
 
@@ -115,10 +118,10 @@ navigation :: AppRoute -> View c ()
 navigation rt = do
   nav (bg Dark . color White . flexCol . hover showMenu) $ do
     row id $ do
-      link "https://github.com/seanhess/hyperbole" (bold . pad 20 . logo . width 200) "HYPERBOLE"
+      link "https://github.com/seanhess/hyperbole" (bold . pad 20 . logo . width 220) "HYPERBOLE"
       space
       el (hide . onMobile flexCol) $ do
-        route Examples (pad 6) $ do
+        el (pad 6) $ do
           el (color White . width 50 . height 50) Icon.hamburger
     col (onMobile hide . menuTarget) $ do
       exampleMenu rt

@@ -1,91 +1,82 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Example.Search where
 
-import Data.String (IsString)
-import Data.Text (Text, isInfixOf, toLower)
+import Control.Monad (forM_)
+import Data.List ((!?))
+import Data.Text (Text)
+import Data.Text qualified as T
+import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
+import Example.Filter as Filter (ProgrammingLanguage (..), allLanguages, chosenView, clearButton, isMatchLanguage, resultsTable)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
+import Web.Hyperbole.View.Event
 import Prelude hiding (even, odd)
 
 
 page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])
 page = do
-  pure $ exampleLayout Route.LiveSearch $ col (pad 20) $ do
-    el bold "Filter Programming Languages"
-    hyper LiveSearch $ liveSearchView allLanguages Nothing
+  pure $ exampleLayout Route.LiveSearch $ col (pad 20 . grow) $ do
+    hyper LiveSearch $ liveSearchView allLanguages 0 mempty
 
 
 data LiveSearch = LiveSearch
   deriving (Show, Read, ViewId)
 
 
-instance HyperView LiveSearch es where
+type Term = Text
+
+
+instance (IOE :> es) => HyperView LiveSearch es where
   data Action LiveSearch
-    = GoSearch Text
-    | Select ProgrammingLanguage
+    = SearchTerm Int Term
+    | Select (Maybe ProgrammingLanguage)
     deriving (Show, Read, ViewAction)
 
 
-  update (GoSearch term) = do
-    let matched = filter (isMatchLanguage term) allLanguages
-    pure $ liveSearchView matched Nothing
-  update (Select lang) = do
-    pure $ liveSearchView [] (Just lang)
+  update (SearchTerm current term) = do
+    pure $ liveSearchView allLanguages current term
+  update (Select Nothing) = do
+    pure $ liveSearchView allLanguages 0 mempty
+  update (Select (Just lang)) = do
+    pure $ selectedView lang
 
 
-liveSearchView :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View LiveSearch ()
-liveSearchView langs selected =
+selectedView :: ProgrammingLanguage -> View LiveSearch ()
+selectedView selected = do
   col (gap 10) $ do
-    search GoSearch 100 (placeholder "programming language" . border 1 . pad 10)
-    chosenView selected
-    resultsTable langs
+    Filter.chosenView (Just selected)
 
 
-chosenView :: Maybe ProgrammingLanguage -> View LiveSearch ()
-chosenView Nothing = none
-chosenView (Just lang) = do
-  row (gap 10) $ do
-    el_ "You chose:"
-    el_ $ text lang.name
-
-
-resultsTable :: [ProgrammingLanguage] -> View LiveSearch ()
-resultsTable langs = do
-  col id $ do
-    mapM_ languageRow langs
+liveSearchView :: [ProgrammingLanguage] -> Int -> Term -> View LiveSearch ()
+liveSearchView langs current term = do
+  col (gap 10) $ do
+    stack id $ do
+      layer $ search (SearchTerm current) 100 (searchKeys . placeholder "search programming languages" . border 1 . pad 10 . value term)
+      Filter.clearButton (SearchTerm current) term
+      searchPopup matchedLanguages currentSearchLang shownIfTerm
+    Filter.resultsTable (Select . Just) langs
  where
-  languageRow :: ProgrammingLanguage -> View LiveSearch ()
-  languageRow lang = do
-    button (Select lang) (border 1 . hover (bg GrayLight) . rows) $ text lang.name
+  matchedLanguages = filter (isMatchLanguage term) langs
 
-  rows = textAlign Center . border 1 . borderColor GrayLight
+  currentSearchLang = matchedLanguages !? current
 
+  -- Only show the search popup if there is a search term
+  shownIfTerm = if T.null term then hide else flexCol
 
-newtype ProgrammingLanguage = ProgrammingLanguage {name :: Text}
-  deriving newtype (IsString, Show, Read)
-
-
-isMatchLanguage :: Text -> ProgrammingLanguage -> Bool
-isMatchLanguage term (ProgrammingLanguage p) =
-  isInfixOf (toLower term) . toLower $ p
+  searchKeys =
+    onKeyDown Enter (Select currentSearchLang)
+      . onKeyDown ArrowDown (SearchTerm (current + 1) term)
+      . onKeyDown ArrowUp (SearchTerm (current - 1) term)
 
 
-allLanguages :: [ProgrammingLanguage]
-allLanguages =
-  [ "JavaScript"
-  , "Java"
-  , "TypeScript"
-  , "Python"
-  , "PHP"
-  , "Go"
-  , "C++"
-  , "C#"
-  , "Objective-C"
-  , "Rust"
-  , "Ruby"
-  , "Swift"
-  , "Haskell"
-  , "Elm"
-  , "Scheme"
-  ]
+searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> Mod LiveSearch -> Layer LiveSearch ()
+searchPopup shownLangs highlighted f = do
+  popout (offset (TRBL 50 0 0 0) . border 1 . bg White . f) $ do
+    forM_ shownLangs $ \lang -> do
+      button (Select (Just lang)) (hover (bg Light) . selected lang . pad 5) $ do
+        text lang.name
+ where
+  selected l = if Just l == highlighted then bg Light else id

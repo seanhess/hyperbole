@@ -3,6 +3,27 @@ import * as debounce from 'debounce'
 
 export type UrlFragment = string
 
+export function listenKeydown(cb:(target:HTMLElement, action:string) => void): void {
+  listenKeyEvent("Keydown", cb)
+}
+
+export function listenKeyup(cb:(target:HTMLElement, action:string) => void): void {
+  listenKeyEvent("Keyup", cb)
+}
+
+export function listenKeyEvent(event:string, cb:(target:HTMLElement, action:string) => void): void {
+  document.addEventListener(event.toLowerCase(), function(e:KeyboardEvent) {
+    let source = e.target as HTMLInputElement
+
+    let datasetKey = "on" + event + e.key
+    let action = source.dataset[datasetKey]
+    if (!action) return
+
+    e.preventDefault()
+    cb(nearestTarget(source), action)
+  })
+}
+
 export function listenClick(cb:(target:HTMLElement, action:string) => void): void {
   document.addEventListener("click", function(e) {
     let el = e.target as HTMLInputElement

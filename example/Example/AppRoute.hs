@@ -16,6 +16,7 @@ data AppRoute
   | Counter
   | Forms
   | LiveSearch
+  | Filter
   | Sessions
   | Requests
   | Redirects

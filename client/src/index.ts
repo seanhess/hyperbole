@@ -1,6 +1,6 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
-import  { listenChange, listenClick, listenFormSubmit, listenLoad, listenLoadDocument, listenInput } from './events'
+import  { listenChange, listenClick, listenFormSubmit, listenLoad, listenLoadDocument, listenInput, listenKeydown, listenKeyup} from './events'
 import  { actionMessage, ActionMessage } from './action'
 
 
@@ -160,6 +160,16 @@ function init() {
 
   listenClick(async function(target:HTMLElement, action:string) {
     console.log("CLICK", target.id, action)
+    runAction(target, action)
+  })
+
+  listenKeydown(async function(target:HTMLElement, action:string) {
+    console.log("KEYDOWN", target.id, action)
+    runAction(target, action)
+  })
+
+  listenKeyup(async function(target:HTMLElement, action:string) {
+    console.log("KEYUP", target.id, action)
     runAction(target, action)
   })
 

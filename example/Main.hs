@@ -27,6 +27,7 @@ import Example.Counter qualified as Counter
 import Example.Effects.Debug as Debug
 import Example.Effects.Users as Users
 import Example.Errors qualified as Errors
+import Example.Filter qualified as Filter
 import Example.Forms qualified as Forms
 import Example.LazyLoading qualified as LazyLoading
 import Example.Redirects qualified as Redirects
@@ -84,6 +85,7 @@ app users count = do
   router Concurrent = runPage Concurrent.page
   router Requests = runPage Requests.page
   router Redirects = runPage Redirects.page
+  router Filter = runPage Filter.page
   router LiveSearch = runPage Search.page
   router Errors = runPage Errors.page
   router RedirectNow = do
