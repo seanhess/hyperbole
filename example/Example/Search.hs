@@ -4,8 +4,7 @@ module Example.Search where
 
 import Control.Monad (forM_)
 import Data.List ((!?))
-import Data.String (IsString)
-import Data.Text (Text, isInfixOf, toLower)
+import Data.Text (Text)
 import Data.Text qualified as T
 import Effectful
 import Example.AppRoute qualified as Route
@@ -55,7 +54,7 @@ liveSearchView :: [ProgrammingLanguage] -> Int -> Term -> View LiveSearch ()
 liveSearchView langs current term = do
   col (gap 10) $ do
     stack id $ do
-      search (SearchTerm current) 100 (searchKeys . placeholder "search programming languages" . border 1 . pad 10 . value term)
+      layer $ search (SearchTerm current) 100 (searchKeys . placeholder "search programming languages" . border 1 . pad 10 . value term)
       Filter.clearButton (SearchTerm current) term
       searchPopup matchedLanguages currentSearchLang shownIfTerm
     Filter.resultsTable (Select . Just) langs
@@ -73,9 +72,9 @@ liveSearchView langs current term = do
       . onKeyDown ArrowUp (SearchTerm (current - 1) term)
 
 
-searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> Mod LiveSearch -> View LiveSearch ()
+searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> Mod LiveSearch -> Layer LiveSearch ()
 searchPopup shownLangs highlighted f = do
-  col (absolute . inset (TRBL 50 0 0 0) . border 1 . bg White . f) $ do
+  popout (offset (TRBL 50 0 0 0) . border 1 . bg White . f) $ do
     forM_ shownLangs $ \lang -> do
       button (Select (Just lang)) (hover (bg Light) . selected lang . pad 5) $ do
         text lang.name

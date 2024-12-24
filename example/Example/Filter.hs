@@ -1,13 +1,11 @@
 module Example.Filter where
 
-import Data.String (IsString)
 import Data.Text (Text, isInfixOf, toLower)
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
-import Web.Hyperbole.View.Event
 import Example.View.Icon as Icon
 import Prelude hiding (even, odd)
 
@@ -42,16 +40,16 @@ filterView :: Text -> [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View
 filterView term langs selected =
   col (gap 10 . grow) $ do
     stack grow $ do
-      search SearchTerm 100 (placeholder "fitler programming languages" . border 1 . pad 10 . value term)
+      layer $ search SearchTerm 100 (placeholder "fitler programming languages" . border 1 . pad 10 . value term)
       clearButton SearchTerm term
     chosenView selected
     resultsTable Select langs
 
 
-clearButton :: (ViewAction (Action id)) => (Term -> Action id) -> Term -> View id ()
+clearButton :: (ViewAction (Action id)) => (Term -> Action id) -> Term -> Layer id ()
 clearButton clear term = 
-      el (absolute . inset (R 0) . pad 10 . showClearBtn) $ do
-        button (clear "") (width 24 . hover (color PrimaryLight)) Icon.xCircle
+  popout (offset (R 0) . pad 10 . showClearBtn) $ do
+    button (clear "") (width 24 . hover (color PrimaryLight)) Icon.xCircle
   where
     showClearBtn =
       case term of
@@ -82,7 +80,7 @@ resultsTable onSelect langs = do
 
       el id $ text lang.description
 
-  rows = textAlign Center . border 1 . borderColor GrayLight
+  rows = textAlign AlignCenter . border 1 . borderColor GrayLight
 
 
 data ProgrammingLanguage = ProgrammingLanguage {name :: Text, description :: Text}

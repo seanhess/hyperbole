@@ -2,14 +2,13 @@
 
 module Web.Hyperbole.View.Event where
 
-import Data.Map qualified as M
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Text.Casing (kebab)
 import Web.Hyperbole.HyperView
 import Web.View (Mod, View, addContext, att, parent)
-import Web.View.Types (AttValue, Attributes (..), Content (Node), Element (..))
+import Web.View.Types (Content (Node), Element (..))
 import Web.View.View (viewModContents)
 
 

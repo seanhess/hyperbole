@@ -18,10 +18,10 @@ import Web.View.Types (ChildCombinator (..), Class (..), Selector (..), selector
 exampleLayout :: AppRoute -> View c () -> View c ()
 exampleLayout rt pageView = do
   rootLayout rt $ do
+    pageDescription rt
     link sourceUrl Style.link "View Source"
     row (bg White) $ do
       pageView
-    pageDescription rt
  where
   sourceUrl = "https://github.com/seanhess/hyperbole/blob/latest/example/" <> routeSource rt
 
