@@ -83,25 +83,3 @@ search go delay f = do
 -}
 route :: (Route a) => a -> Mod c -> View c () -> View c ()
 route r = link (routeUrl r)
-
-{- | \<textarea\> HTML tag which sends the action on change
-
-@
-data SimpleAction
-  = SomeAction Text
-  deriving (Generic)
-
-update (SomeAction t) = do 
-    liftIO $ print ("User typed: " :: String, t)
-    pure simpleView
-
-simpleView :: View Contacts ()
-simpleView = do
-  row (gap 10) $ do
-    textarea SomeAction 500 id 
-  ...
-@
--}
-textarea :: ViewAction (Action id) => (Text -> Action id) -> DelayMs -> Mod id -> View id ()
-textarea act delay f =
-  tag "textarea" (onInput act delay . f) none
