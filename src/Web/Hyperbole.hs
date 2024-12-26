@@ -66,9 +66,9 @@ module Web.Hyperbole
   , option
   , Option
 
-    -- ** textarea 
+    -- ** textarea
   , textarea
-  
+
     -- ** Events
   , onRequest
   , onLoad

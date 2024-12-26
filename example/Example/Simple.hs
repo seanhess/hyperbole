@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module Example.Simple where
 
@@ -11,13 +10,14 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
 
+main :: IO ()
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Example") (runPage simplePage)
+    liveApp (basicDocument "Example") (runPage page)
 
 
-simplePage :: (Hyperbole :> es) => Eff es (Page '[Message])
-simplePage = do
+page :: (Hyperbole :> es) => Eff es (Page '[Message])
+page = do
   pure $ exampleLayout Route.Simple $ col (pad 20 . gap 10) $ do
     hyper (Message 1) $ messageView "Hello"
     hyper (Message 2) $ messageView "World!"
@@ -35,6 +35,7 @@ instance HyperView Message es where
     pure $ messageView new
 
 
+messageView :: Text -> View Message ()
 messageView m = do
   row (gap 10) $ do
     button (Louder m) (border 1 . pad 5) "Louder"

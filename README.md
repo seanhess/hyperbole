@@ -2,13 +2,12 @@
 
 [![Hackage](https://img.shields.io/hackage/v/hyperbole.svg?color=success)](https://hackage.haskell.org/package/hyperbole)
 
-Create fully interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/), [Elm](https://elm-lang.org/), and [Phoenix LiveView](https://www.phoenixframework.org/)
+Create interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/), [Elm](https://elm-lang.org/), and [Phoenix LiveView](https://www.phoenixframework.org/)
 
 [Learn more about Hyperbole on Hackage](https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html)
 
 ```haskell
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 module Main where
@@ -18,37 +17,34 @@ import Web.Hyperbole
 
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Example") (page mainPage)
+    liveApp (basicDocument "Example") (runPage simplePage)
 
 
-mainPage = do
-  handle message
-  load $ do
-    pure $ do
-      el bold "My Page"
-      hyper (Message 1) $ messageView "Hello"
-      hyper (Message 2) $ messageView "World!"
+page :: (Hyperbole :> es) => Eff es (Page '[Message])
+page = do
+  pure $ col id $ do
+    hyper (Message 1) $ messageView "Hello"
+    hyper (Message 2) $ messageView "World!"
 
 
 data Message = Message Int
-  deriving (Generic, ViewId)
-
-data MessageAction = Louder Text
-  deriving (Generic, ViewAction)
-
-instance HyperView Message where
-  type Action Message = MessageAction
+  deriving (Show, Read, ViewId)
 
 
-message :: Message -> MessageAction -> Eff es (View Message ())
-message _ (Louder m) = do
-  let new = m <> "!"
-  pure $ messageView new
+instance HyperView Message es where
+  data Action Message = Louder Text
+    deriving (Show, Read, ViewAction)
+
+  update (Louder msg) = do
+    let new = msg <> "!"
+    pure $ messageView new
 
 
-messageView m = do
-  el_ $ text m
-  button (Louder m) id "Louder"
+messageView :: Text -> View Message ()
+messageView msg = do
+  row id $ do
+    button (Louder msg) id "Louder"
+    el_ $ text msg
 ```
 
 Getting Started with Cabal
@@ -56,9 +52,9 @@ Getting Started with Cabal
 
 Create a new application:
 
-    > mkdir myapp
-    > cd myapp
-    > cabal init
+    $ mkdir myapp
+    $ cd myapp
+    $ cabal init
 
 Add hyperbole and text to your build-depends:
 
@@ -71,7 +67,7 @@ Add hyperbole and text to your build-depends:
 
 Paste the above example into Main.hs, and run
 
-    > cabal run
+    $ cabal run
 
 Visit http://localhost:3000 to view the application
 
@@ -79,14 +75,11 @@ Visit http://localhost:3000 to view the application
 Examples
 ---------
 
-The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/README.md) contains an app with pages demonstrating various features
+The example directory contains an app demonstrating various features. See it in action at https://docs.hyperbole.live
 
 <a href="https://docs.hyperbole.live">
-  <img alt="Hyperbole Examples" src="example/doc/examples.png" width="400"/>
+  <img alt="Hyperbole Examples" src="example/doc/examples.png"/>
 </a>
-
-
-https://docs.hyperbole.live/simple
 
 
 Learn More
@@ -98,14 +91,16 @@ View Documentation on Hackage
 View on Github
 * https://github.com/seanhess/hyperbole
 
-In Production
--------------
+
+Full Production Example
+-----------------------
 
 <a href="https://nso.edu">
   <img alt="National Solar Observatory" src="https://nso1.b-cdn.net/wp-content/uploads/2020/03/NSO-logo-orange-text.png" width="400"/>
 </a>
 
-The NSO uses Hyperbole for the [L2 Data creation UI](https://github.com/DKISTDC/level2/blob/main/src/App.hs) for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/)
+The NSO uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). The application demonstrates complex interfaces, workers, databases, and more.
+
 
 Local Development
 -----------------
@@ -114,6 +109,7 @@ Local Development
 
 
 With nix installed, you can use `nix develop` to get a shell with all dependencies installed.
+
 
 ### Manual dependency installation
 
@@ -176,4 +172,5 @@ Contributors
 * [Sean Hess](seanhess)
 * [Kamil Figiela](https://github.com/kfigiela)
 * [Christian Georgii](https://github.com/cgeorgii)
+* [Pfalzgraf Martin](https://github.com/Skyfold)
 * [Tushar Adhatrao](https://github.com/tusharad)
