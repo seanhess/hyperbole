@@ -239,7 +239,7 @@ myForm = do
   'form' SignUp mempty id $ do
     field @Age id id $ do
      'label' "Age"
-     'input' Number (value "0")
+     'input' Number (placeholder "42")
 @
 -}
 field
@@ -301,7 +301,7 @@ userForm v = do
 
     'field' \@Age id Style.invalid $ do
       'label' \"Age\"
-      'input' Number ('placeholder' "age" . value "0")
+      'input' Number ('placeholder' "age")
       el_ 'invalidText'
 
     'submit' (border 1) \"Submit\"
