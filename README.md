@@ -82,7 +82,7 @@ Examples
 The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/README.md) contains an app with pages demonstrating various features
 
 <a href="https://docs.hyperbole.live">
-  <img alt="Hyperbole Examples" src="./examples/doc/examples.png" width="400"/>
+  <img alt="Hyperbole Examples" src="example/doc/examples.png" width="400"/>
 </a>
 
 
