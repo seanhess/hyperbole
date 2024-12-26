@@ -81,17 +81,12 @@ Examples
 
 The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/README.md) contains an app with pages demonstrating various features
 
-* [Main](https://github.com/seanhess/hyperbole/blob/main/example/Main.hs)
-* [Simple](https://github.com/seanhess/hyperbole/blob/main/example/Example/Simple.hs)
-* [Counter](https://github.com/seanhess/hyperbole/blob/main/example/Example/Counter.hs)
-* [CSS Transitions](https://github.com/seanhess/hyperbole/blob/main/example/Example/Transitions.hs)
-* [Forms](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
-* [Sessions](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
-* [Redirects](https://github.com/seanhess/hyperbole/blob/main/example/Example/Redirects.hs)
-* [Lazy Loading and Polling](https://github.com/seanhess/hyperbole/blob/main/example/Example/LazyLoading.hs)
-* [Errors](https://github.com/seanhess/hyperbole/blob/main/example/Example/Errors.hs)
-* [Live Search](https://github.com/seanhess/hyperbole/blob/main/example/Example/Search.hs)
-* [Contacts (Advanced)](https://github.com/seanhess/hyperbole/blob/main/example/Example/Contacts.hs)
+<a href="https://docs.hyperbole.live">
+  <img alt="Hyperbole Examples" src="./examples/doc/examples.png" width="400"/>
+</a>
+
+
+https://docs.hyperbole.live/simple
 
 
 Learn More
