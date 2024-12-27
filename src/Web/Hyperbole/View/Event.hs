@@ -35,6 +35,11 @@ onClick a = do
   att "data-on-click" (toAction a)
 
 
+onDblClick :: (ViewAction (Action id)) => Action id -> Mod id
+onDblClick a = do
+  att "data-on-dblclick" (toAction a)
+
+
 {- | Run an action when the user types into an 'input' or 'textarea'.
 
 WARNING: a short delay can result in poor performance. It is not recommended to set the 'value' of the input

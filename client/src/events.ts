@@ -3,16 +3,16 @@ import * as debounce from 'debounce'
 
 export type UrlFragment = string
 
-export function listenKeydown(cb:(target:HTMLElement, action:string) => void): void {
+export function listenKeydown(cb: (target: HTMLElement, action: string) => void): void {
   listenKeyEvent("Keydown", cb)
 }
 
-export function listenKeyup(cb:(target:HTMLElement, action:string) => void): void {
+export function listenKeyup(cb: (target: HTMLElement, action: string) => void): void {
   listenKeyEvent("Keyup", cb)
 }
 
-export function listenKeyEvent(event:string, cb:(target:HTMLElement, action:string) => void): void {
-  document.addEventListener(event.toLowerCase(), function(e:KeyboardEvent) {
+export function listenKeyEvent(event: string, cb: (target: HTMLElement, action: string) => void): void {
+  document.addEventListener(event.toLowerCase(), function(e: KeyboardEvent) {
     let source = e.target as HTMLInputElement
 
     let datasetKey = "on" + event + e.key
@@ -24,7 +24,7 @@ export function listenKeyEvent(event:string, cb:(target:HTMLElement, action:stri
   })
 }
 
-export function listenClick(cb:(target:HTMLElement, action:string) => void): void {
+export function listenClick(cb: (target: HTMLElement, action: string) => void): void {
   document.addEventListener("click", function(e) {
     let el = e.target as HTMLInputElement
 
@@ -40,9 +40,27 @@ export function listenClick(cb:(target:HTMLElement, action:string) => void): voi
   })
 }
 
+export function listenDblClick(cb: (target: HTMLElement, action: string) => void): void {
+  document.addEventListener("dblclick", function(e) {
+    let el = e.target as HTMLInputElement
 
-export function listenLoadDocument(cb:(target:HTMLElement, action:string) => void): void {
-  document.addEventListener("hyp-load", function(e:CustomEvent) {
+    console.log("DBL", el.dataset)
+
+    // clicks can fire on internal elements. Find the parent with a click handler
+    let source = el.closest("[data-on-dblclick]") as HTMLElement
+
+    // Let the click do its thing
+    if (!source) return
+
+    e.preventDefault()
+    let target = nearestTarget(source)
+    cb(target, source.dataset.onDblclick)
+  })
+}
+
+
+export function listenLoadDocument(cb: (target: HTMLElement, action: string) => void): void {
+  document.addEventListener("hyp-load", function(e: CustomEvent) {
     let load = e.target as HTMLElement
     let action = load.dataset.onLoad
     let target = e.detail.target
@@ -52,21 +70,21 @@ export function listenLoadDocument(cb:(target:HTMLElement, action:string) => voi
 }
 
 
-export function listenLoad(node:HTMLElement): void {
+export function listenLoad(node: HTMLElement): void {
 
   // it doesn't really matter WHO runs this except that it should have target
-  node.querySelectorAll("[data-on-load]").forEach((load:HTMLElement) => {
+  node.querySelectorAll("[data-on-load]").forEach((load: HTMLElement) => {
     let delay = parseInt(load.dataset.delay) || 0
 
     setTimeout(() => {
-      const event = new CustomEvent("hyp-load", {bubbles:true, detail: {target: nearestTarget(load)}})
+      const event = new CustomEvent("hyp-load", { bubbles: true, detail: { target: nearestTarget(load) } })
       load.dispatchEvent(event)
     }, delay)
   })
 }
 
 
-export function listenChange(cb:(target:HTMLElement, action:string) => void): void {
+export function listenChange(cb: (target: HTMLElement, action: string) => void): void {
   document.addEventListener("change", function(e) {
     let el = e.target as HTMLElement
 
@@ -91,7 +109,7 @@ interface LiveInputElement extends HTMLInputElement {
   debouncedCallback?: Function;
 }
 
-export function listenInput(cb:(target:HTMLElement, actionConstructor:string, term:string) => void): void {
+export function listenInput(cb: (target: HTMLElement, actionConstructor: string, term: string) => void): void {
   document.addEventListener("input", function(e) {
     let el = e.target as HTMLElement
     let source = el.closest("[data-on-input]") as LiveInputElement
@@ -121,7 +139,7 @@ export function listenInput(cb:(target:HTMLElement, actionConstructor:string, te
 }
 
 
-export function listenFormSubmit(cb:(target:HTMLElement, action:string, form:FormData) => void): void {
+export function listenFormSubmit(cb: (target: HTMLElement, action: string, form: FormData) => void): void {
   document.addEventListener("submit", function(e) {
     let form = e.target as HTMLFormElement
 
@@ -139,12 +157,12 @@ export function listenFormSubmit(cb:(target:HTMLElement, action:string, form:For
   })
 }
 
-function nearestTargetId (node:HTMLElement):string | undefined {
+function nearestTargetId(node: HTMLElement): string | undefined {
   let targetData = node.closest("[data-target]") as HTMLElement | undefined
   return targetData?.dataset.target || node.closest("[id]")?.id
 }
 
-function nearestTarget(node:HTMLElement):HTMLElement {
+function nearestTarget(node: HTMLElement): HTMLElement {
   let targetId = nearestTargetId(node)
   let target = document.getElementById(targetId)
 

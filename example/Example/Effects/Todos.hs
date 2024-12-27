@@ -99,8 +99,12 @@ create :: (Todos :> es) => Text -> Eff es TodoId
 create t = send $ Create t
 
 
--- saveTodo :: (Todos :> es) => Todo -> Eff es ()
--- saveTodo t = send $ Save t
+setTask :: (Todos :> es) => Text -> Todo -> Eff es Todo
+setTask task t = do
+  let updated = t{task}
+  send $ Save updated
+  pure updated
+
 
 setCompleted :: (Todos :> es) => Bool -> Todo -> Eff es Todo
 setCompleted completed todo = do

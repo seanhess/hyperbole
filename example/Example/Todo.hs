@@ -15,6 +15,7 @@ import Example.View.Icon qualified as Icon
 import Example.View.Inputs (toggleCheckBtn)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole as Hyperbole
+import Web.Hyperbole.View.Event (onDblClick)
 
 
 page :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
@@ -138,11 +139,19 @@ instance (Todos :> es) => HyperView TodoView es where
 
   data Action TodoView
     = ToggleComplete Todo
+    | Edit Todo
+    | SubmitEdit Todo
     deriving (Show, Read, ViewAction)
 
 
   update (ToggleComplete todo) = do
     updated <- Todos.setCompleted (not todo.completed) todo
+    pure $ todoView updated
+  update (Edit todo) = do
+    pure $ todoEditView todo
+  update (SubmitEdit todo) = do
+    TodoForm task <- formData
+    updated <- Todos.setTask task todo
     pure $ todoView updated
 
 
@@ -150,6 +159,15 @@ todoView :: Todo -> View TodoView ()
 todoView todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
     toggleCheckBtn (ToggleComplete todo) todo.completed
-    el (completed . pad (XY 18 4)) $ text todo.task
+    el (completed . pad (XY 18 4) . onDblClick (Edit todo)) $ text todo.task
  where
   completed = if todo.completed then Style.strikethrough else id
+
+
+todoEditView :: Todo -> View TodoView ()
+todoEditView todo = do
+  let f = formFields @TodoForm
+  row (border (TRBL 0 0 1 0) . pad 10) $ do
+    form @TodoForm (SubmitEdit todo) (pad (TRBL 0 0 0 46)) $ do
+      field f.task (const id) $ do
+        input TextInput (pad 4 . value todo.task)
