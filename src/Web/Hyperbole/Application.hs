@@ -31,8 +31,8 @@ import Web.Cookie (parseCookies)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (reqPath)
 import Web.Hyperbole.Effect.Server (Host (..), Request (..), Response (..), Server, SocketError (..), runServerSockets, runServerWai)
-import Web.Hyperbole.Embed (cssResetEmbed, scriptEmbed)
 import Web.Hyperbole.Route
+import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed)
 
 
 {- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets

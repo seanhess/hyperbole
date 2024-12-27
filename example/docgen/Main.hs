@@ -140,7 +140,6 @@ expandEmbed embed = do
   expanded <- requireTopLevel embed.definition (SourceCode $ T.lines source)
   pure $ fmap markupLine expanded
  where
-
   requireTopLevel :: TopLevelDefinition -> SourceCode -> IO [Text]
   requireTopLevel tld src =
     case findTopLevel tld src of
@@ -174,7 +173,7 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
       else w
 
   terms :: [Text]
-  terms = ["HyperView", "View", "Action", "update", "hyper", "Page", "liveApp", "basicDocument", "runPage", "run", "ViewId", "ViewAction", "Eff", "button", "el", "el_"]
+  terms = ["HyperView", "View", "Action", "update", "hyper", "Page", "liveApp", "basicDocument", "runPage", "run", "ViewId", "ViewAction", "Eff", "button", "el", "el_", "Hyperbole"]
 
 
 -- returns lines of a top-level definition

@@ -10,7 +10,7 @@ import Effectful.Error.Static
 import Effectful.State.Static.Local
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..))
 import Web.Hyperbole.Effect.Server
-import Web.Hyperbole.Session as Session
+import Web.Hyperbole.Effect.Session as Session
 
 
 {- | In any 'load' or 'handle', you can use this Effect to get extra request information or control the response manually.

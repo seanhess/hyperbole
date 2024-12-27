@@ -30,7 +30,11 @@ module Web.Hyperbole
     -- ** Side Effects
     -- $state-effects
 
-    -- * Design and Best Practices
+    -- ** Databases and Custom Effects
+    -- $state-databases
+
+    -- * Architecture Best Practices
+    -- $practices
 
     -- ** Reusable styles
     -- $practices-styles
@@ -92,7 +96,7 @@ module Web.Hyperbole
 
     -- * Type-Safe Forms
 
-    -- | Painless forms with type-checked field names, and support for validation. See [Example.Forms](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
+    -- | Painless forms with type-checked field names, and support for validation. See [Example.Forms](https://docs.hyperbole.live/forms)
   , Form (..)
   , formFields
   , formFieldsWith
@@ -160,7 +164,7 @@ module Web.Hyperbole
     -- ** Embeds
 
     -- | Embedded CSS and Javascript to include in your document function. See 'basicDocument'
-  , module Web.Hyperbole.Embed
+  , module Web.Hyperbole.View.Embed
 
     -- ** Effectful
     -- $effects
@@ -179,12 +183,12 @@ import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (formBody, hasParam, lookupParam, reqParam, reqParams, request)
 import Web.Hyperbole.Effect.Respond (notFound, redirect, respondEarly, view)
 import Web.Hyperbole.Effect.Server
-import Web.Hyperbole.Embed
-import Web.Hyperbole.Forms
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Page (Page, runPage)
 import Web.Hyperbole.Route
 import Web.Hyperbole.View
+import Web.Hyperbole.View.Embed
+import Web.Hyperbole.View.Forms
 import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)
 
 
@@ -287,8 +291,9 @@ Now we can refactor our 'Page' and 'update' to use the same view function. Only 
 
 We can add as many 'HyperView's to a page as we want. Let's add a simple counter 'HyperView'
 
-@
+From [Example.Intro.MultiView](https://github.com/seanhess/hyperbole/blob/latest/example/Example/Intro/MultiView.hs)
 
+@
 #EMBED Example/Intro/MultiView.hs data Count
 
 
@@ -310,19 +315,22 @@ We can use both 'Message' and 'Count' 'HyperView's in our page, and they will up
 
 In addition to creating different 'HyperView's, we can reuse the same one as long as the value 'ViewId' is unique. Let's update `Message` to allow for more than one value:
 
+See [Example.Simple](https://docs.hyperbole.live/simple)
 
 @
 #EMBED Example/Simple.hs data Message
 @
 
-Now we can embed multiple `Message` 'HyperView's into the same page. Each button will update its view independently. See [Example.Simple](https://docs.hyperbole.live/simple) to view this example
+Now we can embed multiple `Message` 'HyperView's into the same page. Each button will update its view independently.
 
 @
 #EMBED Example/Simple.hs messagePage
 @
 
 
-This is especially useful if we put identifying information in our 'ViewId', such as a database id. [Example.Contacts](https://docs.hyperbole.live/contacts) uses this to allow the user to edit multiple contacts on the same page. The 'viewId' function gives us access to the info in our 'update'
+This is especially useful if we put identifying information in our 'ViewId', such as a database id. The [Contacts Example](https://docs.hyperbole.live/contacts) uses this to allow the user to edit multiple contacts on the same page. The 'viewId' function gives us access to the info in our 'update'
+
+From [Example.Contacts](https://docs.hyperbole.live/contacts)
 
 @
 #EMBED Example/Contact.hs data Contact
@@ -335,7 +343,50 @@ This is especially useful if we put identifying information in our 'ViewId', suc
 
 {- $practices-nested
 
-We can nest smaller, specific 'HyperView's inside of a larger parent. You might need this technique to display a list of items, while making each item editable.
+We can nest smaller, specific 'HyperView's inside of a larger parent. You might need this technique to display a list of items which need to update themselves
+
+Let's imagine we want to display a list of Todos. The user can mark individual todos complete, and have them update independently. The specific 'HyperView' might look like this:
+
+From [Example.Intro.Nested](https://github.com/seanhess/hyperbole/blob/latest/example/Example/Intro/Nested.hs)
+
+@
+#EMBED Example/Intro/Nested.hs data TodoItem
+
+
+#EMBED Example/Intro/Nested.hs instance HyperView TodoItem
+@
+
+But we also want the entire list to refresh when a user adds a new todo. We need to create a parent 'HyperView' for the whole list.
+
+We must explicitly list all allowed nested views by adding them to 'Require'
+
+@
+#EMBED Example/Intro/Nested.hs data AllTodos
+
+#EMBED Example/Intro/Nested.hs instance HyperView AllTodos
+@
+
+Then we can embed the child 'HyperView' into the parent with 'hyper'
+
+@
+#EMBED Example/Intro/Nested.hs todosView
+@
+See this technique used in the [TodoMVC Example](https://docs.hyperbole.live/todos)
+-}
+
+
+{- $practices
+
+TODO: Best Practices intro
+
+* Page
+* HyperView - think about what you want to be able to update independently. They aren't about code reuse
+* View Function - needs a new term?
+* Generic View Function - needs a new term?
+
+TODO: new section on dividing into pages
+
+TODO: entire section on code reuse?
 -}
 
 
@@ -385,31 +436,56 @@ Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) t
 #EMBED Example/Intro/SideEffects.hs instance HyperView Message
 @
 
-* See [Example.Counter](https://docs.hyperbole.live/counter) for an example of how to compose effects to create a shared state for all users
-* See [Effectful.Dispatch.Dynamic](https://hackage.haskell.org/package/effectful-core/docs/Effectful-Dispatch-Dynamic.html) for an example of how to create a custom effect
 
 To use an 'Effect' other than 'Hyperbole', add it as a constraint to the 'Page' and any 'HyperView' instances that need it. Then run the effect in your application
 
+From [Example.Counter](https://docs.hyperbole.live/counter)
 
+@
+{\-# LANGUAGE UndecidableInstances #-\}
 
-
-
-
-* See [NSO's Level2 ] ://github.com/DKISTDC/level2/blob/main/src/NSO/Data/Datasets.hs
-
-
-
-
+#EMBED Example/Counter.hs instance (Reader
+@
 -}
 
 
-{- $design
+{- $state-databases
 
-** Item
+A database is no different from any other 'Effect'. We recommend you create a custom effect to describe high-level data operations.
 
-Hello
+From [Example.Effects.Todos](https://github.com/seanhess/hyperbole/blob/latest/example/Example/Effects/Todos.hs)
 
-** Item 2
+@
+#EMBED Example/Effects/Todos.hs data Todos
+@
 
-Hello
+You can add your 'Effect' to any 'HyperView' or 'Page'.
+
+From [Example.Todo](https://docs.hyperbole.live/todos):
+
+@
+{\-# LANGUAGE UndecidableInstances #-\}
+
+#EMBED Example/Todo.hs simplePage
+@
+
+When you create your 'Application', run any 'Effect's you need.
+
+From [example/Main.hs](https://github.com/seanhess/hyperbole/blob/latest/example/Main.hs):
+
+@
+app :: Application
+app = do
+  liveApp
+    toDocument
+    (runApp . routeRequest $ router)
+ where
+  runApp :: (Hyperbole :> es, IOE :> es) => Eff (Concurrent : Todos : es) a -> Eff es a
+  runApp = runTodosSession . runConcurrent
+@
+
+Implementing a database runner for a custom 'Effect' is beyond the scope of this documentation, but see the following:
+
+* [NSO.Data.Datasets](https://github.com/DKISTDC/level2/blob/main/src/NSO/Data/Datasets.hs) - Production Data Effect with a database runner
+* [Effectful.Rel8](https://github.com/DKISTDC/level2/blob/main/types/src/Effectful/Rel8.hs) - Effect for the [Rel8](https://hackage.haskell.org/package/rel8) Postgres Library
 -}

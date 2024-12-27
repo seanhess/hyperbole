@@ -2,7 +2,7 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Web.Hyperbole.Forms
+module Web.Hyperbole.View.Forms
   ( FormFields (..)
   , InputType (..)
   , FieldName

@@ -25,7 +25,7 @@ import Example.Contact qualified as Contact
 import Example.Contacts qualified as Contacts
 import Example.Counter qualified as Counter
 import Example.Effects.Debug as Debug
-import Example.Effects.Todos (runTodosSession)
+import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
 import Example.Errors qualified as Errors
 import Example.Filter qualified as Filter
@@ -70,10 +70,10 @@ app users count = do
     toDocument
     (runApp . routeRequest $ router)
  where
-  runApp :: (IOE :> es) => Eff (Concurrent : Debug : Users : es) a -> Eff es a
-  runApp = runUsersIO users . runDebugIO . runConcurrent
+  runApp :: (Hyperbole :> es, IOE :> es) => Eff (Concurrent : Debug : Users : Todos : es) a -> Eff es a
+  runApp = runTodosSession . runUsersIO users . runDebugIO . runConcurrent
 
-  router :: forall es. (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
+  router :: forall es. (Hyperbole :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
   router (Hello h) = runPage $ hello h
   router (Contacts (Contact uid)) = Contact.response uid
   router (Contacts ContactsAll) = runPage Contacts.page
@@ -97,7 +97,7 @@ app users count = do
   router Sessions = runPage Sessions.page
   router Simple = runPage Simple.page
   router Transitions = runPage Transitions.page
-  router Todos = runTodosSession $ runPage Todo.page
+  router Todos = runPage Todo.page
   router Main = do
     redirect (routeUrl Simple)
 

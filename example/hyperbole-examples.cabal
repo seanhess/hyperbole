@@ -75,16 +75,16 @@ executable examples
       Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Respond
       Web.Hyperbole.Effect.Server
-      Web.Hyperbole.Embed
-      Web.Hyperbole.Forms
+      Web.Hyperbole.Effect.Session
       Web.Hyperbole.HyperView
       Web.Hyperbole.Page
       Web.Hyperbole.Route
-      Web.Hyperbole.Session
       Web.Hyperbole.TypeList
       Web.Hyperbole.View
       Web.Hyperbole.View.Element
+      Web.Hyperbole.View.Embed
       Web.Hyperbole.View.Event
+      Web.Hyperbole.View.Forms
       BulkUpdate
       Example.AppRoute
       Example.Colors
@@ -101,6 +101,7 @@ executable examples
       Example.Intro.BasicPage
       Example.Intro.Interactive
       Example.Intro.MultiView
+      Example.Intro.Nested
       Example.Intro.SideEffects
       Example.Intro.State
       Example.Intro.Toggles

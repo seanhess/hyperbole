@@ -2,19 +2,14 @@
 
 module Example.Effects.Todos where
 
-import Data.Aeson
-import Data.Map.Strict (Map)
-import Data.Map.Strict qualified as M
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Text (Text, pack)
-import Data.Text qualified as T
 import Effectful
 import Effectful.Dispatch.Dynamic
-import GHC.Generics
 import System.Random (randomRIO)
 import Web.HttpApiData (FromHttpApiData (..), ToHttpApiData (..))
-import Web.Hyperbole (FromHttpApiData, Hyperbole, clearSession, session, setSession)
-import Web.Hyperbole.Session (readQueryParam, showQueryParam)
+import Web.Hyperbole (Hyperbole, clearSession, session, setSession)
+import Web.Hyperbole.Effect.Session (readQueryParam, showQueryParam)
 
 
 type TodoId = Text
@@ -52,8 +47,6 @@ data Todos :: Effect where
   Save :: Todo -> Todos m ()
   Remove :: TodoId -> Todos m ()
   Create :: Text -> Todos m TodoId
-
-
 type instance DispatchOf Todos = 'Dynamic
 
 

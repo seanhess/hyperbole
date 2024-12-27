@@ -1,4 +1,4 @@
-module Web.Hyperbole.Session where
+module Web.Hyperbole.Effect.Session where
 
 import Data.ByteString (ByteString)
 import Data.List qualified as L

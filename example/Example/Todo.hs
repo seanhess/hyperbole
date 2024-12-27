@@ -30,6 +30,15 @@ page = do
       hyper AllTodos $ todosView FilterAll todos
 
 
+simplePage :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
+simplePage = do
+  todos <- Todos.loadAll
+  pure $ do
+    hyper AllTodos $ todosView FilterAll todos
+
+
+--- AllTodos ----------------------------------------------------------------------------
+
 data AllTodos = AllTodos
   deriving (Show, Read, ViewId)
 
@@ -80,30 +89,31 @@ instance (Todos :> es) => HyperView AllTodos es where
         Completed -> todo.completed
 
 
+todosView :: FilterTodo -> [Todo] -> View AllTodos ()
+todosView filt todos = do
+  todoForm filt
+  col id $ do
+    forM_ todos $ \todo -> do
+      hyper (TodoView todo.id) $ todoView todo
+  statusBar filt todos
+
+
+todoForm :: FilterTodo -> View AllTodos ()
+todoForm filt = do
+  let f = formFields @TodoForm
+  row (border 1) $ do
+    el (pad 8) $ do
+      button (ToggleAll filt) (width 32 . hover (color Primary)) Icon.chevronDown
+    form @TodoForm SubmitTodo id $ do
+      field f.task (const id) $ do
+        input TextInput (pad 12 . placeholder "What needs to be done?")
+
+
 data TodoForm f = TodoForm
   { task :: Field f Text
   }
   deriving (Generic)
 instance Form TodoForm Maybe
-
-
-todosView :: FilterTodo -> [Todo] -> View AllTodos ()
-todosView filt todos = do
-  todoForm
-  col id $ do
-    forM_ todos $ \todo -> do
-      hyper (TodoView todo.id) $ todoView todo
-  statusBar filt todos
- where
-  todoForm :: View AllTodos ()
-  todoForm = do
-    let f = formFields @TodoForm
-    row (border 1) $ do
-      el (pad 8) $ do
-        button (ToggleAll filt) (width 32 . hover (color Primary)) Icon.chevronDown
-      form @TodoForm SubmitTodo id $ do
-        field f.task (const id) $ do
-          input TextInput (pad 12 . placeholder "What needs to be done?")
 
 
 statusBar :: FilterTodo -> [Todo] -> View AllTodos ()
