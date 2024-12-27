@@ -11,19 +11,15 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
-
 page :: (Hyperbole :> es) => Eff es (Page '[Filter])
 page = do
   pure $ exampleLayout Route.Filter $ col (pad 20 . grow) $ do
     hyper Filter $ filterView allLanguages Nothing
 
-
 data Filter = Filter
   deriving (Show, Read, ViewId)
 
-
 type Term = Text
-
 
 instance HyperView Filter es where
   data Action Filter
@@ -31,13 +27,11 @@ instance HyperView Filter es where
     | Select ProgrammingLanguage
     deriving (Show, Read, ViewAction)
 
-
   update (SearchTerm term) = do
     let matched = filter (isMatchLanguage term) allLanguages
     pure $ filterView matched Nothing
   update (Select lang) = do
     pure $ filterView [] (Just lang)
-
 
 filterView :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View Filter ()
 filterView langs selected =
@@ -47,7 +41,6 @@ filterView langs selected =
     -- clearButton SearchTerm term
     chosenView selected
     resultsTable Select langs
-
 
 -- It's not recommended to attempt to clear the value. Setting the value on inputs results in unexpected behavior.
 -- if you need this, use a javascript component
@@ -61,7 +54,6 @@ clearButton clear term =
       "" -> hide
       _ -> id
 
-
 chosenView :: Maybe ProgrammingLanguage -> View c ()
 chosenView Nothing = none
 chosenView (Just lang) = do
@@ -69,7 +61,6 @@ chosenView (Just lang) = do
     el_ "You chose:"
     el_ $ text lang.name
   el (if lang.name == "Haskell" then id else hide) "You are as wise as you are attractive"
-
 
 resultsTable :: (ViewAction (Action id)) => (ProgrammingLanguage -> Action id) -> [ProgrammingLanguage] -> View id ()
 resultsTable onSelect langs = do
@@ -87,17 +78,14 @@ resultsTable onSelect langs = do
 
   rows = textAlign AlignCenter . border 1 . borderColor GrayLight
 
-
 data ProgrammingLanguage = ProgrammingLanguage {name :: Text, description :: Text}
   deriving (Show, Read)
 instance Eq ProgrammingLanguage where
   p1 == p2 = p1.name == p2.name
 
-
 isMatchLanguage :: Text -> ProgrammingLanguage -> Bool
 isMatchLanguage term p =
   isInfixOf (toLower term) . toLower $ p.name
-
 
 allLanguages :: [ProgrammingLanguage]
 allLanguages =

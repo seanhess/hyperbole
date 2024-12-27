@@ -5,7 +5,6 @@ import Example.Effects.Users (UserId)
 import Text.Read (readMaybe)
 import Web.Hyperbole
 
-
 data AppRoute
   = Main
   | Simple
@@ -30,7 +29,6 @@ data AppRoute
 instance Route AppRoute where
   baseRoute = Just Main
 
-
 data ContactRoute
   = ContactsAll
   | Contact UserId
@@ -43,7 +41,6 @@ instance Route ContactRoute where
     cid <- readMaybe $ unpack contactId
     pure $ Contact cid
   matchRoute _ = Nothing
-
 
 data Hello
   = Greet Text

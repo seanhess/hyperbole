@@ -12,7 +12,6 @@ import Example.Style as Style
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
-
 page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
 page = do
   -- setSession "color" Warning
@@ -22,10 +21,8 @@ page = do
   pure $ exampleLayout Route.Sessions $ col (pad 20 . gap 10) $ do
     hyper Contents $ viewContent clr msg
 
-
 data Contents = Contents
   deriving (Show, Read, ViewId)
-
 
 instance (Debug :> es) => HyperView Contents es where
   data Action Contents
@@ -41,13 +38,11 @@ instance (Debug :> es) => HyperView Contents es where
     clr <- session "color"
     pure $ viewContent clr (Just msg)
 
-
 viewContent :: Maybe AppColor -> Maybe Text -> View Contents ()
 viewContent mclr mmsg =
   col (gap 20) $ do
     viewColorPicker mclr
     viewMessage mmsg
-
 
 viewColorPicker :: Maybe AppColor -> View Contents ()
 viewColorPicker mc = do
@@ -58,7 +53,6 @@ viewColorPicker mc = do
       button (SaveColor Success) (Style.btn' Success . border 1) "Successs"
       button (SaveColor Warning) (Style.btn' Warning . border 1) "Warning"
       button (SaveColor Danger) (Style.btn' Danger . border 1) "Danger"
-
 
 viewMessage :: Maybe Text -> View Contents ()
 viewMessage mm = do

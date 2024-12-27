@@ -6,28 +6,23 @@ import Example.Style as Style
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
-
 page :: (Hyperbole :> es) => Eff es (Page '[Contents])
 page = do
   pure $ exampleLayout Route.Errors $ row (pad 20) $ do
     col (gap 10 . border 1) $ do
       hyper Contents viewContent
 
-
 data Contents = Contents
   deriving (Show, Read, ViewId)
-
 
 instance HyperView Contents es where
   data Action Contents
     = CauseError
     deriving (Show, Read, ViewAction)
 
-
   update CauseError = do
     -- Return a not found error 404
     notFound
-
 
 viewContent :: View Contents ()
 viewContent = do

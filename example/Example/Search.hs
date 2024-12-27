@@ -15,26 +15,21 @@ import Web.Hyperbole
 import Web.Hyperbole.View.Event
 import Prelude hiding (even, odd)
 
-
 page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])
 page = do
   pure $ exampleLayout Route.LiveSearch $ col (pad 20 . grow) $ do
     hyper LiveSearch $ liveSearchView allLanguages 0 mempty
 
-
 data LiveSearch = LiveSearch
   deriving (Show, Read, ViewId)
 
-
 type Term = Text
-
 
 instance (IOE :> es) => HyperView LiveSearch es where
   data Action LiveSearch
     = SearchTerm Int Term
     | Select (Maybe ProgrammingLanguage)
     deriving (Show, Read, ViewAction)
-
 
   update (SearchTerm current term) = do
     pure $ liveSearchView allLanguages current term
@@ -43,12 +38,10 @@ instance (IOE :> es) => HyperView LiveSearch es where
   update (Select (Just lang)) = do
     pure $ selectedView lang
 
-
 selectedView :: ProgrammingLanguage -> View LiveSearch ()
 selectedView selected = do
   col (gap 10) $ do
     Filter.chosenView (Just selected)
-
 
 liveSearchView :: [ProgrammingLanguage] -> Int -> Term -> View LiveSearch ()
 liveSearchView langs current term = do
@@ -70,7 +63,6 @@ liveSearchView langs current term = do
     onKeyDown Enter (Select currentSearchLang)
       . onKeyDown ArrowDown (SearchTerm (current + 1) term)
       . onKeyDown ArrowUp (SearchTerm (current - 1) term)
-
 
 searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> Mod LiveSearch -> Layer LiveSearch ()
 searchPopup shownLangs highlighted f = do

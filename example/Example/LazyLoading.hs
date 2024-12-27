@@ -9,7 +9,6 @@ import Example.Effects.Debug
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
-
 page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
 page = do
   pure $ exampleLayout LazyLoading $ do
@@ -17,10 +16,8 @@ page = do
       col (gap 10 . border 1 . pad 20) $ do
         hyper Contents viewInit
 
-
 data Contents = Contents
   deriving (Show, Read, ViewId)
-
 
 instance (Debug :> es) => HyperView Contents es where
   data Action Contents
@@ -38,7 +35,6 @@ instance (Debug :> es) => HyperView Contents es where
       col (gap 10 . onLoad (Reload (n + 1)) 1000) $ do
         el_ "Reloaded! polling..."
         el_ $ text $ pack $ show n
-
 
 viewInit :: View Contents ()
 viewInit = do

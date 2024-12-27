@@ -50,7 +50,6 @@ import Web.Hyperbole
 import Web.Hyperbole.Effect.Handler (RunHandlers)
 import Web.Hyperbole.Effect.Server (Request (..))
 
-
 -- import Network.Wai.Handler.WebSockets (websocketsOr)
 
 main :: IO ()
@@ -62,7 +61,6 @@ main = do
     staticPolicy (addBase "client/dist") $
       staticPolicy (addBase "static") $
         app users count
-
 
 app :: UserStore -> TVar Int -> Application
 app users count = do

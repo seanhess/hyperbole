@@ -11,9 +11,7 @@ import Web.HttpApiData (FromHttpApiData (..), ToHttpApiData (..))
 import Web.Hyperbole (Hyperbole, clearSession, session, setSession)
 import Web.Hyperbole.Effect.Session (readQueryParam, showQueryParam)
 
-
 type TodoId = Text
-
 
 data Todo = Todo
   { id :: TodoId
@@ -22,10 +20,8 @@ data Todo = Todo
   }
   deriving (Show, Read)
 
-
 newtype TodoIds = TodoIds [Text]
   deriving newtype (Show, Read, Monoid, Semigroup)
-
 
 -- We need an instance of From/To HttpApiData to save to a session
 instance FromHttpApiData Todo where
@@ -33,13 +29,11 @@ instance FromHttpApiData Todo where
 instance ToHttpApiData Todo where
   toQueryParam = showQueryParam
 
-
 -- there's no list instance for some reason
 instance FromHttpApiData TodoIds where
   parseQueryParam = readQueryParam
 instance ToHttpApiData TodoIds where
   toQueryParam = showQueryParam
-
 
 -- Load a user AND do next if missing?
 data Todos :: Effect where
@@ -48,7 +42,6 @@ data Todos :: Effect where
   Remove :: TodoId -> Todos m ()
   Create :: Text -> Todos m TodoId
 type instance DispatchOf Todos = 'Dynamic
-
 
 runTodosSession
   :: forall es a
@@ -83,14 +76,11 @@ runTodosSession = interpret $ \_ -> \case
   sessionSaveTodoIds :: (Hyperbole :> es) => TodoIds -> Eff es ()
   sessionSaveTodoIds = setSession "todoIds"
 
-
 loadAll :: (Todos :> es) => Eff es [Todo]
 loadAll = send LoadAll
 
-
 create :: (Todos :> es) => Text -> Eff es TodoId
 create t = send $ Create t
-
 
 setTask :: (Todos :> es) => Text -> Todo -> Eff es Todo
 setTask task t = do
@@ -98,19 +88,16 @@ setTask task t = do
   send $ Save updated
   pure updated
 
-
 setCompleted :: (Todos :> es) => Bool -> Todo -> Eff es Todo
 setCompleted completed todo = do
   let updated = todo{completed}
   send $ Save updated
   pure updated
 
-
 toggleAll :: (Todos :> es) => [Todo] -> Eff es [Todo]
 toggleAll todos = do
   let shouldComplete = any (\t -> not t.completed) todos
   mapM (setCompleted shouldComplete) todos
-
 
 clearCompleted :: (Todos :> es) => Eff es [Todo]
 clearCompleted = do
@@ -118,7 +105,6 @@ clearCompleted = do
   let completed = filter (.completed) todos
   mapM_ clear completed
   loadAll
-
 
 clear :: (Todos :> es) => Todo -> Eff es ()
 clear todo = do

@@ -15,7 +15,6 @@ import Example.Style qualified as Style
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
-
 page
   :: forall es
    . (Hyperbole :> es, Users :> es, Debug :> es)
@@ -26,18 +25,15 @@ page = do
     col (pad 10 . gap 10) $ do
       hyper Contacts $ allContactsView Nothing us
 
-
 -- Contacts ----------------------------------------------
 
 data Contacts = Contacts
   deriving (Show, Read, ViewId)
 
-
 data Filter
   = Active
   | Inactive
   deriving (Eq, Show, Read)
-
 
 instance (Users :> es, Debug :> es) => HyperView Contacts es where
   data Action Contacts
@@ -46,9 +42,7 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
     | DeleteUser UserId
     deriving (Show, Read, ViewAction)
 
-
   type Require Contacts = '[InlineContact]
-
 
   update = \case
     Reload mf -> do
@@ -64,7 +58,6 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
       Users.delete uid
       us <- Users.all
       pure $ allContactsView Nothing us
-
 
 -- TODO: get the form to close when submitted
 
@@ -99,7 +92,6 @@ allContactsView fil us = col (gap 20) $ do
   filterUsers (Just Active) u = u.isActive
   filterUsers (Just Inactive) u = not u.isActive
 
-
 -- Reuse Contact View ----------------------------------
 -- We want to use the same view as Example.Contact, but customize the edit view to have a delete button
 -- Note that we re-implement the actions and the handler
@@ -108,7 +100,6 @@ allContactsView fil us = col (gap 20) $ do
 data InlineContact = InlineContact UserId
   deriving (Show, Read, ViewId)
 
-
 instance (Users :> es, Debug :> es) => HyperView InlineContact es where
   data Action InlineContact
     = Edit
@@ -116,9 +107,7 @@ instance (Users :> es, Debug :> es) => HyperView InlineContact es where
     | Save
     deriving (Show, Read, ViewAction)
 
-
   type Require InlineContact = '[Contacts]
-
 
   update a = do
     InlineContact uid <- viewId
@@ -134,11 +123,9 @@ instance (Users :> es, Debug :> es) => HyperView InlineContact es where
         Users.save unew
         pure $ contactView unew
 
-
 -- See how we reuse the contactView' from Example.Contact
 contactView :: User -> View InlineContact ()
 contactView = contactView' Edit
-
 
 -- See how we reuse the contactEdit' and contactLoading from Example.Contact
 contactEdit :: User -> View InlineContact ()

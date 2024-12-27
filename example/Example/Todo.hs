@@ -17,7 +17,6 @@ import Example.View.Layout (exampleLayout)
 import Web.Hyperbole as Hyperbole
 import Web.Hyperbole.View.Event (onDblClick)
 
-
 page :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
 page = do
   todos <- Todos.loadAll
@@ -29,19 +28,16 @@ page = do
         space
       hyper AllTodos $ todosView FilterAll todos
 
-
 simplePage :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
 simplePage = do
   todos <- Todos.loadAll
   pure $ do
     hyper AllTodos $ todosView FilterAll todos
 
-
 --- AllTodos ----------------------------------------------------------------------------
 
 data AllTodos = AllTodos
   deriving (Show, Read, ViewId)
-
 
 data FilterTodo
   = FilterAll
@@ -49,10 +45,8 @@ data FilterTodo
   | Completed
   deriving (Show, Read, Eq)
 
-
 instance (Todos :> es) => HyperView AllTodos es where
   type Require AllTodos = '[TodoView]
-
 
   data Action AllTodos
     = ClearCompleted
@@ -60,7 +54,6 @@ instance (Todos :> es) => HyperView AllTodos es where
     | SubmitTodo
     | ToggleAll FilterTodo
     deriving (Show, Read, ViewAction)
-
 
   update = \case
     SubmitTodo -> do
@@ -88,7 +81,6 @@ instance (Todos :> es) => HyperView AllTodos es where
         Active -> not todo.completed
         Completed -> todo.completed
 
-
 todosView :: FilterTodo -> [Todo] -> View AllTodos ()
 todosView filt todos = do
   todoForm filt
@@ -96,7 +88,6 @@ todosView filt todos = do
     forM_ todos $ \todo -> do
       hyper (TodoView todo.id) $ todoView todo
   statusBar filt todos
-
 
 todoForm :: FilterTodo -> View AllTodos ()
 todoForm filt = do
@@ -108,13 +99,11 @@ todoForm filt = do
       field f.task (const id) $ do
         input TextInput (pad 12 . placeholder "What needs to be done?")
 
-
 data TodoForm f = TodoForm
   { task :: Field f Text
   }
   deriving (Generic)
 instance Form TodoForm Maybe
-
 
 statusBar :: FilterTodo -> [Todo] -> View AllTodos ()
 statusBar filt todos = do
@@ -136,23 +125,19 @@ statusBar filt todos = do
   selectedFilter f =
     if f == filt then border 1 else id
 
-
 --- TodoView ----------------------------------------------------------------------------
 
 data TodoView = TodoView TodoId
   deriving (Show, Read, ViewId)
 
-
 instance (Todos :> es) => HyperView TodoView es where
   type Require TodoView = '[AllTodos]
-
 
   data Action TodoView
     = ToggleComplete Todo
     | Edit Todo
     | SubmitEdit Todo
     deriving (Show, Read, ViewAction)
-
 
   update (ToggleComplete todo) = do
     updated <- Todos.setCompleted (not todo.completed) todo
@@ -164,7 +149,6 @@ instance (Todos :> es) => HyperView TodoView es where
     updated <- Todos.setTask task todo
     pure $ todoView updated
 
-
 todoView :: Todo -> View TodoView ()
 todoView todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
@@ -172,7 +156,6 @@ todoView todo = do
     el (completed . pad (XY 18 4) . onDblClick (Edit todo)) $ text todo.task
  where
   completed = if todo.completed then Style.strikethrough else id
-
 
 todoEditView :: Todo -> View TodoView ()
 todoEditView todo = do

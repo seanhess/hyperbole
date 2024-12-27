@@ -6,7 +6,6 @@ import Data.Text (pack)
 import Example.Intro.Interactive (Message (..), messageView)
 import Web.Hyperbole
 
-
 page :: Eff es (Page '[Message, Count])
 page = do
   pure $ do
@@ -14,10 +13,8 @@ page = do
       hyper Message $ messageView "Hello"
       hyper Count $ countView 0
 
-
 data Count = Count
   deriving (Show, Read, ViewId)
-
 
 instance HyperView Count es where
   data Action Count
@@ -25,12 +22,10 @@ instance HyperView Count es where
     | Decrement Int
     deriving (Show, Read, ViewAction)
 
-
   update (Increment n) = do
     pure $ countView (n + 1)
   update (Decrement n) = do
     pure $ countView (n - 1)
-
 
 countView :: Int -> View Count ()
 countView n = do
