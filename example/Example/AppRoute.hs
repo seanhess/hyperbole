@@ -24,6 +24,7 @@ data AppRoute
   | LazyLoading
   | Concurrent
   | Examples
+  | Todos
   | Errors
   deriving (Eq, Generic, Show)
 instance Route AppRoute where

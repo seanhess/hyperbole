@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module IntroMulti where
+module Example.Intro.State where
 
 import Data.Text (Text)
 import Web.Hyperbole
@@ -8,26 +8,26 @@ import Web.Hyperbole
 
 messageView :: Text -> View Message ()
 messageView m = do
+  button (Louder m) (border 1) "Louder"
   el bold $ text $ "Message: " <> m
-  button (SetMessage "Goodbye") (border 1) "Say Goodbye"
 
 
 messagePage :: Eff es (Page '[Message])
 messagePage = do
   pure $ do
-    hyper (Message 1) $ messageView "Hello"
-    hyper (Message 2) $ messageView "World"
+    hyper Message $ messageView "Hello"
 
 
-data Message = Message Int
+data Message = Message
   deriving (Show, Read, ViewId)
 
 
 instance HyperView Message es where
   data Action Message
-    = SetMessage Text
+    = Louder Text
     deriving (Show, Read, ViewAction)
 
 
-  update (SetMessage t) =
-    pure $ messageView t
+  update (Louder m) = do
+    let new = m <> "!"
+    pure $ messageView new

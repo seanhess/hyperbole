@@ -1,12 +1,11 @@
 module Main where
 
 import Control.Exception (SomeException, try)
-import Data.Char (isSpace)
+import Data.Char (isAlpha, isSpace)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
-import Debug.Trace (traceM)
 import System.Directory
 import System.FilePath
 
@@ -24,7 +23,6 @@ test = do
   src <- readSource "../src/Web/Hyperbole.hs"
   SourceCode lns <- expandFile src
   mapM_ print lns
-  pure ()
 
 
 expandSourcesTo :: FilePath -> IO ()
@@ -61,7 +59,6 @@ readSource path = do
 writeSource :: FilePath -> FilePath -> SourceCode -> IO ()
 writeSource tmpDir relPath src = do
   let path = tmpDir </> cleanRelativeDir relPath
-  print path
   createDirectoryIfMissing True $ takeDirectory path
   T.writeFile path $ T.unlines src.lines
   putStrLn $ "WROTE to " <> path <> " " <> show (length src.lines)
@@ -98,12 +95,14 @@ data Embed = Embed
   , prefix :: Text
   , sourceFile :: FilePath
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 newtype SourceCode = SourceCode {lines :: [Text]}
+instance Show Embed where
+  show e = "Embed " <> e.sourceFile <> " " <> show e.prefix <> " " <> show e.definition
 
 
 newtype TopLevelDefinition = TopLevelDefinition Text
-  deriving (Show, Eq)
+  deriving newtype (Show, Eq)
 
 
 expandFile :: SourceCode -> IO SourceCode
@@ -138,18 +137,44 @@ expandEmbed :: Embed -> IO [Text]
 expandEmbed embed = do
   print embed
   source <- T.readFile embed.sourceFile
-  pure $ fmap markupLine $ findTopLevel embed.definition (SourceCode $ T.lines source)
+  expanded <- requireTopLevel embed.definition (SourceCode $ T.lines source)
+  pure $ fmap markupLine expanded
  where
-  addPrefix line = embed.prefix <> line
+
+  requireTopLevel :: TopLevelDefinition -> SourceCode -> IO [Text]
+  requireTopLevel tld src =
+    case findTopLevel tld src of
+      [] -> fail $ "Could not find " <> show embed
+      lns -> pure lns
+
+  -- addPrefix line = embed.prefix <> line
   markupLine :: Text -> Text
   markupLine line =
     case embed.prefix of
       "" -> markupLineAt line
       _ -> markupLinePrefix line
   markupLineAt =
-    T.replace "\"" "\\\""
+    T.replace "\"" "\\\"" . highlightTermsLine
   markupLinePrefix line =
     embed.prefix <> line
+
+
+highlightTermsLine :: Text -> Text
+highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
+ where
+  isSameTerm :: Char -> Char -> Bool
+  isSameTerm c1 c2 =
+    (isAlpha c1 && isAlpha c2)
+      || (isSpace c1 && isSpace c2)
+
+  highlightWord :: Text -> Text
+  highlightWord w =
+    if w `elem` terms
+      then "'" <> w <> "'"
+      else w
+
+  terms :: [Text]
+  terms = ["HyperView", "View", "Action", "update", "hyper", "Page", "liveApp", "basicDocument", "runPage", "run", "ViewId", "ViewAction", "Eff", "button", "el", "el_"]
 
 
 -- returns lines of a top-level definition
@@ -160,7 +185,7 @@ findTopLevel (TopLevelDefinition definition) source =
  where
   isTopLevel = T.isPrefixOf definition
   isEmpty = T.null
-  isBlankLine line = T.null $ T.strip line
+  -- isBlankLine line = T.null $ T.strip line
   isCurrentDefinition line =
     isTopLevel line || not (isFullyOutdented line)
   dropWhileEnd p as =

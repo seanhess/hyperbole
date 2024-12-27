@@ -19,17 +19,26 @@ main = do
 page :: (Hyperbole :> es) => Eff es (Page '[Message])
 page = do
   pure $ exampleLayout Route.Simple $ col (pad 20 . gap 10) $ do
-    hyper (Message 1) $ messageView "Hello"
-    hyper (Message 2) $ messageView "World!"
+    hyper Message1 $ messageView "Hello"
+    hyper Message2 $ messageView "World!"
 
 
-data Message = Message Int
+messagePage :: Eff es (Page '[Message])
+messagePage = do
+  pure $ do
+    hyper Message1 $ messageView "Hello"
+    hyper Message2 $ messageView "World!"
+
+
+data Message = Message1 | Message2
   deriving (Show, Read, ViewId)
 
 
 instance HyperView Message es where
   data Action Message = Louder Text
     deriving (Show, Read, ViewAction)
+
+
   update (Louder m) = do
     let new = m <> "!"
     pure $ messageView new

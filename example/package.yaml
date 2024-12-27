@@ -27,6 +27,7 @@ default-extensions:
 
 dependencies:
   - base
+  - aeson
   - bytestring
   - containers
   - casing
@@ -36,6 +37,7 @@ dependencies:
   - file-embed
   - http-api-data
   - http-types
+  - random
   - wai
   - warp
   - web-view

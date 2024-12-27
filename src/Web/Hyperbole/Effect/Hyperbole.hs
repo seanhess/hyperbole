@@ -20,9 +20,8 @@ For most 'Page's, you won't need to use this effect directly. Use custom 'Route'
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondEarly :: Response -> Hyperbole m a
-  SetSession :: (ToHttpApiData a) => Text -> a -> Hyperbole m ()
-  DelSession :: Text -> Hyperbole m ()
-  GetSession :: (FromHttpApiData a) => Text -> Hyperbole m (Maybe a)
+  ModSession :: (Session -> Session) -> Hyperbole m ()
+  GetSession :: Hyperbole m Session
 
 
 type instance DispatchOf Hyperbole = 'Dynamic
@@ -40,13 +39,10 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
     s <- gets @HyperState (.session)
     send $ SendResponse s r
     throwError_ r
-  SetSession k a -> do
-    modify $ \st -> st{session = sessionSet k a st.session} :: HyperState
-  DelSession k -> do
-    modify $ \st -> st{session = sessionDel k st.session} :: HyperState
-  GetSession k -> do
-    s <- gets @HyperState (.session)
-    pure $ sessionLookup k s
+  GetSession -> do
+    gets @HyperState (.session)
+  ModSession f -> do
+    modify @HyperState $ \st -> st{session = f st.session}
  where
   runLocal :: (Server :> es) => Eff (State HyperState : Error Response : es) a -> Eff es (Either Response (a, HyperState))
   runLocal eff = do
@@ -73,27 +69,20 @@ data HyperState = HyperState
   }
 
 
-{- | Lookup a session variable by keyword
-
-> load $ do
->   tok <- session "token"
->   ...
--}
-session :: (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es (Maybe a)
-session k = send $ GetSession k
+-- | Lookup a session variable by keyword
+session :: (FromHttpApiData a, Hyperbole :> es) => Text -> Eff es (Maybe a)
+session k = do
+  s <- send GetSession
+  pure $ sessionLookup k s
 
 
-{- | Set a session variable by keyword
-
-> load $ do
->   t <- reqParam "token"
->   setSession "token" t
->   ...
--}
-setSession :: (Hyperbole :> es, ToHttpApiData a) => Text -> a -> Eff es ()
-setSession k v = send $ SetSession k v
+-- | Set a session variable by keyword
+setSession :: (ToHttpApiData a, Hyperbole :> es) => Text -> a -> Eff es ()
+setSession k v = do
+  send $ ModSession (sessionSet k v)
 
 
--- | Clear the user's session
+-- | Clear a session variable
 clearSession :: (Hyperbole :> es) => Text -> Eff es ()
-clearSession k = send $ DelSession k
+clearSession k = do
+  send $ ModSession (sessionDel k)

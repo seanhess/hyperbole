@@ -34,6 +34,7 @@ page = do
       hyper (Contact uid) $ contactView u
 
 
+
 -- Contact ----------------------------------------------------
 
 data Contact = Contact UserId

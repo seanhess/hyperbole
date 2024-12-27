@@ -23,9 +23,6 @@ source-repository head
 executable docgen
   main-is: Main.hs
   other-modules:
-      Intro
-      Intro2
-      IntroMulti
       Paths_hyperbole_examples
   autogen-modules:
       Paths_hyperbole_examples
@@ -42,7 +39,8 @@ executable docgen
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes
   build-depends:
-      base
+      aeson
+    , base
     , bytestring
     , casing
     , containers
@@ -55,6 +53,7 @@ executable docgen
     , http-types
     , hyperbole
     , network
+    , random
     , string-conversions
     , string-interpolate
     , text
@@ -68,7 +67,6 @@ executable docgen
 executable examples
   main-is: Main.hs
   other-modules:
-      Simple
       Web.Hyperbole
       Web.Hyperbole.Application
       Web.Hyperbole.Effect.Event
@@ -95,10 +93,18 @@ executable examples
       Example.Contacts
       Example.Counter
       Example.Effects.Debug
+      Example.Effects.Todos
       Example.Effects.Users
       Example.Errors
       Example.Filter
       Example.Forms
+      Example.Intro.BasicPage
+      Example.Intro.Interactive
+      Example.Intro.MultiView
+      Example.Intro.SideEffects
+      Example.Intro.State
+      Example.Intro.Toggles
+      Example.Intro.ViewFunctions
       Example.LazyLoading
       Example.Redirects
       Example.Requests
@@ -106,8 +112,10 @@ executable examples
       Example.Sessions
       Example.Simple
       Example.Style
+      Example.Todo
       Example.Transitions
       Example.View.Icon
+      Example.View.Inputs
       Example.View.Layout
       HelloWorld
       Paths_hyperbole_examples
@@ -127,7 +135,8 @@ executable examples
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base
+      aeson
+    , base
     , bytestring
     , casing
     , containers
@@ -137,6 +146,7 @@ executable examples
     , http-api-data
     , http-types
     , network
+    , random
     , string-conversions
     , string-interpolate
     , text

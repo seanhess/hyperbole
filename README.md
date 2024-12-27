@@ -23,11 +23,11 @@ main = do
 page :: (Hyperbole :> es) => Eff es (Page '[Message])
 page = do
   pure $ col id $ do
-    hyper (Message 1) $ messageView "Hello"
-    hyper (Message 2) $ messageView "World!"
+    hyper Message1 $ messageView "Hello"
+    hyper Message2 $ messageView "World!"
 
 
-data Message = Message Int
+data Message = Message1 | Message2
   deriving (Show, Read, ViewId)
 
 

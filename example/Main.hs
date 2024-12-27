@@ -25,6 +25,7 @@ import Example.Contact qualified as Contact
 import Example.Contacts qualified as Contacts
 import Example.Counter qualified as Counter
 import Example.Effects.Debug as Debug
+import Example.Effects.Todos (runTodosSession)
 import Example.Effects.Users as Users
 import Example.Errors qualified as Errors
 import Example.Filter qualified as Filter
@@ -36,6 +37,7 @@ import Example.Search qualified as Search
 import Example.Sessions qualified as Sessions
 import Example.Simple qualified as Simple
 import Example.Style qualified as Style
+import Example.Todo qualified as Todo
 import Example.Transitions qualified as Transitions
 import Example.View.Layout as Layout (exampleLayout, examplesView)
 import GHC.Generics (Generic)
@@ -73,28 +75,29 @@ app users count = do
 
   router :: forall es. (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
   router (Hello h) = runPage $ hello h
-  router Examples = view Layout.examplesView
-  router Simple = runPage Simple.page
-  router (Contacts ContactsAll) = runPage Contacts.page
   router (Contacts (Contact uid)) = Contact.response uid
-  router Counter = runReader count $ runPage Counter.page
-  router Transitions = runPage Transitions.page
-  router Forms = runPage Forms.page
-  router Sessions = runPage Sessions.page
-  router LazyLoading = runPage LazyLoading.page
+  router (Contacts ContactsAll) = runPage Contacts.page
   router Concurrent = runPage Concurrent.page
-  router Requests = runPage Requests.page
-  router Redirects = runPage Redirects.page
-  router Filter = runPage Filter.page
-  router LiveSearch = runPage Search.page
+  router Counter = runReader count $ runPage Counter.page
   router Errors = runPage Errors.page
-  router RedirectNow = do
-    redirect (routeUrl $ Hello Redirected)
+  router Examples = view Layout.examplesView
+  router Filter = runPage Filter.page
+  router Forms = runPage Forms.page
+  router LazyLoading = runPage LazyLoading.page
+  router LiveSearch = runPage Search.page
   router Query = do
     p <- reqParam "key"
     view $ el (pad 20) $ do
       text "key: "
       text p
+  router RedirectNow = do
+    redirect (routeUrl $ Hello Redirected)
+  router Redirects = runPage Redirects.page
+  router Requests = runPage Requests.page
+  router Sessions = runPage Sessions.page
+  router Simple = runPage Simple.page
+  router Transitions = runPage Transitions.page
+  router Todos = runTodosSession $ runPage Todo.page
   router Main = do
     redirect (routeUrl Simple)
 

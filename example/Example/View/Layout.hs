@@ -47,6 +47,7 @@ exampleLayout rt pageView = do
     Hello _ -> "Main.hs"
     Main -> "Main.hs"
     Examples -> "Example/View/Layout.hs"
+    Todos -> "Example/Todo.hs"
 
 
 rootLayout :: AppRoute -> View c () -> View c ()
@@ -72,6 +73,7 @@ exampleMenu current = do
   example Concurrent
   example Filter
   example LiveSearch
+  example Todos
   example (Contacts ContactsAll)
   example Errors
  where
@@ -90,6 +92,7 @@ routeTitle (Hello _) = "Hello World"
 routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
 routeTitle Filter = "Search - Basic Filter"
 routeTitle LiveSearch = "Search - Autocomplete"
+routeTitle Todos = "TodoMVC"
 routeTitle r = cs $ toWords $ fromHumps $ show r
 
 

@@ -37,7 +37,7 @@ import Web.Hyperbole.Route
 
 {- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
 
-> #EMBED docgen/Intro.hs main
+> #EMBED Example/Intro/BasicPage.hs main
 -}
 liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, Concurrent, IOE] Response -> Wai.Application
 liveApp toDoc app =

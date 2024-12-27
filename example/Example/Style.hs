@@ -1,7 +1,10 @@
 module Example.Style where
 
+import Data.Function ((&))
+import Data.Text (Text)
 import Example.Colors
 import Web.View
+import Web.View.Style (addClass, cls, prop)
 
 
 btn :: Mod id
@@ -49,3 +52,10 @@ input = border 1 . pad 8
 
 code :: Mod id
 code = bg Light . pad 10 . fontSize 12
+
+
+strikethrough :: Mod id
+strikethrough =
+  addClass $
+    cls "strike"
+      & prop @Text "text-decoration" "line-through"

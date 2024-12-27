@@ -12,7 +12,10 @@ module Web.Hyperbole
   ( -- * Introduction
     -- $use
 
-    -- ** Hello World
+    -- ** Examples
+    -- $examples
+
+    -- * Getting started
     -- $hello
 
     -- ** Interactivity
@@ -21,13 +24,30 @@ module Web.Hyperbole
     -- ** View Functions
     -- $view-functions
 
-    -- ** Independent Updates
-    -- $multi
+    -- * Managing State
+    -- $state-parameters
 
-    -- ** Examples
-    -- $examples
+    -- ** Side Effects
+    -- $state-effects
 
-    -- * Run an Application
+    -- * Design and Best Practices
+
+    -- ** Reusable styles
+    -- $practices-styles
+
+    -- ** Reusable View Functions
+    -- $practices-view-functions
+
+    -- ** Different HyperViews
+    -- $practices-multi
+
+    -- ** Reusing the same HyperView
+    -- $practices-same
+
+    -- ** Nested HyperViews
+    -- $practices-nested
+
+    -- * Application
     liveApp
   , Warp.run
   , runPage
@@ -39,19 +59,15 @@ module Web.Hyperbole
   , routeUrl
   , route
 
-    -- * Create Pages
+    -- * Pages
 
     -- | Applications are made up of Pages, which have zero dependencies between them. WE start with a page load, etc
   , Page
 
-    -- * Add HyperViews
+    -- * HyperViews
   , HyperView (..)
   , hyper
   , HasViewId (..)
-
-    -- * Write View Functions
-
-    -- | You need to create a view function for every HyperView
 
     -- * Interactive Elements
 
@@ -178,7 +194,7 @@ import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, labe
 
 Single Page Applications (SPAs) require the programmer to write two programs: a Javascript client and a Server, which both must conform to a common API
 
-Hyperbole allows us instead to write a single Haskell program which runs exclusively on the server. All user interactions are sent to the server for processing, and a sub-section of the page is updated with the resulting HTML.
+Hyperbole allows us to instead write a single Haskell program which runs exclusively on the server. All user interactions are sent to the server for processing, and a sub-section of the page is updated with the resulting HTML.
 
 There are frameworks that support this in different ways, including [HTMX](https://htmx.org/), [Phoenix LiveView](https://www.phoenixframework.org/), and others. Hyperbole has the following advantages
 
@@ -192,9 +208,9 @@ Like [HTMX](https://htmx.org/), Hyperbole extends the capability of UI elements,
 
 Like [Phoenix LiveView](https://www.phoenixframework.org/), it upgrades the page to a fast WebSocket connection and uses VirtualDOM for live updates
 
-Like [Elm](https://elm-lang.org/), it relies on an update function to 'handle' actions, but greatly simplifies the Elm Architecture by handling state with extensible effects. 'form's are easy to use with minimal boilerplate
+Like [Elm](https://elm-lang.org/), it uses an update function to process actions, but greatly simplifies the Elm Architecture by remaining stateless. Effects are handled by [Effectful](https://hackage.haskell.org/package/effectful). 'form's are easy to use with minimal boilerplate
 
-Depends heavily on the following frameworks
+Hyperbole depends heavily on the following frameworks
 
 * [Effectful](https://hackage.haskell.org/package/effectful-core)
 * [Web View](https://hackage.haskell.org/package/web-view)
@@ -208,9 +224,15 @@ Hyperbole applications run via [Warp](https://hackage.haskell.org/package/warp) 
 They are divided into top-level 'Page's, which can run side effects (like loading data), then respond with a 'View'
 
 @
-#EMBED docgen/Intro.hs main
+{\-# LANGUAGE DeriveAnyClass #-\}
+{\-# LANGUAGE OverloadedStrings #-\}
+{\-# LANGUAGE TypeFamilies #-\}
 
-#EMBED docgen/Intro.hs messagePage
+module Main where
+
+#EMBED Example/Intro/BasicPage.hs main
+
+#EMBED Example/Intro/BasicPage.hs messagePage
 @
 -}
 
@@ -220,161 +242,174 @@ They are divided into top-level 'Page's, which can run side effects (like loadin
 We can include one or more 'HyperView's to add type-safe interactivity to live subsections of the 'Page'. Define a data type that uniquely identifies it.
 
 @
-#EMBED docgen/Intro.hs data Message
+#EMBED Example/Intro/Interactive.hs data Message
 @
 
-Make our 'ViewId' an instance of 'HyperView'.
+Make our 'ViewId' an instance of 'HyperView' by:
 
-1. Specify every interactive 'Action' possible
-2. Write an 'update' function which replaces the contents of the 'HyperView'
+* Create a constructor for every 'Action' possible
+* Write an 'update' for each one
 
 @
-{\-# LANGUAGE UndecidableInstances #-\}
-
-#EMBED docgen/Intro.hs instance HyperView Message
+#EMBED Example/Intro/Interactive.hs instance HyperView Message
 @
 
 
-Embed the new 'HyperView' in the 'Page' using the 'hyper' function, and add our 'ViewId' to the 'Page'. Then add a 'button 'to trigger the 'Action'
+Embed our new 'HyperView' in the 'Page' with 'hyper', and add our 'ViewId' to the 'Page' type signature. Then add a 'button' to trigger the 'Action'
 
 @
-#EMBED docgen/Intro.hs messagePage'
+#EMBED Example/Intro/Interactive.hs messagePage
 @
 
-Clicking the button will replace the contents with the result of the 'update'
+Now clicking the button will replace the contents with the result of the 'update'
 -}
 
 
 {- $view-functions
 
-The best way to organize our 'View's is with "View Functions". These are pure functions with state as parameters, returning a View with our 'ViewId' as the 'context'
-
-> #EMBED docgen/Intro.hs messageView
-
-Now we can refactor our 'Page' and 'update' to use the same view function
+To avoid repeating ourselves, we can organize our 'View's into __View Functions__. These are pure functions with state as parameters, which return a 'View'.
 
 @
-#EMBED docgen/Intro2.hs messagePage
+#EMBED Example/Intro/ViewFunctions.hs messageView
+@
 
-#EMBED docgen/Intro2.hs instance HyperView Message
+Now we can refactor our 'Page' and 'update' to use the same view function. Only the message will change.
+
+@
+#EMBED Example/Intro/ViewFunctions.hs messagePage
+
+#EMBED Example/Intro/ViewFunctions.hs instance HyperView Message
 @
 -}
 
 
-{- $multi
+{- $practices-multi
 
-'HyperView's update independently. We can make completely new 'HyperViews', but we can also reuse the same one as long as the value of 'ViewId' is unique. Let's update our 'ViewId' to allow for more than one value.
+We can add as many 'HyperView's to a page as we want. Let's add a simple counter 'HyperView'
+
+@
+
+#EMBED Example/Intro/MultiView.hs data Count
+
+
+#EMBED Example/Intro/MultiView.hs instance HyperView Count
+
+
+#EMBED Example/Intro/MultiView.hs countView
+@
+
+We can use both 'Message' and 'Count' 'HyperView's in our page, and they will update independently:
+
+@
+#EMBED Example/Intro/MultiView.hs page
+@
+-}
+
+
+{- $practices-same
+
+In addition to creating different 'HyperView's, we can reuse the same one as long as the value 'ViewId' is unique. Let's update `Message` to allow for more than one value:
 
 
 @
-#EMBED docgen/IntroMulti.hs data Message
+#EMBED Example/Simple.hs data Message
 @
 
-Now we can use the same 'HyperView' multiple times in a page. Each button will update its view independently
-
+Now we can embed multiple `Message` 'HyperView's into the same page. Each button will update its view independently. See [Example.Simple](https://docs.hyperbole.live/simple) to view this example
 
 @
-#EMBED docgen/IntroMulti.hs messagePage
+#EMBED Example/Simple.hs messagePage
 @
+
+
+This is especially useful if we put identifying information in our 'ViewId', such as a database id. [Example.Contacts](https://docs.hyperbole.live/contacts) uses this to allow the user to edit multiple contacts on the same page. The 'viewId' function gives us access to the info in our 'update'
+
+@
+#EMBED Example/Contact.hs data Contact
+
+
+#EMBED Example/Contact.hs instance (Users :> es,
+@
+-}
+
+
+{- $practices-nested
+
+We can nest smaller, specific 'HyperView's inside of a larger parent. You might need this technique to display a list of items, while making each item editable.
+-}
+
+
+{- $practices-styles
+
+TODO: directly reusing styles
+-}
+
+
+{- $practices-view-functions
+
+You may be tempted build HyperViews into generic "Components". This leads to inheretence-like designs that don't compose well. We are using a functional language, so our main unit of reuse should be functions!
+
+For example, let's say you wanted a reusable toggle button on user preferences page. It would be messy and complex to make each toggle a separate 'HyperView'. Instead, let's turn it into a view function
+
+TODO: components for reusing styles, like a toggle button
 -}
 
 
 {- $examples
-The [example directory](https://github.com/seanhess/hyperbole/blob/main/example/README.md) contains an app with pages demonstrating various features
-
-* [Main](https://github.com/seanhess/hyperbole/blob/main/example/Main.hs)
-* [Simple](https://github.com/seanhess/hyperbole/blob/main/example/Example/Simple.hs)
-* [Counter](https://github.com/seanhess/hyperbole/blob/main/example/Example/Counter.hs)
-* [CSS Transitions](https://github.com/seanhess/hyperbole/blob/main/example/Example/Transitions.hs)
-* [Forms](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
-* [Sessions](https://github.com/seanhess/hyperbole/blob/main/example/Example/Forms.hs)
-* [Redirects](https://github.com/seanhess/hyperbole/blob/main/example/Example/Redirects.hs)
-* [Lazy Loading and Polling](https://github.com/seanhess/hyperbole/blob/main/example/Example/LazyLoading.hs)
-* [Errors](https://github.com/seanhess/hyperbole/blob/main/example/Example/Errors.hs)
-* [Contacts (Advanced)](https://github.com/seanhess/hyperbole/blob/main/example/Example/Contacts.hs)
+Visit https://docs.hyperbole.live to see an application demonstrating various features on different pages. Each example includes a link to the source code
 -}
 
 
-{- $effects
+{- $state-parameters
 
-Hyperbole is tighly integrated with [Effectful](https://hackage.haskell.org/package/effectful) for extensible effects. It is used to implement the 'Hyperbole' and 'Server' effects.
+'HyperView's are stateless. They 'update' based entirely on the 'Action'. However, we can track simple state by passing it back and forth between the 'Action' and the view function
 
+@
+#EMBED Example/Intro/State.hs instance HyperView Message
+
+
+#EMBED Example/Intro/State.hs messageView
+@
+-}
+
+
+{- $state-effects
+
+For any real application with more complex state and data persistence, we need side effects.
+
+Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use effects in a 'Page' or an 'update'. In this example, each client stores the latest message in their session.
+
+@
+#EMBED Example/Intro/SideEffects.hs messagePage
+
+#EMBED Example/Intro/SideEffects.hs instance HyperView Message
+@
+
+* See [Example.Counter](https://docs.hyperbole.live/counter) for an example of how to compose effects to create a shared state for all users
 * See [Effectful.Dispatch.Dynamic](https://hackage.haskell.org/package/effectful-core/docs/Effectful-Dispatch-Dynamic.html) for an example of how to create a custom effect
-* See [Example.Counter](https://github.com/seanhess/hyperbole/blob/main/example/Example/Counter.hs) for an example of how to compose an existing effect
+
+To use an 'Effect' other than 'Hyperbole', add it as a constraint to the 'Page' and any 'HyperView' instances that need it. Then run the effect in your application
+
+
+
+
+
+
+* See [NSO's Level2 ] ://github.com/DKISTDC/level2/blob/main/src/NSO/Data/Datasets.hs
+
+
+
+
 -}
 
--- test :: (Hyperbole :> es) => Page '[Woot, Nope] es ()
--- test =
---   handler woot $ handler nope $ load $ do
---     pure $ do
---       hyper Woot none
---       hyper Nope none
---
---
--- -- makePage
--- --   <$> woot ()
--- --   <*> zoop asdflsadfkl
--- --   <*> do
--- --     pure $ do
--- --       hyper Woot none
--- --       hyper Nope none
---
--- nope :: Nope -> None -> Eff es (View Nope ())
--- nope = _
---
---
--- -- hyper Nope none
---
--- data PageView = PageView
---   deriving (Read, Show, ViewId)
---
---
--- instance HyperView PageView where
---   type Children PageView = '[Woot]
---   type Action PageView = ()
---
---
--- data Woot = Woot
---   deriving (Read, Show, ViewId)
---
---
--- instance HyperView Woot where
---   type Action Woot = None
---   type Children Woot = '[]
---
---
--- woot :: (Hyperbole :> es) => Woot -> None -> Eff es (View Woot ())
--- woot _ _ = pure none
---
---
--- data Nope = Nope
---   deriving (Read, Show, ViewId)
---
---
--- instance HyperView Nope where
---   type Action Nope = None
---
---
--- viewWoot :: View Woot ()
--- viewWoot = do
---   hyper Nope none
---   none
---
--- -- TODO: woot is allowed to appear in our page
--- -- how can we specify this?
--- -- certain views are allowed in others?
---
 
-{-
+{- $design
 
-#EMBED docgen/Intro.hs main
+** Item
 
-#EMBED docgen/Intro.hs messagePage
+Hello
 
-#EMBED docgen/Intro.hs data Message
+** Item 2
 
-#EMBED docgen/Intro.hs instance HyperView Message
-
-> #EMBED docgen/Intro.hs messageView
-
+Hello
 -}
