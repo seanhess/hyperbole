@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Web.Hyperbole.Effect.Request where
 
@@ -89,7 +90,24 @@ reqParam p = do
   require Nothing = Left $ Err $ ErrParam $ "Missing: " <> p
   require (Just a) = pure a
 
+{- | Maybe version of 'reqParam'
 
+@
+myPage :: 'Page' es 'Response'
+myPage = do
+  'load' $ do
+      mbToken <- reqParamMaybe "token"
+      sideEffectUsingToken $ fromMaybe "default" mbToken
+      pure myPageView
+@
+-}
+reqParamMaybe :: forall a es. (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es (Maybe a)
+reqParamMaybe p = do
+  q <- reqParams
+  pure $ lookup (encodeUtf8 p) q >>= \case
+    Nothing -> Nothing
+    Just v -> either (const Nothing) Just $ parseQueryParam (decodeUtf8 v)
+  
 -- | Lookup the query param in the 'Query'
 lookupParam :: BS.ByteString -> Query -> Maybe Text
 lookupParam p q =
