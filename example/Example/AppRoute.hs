@@ -5,7 +5,6 @@ import Example.Effects.Users (UserId)
 import Text.Read (readMaybe)
 import Web.Hyperbole
 
-
 data AppRoute
   = Main
   | Simple
@@ -16,6 +15,7 @@ data AppRoute
   | Counter
   | Forms
   | LiveSearch
+  | Filter
   | Sessions
   | Requests
   | Redirects
@@ -23,11 +23,11 @@ data AppRoute
   | LazyLoading
   | Concurrent
   | Examples
+  | Todos
   | Errors
   deriving (Eq, Generic, Show)
 instance Route AppRoute where
   baseRoute = Just Main
-
 
 data ContactRoute
   = ContactsAll
@@ -41,7 +41,6 @@ instance Route ContactRoute where
     cid <- readMaybe $ unpack contactId
     pure $ Contact cid
   matchRoute _ = Nothing
-
 
 data Hello
   = Greet Text

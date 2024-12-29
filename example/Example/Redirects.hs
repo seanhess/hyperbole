@@ -6,23 +6,19 @@ import Example.Style as Style
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
-
 page :: (Hyperbole :> es) => Eff es (Page '[Contents])
 page = do
   pure $ exampleLayout Route.Redirects $ row (pad 20) $ do
     hyper Contents contentsView
 
-
 data Contents = Contents
   deriving (Show, Read, ViewId)
-
 
 instance HyperView Contents es where
   data Action Contents = RedirectAsAction
     deriving (Show, Read, ViewAction)
   update RedirectAsAction = do
     redirect "/hello/redirected"
-
 
 contentsView :: View Contents ()
 contentsView = do

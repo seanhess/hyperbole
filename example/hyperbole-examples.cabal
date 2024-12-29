@@ -1,0 +1,160 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.36.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           hyperbole-examples
+version:        0.4.2
+synopsis:       Interactive HTML apps using type-safe serverside Haskell
+description:    Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
+category:       Web, Network
+homepage:       https://github.com/seanhess/hyperbole
+bug-reports:    https://github.com/seanhess/hyperbole/issues
+author:         Sean Hess
+maintainer:     seanhess@gmail.com
+license:        BSD-3-Clause
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/seanhess/hyperbole
+
+executable docgen
+  main-is: Main.hs
+  other-modules:
+      Paths_hyperbole_examples
+  autogen-modules:
+      Paths_hyperbole_examples
+  hs-source-dirs:
+      ./docgen
+  default-extensions:
+      OverloadedStrings
+      OverloadedRecordDot
+      DuplicateRecordFields
+      NoFieldSelectors
+      TypeFamilies
+      DataKinds
+      DerivingStrategies
+      DeriveAnyClass
+  ghc-options: -Wall -fdefer-typed-holes
+  build-depends:
+      aeson
+    , base
+    , bytestring
+    , casing
+    , containers
+    , cookie
+    , directory
+    , effectful
+    , file-embed
+    , filepath
+    , http-api-data
+    , http-types
+    , hyperbole
+    , network
+    , random
+    , string-conversions
+    , string-interpolate
+    , text
+    , wai
+    , wai-websockets
+    , warp
+    , web-view
+    , websockets
+  default-language: GHC2021
+
+executable examples
+  main-is: Main.hs
+  other-modules:
+      Web.Hyperbole
+      Web.Hyperbole.Application
+      Web.Hyperbole.Effect.Event
+      Web.Hyperbole.Effect.Handler
+      Web.Hyperbole.Effect.Hyperbole
+      Web.Hyperbole.Effect.Request
+      Web.Hyperbole.Effect.Respond
+      Web.Hyperbole.Effect.Server
+      Web.Hyperbole.Effect.Session
+      Web.Hyperbole.HyperView
+      Web.Hyperbole.Page
+      Web.Hyperbole.Route
+      Web.Hyperbole.TypeList
+      Web.Hyperbole.View
+      Web.Hyperbole.View.Element
+      Web.Hyperbole.View.Embed
+      Web.Hyperbole.View.Event
+      Web.Hyperbole.View.Forms
+      BulkUpdate
+      Example.AppRoute
+      Example.Colors
+      Example.Concurrent
+      Example.Contact
+      Example.Contacts
+      Example.Counter
+      Example.Effects.Debug
+      Example.Effects.Todos
+      Example.Effects.Users
+      Example.Errors
+      Example.Filter
+      Example.Forms
+      Example.Intro.BasicPage
+      Example.Intro.Interactive
+      Example.Intro.MultiView
+      Example.Intro.Nested
+      Example.Intro.SideEffects
+      Example.Intro.State
+      Example.Intro.Toggles
+      Example.Intro.ViewFunctions
+      Example.LazyLoading
+      Example.Redirects
+      Example.Requests
+      Example.Search
+      Example.Sessions
+      Example.Simple
+      Example.Style
+      Example.Todo
+      Example.Transitions
+      Example.View.Icon
+      Example.View.Inputs
+      Example.View.Layout
+      HelloWorld
+      Paths_hyperbole_examples
+  autogen-modules:
+      Paths_hyperbole_examples
+  hs-source-dirs:
+      ../src
+      ./
+  default-extensions:
+      OverloadedStrings
+      OverloadedRecordDot
+      DuplicateRecordFields
+      NoFieldSelectors
+      TypeFamilies
+      DataKinds
+      DerivingStrategies
+      DeriveAnyClass
+  ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , base
+    , bytestring
+    , casing
+    , containers
+    , cookie
+    , effectful
+    , file-embed
+    , http-api-data
+    , http-types
+    , network
+    , random
+    , string-conversions
+    , string-interpolate
+    , text
+    , wai
+    , wai-middleware-static
+    , wai-websockets
+    , warp
+    , web-view
+    , websockets
+  default-language: GHC2021

@@ -5,7 +5,6 @@ import Text.Read (readMaybe)
 import Web.HttpApiData
 import Web.Hyperbole
 
-
 data AppColor
   = White
   | Light
@@ -22,7 +21,6 @@ data AppColor
   | SecondaryLight
   deriving (Show, Read)
 
-
 instance ToHttpApiData AppColor where
   toQueryParam c = cs (show c)
 instance FromHttpApiData AppColor where
@@ -30,7 +28,6 @@ instance FromHttpApiData AppColor where
     case readMaybe (cs t) of
       Nothing -> Left $ "Invalid AppColor: " <> t
       (Just c) -> pure c
-
 
 instance ToColor AppColor where
   colorValue White = "#FFF"

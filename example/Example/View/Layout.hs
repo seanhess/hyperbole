@@ -14,15 +14,13 @@ import Web.Hyperbole
 import Web.View.Style (addClass, cls, prop)
 import Web.View.Types (ChildCombinator (..), Class (..), Selector (..), selector)
 
-
 exampleLayout :: AppRoute -> View c () -> View c ()
 exampleLayout rt pageView = do
   rootLayout rt $ do
+    pageDescription rt
     link sourceUrl Style.link "View Source"
     row (bg White) $ do
       pageView
-      space
-    pageDescription rt
  where
   sourceUrl = "https://github.com/seanhess/hyperbole/blob/latest/example/" <> routeSource rt
 
@@ -40,6 +38,7 @@ exampleLayout rt pageView = do
     Concurrent -> "Example/Concurrent.hs"
     Redirects -> "Example/Redirects.hs"
     Requests -> "Example/Requests.hs"
+    Filter -> "Example/Filter.hs"
     LiveSearch -> "Example/LiveSearch.hs"
     Errors -> "Example/Errors.hs"
     RedirectNow -> "Main.hs"
@@ -47,7 +46,7 @@ exampleLayout rt pageView = do
     Hello _ -> "Main.hs"
     Main -> "Main.hs"
     Examples -> "Example/View/Layout.hs"
-
+    Todos -> "Example/Todo.hs"
 
 rootLayout :: AppRoute -> View c () -> View c ()
 rootLayout rt content =
@@ -56,7 +55,6 @@ rootLayout rt content =
       navigation rt
       col (pad 20 . gap 20 . grow) $ do
         content
-
 
 exampleMenu :: AppRoute -> View c ()
 exampleMenu current = do
@@ -70,7 +68,9 @@ exampleMenu current = do
   example RedirectNow
   example LazyLoading
   example Concurrent
+  example Filter
   example LiveSearch
+  example Todos
   example (Contacts ContactsAll)
   example Errors
  where
@@ -83,12 +83,13 @@ exampleMenu current = do
   selected rt =
     if rt == current then bg DarkHighlight else id
 
-
 routeTitle :: AppRoute -> Text
 routeTitle (Hello _) = "Hello World"
 routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
+routeTitle Filter = "Search - Basic Filter"
+routeTitle LiveSearch = "Search - Autocomplete"
+routeTitle Todos = "TodoMVC"
 routeTitle r = cs $ toWords $ fromHumps $ show r
-
 
 pageDescription :: AppRoute -> View c ()
 pageDescription = \case
@@ -104,21 +105,19 @@ pageDescription = \case
     el_ "Reload your browser after changing these settings to see the session information preserved"
   _ -> none
 
-
 examplesView :: View c ()
 examplesView = rootLayout Examples $ do
   col (bg Dark) $ do
     exampleMenu Examples
 
-
 navigation :: AppRoute -> View c ()
 navigation rt = do
   nav (bg Dark . color White . flexCol . hover showMenu) $ do
     row id $ do
-      link "https://github.com/seanhess/hyperbole" (bold . pad 20 . logo . width 200) "HYPERBOLE"
+      link "https://github.com/seanhess/hyperbole" (bold . pad 20 . logo . width 220) "HYPERBOLE"
       space
       el (hide . onMobile flexCol) $ do
-        route Examples (pad 6) $ do
+        el (pad 6) $ do
           el (color White . width 50 . height 50) Icon.hamburger
     col (onMobile hide . menuTarget) $ do
       exampleMenu rt
@@ -138,7 +137,6 @@ navigation rt = do
       cls "logo"
         & prop @Text "background" "no-repeat center/90% url(/logo-robot.png)"
         & prop @Text "color" "transparent"
-
 
 onMobile :: Mod c -> Mod c
 onMobile = media (MaxWidth 650)

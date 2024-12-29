@@ -8,7 +8,7 @@ license-file:       LICENSE
 author:             Sean Hess
 maintainer:         seanhess@gmail.com
 category:           Web, Network
-description:        Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
+description:        Interactive serverside web framework Inspired by HTMX, Elm, and Phoenix LiveView
 
 extra-doc-files:
   - README.md
@@ -50,7 +50,7 @@ dependencies:
   - http-types >= 0.12 && <0.13
   - wai >= 3.2 && <4
   - warp >= 3.3 && <4
-  - web-view >= 0.6.1 && <= 1.0
+  - web-view >= 0.6.2 && <= 1.0
   - string-conversions >= 0.4 && <0.5
   - wai-websockets >= 3.0 && <4
   - network >= 3.1 && <4

@@ -1,4 +1,4 @@
-module Web.Hyperbole.Session where
+module Web.Hyperbole.Effect.Session where
 
 import Data.ByteString (ByteString)
 import Data.List qualified as L
@@ -6,8 +6,9 @@ import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Network.HTTP.Types
+import Text.Read (readMaybe)
 import Web.HttpApiData
 import Prelude
 
@@ -61,8 +62,14 @@ sessionFromCookies cks = fromMaybe sessionEmpty $ do
 sessionSetCookie :: Session -> ByteString
 sessionSetCookie ss = "session=" <> sessionRender ss <> "; SameSite=None; secure; path=/"
 
--- sessionKeyParse :: (FromHttpApiData a) => Text -> Session -> Either Text (Maybe a)
--- sessionKeyParse k (Session kvs) =
---   case Map.lookup k kvs of
---     Nothing -> pure Nothing
---     Just t -> Just <$> parseQueryParam t
+
+showQueryParam :: (Show a) => a -> Text
+showQueryParam a = toQueryParam $ show a
+
+
+readQueryParam :: (Read a) => Text -> Either Text a
+readQueryParam t = do
+  str <- parseQueryParam t
+  case readMaybe str of
+    Nothing -> Left $ pack $ "Could not read HttpApiData: " <> str
+    Just a -> pure a

@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Web.Hyperbole.Embed
+module Web.Hyperbole.View.Embed
   ( cssResetEmbed
   , cssResetLink
   , scriptEmbed

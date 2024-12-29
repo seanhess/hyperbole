@@ -8,22 +8,18 @@ import Example.Style qualified as Style
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
-
 page :: (Hyperbole :> es) => Eff es (Page '[FormView])
 page = do
   pure $ exampleLayout Route.Forms $ row (pad 20) $ do
     hyper FormView (formView genForm)
 
-
 data FormView = FormView
   deriving (Show, Read, ViewId)
-
 
 instance HyperView FormView es where
   data Action FormView
     = Submit
     deriving (Show, Read, ViewAction)
-
 
   update Submit = do
     uf <- formData @UserForm
@@ -34,12 +30,10 @@ instance HyperView FormView es where
       then pure $ formView vals
       else pure $ userView uf
 
-
 -- Form Fields
 newtype User = User {username :: Text}
   deriving (Generic)
   deriving newtype (FromHttpApiData)
-
 
 data UserForm f = UserForm
   { user :: Field f User
@@ -50,7 +44,6 @@ data UserForm f = UserForm
   deriving (Generic)
 instance Form UserForm Validated
 
-
 validateForm :: UserForm Identity -> UserForm Validated
 validateForm u =
   UserForm
@@ -60,11 +53,9 @@ validateForm u =
     , pass2 = NotInvalid
     }
 
-
 validateAge :: Int -> Validated Int
 validateAge a =
   validate (a < 20) "User must be at least 20 years old"
-
 
 validateUser :: User -> Validated User
 validateUser (User u) =
@@ -76,14 +67,12 @@ validateUser (User u) =
         else Valid
     ]
 
-
 validatePass :: Text -> Text -> Validated Text
 validatePass p1 p2 =
   mconcat
     [ validate (p1 /= p2) "Passwords did not match"
     , validate (T.length p1 < 8) "Password must be at least 8 chars"
     ]
-
 
 formView :: UserForm Validated -> View FormView ()
 formView v = do
@@ -125,7 +114,6 @@ formView v = do
   valStyle Valid = Style.success
   valStyle _ = id
 
-
 formViewEmpty :: View FormView ()
 formViewEmpty = do
   let f = formFields @UserForm
@@ -162,7 +150,6 @@ formViewEmpty = do
   valStyle (Invalid _) = Style.invalid
   valStyle Valid = Style.success
   valStyle _ = id
-
 
 userView :: UserForm Identity -> View FormView ()
 userView u = do

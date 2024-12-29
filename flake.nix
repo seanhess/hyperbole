@@ -23,6 +23,7 @@
     }:
     let
       packageName = "hyperbole";
+      examplesName = "hyperbole-examples";
       src = nix-filter.lib {
         root = ./.;
         include = [
@@ -88,18 +89,41 @@
           inherit system;
         };
 
-        # Create an attrset of GHC packages
-        ghcPkgs =
-          (import nixpkgs {
-            inherit system;
-            overlays = [ self.overlays.default ];
-          }).haskell.packages;
+        example-src = nix-filter.lib {
+          root = ./example;
+          include = [
+            "Example"
+            (nix-filter.lib.matchExt "hs")
+            ./example/${examplesName}.cabal
+            # ./example/cabal.project
+            "docgen"
+          ];
+        };
 
         # Define GHC versions list
         ghcVersions = [
           "966"
           "982"
         ];
+
+        overridePkgs = import nixpkgs {
+          inherit system;
+          overlays = [ self.overlays.default ];
+        };
+
+        # Create an attrset of GHC packages
+        ghcPkgs = builtins.listToAttrs (
+          map (ghcVer: {
+            name = "ghc${ghcVer}";
+            value = (
+              overridePkgs.haskell.packages."ghc${ghcVer}".extend (
+                pkgs.haskell.lib.compose.packageSourceOverrides {
+                  ${examplesName} = example-src;
+                }
+              )
+            );
+          }) ghcVersions
+        );
 
         pre-commit = pre-commit-hooks.lib.${system}.run {
           src = src;
@@ -129,6 +153,7 @@
             ghcid
             pkgs.ghciwatch
             pkgs.hpack
+            # pkgs.python312Packages.livereload
           ];
           withHoogle = true;
           doBenchmark = true;
@@ -141,40 +166,38 @@
 
         exe =
           version:
-          pkgs.haskell.lib.justStaticExecutables self.packages.${system}."ghc${version}-${packageName}";
+          pkgs.haskell.lib.justStaticExecutables self.packages.${system}."ghc${version}-${examplesName}";
 
       in
       {
         checks = builtins.listToAttrs (
-          builtins.concatMap (version: [
-            {
-              name = "ghc${version}-check-${packageName}";
-              value = pkgs.runCommand "ghc${version}-check-${packageName}" {
-                buildInputs = [ self.packages.${system}."ghc${version}-${packageName}" ];
-              } "touch $out";
-            }
-            {
-              name = "ghc${version}-check-example";
-              value = pkgs.runCommand "ghc${version}-check-example" {
-                buildInputs = [ (exe version) ];
-              } "type examples; type docgen; touch $out";
-            }
-          ]) ghcVersions
+          map (version: {
+            name = "ghc${version}-check-example";
+            value = pkgs.runCommand "ghc${version}-check-example" {
+              buildInputs = [ (exe version) ];
+            } "type examples; type docgen; touch $out";
+          }) ghcVersions
         );
 
         apps =
           {
-            default = self.apps.${system}.ghc966-example;
-            docgen = self.apps.${system}.ghc966-docgen;
+            default = self.apps.${system}.ghc966.example;
+            docgen = self.apps.${system}.ghc966.docgen;
           }
           // builtins.listToAttrs (
             # Generate apps
             builtins.concatMap (version: [
               {
-                name = "ghc${version}-example";
+                name = "ghc${version}";
                 value = {
-                  type = "app";
-                  program = "${exe version}/bin/examples";
+                  example = {
+                    type = "app";
+                    program = "${exe version}/bin/examples";
+                  };
+                  docgen = {
+                    type = "app";
+                    program = "${exe version}/bin/docgen";
+                  };
                 };
               }
               {
@@ -184,38 +207,38 @@
                   program = "${exe version}/bin/docgen";
                 };
               }
-
             ]) ghcVersions
           );
 
         packages =
           {
-            default = self.packages.${system}."ghc982-${packageName}";
+            default = self.packages.${system}."ghc982-${examplesName}";
           }
           // builtins.listToAttrs (
-            # Generate packages
-            builtins.concatMap (version: [
-              {
-                name = "ghc${version}-${packageName}";
-                value = ghcPkgs."ghc${version}".${packageName};
-              }
-            ]) ghcVersions
+            map (version: {
+              name = "ghc${version}-${examplesName}";
+              value = ghcPkgs."ghc${version}".${examplesName};
+            }) ghcVersions
           );
 
         devShells =
           {
-            default = self.devShells.${system}."ghc982-${packageName}";
+            default = self.devShells.${system}.ghc982;
           }
           // builtins.listToAttrs (
             # Generate devShells
-            builtins.concatMap (version: [
-              {
-                name = "ghc${version}-${packageName}";
-                value = ghcPkgs."ghc${version}".shellFor (
-                  shellCommon version // { packages = p: [ p.${packageName} ]; }
-                );
-              }
-            ]) ghcVersions
+            map (version: {
+              name = "ghc${version}";
+              value = ghcPkgs."ghc${version}".shellFor (
+                shellCommon version
+                // {
+                  packages = p: [
+                    p.${packageName}
+                    p.${examplesName}
+                  ];
+                }
+              );
+            }) ghcVersions
           );
       }
     );

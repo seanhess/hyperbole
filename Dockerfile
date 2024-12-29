@@ -16,6 +16,7 @@ COPY --from=base /root/.config /root/.config
 ADD ./package.yaml .
 ADD ./cabal.project .
 RUN hpack
+RUN cabal update
 RUN cabal build --only-dependencies
 
 FROM haskell:9.8.2 AS build

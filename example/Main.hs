@@ -35,8 +35,10 @@ import Example.Contact qualified as Contact
 import Example.Contacts qualified as Contacts
 import Example.Counter qualified as Counter
 import Example.Effects.Debug as Debug
+import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
 import Example.Errors qualified as Errors
+import Example.Filter qualified as Filter
 import Example.Forms qualified as Forms
 import Example.LazyLoading qualified as LazyLoading
 import Example.Redirects qualified as Redirects
@@ -45,6 +47,7 @@ import Example.Search qualified as Search
 import Example.Sessions qualified as Sessions
 import Example.Simple qualified as Simple
 import Example.Style qualified as Style
+import Example.Todo qualified as Todo
 import Example.Transitions qualified as Transitions
 import Example.View.Layout as Layout (exampleLayout, examplesView)
 import Foreign.Store
@@ -65,10 +68,8 @@ import Web.Hyperbole.Effect.Handler (RunHandlers)
 import Web.Hyperbole.Effect.Server (Request (..))
 
 -- import System.Process (callCommand)
-
 -- import Network.Wai.Handler.Warp
 import GHC.Word (Word32)
-
 
 -- import Network.Wai.Handler.WebSockets (websocketsOr)
 
@@ -82,43 +83,40 @@ main = do
       staticPolicy (addBase "static") $
         app users count
 
-
 app :: UserStore -> TVar Int -> Application
 app users count = do
   liveApp
     toDocument
     (runApp . routeRequest $ router)
  where
-  runApp :: (IOE :> es) => Eff (Concurrent : Debug : Users : es) a -> Eff es a
-  runApp = runUsersIO users . runDebugIO . runConcurrent
+  runApp :: (Hyperbole :> es, IOE :> es) => Eff (Concurrent : Debug : Users : Todos : es) a -> Eff es a
+  runApp = runTodosSession . runUsersIO users . runDebugIO . runConcurrent
 
-  router
-    :: forall es
-     . (Hyperbole :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es)
-    => AppRoute
-    -> Eff es Response
+  router :: forall es. (Hyperbole :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
   router (Hello h) = runPage $ hello h
-  router Examples = view Layout.examplesView
-  router Simple = runPage Simple.simplePage
-  router (Contacts ContactsAll) = runPage Contacts.page
   router (Contacts (Contact uid)) = Contact.response uid
-  router Counter = runReader count $ runPage Counter.page
-  router Transitions = runPage Transitions.page
-  router Forms = runPage Forms.page
-  router Sessions = runPage Sessions.page
-  router LazyLoading = runPage LazyLoading.page
+  router (Contacts ContactsAll) = runPage Contacts.page
   router Concurrent = runPage Concurrent.page
-  router Requests = runPage Requests.page
-  router Redirects = runPage Redirects.page
-  router LiveSearch = runPage Search.page
+  router Counter = runReader count $ runPage Counter.page
   router Errors = runPage Errors.page
-  router RedirectNow = do
-    redirect (routeUrl $ Hello Redirected)
+  router Examples = view Layout.examplesView
+  router Filter = runPage Filter.page
+  router Forms = runPage Forms.page
+  router LazyLoading = runPage LazyLoading.page
+  router LiveSearch = runPage Search.page
   router Query = do
     p <- reqParam "key"
     view $ el (pad 20) $ do
       text "key: "
       text p
+  router RedirectNow = do
+    redirect (routeUrl $ Hello Redirected)
+  router Redirects = runPage Redirects.page
+  router Requests = runPage Requests.page
+  router Sessions = runPage Sessions.page
+  router Simple = runPage Simple.page
+  router Transitions = runPage Transitions.page
+  router Todos = runPage Todo.page
   router Main = do
     redirect (routeUrl Simple)
 
@@ -147,7 +145,6 @@ app users count = do
       </head>
       <body>#{cnt}</body>
     </html>|]
-
 
 {- | Made for local development
  -
@@ -196,7 +193,6 @@ update = do
       -- Normally this should be fine
       (\_ -> putMVar done ())
 
-
 -- | kill the server
 shutdown :: IO ()
 shutdown = do
@@ -208,10 +204,8 @@ shutdown = do
       withStore tidStore $ readIORef >=> killThread
       putStrLn "Yesod app is shutdown"
 
-
 tidStoreNum :: Word32
 tidStoreNum = 1
-
 
 modifyStoredIORef :: Store (IORef a) -> (a -> IO a) -> IO ()
 modifyStoredIORef store f = withStore store $ \ref -> do

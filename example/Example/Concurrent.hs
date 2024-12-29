@@ -9,7 +9,6 @@ import Example.Effects.Debug
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
-
 page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Eff es (Page '[Poller])
 page = do
   pure $ exampleLayout Concurrent $ do
@@ -17,10 +16,8 @@ page = do
       hyper (Poller 250) $ viewPoll 1
       hyper (Poller 1000) $ viewPoll 100
 
-
 data Poller = Poller Milliseconds
   deriving (Show, Read, ViewId)
-
 
 instance (Debug :> es) => HyperView Poller es where
   data Action Poller
@@ -31,7 +28,6 @@ instance (Debug :> es) => HyperView Poller es where
     -- BUG: this is blocking the thread, so the short poll has to wait for the long to finish before continuing
     delay dl
     pure $ viewPoll (n + 1)
-
 
 viewPoll :: Int -> View Poller ()
 viewPoll n = do

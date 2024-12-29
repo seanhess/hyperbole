@@ -15,11 +15,9 @@ import Example.Style qualified as Style
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
-
 -- Example adding a reader context to the page, based on an argument from the AppRoute
 response :: (Hyperbole :> es, Users :> es, Debug :> es) => UserId -> Eff es Response
 response uid = runReader uid $ runPage page
-
 
 -- The page assumes all effects have been added
 page
@@ -33,12 +31,10 @@ page = do
     col (pad 10 . gap 10) $ do
       hyper (Contact uid) $ contactView u
 
-
 -- Contact ----------------------------------------------------
 
 data Contact = Contact UserId
   deriving (Show, Read, ViewId)
-
 
 instance (Users :> es, Debug :> es) => HyperView Contact es where
   data Action Contact
@@ -61,25 +57,22 @@ instance (Users :> es, Debug :> es) => HyperView Contact es where
         Users.save unew
         pure $ contactView unew
 
-
 data ContactForm f = ContactForm
   { firstName :: Field f Text
   , lastName :: Field f Text
   , age :: Field f Int
+  , info :: Field f Text
   }
   deriving (Generic)
 instance Form ContactForm Maybe
 
-
 parseUser :: (Hyperbole :> es) => Int -> Eff es User
 parseUser uid = do
-  ContactForm{firstName, lastName, age} <- formData @ContactForm
-  pure User{id = uid, isActive = True, firstName, lastName, age}
-
+  ContactForm{firstName, lastName, age, info} <- formData @ContactForm
+  pure User{id = uid, isActive = True, firstName, lastName, age, info}
 
 contactView :: User -> View Contact ()
 contactView = contactView' Edit
-
 
 contactView' :: (ViewId c, ViewAction (Action c)) => Action c -> User -> View c ()
 contactView' edit u = do
@@ -97,6 +90,10 @@ contactView' edit u = do
       text (cs $ show u.age)
 
     row fld $ do
+      el id (text "Info:")
+      text u.info
+
+    row fld $ do
       el id (text "Active:")
       text (cs $ show u.isActive)
 
@@ -104,12 +101,10 @@ contactView' edit u = do
  where
   fld = gap 10
 
-
 contactEdit :: User -> View Contact ()
 contactEdit u = do
   el (hide . onRequest flexCol) contactLoading
   el (onRequest hide) $ contactEdit' View Save u
-
 
 contactEdit' :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
 contactEdit' onView onSave u = do
@@ -123,8 +118,8 @@ contactEdit' onView onSave u = do
       { firstName = Just u.firstName
       , lastName = Just u.lastName
       , age = Just u.age
+      , info = Just u.info
       }
-
 
 contactForm :: (ViewId id, ViewAction (Action id)) => Action id -> ContactForm Maybe -> View id ()
 contactForm onSubmit c = do
@@ -138,6 +133,10 @@ contactForm onSubmit c = do
       label "Last Name:"
       input Name (inp . maybe id value c.lastName)
 
+    field f.info (const fld) $ do
+      label "Info:"
+      textarea inp c.info
+
     field f.age (const fld) $ do
       label "Age:"
       input Number (inp . maybe id (value . pack . show) c.age)
@@ -146,7 +145,6 @@ contactForm onSubmit c = do
  where
   fld = flexRow . gap 10
   inp = Style.input
-
 
 contactLoading :: View id ()
 contactLoading = el (bg Warning . pad 10) "Loading..."

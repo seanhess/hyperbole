@@ -18,8 +18,8 @@ import Network.Wai.Internal (ResponseReceived (..))
 import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
+import Web.Hyperbole.Effect.Session
 import Web.Hyperbole.Route
-import Web.Hyperbole.Session
 import Web.View (Query, Segment, View, renderLazyByteString, renderUrl)
 
 
