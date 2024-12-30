@@ -7,7 +7,6 @@ import Data.Kind (Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
-import Network.HTTP.Types (queryToQueryText)
 import Web.Hyperbole.Effect.Event (getEvent, lookupEvent)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (request)
@@ -61,7 +60,7 @@ runLoad loadPage = do
 guardNoEvent :: (Hyperbole :> es) => Eff es ()
 guardNoEvent = do
   r <- request
-  case lookupEvent (queryToQueryText r.query) of
+  case lookupEvent r.query of
     -- Are id and action set to something?
     Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
     Nothing -> pure ()

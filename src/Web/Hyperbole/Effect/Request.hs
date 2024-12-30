@@ -9,7 +9,7 @@ import Data.Maybe (isJust)
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
-import Network.HTTP.Types (QueryText, queryToQueryText)
+import Network.HTTP.Types (QueryText)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, parseQueryParam)
 import Web.Hyperbole.Effect.Hyperbole
@@ -58,7 +58,7 @@ myPage = do
 @
 -}
 reqParams :: (Hyperbole :> es) => Eff es QueryText
-reqParams = queryToQueryText . (.query) <$> request
+reqParams = (.query) <$> request
 
 
 {- | Require a given parameter from the 'Query' arguments

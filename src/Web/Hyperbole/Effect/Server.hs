@@ -20,7 +20,8 @@ import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
 import Web.Hyperbole.Effect.Session
 import Web.Hyperbole.Route
-import Web.View (Query, Segment, View, renderLazyByteString, renderUrl)
+import Web.View (Segment, View, renderLazyByteString, renderUrl)
+import Network.HTTP.Types.URI (QueryText, queryToQueryText)
 
 
 -- | Low level effect mapping request/response to either HTTP or WebSockets
@@ -92,7 +93,7 @@ runServerWai toDoc req respond =
   fromWaiRequest wr = do
     body <- liftIO $ Wai.consumeRequestBodyLazy wr
     let path = Wai.pathInfo wr
-        query = Wai.queryString wr
+        query = queryToQueryText (Wai.queryString wr)
         headers = Wai.requestHeaders wr
         cookie = fromMaybe "" $ L.lookup "Cookie" headers
         host = Host $ fromMaybe "" $ L.lookup "Host" headers
@@ -203,7 +204,7 @@ newtype Host = Host {text :: BS.ByteString}
 data Request = Request
   { host :: Host
   , path :: [Segment]
-  , query :: Query
+  , query :: QueryText
   , body :: BL.ByteString
   , method :: Method
   , cookies :: [(BS.ByteString, BS.ByteString)]
