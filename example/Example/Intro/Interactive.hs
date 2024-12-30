@@ -3,6 +3,9 @@ module Example.Intro.Interactive where
 import Data.Text (Text)
 import Web.Hyperbole
 
+page :: Eff es (Page '[Message])
+page = messagePage
+
 messagePage :: Eff es (Page '[Message])
 messagePage = do
   pure $ do
@@ -19,7 +22,8 @@ data Message = Message
   deriving (Show, Read, ViewId)
 
 instance HyperView Message es where
-  data Action Message = SetMessage Text
+  data Action Message
+    = SetMessage Text
     deriving (Show, Read, ViewAction)
 
   update (SetMessage t) =

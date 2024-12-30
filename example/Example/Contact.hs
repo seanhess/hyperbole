@@ -42,6 +42,7 @@ instance (Users :> es, Debug :> es) => HyperView Contact es where
     | Save
     | View
     deriving (Show, Read, ViewAction)
+
   update action = do
     -- No matter which action we are performing, let's look up the user to make sure it exists
     Contact uid <- viewId

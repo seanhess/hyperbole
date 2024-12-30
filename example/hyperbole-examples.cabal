@@ -99,7 +99,9 @@ executable examples
       Example.Filter
       Example.Forms
       Example.Intro.BasicPage
+      Example.Intro.Component
       Example.Intro.Interactive
+      Example.Intro.MultiPage
       Example.Intro.MultiView
       Example.Intro.Nested
       Example.Intro.SideEffects

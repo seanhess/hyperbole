@@ -25,3 +25,16 @@ instance HyperView Message es where
 
   update (SetMessage t) =
     pure $ messageView t
+
+messageView' :: Text -> View Message ()
+messageView' m = do
+  header $ "Message: " <> m
+  goodbyeButton
+
+goodbyeButton :: View Message ()
+goodbyeButton = do
+  button (SetMessage "Goodbye") (border 1) "Say Goodbye"
+
+header :: Text -> View c ()
+header txt = do
+  el bold (text txt)

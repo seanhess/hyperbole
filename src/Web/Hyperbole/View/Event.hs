@@ -109,13 +109,6 @@ toActionInput con =
   T.dropEnd 3 $ toAction $ con ""
 
 
-{- | Serialize a constructor that expects a single 'Text', like `data MyAction = GoSearch Text`
-toActionKey :: (ViewAction a) => (Key -> a) -> Text
-toActionKey con =
-  -- "MyAction Space" -> "MyAction"
-  T.dropEnd 6 $ toAction $ con Space
--}
-
 {- | Apply a Mod only when a request is in flight
 
 @
