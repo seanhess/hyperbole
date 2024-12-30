@@ -6,6 +6,6 @@ cd example
 hpack
 cabal run docgen
 
-cd /tmp/docs
+cd /tmp/hyperbole
 cabal haddock
 

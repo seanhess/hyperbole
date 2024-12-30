@@ -11,7 +11,7 @@ import System.FilePath
 
 main :: IO ()
 main = do
-  let tmpDir = "/tmp/docs"
+  let tmpDir = "/tmp/hyperbole"
   copyExtraFilesTo tmpDir
   expandSourcesTo tmpDir
 
