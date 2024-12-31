@@ -27,4 +27,4 @@ instance HyperView Message es where
     deriving (Show, Read, ViewAction)
 
   update (SetMessage t) =
-    pure $ el_ (text t)
+    pure $ el bold (text t)

@@ -222,8 +222,11 @@ They are divided into top-level 'Page's, which can run side effects (like loadin
 {\-# LANGUAGE DeriveAnyClass #-\}
 {\-# LANGUAGE OverloadedStrings #-\}
 {\-# LANGUAGE TypeFamilies #-\}
+{\-# LANGUAGE DataKinds #-\}
 
 module Main where
+
+import Web.Hyperbole
 
 #EMBED Example/Intro/BasicPage.hs main
 
@@ -463,6 +466,8 @@ https://docs.hyperbole.live is full of live examples demonstrating different fea
 * [Filter Items](https://docs.hyperbole.live/filter)
 * [Autocomplete](https://docs.hyperbole.live/livesearch)
 * [Todo MVC](https://docs.hyperbole.live/todos)
+
+The [National Solar Observatory](https://nso.edu) uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). This production application contains complex interfaces, workers, databases, and more.
 -}
 
 
