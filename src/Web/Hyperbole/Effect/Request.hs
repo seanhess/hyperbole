@@ -1,17 +1,15 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.Effect.Request where
 
-import Control.Monad (join)
 import Data.Bifunctor (first)
-import Data.ByteString qualified as BS
 import Data.List qualified as List
 import Data.Maybe (isJust)
-import Data.String.Conversions
 import Data.Text (Text)
-import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Effectful
 import Effectful.Dispatch.Dynamic
+import Network.HTTP.Types (QueryText)
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.HttpApiData (FromHttpApiData, parseQueryParam)
 import Web.Hyperbole.Effect.Hyperbole
@@ -59,7 +57,7 @@ myPage = do
         pure myPageView
 @
 -}
-reqParams :: (Hyperbole :> es) => Eff es Query
+reqParams :: (Hyperbole :> es) => Eff es QueryText
 reqParams = (.query) <$> request
 
 
@@ -78,9 +76,9 @@ reqParam :: forall a es. (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es 
 reqParam p = do
   q <- reqParams
   (er :: Either Response a) <- pure $ do
-    mv <- require $ List.lookup (encodeUtf8 p) q
+    mv <- require $ List.lookup p q
     v <- require mv
-    first (Err . ErrParam) $ parseQueryParam (decodeUtf8 v)
+    first (Err . ErrParam) $ parseQueryParam v
   case er of
     Left e -> send $ RespondEarly e
     Right a -> pure a
@@ -89,14 +87,27 @@ reqParam p = do
   require Nothing = Left $ Err $ ErrParam $ "Missing: " <> p
   require (Just a) = pure a
 
+{- | Maybe version of 'reqParam'
 
--- | Lookup the query param in the 'Query'
-lookupParam :: BS.ByteString -> Query -> Maybe Text
-lookupParam p q =
-  fmap cs <$> join $ lookup p q
+@
+myPage :: 'Page' es 'Response'
+myPage = do
+  'load' $ do
+      mbToken <- lookupParam "token"
+      sideEffectUsingToken $ fromMaybe "default" mbToken
+      pure myPageView
+@
+-}
+lookupParam :: forall a es. (Hyperbole :> es, FromHttpApiData a) => Text -> Eff es (Maybe a)
+lookupParam p = do
+  q <- reqParams
+  pure $
+    lookup p q >>= \case
+      Nothing -> Nothing
+      Just v -> either (const Nothing) Just $ parseQueryParam v
 
 
 -- | Whether the param is present or not
-hasParam :: BS.ByteString -> Query -> Bool
+hasParam :: Text -> QueryText -> Bool
 hasParam p q =
   isJust $ lookup p q
