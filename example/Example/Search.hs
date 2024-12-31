@@ -12,7 +12,6 @@ import Example.Colors
 import Example.Filter as Filter (ProgrammingLanguage (..), allLanguages, chosenView, isMatchLanguage, resultsTable)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
-import Web.Hyperbole.View.Event
 import Prelude hiding (even, odd)
 
 page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])

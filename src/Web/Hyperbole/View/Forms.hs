@@ -155,8 +155,7 @@ instance Monoid (Validated a) where
 -- newtype Validation' validated a = Validation [(Text, validated ())]
 --   deriving newtype (Semigroup, Monoid)
 
--- instance (Show (v ())) => Show (Validation' v fs) where
---   show (Validation v) = show v
+-- instance (Show (v ())) => Show (Validation' v fs) whervalid   show (Validation v) = show v
 --
 --
 -- validation :: forall a fs v. (FormField a, Elem a fs, ValidationState v, Monoid (v a)) => Validation' v fs -> v a
@@ -365,7 +364,7 @@ formAction _ SignUp = do
 -- WARNING: needs the capability to
 -- TODO: Generate an empty set of field names?
 -- TODO: Merge Validation and FieldNames
-class Form form (valid :: Type -> Type) | form -> valid where
+class Form form (val :: Type -> Type) | form -> val where
   formParse :: FE.Form -> Either Text (form Identity)
   default formParse :: (Generic (form Identity), GFormParse (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
   formParse f = to <$> gFormParse f

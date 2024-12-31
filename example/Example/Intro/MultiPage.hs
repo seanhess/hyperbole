@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
+
 module Example.Intro.MultiPage where
 
 import Example.Intro.Interactive qualified as Message
