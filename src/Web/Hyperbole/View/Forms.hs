@@ -155,8 +155,7 @@ instance Monoid (Validated a) where
 -- newtype Validation' validated a = Validation [(Text, validated ())]
 --   deriving newtype (Semigroup, Monoid)
 
--- instance (Show (v ())) => Show (Validation' v fs) where
---   show (Validation v) = show v
+-- instance (Show (v ())) => Show (Validation' v fs) whervalid   show (Validation v) = show v
 --
 --
 -- validation :: forall a fs v. (FormField a, Elem a fs, ValidationState v, Monoid (v a)) => Validation' v fs -> v a
@@ -224,9 +223,9 @@ data FieldName a = FieldName Text
 data Invalid a
 
 
-data Input id v a = Input
+data Input (id :: Type) (valid :: Type -> Type) (a :: Type) = Input
   { inputName :: FieldName a
-  , valid :: v a
+  , valid :: valid a
   }
 
 
@@ -243,7 +242,7 @@ myForm = do
 @
 -}
 field
-  :: forall v a id
+  :: forall (id :: Type) (v :: Type -> Type) (a :: Type)
    . FormField v a
   -> (v a -> Mod (FormFields id))
   -> View (Input id v a) ()
@@ -307,7 +306,7 @@ userForm v = do
     'submit' (border 1) \"Submit\"
 @
 -}
-form :: (Form form val, ViewAction (Action id)) => Action id -> Mod id -> View (FormFields id) () -> View id ()
+form :: (Form form v, ViewAction (Action id)) => Action id -> Mod id -> View (FormFields id) () -> View id ()
 form a md cnt = do
   vid <- context
   tag "form" (onSubmit a . md . flexCol . marginEnd0) $ do
@@ -365,7 +364,7 @@ formAction _ SignUp = do
 -- WARNING: needs the capability to
 -- TODO: Generate an empty set of field names?
 -- TODO: Merge Validation and FieldNames
-class Form form val | form -> val where
+class Form form (val :: Type -> Type) | form -> val where
   formParse :: FE.Form -> Either Text (form Identity)
   default formParse :: (Generic (form Identity), GFormParse (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
   formParse f = to <$> gFormParse f

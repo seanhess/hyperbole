@@ -15,7 +15,6 @@ import Example.View.Icon qualified as Icon
 import Example.View.Inputs (toggleCheckBtn)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole as Hyperbole
-import Web.Hyperbole.View.Event (onDblClick)
 
 page :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
 page = do

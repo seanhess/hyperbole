@@ -60,7 +60,7 @@ Add hyperbole and text to your build-depends:
 
 ```
     build-depends:
-        base ^>=4.18.2.1
+        base
       , hyperbole
       , text
 ```
@@ -102,7 +102,7 @@ Full Production Example
   <img alt="National Solar Observatory" src="https://nso1.b-cdn.net/wp-content/uploads/2020/03/NSO-logo-orange-text.png" width="400"/>
 </a>
 
-The NSO uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). The application demonstrates complex interfaces, workers, databases, and more.
+The NSO uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). This production application contains complex interfaces, workers, databases, and more.
 
 
 Local Development

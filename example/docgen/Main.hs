@@ -11,7 +11,7 @@ import System.FilePath
 
 main :: IO ()
 main = do
-  let tmpDir = "/tmp/docs"
+  let tmpDir = "/tmp/hyperbole"
   copyExtraFilesTo tmpDir
   expandSourcesTo tmpDir
 
@@ -159,7 +159,30 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
       else w
 
   terms :: [Text]
-  terms = ["HyperView", "View", "Action", "update", "hyper", "Page", "liveApp", "basicDocument", "runPage", "run", "ViewId", "ViewAction", "Eff", "button", "el", "el_", "Hyperbole"]
+  terms =
+    [ "HyperView"
+    , "View"
+    , "Action"
+    , "update"
+    , "hyper"
+    , "Page"
+    , "liveApp"
+    , "basicDocument"
+    , "runPage"
+    , "run"
+    , "ViewId"
+    , "viewId"
+    , "ViewAction"
+    , "Eff"
+    , "button"
+    , "el"
+    , "el_"
+    , "Hyperbole"
+    , "Route"
+    , "routeRequest"
+    , "route"
+    , "layout"
+    ]
 
 -- returns lines of a top-level definition
 findTopLevel :: TopLevelDefinition -> SourceCode -> [Text]
