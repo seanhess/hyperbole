@@ -32,7 +32,8 @@ exampleLayout rt pageView = do
     Contacts (Contact _) -> "Example/Contact.hs"
     Counter -> "Example/Counter.hs"
     Transitions -> "Example/Transitions.hs"
-    Forms -> "Example/Forms.hs"
+    FormSimple -> "Example/FormSimple.hs"
+    FormValidation -> "Example/FormValidation.hs"
     Sessions -> "Example/Sessions.hs"
     LazyLoading -> "Example/LazyLoading.hs"
     Concurrent -> "Example/Concurrent.hs"
@@ -61,13 +62,14 @@ exampleMenu current = do
   example Simple
   example Counter
   example Transitions
-  example Forms
   example Sessions
   example Requests
   example Redirects
   example RedirectNow
   example LazyLoading
   example Concurrent
+  example FormSimple
+  example FormValidation
   example Filter
   example LiveSearch
   example Todos
@@ -89,6 +91,8 @@ routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
 routeTitle Filter = "Search - Basic Filter"
 routeTitle LiveSearch = "Search - Autocomplete"
 routeTitle Todos = "TodoMVC"
+routeTitle FormSimple = "Forms - Simple"
+routeTitle FormValidation = "Forms - Validation"
 routeTitle r = cs $ toWords $ fromHumps $ show r
 
 pageDescription :: AppRoute -> View c ()

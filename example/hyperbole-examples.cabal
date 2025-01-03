@@ -99,7 +99,8 @@ executable examples
       Example.Effects.Users
       Example.Errors
       Example.Filter
-      Example.Forms
+      Example.FormSimple
+      Example.FormValidation
       Example.Intro.BasicPage
       Example.Intro.Component
       Example.Intro.Interactive
