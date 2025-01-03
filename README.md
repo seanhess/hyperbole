@@ -126,8 +126,8 @@ ghcid --command="cabal repl test lib:hyperbole" --run=Main.main --warnings --rel
 
 Prepend targets with ghc982 or ghc966 to use GHC 9.8.2 or GHC 9.6.6
 
-- `nix run` or `nix run .#ghc966-example` to start the example project with GHC 9.8.2
-- `nix develop` or `nix develop .#ghc982` to get a shell with all dependencies installed for GHC 9.8.2. 
+- `nix run` or `nix run .#ghc966-hyperbole-examples` to start the example project with GHC 9.8.2
+- `nix develop` or `nix develop .#ghc982-shell` to get a shell with all dependencies installed for GHC 9.8.2. 
 
 You can import this flake's overlay to add `hyperbole` to all package sets and override ghc966 and ghc982 with the packages to satisfy `hyperbole`'s dependencies.
 

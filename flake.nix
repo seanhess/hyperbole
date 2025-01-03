@@ -173,7 +173,7 @@
       {
         checks = builtins.listToAttrs (
           map (version: {
-            name = "ghc${version}-check-example";
+            name = "ghc${version}-check-${examplesName}";
             value = pkgs.runCommand "ghc${version}-check-example" {
               buildInputs = [ (exe version) ];
             } "type examples; type docgen; touch $out";
@@ -182,33 +182,17 @@
 
         apps =
           {
-            default = self.apps.${system}.ghc966.example;
-            docgen = self.apps.${system}.ghc966.docgen;
+            default = self.apps.${system}."ghc966-${examplesName}";
           }
           // builtins.listToAttrs (
             # Generate apps
-            builtins.concatMap (version: [
-              {
-                name = "ghc${version}";
-                value = {
-                  example = {
-                    type = "app";
-                    program = "${exe version}/bin/examples";
-                  };
-                  docgen = {
-                    type = "app";
-                    program = "${exe version}/bin/docgen";
-                  };
-                };
-              }
-              {
-                name = "ghc${version}-docgen";
-                value = {
-                  type = "app";
-                  program = "${exe version}/bin/docgen";
-                };
-              }
-            ]) ghcVersions
+            map (version: {
+              name = "ghc${version}-${examplesName}";
+              value = {
+                type = "app";
+                program = "${exe version}/bin/examples";
+              };
+            }) ghcVersions
           );
 
         packages =
@@ -224,12 +208,12 @@
 
         devShells =
           {
-            default = self.devShells.${system}.ghc982;
+            default = self.devShells.${system}.ghc982-shell;
           }
           // builtins.listToAttrs (
             # Generate devShells
             map (version: {
-              name = "ghc${version}";
+              name = "ghc${version}-shell";
               value = ghcPkgs."ghc${version}".shellFor (
                 shellCommon version
                 // {
