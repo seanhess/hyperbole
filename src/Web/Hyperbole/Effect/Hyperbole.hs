@@ -8,7 +8,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Web.HttpApiData (FromHttpApiData, ToHttpApiData (..))
+import Web.Hyperbole.Effect.QueryData
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.Effect.Session as Session
 
@@ -70,14 +70,14 @@ data HyperState = HyperState
 
 
 -- | Lookup a session variable by keyword
-session :: (FromHttpApiData a, Hyperbole :> es) => Text -> Eff es (Maybe a)
+session :: (FromQueryData a, Hyperbole :> es) => Text -> Eff es (Maybe a)
 session k = do
   s <- send GetSession
   pure $ sessionLookup k s
 
 
 -- | Set a session variable by keyword
-setSession :: (ToHttpApiData a, Hyperbole :> es) => Text -> a -> Eff es ()
+setSession :: (ToQueryData a, Hyperbole :> es) => Text -> a -> Eff es ()
 setSession k v = do
   send $ ModSession (sessionSet k v)
 

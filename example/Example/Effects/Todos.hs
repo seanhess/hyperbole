@@ -7,9 +7,7 @@ import Data.Text (Text, pack)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import System.Random (randomRIO)
-import Web.HttpApiData (FromHttpApiData (..), ToHttpApiData (..))
-import Web.Hyperbole (Hyperbole, clearSession, session, setSession)
-import Web.Hyperbole.Effect.Session (readQueryParam, showQueryParam)
+import Web.Hyperbole (FromQueryData (..), Hyperbole, ToQueryData (..), clearSession, session, setSession)
 
 type TodoId = Text
 
@@ -18,31 +16,14 @@ data Todo = Todo
   , task :: Text
   , completed :: Bool
   }
-  deriving (Show, Read)
+  deriving (Show, Read, ToQueryData, FromQueryData)
 
-newtype TodoIds = TodoIds [Text]
-  deriving newtype (Show, Read, Monoid, Semigroup)
-
--- We need an instance of From/To HttpApiData to save to a session
-instance FromHttpApiData Todo where
-  parseQueryParam = readQueryParam
-instance ToHttpApiData Todo where
-  toQueryParam = showQueryParam
-
--- there's no list instance for some reason
-instance FromHttpApiData TodoIds where
-  parseQueryParam = readQueryParam
-instance ToHttpApiData TodoIds where
-  toQueryParam = showQueryParam
-
--- Load a user AND do next if missing?
 data Todos :: Effect where
   LoadAll :: Todos m [Todo]
   Save :: Todo -> Todos m ()
   Remove :: TodoId -> Todos m ()
   Create :: Text -> Todos m TodoId
 type instance DispatchOf Todos = 'Dynamic
-
 runTodosSession
   :: forall es a
    . (Hyperbole :> es, IOE :> es)
@@ -50,30 +31,30 @@ runTodosSession
   -> Eff es a
 runTodosSession = interpret $ \_ -> \case
   LoadAll -> do
-    TodoIds ids <- sessionTodoIds
+    ids <- sessionTodoIds
     catMaybes <$> mapM session ids
   Save todo -> do
     setSession todo.id todo
   Remove todoId -> do
-    TodoIds ids <- sessionTodoIds
-    sessionSaveTodoIds $ TodoIds $ filter (/= todoId) ids
+    ids <- sessionTodoIds
+    sessionSaveTodoIds $ filter (/= todoId) ids
     clearSession todoId
   Create task -> do
     todoId <- randomId
     let todo = Todo todoId task False
-    TodoIds ids <- sessionTodoIds
+    ids <- sessionTodoIds
     setSession todo.id todo
-    sessionSaveTodoIds $ TodoIds (todo.id : ids)
+    sessionSaveTodoIds (todo.id : ids)
     pure todoId
  where
   randomId :: (IOE :> es) => Eff es Text
   randomId = pack . show <$> randomRIO @Int (0, 9999999)
 
-  sessionTodoIds :: (Hyperbole :> es) => Eff es TodoIds
+  sessionTodoIds :: (Hyperbole :> es) => Eff es [TodoId]
   sessionTodoIds = do
     fromMaybe mempty <$> session "todoIds"
 
-  sessionSaveTodoIds :: (Hyperbole :> es) => TodoIds -> Eff es ()
+  sessionSaveTodoIds :: (Hyperbole :> es) => [TodoId] -> Eff es ()
   sessionSaveTodoIds = setSession "todoIds"
 
 loadAll :: (Todos :> es) => Eff es [Todo]

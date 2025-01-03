@@ -13,7 +13,8 @@ data AppRoute
   | Transitions
   | Query
   | Counter
-  | Forms
+  | FormSimple
+  | FormValidation
   | LiveSearch
   | Filter
   | Sessions

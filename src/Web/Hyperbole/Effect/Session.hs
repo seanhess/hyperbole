@@ -6,10 +6,9 @@ import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import Network.HTTP.Types
-import Text.Read (readMaybe)
-import Web.HttpApiData
+import Web.Hyperbole.Effect.QueryData
 import Prelude
 
 
@@ -18,9 +17,9 @@ newtype Session = Session (Map Text Text)
 
 
 -- | Set the session key to value
-sessionSet :: (ToHttpApiData a) => Text -> a -> Session -> Session
+sessionSet :: (ToQueryData a) => Text -> a -> Session -> Session
 sessionSet k a (Session kvs) =
-  let val = toQueryParam a
+  let val = toQueryData a
    in Session $ Map.insert k val kvs
 
 
@@ -29,10 +28,10 @@ sessionDel k (Session kvs) =
   Session $ Map.delete k kvs
 
 
-sessionLookup :: (FromHttpApiData a) => Text -> Session -> Maybe a
+sessionLookup :: (FromQueryData a) => Text -> Session -> Maybe a
 sessionLookup k (Session sm) = do
   t <- Map.lookup k sm
-  either (const Nothing) pure $ parseQueryParam t
+  either (const Nothing) pure $ parseQueryData t
 
 
 sessionEmpty :: Session
@@ -61,15 +60,3 @@ sessionFromCookies cks = fromMaybe sessionEmpty $ do
 
 sessionSetCookie :: Session -> ByteString
 sessionSetCookie ss = "session=" <> sessionRender ss <> "; SameSite=None; secure; path=/"
-
-
-showQueryParam :: (Show a) => a -> Text
-showQueryParam a = toQueryParam $ show a
-
-
-readQueryParam :: (Read a) => Text -> Either Text a
-readQueryParam t = do
-  str <- parseQueryParam t
-  case readMaybe str of
-    Nothing -> Left $ pack $ "Could not read HttpApiData: " <> str
-    Just a -> pure a

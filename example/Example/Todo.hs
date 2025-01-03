@@ -94,7 +94,7 @@ todoForm filt = do
   row (border 1) $ do
     el (pad 8) $ do
       button (ToggleAll filt) (width 32 . hover (color Primary)) Icon.chevronDown
-    form @TodoForm SubmitTodo id $ do
+    form @TodoForm SubmitTodo grow $ do
       field f.task (const id) $ do
         input TextInput (pad 12 . placeholder "What needs to be done?")
 

@@ -39,7 +39,8 @@ import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
 import Example.Errors qualified as Errors
 import Example.Filter qualified as Filter
-import Example.Forms qualified as Forms
+import Example.FormSimple qualified as FormSimple
+import Example.FormValidation qualified as FormValidation
 import Example.LazyLoading qualified as LazyLoading
 import Example.Redirects qualified as Redirects
 import Example.Requests qualified as Requests
@@ -107,7 +108,8 @@ app users count = do
   router Errors = runPage Errors.page
   router Examples = view Layout.examplesView
   router Filter = runPage Filter.page
-  router Forms = runPage Forms.page
+  router FormSimple = runPage FormSimple.page
+  router FormValidation = runPage FormValidation.page
   router LazyLoading = runPage LazyLoading.page
   router LiveSearch = runPage Search.page
   router Query = do

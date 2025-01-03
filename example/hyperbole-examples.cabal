@@ -57,6 +57,7 @@ executable docgen
     , string-conversions
     , string-interpolate
     , text
+    , time
     , wai
     , wai-websockets
     , warp
@@ -79,7 +80,8 @@ executable examples
       Example.Effects.Users
       Example.Errors
       Example.Filter
-      Example.Forms
+      Example.FormSimple
+      Example.FormValidation
       Example.Intro.BasicPage
       Example.Intro.Component
       Example.Intro.Interactive
@@ -137,6 +139,7 @@ executable examples
     , string-conversions
     , string-interpolate
     , text
+    , time
     , wai
     , wai-middleware-static
     , wai-websockets

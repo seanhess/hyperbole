@@ -1,4 +1,4 @@
-module Example.Forms where
+module Example.FormValidation where
 
 import Data.Text (Text, pack)
 import Data.Text qualified as T
@@ -10,7 +10,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Eff es (Page '[FormView])
 page = do
-  pure $ exampleLayout Route.Forms $ row (pad 20) $ do
+  pure $ exampleLayout Route.FormValidation $ row (pad 20) $ do
     hyper FormView (formView genForm)
 
 data FormView = FormView
@@ -33,7 +33,7 @@ instance HyperView FormView es where
 -- Form Fields
 newtype User = User {username :: Text}
   deriving (Generic)
-  deriving newtype (FromHttpApiData)
+  deriving newtype (FromQueryData)
 
 data UserForm f = UserForm
   { user :: Field f User
@@ -80,9 +80,6 @@ formView v = do
   form @UserForm Submit (gap 10 . pad 10) $ do
     el Style.h1 "Sign Up"
 
-    -- what does it need from this? the field name, is the only thing, really
-    -- what about a simpler thing...
-    -- people could always just set the id... and parse the id manually
     field f.user valStyle $ do
       label "Username"
       input Username (inp . placeholder "username")

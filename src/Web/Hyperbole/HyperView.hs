@@ -4,12 +4,12 @@
 module Web.Hyperbole.HyperView where
 
 import Data.Kind (Constraint, Type)
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text)
 import Effectful
 import Effectful.Reader.Dynamic
 import GHC.TypeLits hiding (Mod)
-import Text.Read (readMaybe)
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
+import Web.Hyperbole.Effect.QueryData (readQueryParam, showQueryParam)
 import Web.Hyperbole.TypeList
 import Web.View (View, addContext, att, context, el, flexCol, none)
 
@@ -164,12 +164,13 @@ hyperUnsafe vid vw = do
 class ViewAction a where
   toAction :: a -> Text
   default toAction :: (Show a) => a -> Text
-  toAction = pack . show
+  toAction = showQueryParam
 
 
   parseAction :: Text -> Maybe a
   default parseAction :: (Read a) => Text -> Maybe a
-  parseAction = readMaybe . unpack
+  parseAction t =
+    either (const Nothing) pure $ readQueryParam t
 
 
 instance ViewAction () where
@@ -180,12 +181,13 @@ instance ViewAction () where
 class ViewId a where
   toViewId :: a -> Text
   default toViewId :: (Show a) => a -> Text
-  toViewId = pack . show
+  toViewId = showQueryParam
 
 
   parseViewId :: Text -> Maybe a
   default parseViewId :: (Read a) => Text -> Maybe a
-  parseViewId = readMaybe . unpack
+  parseViewId t =
+    either (const Nothing) pure $ readQueryParam t
 
 
 class HasViewId m view where
