@@ -123,6 +123,7 @@ executable examples
       Example.View.Icon
       Example.View.Inputs
       Example.View.Layout
+      Example.View.SortableTable
       HelloWorld
       Paths_hyperbole_examples
   autogen-modules:

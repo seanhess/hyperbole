@@ -11,4 +11,5 @@ main = do
 messagePage :: Eff es (Page '[])
 messagePage = do
   pure $ do
-    el bold "Hello World"
+    col (pad 10) $ do
+      el bold "Hello World"
