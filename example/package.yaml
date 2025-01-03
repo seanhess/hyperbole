@@ -46,6 +46,7 @@ dependencies:
   - network
   - websockets
   - cookie
+  - hyperbole
 
 executables:
   examples:
@@ -55,15 +56,15 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
     source-dirs:
-      - ../src
       - ./
     dependencies:
     - wai-middleware-static
+    - safe
+    - foreign-store
   docgen:
     main:                Main.hs
     source-dirs:
       - ./docgen
     dependencies:
-      - hyperbole
       - directory
       - filepath

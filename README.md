@@ -124,8 +124,6 @@ ghcid --command="cabal repl test lib:hyperbole" --run=Main.main --warnings --rel
 
 ### Nix
 
-FIXME, setup nodejs project with nix.
-
 Prepend targets with ghc982 or ghc966 to use GHC 9.8.2 or GHC 9.6.6
 
 - `nix run` or `nix run .#ghc966-example` to start the example project with GHC 9.8.2

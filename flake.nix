@@ -146,6 +146,8 @@
           # Programs that will be available in the development shell
           buildInputs = with pkgs.haskell.packages."ghc${version}"; [
             pkgs.nodePackages_latest.webpack-cli
+            pkgs.nodePackages_latest.webpack
+            pkgs.nodejs
             cabal-install
             haskell-language-server
             fourmolu
@@ -153,7 +155,6 @@
             ghcid
             pkgs.ghciwatch
             pkgs.hpack
-            # pkgs.python312Packages.livereload
           ];
           withHoogle = true;
           doBenchmark = true;

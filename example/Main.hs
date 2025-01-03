@@ -63,6 +63,11 @@ import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Middleware.Static (addBase, staticPolicy)
 import Network.WebSockets (Connection, PendingConnection, acceptRequest, defaultConnectionOptions)
+import System.IO
+  ( BufferMode (LineBuffering)
+  , hSetBuffering
+  , stdout
+  )
 import Web.Hyperbole
 import Web.Hyperbole.Effect.Handler (RunHandlers)
 import Web.Hyperbole.Effect.Server (Request (..))
@@ -75,6 +80,7 @@ import GHC.Word (Word32)
 
 main :: IO ()
 main = do
+  hSetBuffering stdout LineBuffering
   putStrLn "Starting Examples on http://localhost:3000"
   users <- Users.initUsers
   count <- runEff $ runConcurrent Counter.initCounter
@@ -192,17 +198,6 @@ update = do
       -- between shutdownApp and the next app that is starting.
       -- Normally this should be fine
       (\_ -> putMVar done ())
-
--- | kill the server
-shutdown :: IO ()
-shutdown = do
-  mtidStore <- lookupStore tidStoreNum
-  case mtidStore of
-    -- no server running
-    Nothing -> putStrLn "no Yesod app running"
-    Just tidStore -> do
-      withStore tidStore $ readIORef >=> killThread
-      putStrLn "Yesod app is shutdown"
 
 tidStoreNum :: Word32
 tidStoreNum = 1
