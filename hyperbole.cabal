@@ -80,7 +80,7 @@ library
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
     , text >=1.2 && <3
-    , time
+    , time >=1.12 && <2
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
@@ -130,7 +130,7 @@ test-suite test
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
     , text >=1.2 && <3
-    , time
+    , time >=1.12 && <2
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
