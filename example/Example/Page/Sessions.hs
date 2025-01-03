@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Sessions where
+module Example.Page.Sessions where
 
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)

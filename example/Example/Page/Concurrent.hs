@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Concurrent where
+module Example.Page.Concurrent where
 
 import Data.Text (pack)
 import Effectful

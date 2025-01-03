@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.LazyLoading where
+module Example.Page.LazyLoading where
 
 import Data.Text (pack)
 import Effectful

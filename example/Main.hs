@@ -30,26 +30,27 @@ import Effectful.Reader.Dynamic
 import Effectful.State.Static.Local
 import Example.AppRoute
 import Example.Colors
-import Example.Concurrent qualified as Concurrent
-import Example.Contact qualified as Contact
-import Example.Contacts qualified as Contacts
-import Example.Counter qualified as Counter
 import Example.Effects.Debug as Debug
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
-import Example.Errors qualified as Errors
-import Example.Filter qualified as Filter
-import Example.FormSimple qualified as FormSimple
-import Example.FormValidation qualified as FormValidation
-import Example.LazyLoading qualified as LazyLoading
-import Example.Redirects qualified as Redirects
-import Example.Requests qualified as Requests
-import Example.Search qualified as Search
-import Example.Sessions qualified as Sessions
-import Example.Simple qualified as Simple
+import Example.Page.Concurrent qualified as Concurrent
+import Example.Page.Contact qualified as Contact
+import Example.Page.Contacts qualified as Contacts
+import Example.Page.Counter qualified as Counter
+import Example.Page.DataTable qualified as DataTable
+import Example.Page.Errors qualified as Errors
+import Example.Page.Filter qualified as Filter
+import Example.Page.FormSimple qualified as FormSimple
+import Example.Page.FormValidation qualified as FormValidation
+import Example.Page.LazyLoading qualified as LazyLoading
+import Example.Page.Redirects qualified as Redirects
+import Example.Page.Requests qualified as Requests
+import Example.Page.Search qualified as Search
+import Example.Page.Sessions qualified as Sessions
+import Example.Page.Simple qualified as Simple
+import Example.Page.Todo qualified as Todo
+import Example.Page.Transitions qualified as Transitions
 import Example.Style qualified as Style
-import Example.Todo qualified as Todo
-import Example.Transitions qualified as Transitions
 import Example.View.Layout as Layout (exampleLayout, examplesView)
 import Foreign.Store
   ( Store (..)
@@ -105,6 +106,7 @@ app users count = do
   router (Contacts ContactsAll) = runPage Contacts.page
   router Concurrent = runPage Concurrent.page
   router Counter = runReader count $ runPage Counter.page
+  router DataTable = runPage DataTable.page
   router Errors = runPage Errors.page
   router Examples = view Layout.examplesView
   router Filter = runPage Filter.page

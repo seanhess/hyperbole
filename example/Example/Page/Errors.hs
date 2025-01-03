@@ -1,4 +1,4 @@
-module Example.Errors where
+module Example.Page.Errors where
 
 import Effectful
 import Example.AppRoute qualified as Route

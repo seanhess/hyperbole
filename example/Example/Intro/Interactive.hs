@@ -9,9 +9,10 @@ page = messagePage
 messagePage :: Eff es (Page '[Message])
 messagePage = do
   pure $ do
-    hyper Message $ do
-      el bold "Hello World"
-      button (SetMessage "Goodbye") (border 1) "Say Goodbye"
+    col (pad 10 . gap 10) $ do
+      hyper Message $ do
+        el bold "Hello World"
+        button (SetMessage "Goodbye") (border 1) "Say Goodbye"
 
 messageView :: Text -> View Message ()
 messageView m = do

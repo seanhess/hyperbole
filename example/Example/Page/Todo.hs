@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Todo where
+module Example.Page.Todo where
 
 import Control.Monad (forM_)
 import Data.Text (Text, pack)

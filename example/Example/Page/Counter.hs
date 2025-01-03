@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Counter where
+module Example.Page.Counter where
 
 import Data.Text (pack)
 import Effectful

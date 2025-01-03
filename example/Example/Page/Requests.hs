@@ -1,4 +1,4 @@
-module Example.Requests where
+module Example.Page.Requests where
 
 import Data.String.Conversions (cs)
 import Effectful

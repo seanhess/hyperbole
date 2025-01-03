@@ -1,4 +1,4 @@
-module Example.Redirects where
+module Example.Page.Redirects where
 
 import Effectful
 import Example.AppRoute qualified as Route

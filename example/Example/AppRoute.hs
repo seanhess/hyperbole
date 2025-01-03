@@ -23,6 +23,7 @@ data AppRoute
   | RedirectNow
   | LazyLoading
   | Concurrent
+  | DataTable
   | Examples
   | Todos
   | Errors
@@ -36,12 +37,16 @@ data ContactRoute
   deriving (Eq, Generic, Show)
 instance Route ContactRoute where
   baseRoute = Just ContactsAll
+
   matchRoute [] = pure ContactsAll
   matchRoute [""] = pure ContactsAll
   matchRoute [contactId] = do
     cid <- readMaybe $ unpack contactId
     pure $ Contact cid
   matchRoute _ = Nothing
+
+  routePath (Contact uid) = routePath uid
+  routePath ContactsAll = []
 
 data Hello
   = Greet Text
