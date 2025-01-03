@@ -31,7 +31,7 @@ module Web.Hyperbole.View.Forms
   , Identity
 
     -- * Re-exports
-  , FromHttpApiData
+  , FromQueryData
   , Generic
   , GenFields (..)
   , GenField (..)
@@ -43,13 +43,14 @@ import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text, pack)
+import Debug.Trace
 import Effectful
 import GHC.Generics
 import Text.Casing (kebab)
 import Web.FormUrlEncoded (FormOptions (..), defaultFormOptions, parseUnique)
 import Web.FormUrlEncoded qualified as FE
-import Web.HttpApiData (FromHttpApiData (..))
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Effect.QueryData (FromQueryData (..))
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Respond (parseError)
 import Web.Hyperbole.HyperView
@@ -336,6 +337,7 @@ type instance Field (Either String) a = Either String a
 formData :: forall form val es. (Form form val, Hyperbole :> es) => Eff es (form Identity)
 formData = do
   f <- formBody
+  traceM $ show f
   let ef = formParse @form @val f :: Either Text (form Identity)
   case ef of
     Left e -> parseError e
@@ -436,10 +438,12 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
   gFormParse f = M1 <$> gFormParse f
 
 
-instance (Selector s, FromHttpApiData a) => GFormParse (M1 S s (K1 R a)) where
-  gFormParse f =
+instance (Selector s, FromQueryData a) => GFormParse (M1 S s (K1 R a)) where
+  gFormParse f = do
     let s = selName (undefined :: M1 S s (K1 R (f a)) p)
-     in M1 . K1 <$> parseUnique (pack s) f
+    t <- parseUnique (pack s) f
+    traceM (show t)
+    M1 . K1 <$> parseQueryData t
 
 
 ------------------------------------------------------------------------------

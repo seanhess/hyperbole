@@ -36,6 +36,7 @@ library
       Web.Hyperbole.Effect.Event
       Web.Hyperbole.Effect.Handler
       Web.Hyperbole.Effect.Hyperbole
+      Web.Hyperbole.Effect.QueryData
       Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Respond
       Web.Hyperbole.Effect.Server
@@ -79,6 +80,7 @@ library
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
     , text >=1.2 && <3
+    , time
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
@@ -90,6 +92,7 @@ test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Test.FormSpec
       Test.RouteSpec
       Test.ViewActionSpec
       Test.ViewIdSpec
@@ -127,6 +130,7 @@ test-suite test
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
     , text >=1.2 && <3
+    , time
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4

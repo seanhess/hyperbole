@@ -57,6 +57,7 @@ executable docgen
     , string-conversions
     , string-interpolate
     , text
+    , time
     , wai
     , wai-websockets
     , warp
@@ -72,6 +73,7 @@ executable examples
       Web.Hyperbole.Effect.Event
       Web.Hyperbole.Effect.Handler
       Web.Hyperbole.Effect.Hyperbole
+      Web.Hyperbole.Effect.QueryData
       Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Respond
       Web.Hyperbole.Effect.Server
@@ -153,6 +155,7 @@ executable examples
     , string-conversions
     , string-interpolate
     , text
+    , time
     , wai
     , wai-middleware-static
     , wai-websockets

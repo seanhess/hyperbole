@@ -33,6 +33,7 @@ dependencies:
   - casing
   - effectful
   - text
+  - time
   - string-interpolate
   - file-embed
   - http-api-data
