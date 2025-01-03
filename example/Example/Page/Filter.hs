@@ -1,11 +1,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Filter where
+module Example.Page.Filter where
 
-import Data.Text (Text, isInfixOf, toLower)
+import Data.Text (Text)
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
+import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages, isMatchLanguage)
 import Example.View.Icon as Icon
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
@@ -77,31 +78,3 @@ resultsTable onSelect langs = do
       el id $ text lang.description
 
   rows = textAlign AlignCenter . border 1 . borderColor GrayLight
-
-data ProgrammingLanguage = ProgrammingLanguage {name :: Text, description :: Text}
-  deriving (Show, Read)
-instance Eq ProgrammingLanguage where
-  p1 == p2 = p1.name == p2.name
-
-isMatchLanguage :: Text -> ProgrammingLanguage -> Bool
-isMatchLanguage term p =
-  isInfixOf (toLower term) . toLower $ p.name
-
-allLanguages :: [ProgrammingLanguage]
-allLanguages =
-  [ ProgrammingLanguage "JavaScript" "A versatile scripting language mainly used for web development."
-  , ProgrammingLanguage "Java" "A robust, platform-independent language commonly used for enterprise applications."
-  , ProgrammingLanguage "TypeScript" "A superset of JavaScript that adds static typing."
-  , ProgrammingLanguage "Python" "A beginner-friendly language with a wide range of applications, from web to data science."
-  , ProgrammingLanguage "PHP" "A server-side scripting language primarily used for web development."
-  , ProgrammingLanguage "Go" "A statically typed, compiled language designed for simplicity and efficiency."
-  , ProgrammingLanguage "C++" "A powerful language for system programming, game development, and high-performance applications."
-  , ProgrammingLanguage "C#" "A language developed by Microsoft, widely used for developing Windows and web applications."
-  , ProgrammingLanguage "Objective-C" "A language used primarily for macOS and iOS application development before Swift."
-  , ProgrammingLanguage "Rust" "A memory-safe language focused on performance and reliability."
-  , ProgrammingLanguage "Ruby" "A dynamic language known for its simplicity and used in web frameworks like Ruby on Rails."
-  , ProgrammingLanguage "Swift" "A modern language for iOS and macOS application development."
-  , ProgrammingLanguage "Haskell" "An elegant functional language for those with excellent taste."
-  , ProgrammingLanguage "Elm" "A functional language for building reliable web front-end applications."
-  , ProgrammingLanguage "Scheme" "A minimalist, functional dialect of Lisp."
-  ]

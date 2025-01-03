@@ -1,4 +1,4 @@
-module Example.Transitions where
+module Example.Page.Transitions where
 
 import Effectful
 import Example.AppRoute

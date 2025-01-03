@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Contact where
+module Example.Page.Contact where
 
 import Data.String.Conversions
 import Data.Text (Text, pack)

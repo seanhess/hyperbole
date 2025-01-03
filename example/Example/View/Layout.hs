@@ -26,28 +26,29 @@ exampleLayout rt pageView = do
 
   routeSource :: AppRoute -> Url
   routeSource = \case
-    Simple -> "Example/Simple.hs"
+    Simple -> "Example/Page/Simple.hs"
     -- Docs Intro -> "Docs/Intro.hs"
-    Contacts ContactsAll -> "Example/Contacts.hs"
-    Contacts (Contact _) -> "Example/Contact.hs"
-    Counter -> "Example/Counter.hs"
-    Transitions -> "Example/Transitions.hs"
-    FormSimple -> "Example/FormSimple.hs"
-    FormValidation -> "Example/FormValidation.hs"
-    Sessions -> "Example/Sessions.hs"
-    LazyLoading -> "Example/LazyLoading.hs"
-    Concurrent -> "Example/Concurrent.hs"
-    Redirects -> "Example/Redirects.hs"
-    Requests -> "Example/Requests.hs"
-    Filter -> "Example/Filter.hs"
-    LiveSearch -> "Example/LiveSearch.hs"
-    Errors -> "Example/Errors.hs"
+    Contacts ContactsAll -> "Example/Page/Contacts.hs"
+    Contacts (Contact _) -> "Example/Page/Contact.hs"
+    Counter -> "Example/Page/Counter.hs"
+    Transitions -> "Example/Page/Transitions.hs"
+    FormSimple -> "Example/Page/FormSimple.hs"
+    FormValidation -> "Example/Page/FormValidation.hs"
+    Sessions -> "Example/Page/Sessions.hs"
+    LazyLoading -> "Example/Page/LazyLoading.hs"
+    Concurrent -> "Example/Page/Concurrent.hs"
+    Redirects -> "Example/Page/Redirects.hs"
+    Requests -> "Example/Page/Requests.hs"
+    Filter -> "Example/Page/Filter.hs"
+    LiveSearch -> "Example/Page/LiveSearch.hs"
+    Errors -> "Example/Page/Errors.hs"
     RedirectNow -> "Main.hs"
     Query -> "Main.hs"
     Hello _ -> "Main.hs"
     Main -> "Main.hs"
     Examples -> "Example/View/Layout.hs"
     Todos -> "Example/Todo.hs"
+    DataTable -> "Example/DataTable.hs"
 
 rootLayout :: AppRoute -> View c () -> View c ()
 rootLayout rt content =
@@ -70,6 +71,7 @@ exampleMenu current = do
   example Concurrent
   example FormSimple
   example FormValidation
+  example DataTable
   example Filter
   example LiveSearch
   example Todos

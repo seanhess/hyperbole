@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Example.Simple where
+module Example.Page.Simple where
 
 import Data.Text (Text)
 import Example.AppRoute qualified as Route

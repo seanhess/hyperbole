@@ -342,16 +342,16 @@ We can use both 'Message' and 'Count' 'HyperView's in our page, and they will up
 
 We can embed multiple copies of the same 'HyperView' as long as the value of 'ViewId' is unique. Let's update `Message` to allow for more than one value:
 
-See [Example.Simple](https://docs.hyperbole.live/simple)
+See [Example.Page.Simple](https://docs.hyperbole.live/simple)
 
 @
-#EMBED Example/Simple.hs data Message
+#EMBED Example/Page/Simple.hs data Message
 @
 
 Now we can embed multiple `Message` 'HyperView's into the same page. Each will update independently.
 
 @
-#EMBED Example/Simple.hs messagePage
+#EMBED Example/Page/Simple.hs messagePage
 @
 
 
@@ -360,9 +360,9 @@ This is especially useful if we put identifying information in our 'ViewId', suc
 From [Example.Contacts](https://docs.hyperbole.live/contacts)
 
 @
-#EMBED Example/Contact.hs data Contact
+#EMBED Example/Page/Contact.hs data Contact
 
-#EMBED Example/Contact.hs instance (Users :> es,
+#EMBED Example/Page/Contact.hs instance (Users :> es,
 @
 -}
 
@@ -436,7 +436,7 @@ See this technique used in the [TodoMVC Example](https://docs.hyperbole.live/tod
 
 You may be tempted to use 'HyperView's to create reusable "Components". This leads to object-oriented designs that don't compose well. We are using a functional language, so our main unit of reuse should be functions!
 
-We showed earlier that we can write a [View Function](#g:view-functions) with a generic 'context' that we can reuse in any view.  A function like this could help us reuse styles
+We showed earlier that we can write a [View Function](#g:view-functions) with a generic 'context' that we can reuse in any view.  A function like this might help us reuse styles:
 
 @
 #EMBED Example/Intro/ViewFunctions.hs header
@@ -454,7 +454,9 @@ We can create more complex view functions by passing state in as a parameter. He
 #EMBED Example/View/Inputs.hs toggleCheckBtn
 @
 
-Don't leverage 'HyperView's for code reuse. Think about which subsections of a page ought to update independently. Those are 'HyperView's. If you need reusable functionality, use view functions instead
+Don't leverage 'HyperView's for code reuse. Think about which subsections of a page ought to update independently. Those are 'HyperView's. If you need reusable functionality, use view functions instead.
+
+* See [Example.View.DataTable](https://docs.hyperbole.live/datatable) for a more complex example
 -}
 
 
@@ -466,6 +468,7 @@ https://docs.hyperbole.live is full of live examples demonstrating different fea
 * [CSS Transitions](https://docs.hyperbole.live/transitions)
 * [Lazy Loading](https://docs.hyperbole.live/lazyloading)
 * [Forms](https://docs.hyperbole.live/formsimple)
+* [Data Table](https://docs.hyperbole.live/datatable)
 * [Filter Items](https://docs.hyperbole.live/filter)
 * [Autocomplete](https://docs.hyperbole.live/livesearch)
 * [Todo MVC](https://docs.hyperbole.live/todos)
@@ -478,7 +481,7 @@ The [National Solar Observatory](https://nso.edu) uses Hyperbole for the Level 2
 
 'HyperView's are stateless. They 'update' based entirely on the 'Action'. However, we can track simple state by passing it back and forth between the 'Action' and the 'View'
 
-From [Example.Simple](https://docs.hyperbole.live/simple)
+From [Example.Page.Simple](https://docs.hyperbole.live/simple)
 
 @
 #EMBED Example/Intro/State.hs instance HyperView Message
@@ -494,7 +497,7 @@ For any real application with more complex state and data persistence, we need s
 
 Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use effects in a 'Page' or an 'update'. In this example, each client stores the latest message in their session.
 
-From [Example.Simple](https://docs.hyperbole.live/simple)
+From [Example.Page.Simple](https://docs.hyperbole.live/simple)
 
 @
 #EMBED Example/Intro/SideEffects.hs messagePage
@@ -505,12 +508,12 @@ From [Example.Simple](https://docs.hyperbole.live/simple)
 
 To use an 'Effect' other than 'Hyperbole', add it as a constraint to the 'Page' and any 'HyperView' instances that need it. Then run the effect in your application
 
-From [Example.Counter](https://docs.hyperbole.live/counter)
+From [Example.Page.Counter](https://docs.hyperbole.live/counter)
 
 @
 {\-# LANGUAGE UndecidableInstances #-\}
 
-#EMBED Example/Counter.hs instance (Reader
+#EMBED Example/Page/Counter.hs instance (Reader
 @
 -}
 
@@ -529,12 +532,12 @@ From [Example.Effects.Todos](https://github.com/seanhess/hyperbole/blob/latest/e
 
 Once you've created an 'Effect', you add it to any 'HyperView' or 'Page' as a constraint.
 
-From [Example.Todo](https://docs.hyperbole.live/todos):
+From [Example.Page.Todo](https://docs.hyperbole.live/todos):
 
 @
 {\-# LANGUAGE UndecidableInstances #-\}
 
-#EMBED Example/Todo.hs simplePage
+#EMBED Example/Page/Todo.hs simplePage
 @
 
 When you create your 'Application', run any 'Effect's you need. Here we are using a runner that implements the effect with sessions from 'Hyperbole', but you could write a different runner that connects to a database instead.

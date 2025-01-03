@@ -1,4 +1,4 @@
-module Example.FormValidation where
+module Example.Page.FormValidation where
 
 import Data.Text (Text, pack)
 import Data.Text qualified as T

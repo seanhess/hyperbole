@@ -1,13 +1,13 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Contacts where
+module Example.Page.Contacts where
 
 import Control.Monad (forM_)
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
-import Example.Contact (contactEdit', contactForm, contactLoading, contactView', parseUser)
+import Example.Page.Contact (contactEdit', contactForm, contactLoading, contactView', parseUser)
 import Example.Effects.Debug
 import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users

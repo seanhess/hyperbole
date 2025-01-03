@@ -23,6 +23,7 @@ data AppRoute
   | RedirectNow
   | LazyLoading
   | Concurrent
+  | DataTable
   | Examples
   | Todos
   | Errors

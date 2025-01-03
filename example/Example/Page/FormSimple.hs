@@ -1,4 +1,4 @@
-module Example.FormSimple where
+module Example.Page.FormSimple where
 
 import Data.Text (Text, pack)
 import Effectful
