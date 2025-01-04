@@ -47,7 +47,7 @@ exampleLayout rt pageView = do
     Hello _ -> "Main.hs"
     Main -> "Main.hs"
     Examples -> "Example/View/Layout.hs"
-    Todos -> "Example/Todo.hs"
+    Todos -> "Example/Page/Todo.hs"
     DataTable -> "Example/DataTable.hs"
 
 rootLayout :: AppRoute -> View c () -> View c ()
