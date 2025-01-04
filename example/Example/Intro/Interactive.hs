@@ -7,12 +7,11 @@ page :: Eff es (Page '[Message])
 page = messagePage
 
 messagePage :: Eff es (Page '[Message])
-messagePage = do
-  pure $ do
-    col (pad 10 . gap 10) $ do
-      hyper Message $ do
-        el bold "Hello World"
-        button (SetMessage "Goodbye") (border 1) "Say Goodbye"
+messagePage =
+  pure $
+    col (pad 10 . gap 10) $
+      hyper Message $
+        messageView "Hello World"
 
 messageView :: Text -> View Message ()
 messageView m = do
@@ -27,5 +26,4 @@ instance HyperView Message es where
     = SetMessage Text
     deriving (Show, Read, ViewAction)
 
-  update (SetMessage t) =
-    pure $ el bold (text t)
+  update (SetMessage m) = pure $ messageView m

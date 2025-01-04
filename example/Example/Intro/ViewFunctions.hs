@@ -13,6 +13,7 @@ messageView m = do
 messagePage :: Eff es (Page '[Message])
 messagePage = do
   pure $ do
+    el_ "This part will not be updated (after initial page load)"
     hyper Message $ messageView "Hello"
 
 data Message = Message
@@ -23,8 +24,8 @@ instance HyperView Message es where
     = SetMessage Text
     deriving (Show, Read, ViewAction)
 
-  update (SetMessage t) =
-    pure $ messageView t
+  update (SetMessage m) =
+    pure $ messageView m
 
 messageView' :: Text -> View Message ()
 messageView' m = do
