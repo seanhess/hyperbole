@@ -44,7 +44,7 @@ module Web.Hyperbole
     -- ** Updating Parts of `HyperView`s independently (`HyperView`s within `HyperView`s) - `Require`
     -- $practices-nested
 
-    -- ** Side Effects - State across `HyperView`s, Persistence / DB and IO
+    -- ** Side-Effects - State across `HyperView`s, Persistence / DB and IO
     -- *** Introduction
     -- $state-effects
 
@@ -60,26 +60,33 @@ module Web.Hyperbole
     -- ** Pages #pages#
     -- $practices-pages
 
+    -- ** Forms
+    -- $forms
+
+    -- * Architectural Assumptions
+    -- $architectural-assumptions
+
     -- * Examples
     -- $examples
 
-    -- * Application
+    -- * Technical Documentation
+    -- ** Application
     liveApp
   , Warp.run
   , basicDocument
   , runPage
   , Page
 
-    -- ** Type-Safe Routes
+    -- *** Type-Safe Routes
   , routeRequest -- maybe belongs in an application section
   , Route (..)
   , routeUrl
   , route
 
-    -- * Hyperbole Effect
+    -- ** Hyperbole Effect
   , Hyperbole
 
-    -- ** Request
+    -- *** Request
   , reqParam
   , reqParams
   , request
@@ -90,17 +97,17 @@ module Web.Hyperbole
   , ToQueryData (..)
   , FromQueryData (..)
 
-    -- ** Response
+    -- *** Response
   , notFound
   , redirect
   , respondEarly
 
-    -- * HyperView
+    -- ** HyperView
   , HyperView (..)
   , hyper
   , HasViewId (..)
 
-    -- * Events
+    -- ** Events
   , onClick
   , onDblClick
   , onInput
@@ -111,14 +118,14 @@ module Web.Hyperbole
   , Key (..)
   , DelayMs
 
-    -- * Interactive Elements
+    -- ** Interactive Elements
   , button
   , search
   , dropdown
   , option
   , Option
 
-    -- * Type-Safe Forms
+    -- ** Type-Safe Forms
 
     -- | Painless forms with type-checked field names, and support for validation. See [Example.Forms](https://docs.hyperbole.live/formsimple)
   , Form (..)
@@ -128,7 +135,7 @@ module Web.Hyperbole
   , Field
   , Identity
 
-    -- ** Form View
+    -- *** Form View
   , form
   , field
   , label
@@ -138,21 +145,21 @@ module Web.Hyperbole
   , placeholder
   , InputType (..)
 
-    -- ** Handlers
+    -- *** Handlers
 
-    -- ** Validation
+    -- *** Validation
   , Validated (..)
   , validate
   , fieldValid
   , invalidText
   , anyInvalid
 
-    -- ** Sessions
+    -- *** Sessions
   , session
   , setSession
   , clearSession
 
-    -- * Advanced
+    -- ** Advanced
   , target
   , view
   , ViewId
@@ -161,23 +168,23 @@ module Web.Hyperbole
   , Root
   , HyperViewHandled
 
-    -- * Exports
+    -- ** Exports
 
-    -- ** Web.View
+    -- *** Web.View
 
     -- | Hyperbole is tightly integrated with [Web.View](https://hackage.haskell.org/package/web-view/docs/Web-View.html) for HTML generation
   , module Web.View
 
-    -- ** Embeds
+    -- *** Embeds
 
     -- | Embedded CSS and Javascript to include in your document function. See 'basicDocument'
   , module Web.Hyperbole.View.Embed
 
-    -- ** Effectful
+    -- *** Effectful
     -- $effects
   , module Effectful
 
-    -- ** Other
+    -- *** Other
   , Application
   , Generic
   ) where
@@ -246,9 +253,9 @@ module Main where
 
 import Web.Hyperbole
 
-#EMBED Example/Intro/BasicPage.hs main
+#EMBED Example/Intro/BasicPage.hs main =
 
-#EMBED Example/Intro/BasicPage.hs messagePage
+#EMBED Example/Intro/BasicPage.hs messagePage1
 @
 
 
@@ -256,13 +263,15 @@ Then factor them out into `View`s. You may use multiple `View`s to make up a `Pa
 
 @
 
-#EMBED Example/Intro/BasicPage.hs main'
+#EMBED Example/Intro/BasicPage.hs main2
 
-#EMBED Example/Intro/BasicPage.hs messagePage'
+#EMBED Example/Intro/BasicPage.hs messagePage2
 
 #EMBED Example/Intro/BasicPage.hs messageView1
 
 @
+
+/Note: @anything@ (or any user lower case letter) makes @messageView1@ generic so it as a `View` can assume any specific `ViewId` (which enables its use in any (Hyper)`View`)./
 
 You may pass a `View` function also arguments like:
 
@@ -506,6 +515,19 @@ If you need the same header or menu on all pages, use a view function:
 @
 
 As shown above, each 'Page' can contain multiple interactive 'HyperView's to add interactivity
+-}
+
+{- $forms
+
+    We are using Higher Kinded Types for the forms, which makes validation and form fields convenient, but if you haven't seen them before they are intimidating.
+    
+    /TBD/
+-}
+
+{- $architectural-assumptions
+
+- People prefer the simplicity of the mental model of @Action -> Replace the View with HTML@ to Elm's @Action -> Reduce the Model -> Render the Model as HTML@. This is how HTMX works. For serverside apps, the "model" is often stored in a database anyway, and if a model/state was built in, you would have to sync it with the database.
+
 -}
 
 {- $examples

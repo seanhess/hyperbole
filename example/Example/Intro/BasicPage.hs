@@ -3,25 +3,24 @@
 module Example.Intro.BasicPage where
 
 import Web.Hyperbole
-import Web.Hyperbole.Effect.Handler
 import Data.Text (Text)
 
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Example") (runPage messagePage)
+    liveApp (basicDocument "Example") (runPage messagePage1)
 
-main' = do
+main2 = do
   run 3000 $ do
-    liveApp (basicDocument "Example") (loadToResponse messagePage')
+    liveApp (basicDocument "Example") (runPage messagePage2)
 
-messagePage :: Eff es (Page '[])
-messagePage = do
+messagePage1 :: Eff es (Page '[])
+messagePage1 = do
   pure $ do
     col (pad 10) $ do
       el bold "Hello World"
 
-messagePage' :: Eff es (Page '[Message])
-messagePage' = pure $ messageView1
+messagePage2 :: Eff es (Page '[])
+messagePage2 = pure $ messageView1
 
 data Message = Message
   deriving (Show, Read, ViewId)
