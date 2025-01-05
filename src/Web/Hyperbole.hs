@@ -65,29 +65,36 @@ module Web.Hyperbole
   , Hyperbole
 
     -- ** Request
-  , param
-  , setParam
-  , queryParams
-  , deleteParam
   , request
-  , lookupParam
   , formBody
   , formData
-  , ToParam (..)
-  , FromParam (..)
-  , ToQuery (..)
-  , FromQuery (..)
 
     -- ** Response
   , notFound
   , redirect
   , respondEarly
+
+    -- ** Query
+  , param
+  , lookupParam
+  , setParam
+  , deleteParam
+  , query
+  , setQuery
+  , queryParams
+  , ToParam (..)
+  , FromParam (..)
+  , ToQuery (..)
+  , FromQuery (..)
+
+    -- ** Session
   , sessionKey
   , lookupSessionKey
   , setSessionKey
   , deleteSessionKey
   , session
   , setSession
+  , sessionParams
 
     -- * HyperView
   , HyperView (..)
