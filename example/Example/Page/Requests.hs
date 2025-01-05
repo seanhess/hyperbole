@@ -13,6 +13,9 @@ page = do
   pure $ exampleLayout Route.Requests $ do
     col (gap 10 . pad 10) $ do
       el_ $ do
+        text "Method: "
+        text $ cs $ show r.method
+      el_ $ do
         text "Host: "
         text $ cs $ show r.host
       el_ $ do

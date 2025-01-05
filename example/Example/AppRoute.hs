@@ -19,6 +19,7 @@ data AppRoute
   | Filter
   | Sessions
   | Requests
+  | QueryParams
   | Redirects
   | RedirectNow
   | LazyLoading

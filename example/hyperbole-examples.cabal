@@ -114,6 +114,7 @@ executable examples
       Example.Page.FormSimple
       Example.Page.FormValidation
       Example.Page.LazyLoading
+      Example.Page.QueryParams
       Example.Page.Redirects
       Example.Page.Requests
       Example.Page.Search

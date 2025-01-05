@@ -39,6 +39,7 @@ exampleLayout rt pageView = do
     Concurrent -> "Example/Page/Concurrent.hs"
     Redirects -> "Example/Page/Redirects.hs"
     Requests -> "Example/Page/Requests.hs"
+    QueryParams -> "Example/Page/QueryParams.hs"
     Filter -> "Example/Page/Filter.hs"
     LiveSearch -> "Example/Page/LiveSearch.hs"
     Errors -> "Example/Page/Errors.hs"
@@ -65,6 +66,7 @@ exampleMenu current = do
   example Transitions
   example Sessions
   example Requests
+  example QueryParams
   example Redirects
   example RedirectNow
   example LazyLoading

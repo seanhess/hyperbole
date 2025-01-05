@@ -35,6 +35,7 @@ import Example.Page.FormValidation qualified as FormValidation
 import Example.Page.LazyLoading qualified as LazyLoading
 import Example.Page.Redirects qualified as Redirects
 import Example.Page.Requests qualified as Requests
+import Example.Page.QueryParams qualified as QueryParams
 import Example.Page.Search qualified as Search
 import Example.Page.Sessions qualified as Sessions
 import Example.Page.Simple qualified as Simple
@@ -96,6 +97,7 @@ app users count = do
     redirect (routeUrl $ Hello Redirected)
   router Redirects = runPage Redirects.page
   router Requests = runPage Requests.page
+  router QueryParams = runPage QueryParams.page
   router Sessions = runPage Sessions.page
   router Simple = runPage Simple.page
   router Transitions = runPage Transitions.page
