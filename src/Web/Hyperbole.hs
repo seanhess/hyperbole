@@ -65,20 +65,29 @@ module Web.Hyperbole
   , Hyperbole
 
     -- ** Request
-  , reqParam
-  , reqParams
+  , param
+  , setParam
+  , queryParams
+  , deleteParam
   , request
   , lookupParam
-  , hasParam
   , formBody
   , formData
-  , ToQueryData (..)
-  , FromQueryData (..)
+  , ToParam (..)
+  , FromParam (..)
+  , ToQuery (..)
+  , FromQuery (..)
 
     -- ** Response
   , notFound
   , redirect
   , respondEarly
+  , sessionKey
+  , lookupSessionKey
+  , setSessionKey
+  , deleteSessionKey
+  , session
+  , setSession
 
     -- * HyperView
   , HyperView (..)
@@ -123,19 +132,12 @@ module Web.Hyperbole
   , placeholder
   , InputType (..)
 
-    -- ** Handlers
-
     -- ** Validation
   , Validated (..)
   , validate
   , fieldValid
   , invalidText
   , anyInvalid
-
-    -- ** Sessions
-  , session
-  , setSession
-  , clearSession
 
     -- * Advanced
   , target
@@ -171,11 +173,13 @@ import Effectful (Eff, (:>))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Hyperbole.Application
+import Web.Hyperbole.Data.QueryData (FromParam (..), FromQuery (..), ToParam (..), ToQuery (..))
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.QueryData (FromQueryData (..), ToQueryData (..))
-import Web.Hyperbole.Effect.Request (formBody, hasParam, lookupParam, reqParam, reqParams, request)
-import Web.Hyperbole.Effect.Respond (notFound, redirect, respondEarly, view)
+import Web.Hyperbole.Effect.Query
+import Web.Hyperbole.Effect.Request
+import Web.Hyperbole.Effect.Response (notFound, redirect, respondEarly, view)
 import Web.Hyperbole.Effect.Server
+import Web.Hyperbole.Effect.Session
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Page (Page, runPage)
 import Web.Hyperbole.Route

@@ -1,0 +1,253 @@
+{-# LANGUAGE DefaultSignatures #-}
+
+module Web.Hyperbole.Data.QueryData where
+
+import Data.Bifunctor (bimap)
+import Data.ByteString (ByteString)
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as M
+import Data.String.Conversions (cs)
+import Data.Text (Text, pack)
+import Data.Time (UTCTime)
+import Data.Word
+import Network.HTTP.Types (Query, renderQuery)
+import Network.HTTP.Types qualified as HTTP
+import Text.Read (readMaybe)
+import Web.HttpApiData
+import Prelude hiding (lookup)
+
+
+-- | Key-value store for query params and sessions
+newtype QueryData = QueryData (Map Text Text)
+  deriving (Show)
+  deriving newtype (Monoid, Semigroup)
+
+
+singleton :: (ToParam a) => Text -> a -> QueryData
+singleton key a = QueryData $ M.singleton key (toParam a)
+
+
+insert :: (ToParam a) => Text -> a -> QueryData -> QueryData
+insert k a (QueryData m) =
+  let val = toParam a
+   in QueryData $ M.insert k val m
+
+
+insertAll :: (ToQuery a) => a -> QueryData -> QueryData
+insertAll a (QueryData m) =
+  let QueryData kvs = toQuery a
+   in QueryData $ M.union kvs m
+
+
+delete :: Text -> QueryData -> QueryData
+delete k (QueryData m) =
+  QueryData $ M.delete k m
+
+
+lookup :: (FromParam a) => Text -> QueryData -> Maybe a
+lookup k (QueryData m) = do
+  t <- M.lookup k m
+  either (const Nothing) pure $ parseParam t
+
+
+require :: (FromParam a) => Text -> QueryData -> Either Text a
+require k qd = do
+  case lookup k qd of
+    Nothing -> Left $ "Missing Key: " <> k
+    Just t -> parseParam t
+
+
+filterKey :: (Text -> Bool) -> QueryData -> QueryData
+filterKey p (QueryData m) =
+  QueryData $ M.filterWithKey (\k _ -> p k) m
+
+
+member :: Text -> QueryData -> Bool
+member k (QueryData qd) = M.member k qd
+
+
+elems :: QueryData -> [Text]
+elems (QueryData m) = M.elems m
+
+
+render :: QueryData -> ByteString
+render (QueryData m) =
+  -- urlEncode True
+  renderQuery False (HTTP.toQuery $ M.toList m)
+
+
+parse :: ByteString -> QueryData
+parse =
+  -- urlDecode True
+  queryData . HTTP.parseQuery
+
+
+queryData :: Query -> QueryData
+queryData =
+  QueryData . M.fromList . map (bimap cs value)
+ where
+  -- empty / missing values are encoded as empty strings
+  value Nothing = ""
+  value (Just v) = cs v
+
+
+-- | Decode a type from a Query
+class FromQuery a where
+  parseQuery :: QueryData -> Either Text a
+
+
+instance FromQuery QueryData where
+  parseQuery = pure
+
+
+-- | Encode an type to a full Query
+class ToQuery a where
+  toQuery :: a -> QueryData
+
+
+instance ToQuery QueryData where
+  toQuery = id
+
+
+instance ToQuery Query where
+  toQuery = queryData
+
+
+-- | Reimplement 'ToHttpApiData' based on Show
+class ToParam a where
+  toParam :: a -> Text
+  default toParam :: (Show a) => a -> Text
+  toParam = showQueryParam
+
+
+-- | Reimplement 'FromHttpApiData' based on Read
+class FromParam a where
+  parseParam :: Text -> Either Text a
+  default parseParam :: (Read a) => Text -> Either Text a
+  parseParam = readQueryParam
+
+
+instance ToParam Int where
+  toParam = toQueryParam
+instance FromParam Int where
+  parseParam = parseQueryParam
+
+
+instance ToParam Integer where
+  toParam = toQueryParam
+instance FromParam Integer where
+  parseParam = parseQueryParam
+
+
+instance ToParam Float where
+  toParam = toQueryParam
+instance FromParam Float where
+  parseParam = parseQueryParam
+
+
+instance ToParam Double where
+  toParam = toQueryParam
+instance FromParam Double where
+  parseParam = parseQueryParam
+
+
+instance ToParam Word where
+  toParam = toQueryParam
+instance FromParam Word where
+  parseParam = parseQueryParam
+
+
+instance ToParam Word8 where
+  toParam = toQueryParam
+instance FromParam Word8 where
+  parseParam = parseQueryParam
+
+
+instance ToParam Word16 where
+  toParam = toQueryParam
+instance FromParam Word16 where
+  parseParam = parseQueryParam
+
+
+instance ToParam Word32 where
+  toParam = toQueryParam
+instance FromParam Word32 where
+  parseParam = parseQueryParam
+
+
+instance ToParam Word64 where
+  toParam = toQueryParam
+instance FromParam Word64 where
+  parseParam = parseQueryParam
+
+
+instance ToParam Bool where
+  toParam = toQueryParam
+instance FromParam Bool where
+  parseParam = parseQueryParam
+
+
+instance ToParam Text where
+  toParam = toQueryParam
+instance FromParam Text where
+  parseParam = parseQueryParam
+
+
+instance ToParam Char where
+  toParam = toQueryParam
+instance FromParam Char where
+  parseParam = parseQueryParam
+
+
+instance ToParam UTCTime where
+  toParam = toQueryParam
+instance FromParam UTCTime where
+  parseParam = parseQueryParam
+
+
+instance (Show a) => ToParam [a] where
+  toParam = showQueryParam
+instance (Read a) => FromParam [a] where
+  parseParam = readQueryParam
+
+
+instance (ToParam a) => ToParam (Maybe a) where
+  toParam Nothing = ""
+  toParam (Just a) = toParam a
+instance (FromParam a) => FromParam (Maybe a) where
+  parseParam "" = pure Nothing
+  parseParam t = Just <$> parseParam @a t
+
+
+instance (ToParam a, ToParam b) => ToParam (Either a b) where
+  toParam (Left a) = toParam a
+  toParam (Right b) = toParam b
+instance (FromParam a, FromParam b) => FromParam (Either a b) where
+  parseParam t =
+    case parseParam @a t of
+      Right a -> pure $ Left a
+      Left _ -> do
+        case parseParam @b t of
+          Left _ -> Left $ "Could not parseParam Either: " <> t
+          Right b -> pure $ Right b
+
+
+-- | Encode a Show as a query param
+
+-- TODO: urlEncode
+showQueryParam :: (Show a) => a -> Text
+showQueryParam a = toQueryParam $ show a
+
+
+-- | Decode a Read as a query param
+readQueryParam :: (Read a) => Text -> Either Text a
+readQueryParam t = do
+  str <- parseQueryParam t
+  case readMaybe str of
+    Nothing -> Left $ pack $ "Could not read query param: " <> str
+    Just a -> pure a
+
+
+-- | Parse a Traversable (list) of params
+parseParams :: (Traversable t, FromParam a) => t Text -> Either Text (t a)
+parseParams = traverse parseParam

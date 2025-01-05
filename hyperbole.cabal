@@ -33,12 +33,13 @@ library
   exposed-modules:
       Web.Hyperbole
       Web.Hyperbole.Application
+      Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Effect.Event
       Web.Hyperbole.Effect.Handler
       Web.Hyperbole.Effect.Hyperbole
-      Web.Hyperbole.Effect.QueryData
+      Web.Hyperbole.Effect.Query
       Web.Hyperbole.Effect.Request
-      Web.Hyperbole.Effect.Respond
+      Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Server
       Web.Hyperbole.Effect.Session
       Web.Hyperbole.HyperView
@@ -93,6 +94,7 @@ test-suite test
   main-is: Spec.hs
   other-modules:
       Test.FormSpec
+      Test.QuerySpec
       Test.RouteSpec
       Test.ViewActionSpec
       Test.ViewIdSpec

@@ -88,7 +88,7 @@ app users count = do
   router LazyLoading = runPage LazyLoading.page
   router LiveSearch = runPage Search.page
   router Query = do
-    p <- reqParam "key"
+    p <- param "key"
     view $ el (pad 20) $ do
       text "key: "
       text p

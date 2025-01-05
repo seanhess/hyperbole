@@ -8,8 +8,8 @@ import Data.Text (Text)
 import Effectful
 import Effectful.Reader.Dynamic
 import GHC.TypeLits hiding (Mod)
+import Web.Hyperbole.Data.QueryData (readQueryParam, showQueryParam)
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
-import Web.Hyperbole.Effect.QueryData (readQueryParam, showQueryParam)
 import Web.Hyperbole.TypeList
 import Web.View (View, addContext, att, context, el, flexCol, none)
 

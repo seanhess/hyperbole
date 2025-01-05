@@ -2,6 +2,7 @@
 
 module Example.Page.Filter where
 
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Effectful
 import Example.AppRoute qualified as Route
@@ -14,8 +15,11 @@ import Prelude hiding (even, odd)
 
 page :: (Hyperbole :> es) => Eff es (Page '[Filter])
 page = do
+  term <- fromMaybe "" <$> lookupParam "term"
+  let matched = filter (isMatchLanguage term) allLanguages
+
   pure $ exampleLayout Route.Filter $ col (pad 20 . grow) $ do
-    hyper Filter $ filterView allLanguages Nothing
+    hyper Filter $ filterView matched Nothing
 
 data Filter = Filter
   deriving (Show, Read, ViewId)
@@ -29,6 +33,9 @@ instance HyperView Filter es where
     deriving (Show, Read, ViewAction)
 
   update (SearchTerm term) = do
+    -- save the search term as a query param
+    setParam "term" term
+
     let matched = filter (isMatchLanguage term) allLanguages
     pure $ filterView matched Nothing
   update (Select lang) = do
@@ -75,6 +82,7 @@ resultsTable onSelect langs = do
         space
         button (onSelect lang) (pad (XY 10 2) . border 1 . hover (bg GrayLight) . rows) "Select"
 
-      el id $ text lang.description
+      row (gap 5) $ do
+        el id $ text lang.description
 
   rows = textAlign AlignCenter . border 1 . borderColor GrayLight

@@ -2,6 +2,7 @@ import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenLoadDocument, listenInput, listenKeydown, listenKeyup } from './events'
 import { actionMessage, ActionMessage } from './action'
+import { setQuery } from "./browser"
 
 
 // import { listenEvents } from './events';
@@ -43,6 +44,10 @@ async function sendAction(msg: ActionMessage) {
     if (res.headers.get("location")) {
       window.location.href = res.headers.get("location")
       return
+    }
+
+    if (res.headers.get("set-query")) {
+      setQuery(res.headers.get("set-query"))
     }
 
     if (!res.ok) {

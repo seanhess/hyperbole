@@ -1,62 +1,61 @@
 module Web.Hyperbole.Effect.Session where
 
-import Data.ByteString (ByteString)
-import Data.List qualified as L
-import Data.Map (Map)
-import Data.Map qualified as Map
-import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import Network.HTTP.Types
-import Web.Hyperbole.Effect.QueryData
+import Effectful
+import Effectful.Dispatch.Dynamic (send)
+import Web.Hyperbole.Data.QueryData (FromParam (..), FromQuery (..), QueryData (..), ToParam (..), ToQuery (..))
+import Web.Hyperbole.Data.QueryData qualified as QueryData
+import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
+import Web.Hyperbole.Effect.Server (Client (..), Response (..), ResponseError (..), Session)
 import Prelude
 
 
-newtype Session = Session (Map Text Text)
-  deriving (Show)
+session :: (FromQuery a, Hyperbole :> es) => Eff es a
+session = do
+  q <- sessionParams
+  case parseQuery q of
+    Left e -> send $ RespondEarly $ Err $ ErrSession $ "Query Parse " <> e <> " from " <> cs (show q)
+    Right a -> pure a
 
 
--- | Set the session key to value
-sessionSet :: (ToQueryData a) => Text -> a -> Session -> Session
-sessionSet k a (Session kvs) =
-  let val = toQueryData a
-   in Session $ Map.insert k val kvs
+setSession :: (Hyperbole :> es, ToQuery a) => a -> Eff es ()
+setSession a = do
+  modifySession (QueryData.insertAll a)
 
 
-sessionDel :: Text -> Session -> Session
-sessionDel k (Session kvs) =
-  Session $ Map.delete k kvs
+-- | Lookup a session variable by keyword
+sessionKey :: (FromParam a, Hyperbole :> es) => Text -> Eff es a
+sessionKey k = do
+  s <- sessionParams
+  case QueryData.require k s of
+    Left e -> send $ RespondEarly $ Err $ ErrSession e
+    Right a -> pure a
 
 
-sessionLookup :: (FromQueryData a) => Text -> Session -> Maybe a
-sessionLookup k (Session sm) = do
-  t <- Map.lookup k sm
-  either (const Nothing) pure $ parseQueryData t
+lookupSessionKey :: (FromParam a, Hyperbole :> es) => Text -> Eff es (Maybe a)
+lookupSessionKey k = do
+  QueryData.lookup k <$> sessionParams
 
 
-sessionEmpty :: Session
-sessionEmpty = Session Map.empty
+-- | Set a session variable by keyword
+setSessionKey :: (ToParam a, Hyperbole :> es) => Text -> a -> Eff es ()
+setSessionKey k v = do
+  modifySession (QueryData.insert k v)
 
 
--- | Render a session as a url-encoded query string
-sessionRender :: Session -> ByteString
-sessionRender (Session sm) =
-  urlEncode True $ renderQuery False (toQuery $ Map.toList sm)
+-- | Clear a session variable
+deleteSessionKey :: (Hyperbole :> es) => Text -> Eff es ()
+deleteSessionKey k = do
+  modifySession (QueryData.delete k)
 
 
--- | Parse a session as a url-encoded query string
-sessionParse :: ByteString -> Session
-sessionParse = Session . Map.fromList . map toText . parseQuery . urlDecode True
- where
-  toText (k, Nothing) = (cs k, "false")
-  toText (k, Just v) = (cs k, cs v)
+modifySession :: (Hyperbole :> es) => (Session -> Session) -> Eff es ()
+modifySession f =
+  send $ ModClient $ \client ->
+    Client{session = f client.session, query = client.query}
 
 
-sessionFromCookies :: [(ByteString, ByteString)] -> Session
-sessionFromCookies cks = fromMaybe sessionEmpty $ do
-  bs <- L.lookup "session" cks
-  pure $ sessionParse bs
-
-
-sessionSetCookie :: Session -> ByteString
-sessionSetCookie ss = "session=" <> sessionRender ss <> "; SameSite=None; secure; path=/"
+sessionParams :: (Hyperbole :> es) => Eff es QueryData
+sessionParams = do
+  (.session) <$> send GetClient

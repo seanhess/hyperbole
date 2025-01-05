@@ -6,7 +6,7 @@ import Web.Hyperbole
 
 messagePage :: (Hyperbole :> es) => Eff es (Page '[Message])
 messagePage = do
-  stored <- session @Text "message"
+  stored <- lookupSessionKey @Text "message"
   let msg = fromMaybe "Hello" stored
   pure $ do
     hyper Message $ messageView msg
@@ -21,7 +21,7 @@ instance HyperView Message es where
 
   update (Louder m) = do
     let new = m <> "!"
-    setSession "message" new
+    setSessionKey "message" new
     pure $ messageView new
 
 messageView :: Text -> View Message ()
