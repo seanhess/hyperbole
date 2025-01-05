@@ -434,7 +434,7 @@ See this technique used in the [TodoMVC Example](https://docs.hyperbole.live/tod
 
 {- $reusable
 
-You may be tempted to use 'HyperView's to create reusable "Components". This leads to object-oriented designs that don't compose well. We are using a functional language, so our main unit of reuse should be functions!
+You may be tempted to use 'HyperView's to create reusable \"Components\". This leads to object-oriented designs that don't compose well. We are using a functional language, so our main unit of reuse should be functions!
 
 We showed earlier that we can write a [View Function](#g:view-functions) with a generic 'context' that we can reuse in any view.  A function like this might help us reuse styles:
 
