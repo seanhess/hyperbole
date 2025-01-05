@@ -7,7 +7,7 @@ import Data.Text (Text)
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
-import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages, isMatchLanguage)
+import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguage (..), allLanguages, isMatchLanguage)
 import Example.View.Icon as Icon
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
@@ -77,12 +77,18 @@ resultsTable onSelect langs = do
  where
   languageRow lang = do
     col (gap 5) $ do
-      row id $ do
+      row (gap 5) $ do
         el bold $ text lang.name
         space
         button (onSelect lang) (pad (XY 10 2) . border 1 . hover (bg GrayLight) . rows) "Select"
 
+      row id $ do
+        el (bg Light . pad (XY 10 2) . fontSize 16 . textAlign AlignCenter) (family lang.family)
+
       row (gap 5) $ do
         el id $ text lang.description
+
+  family Functional = "Functional"
+  family ObjectOriented = "Object Oriented"
 
   rows = textAlign AlignCenter . border 1 . borderColor GrayLight

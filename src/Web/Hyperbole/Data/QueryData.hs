@@ -10,6 +10,7 @@ import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Time (UTCTime)
 import Data.Word
+import GHC.Generics
 import Network.HTTP.Types (Query, renderQuery)
 import Network.HTTP.Types qualified as HTTP
 import Text.Read (readMaybe)
@@ -94,6 +95,8 @@ queryData =
 -- | Decode a type from a Query
 class FromQuery a where
   parseQuery :: QueryData -> Either Text a
+  default parseQuery :: (Generic a, GFromQuery (Rep a)) => QueryData -> Either Text a
+  parseQuery q = to <$> gParseQuery q
 
 
 instance FromQuery QueryData where
@@ -251,3 +254,52 @@ readQueryParam t = do
 -- | Parse a Traversable (list) of params
 parseParams :: (Traversable t, FromParam a) => t Text -> Either Text (t a)
 parseParams = traverse parseParam
+
+
+-- Generic From Query for records
+class GFromQuery f where
+  gParseQuery :: QueryData -> Either Text (f p)
+
+
+instance (GFromQuery f, GFromQuery g) => GFromQuery (f :*: g) where
+  gParseQuery q = do
+    a <- gParseQuery q
+    b <- gParseQuery q
+    pure $ a :*: b
+
+
+instance (GFromQuery f) => GFromQuery (M1 D d f) where
+  gParseQuery q = M1 <$> gParseQuery q
+
+
+instance (GFromQuery f) => GFromQuery (M1 C c f) where
+  gParseQuery q = M1 <$> gParseQuery q
+
+
+instance (Selector s, FromParam a) => GFromQuery (M1 S s (K1 R a)) where
+  gParseQuery q = do
+    let s = selName (undefined :: M1 S s (K1 R (f a)) p)
+    val <- require (pack s) q
+    pure $ M1 $ K1 val
+
+
+class GToQuery f where
+  gToQuery :: f p -> QueryData
+
+
+instance (GToQuery f, GToQuery g) => GToQuery (f :*: g) where
+  gToQuery (f :*: g) = gToQuery f <> gToQuery g
+
+
+instance (GToQuery f) => GToQuery (M1 D d f) where
+  gToQuery (M1 f) = gToQuery f
+
+
+instance (GToQuery f) => GToQuery (M1 C d f) where
+  gToQuery (M1 f) = gToQuery f
+
+
+instance (Selector s, ToParam a) => GToQuery (M1 S s (K1 R a)) where
+  gToQuery (M1 (K1 a)) =
+    let sel = pack $ selName (undefined :: M1 S s (K1 R (f a)) p)
+     in singleton sel (toParam a)

@@ -44,6 +44,8 @@ sortOnField = \case
 languagesView :: [ProgrammingLanguage] -> View Languages ()
 languagesView langs =
   table dataTable langs $ do
-    sortColumn "Language" (SortOn SortName) (.name)
-    sortColumn "Family" (SortOn SortFamily) $ \d -> pack $ show d.family
-    sortColumn "Description" (SortOn SortDescription) (.description)
+    sortColumn "Language" (SortOn SortName) center (.name)
+    sortColumn "Family" (SortOn SortFamily) center $ \d -> pack $ show d.family
+    sortColumn "Description" (SortOn SortDescription) id (.description)
+ where
+  center = textAlign AlignCenter
