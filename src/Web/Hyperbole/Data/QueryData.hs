@@ -17,7 +17,7 @@ import GHC.Generics
 import Network.HTTP.Types (Query, renderQuery)
 import Network.HTTP.Types qualified as HTTP
 import Text.Read (readMaybe)
-import Web.HttpApiData
+import Web.HttpApiData (parseQueryParam, toQueryParam)
 import Prelude hiding (lookup)
 
 
