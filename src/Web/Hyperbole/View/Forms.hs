@@ -17,6 +17,8 @@ module Web.Hyperbole.View.Forms
   , submit
   , formData
   , Form (..)
+  , formParseParam
+  , formLookupParam
   , formFields
   , formFieldsWith
   , Field
@@ -390,6 +392,18 @@ class Form form (val :: Type -> Type) | form -> val where
   genFieldsWith fv = to $ gConvert (from fv)
 
 
+formParseParam :: (FromParam a) => Text -> FE.Form -> Either Text a
+formParseParam key frm = do
+  t <- FE.parseUnique @Text key frm
+  parseParam t
+
+
+formLookupParam :: (FromParam a) => Text -> FE.Form -> Either Text (Maybe a)
+formLookupParam key frm = do
+  mt <- FE.parseMaybe @Text key frm
+  maybe (pure Nothing) parseParam mt
+
+
 {- | Generate FormFields for the given instance of 'Form', with no validation information
 
 > let f = formFields @UserForm
@@ -441,8 +455,7 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
 instance (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
   gFormParse f = do
     let s = selName (undefined :: M1 S s (K1 R (f a)) p)
-    t <- parseUnique (pack s) f
-    traceM (show t)
+    t <- parseUnique @Text (pack s) f
     M1 . K1 <$> parseParam t
 
 
