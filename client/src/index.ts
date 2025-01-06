@@ -2,6 +2,7 @@ import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenLoadDocument, listenInput, listenKeydown, listenKeyup } from './events'
 import { actionMessage, ActionMessage } from './action'
+import { setQuery } from "./browser"
 
 
 // import { listenEvents } from './events';
@@ -44,6 +45,8 @@ async function sendAction(msg: ActionMessage) {
       window.location.href = res.headers.get("location")
       return
     }
+
+    setQuery(res.headers.get("set-query"))
 
     if (!res.ok) {
       let error = new Error()
@@ -106,6 +109,8 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   const old: VNode = create(target)
   patch(next, old)
 
+  console.log("NEXT", next)
+
   // Emit relevant events
   let newTarget = document.getElementById(target.id)
   // let event = new Event("content", {bubbles:true})
@@ -113,6 +118,7 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
 
   // load doesn't bubble
   listenLoad(newTarget)
+  // setCheckboxes(newTarget)
 
   // Remove loading and clear add timeout
   clearTimeout(timeout)
@@ -129,6 +135,12 @@ function addCSS(src: HTMLStyleElement) {
     }
   }
 }
+
+// function setCheckboxes(target: HTMLElement) {
+//   target.querySelectorAll("input[type=checkbox]").forEach(input => {
+//     console.log(input.attributes)
+//   })
+// }
 
 type Response = {
   content: HTMLElement

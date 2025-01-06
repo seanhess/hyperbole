@@ -17,6 +17,8 @@ module Web.Hyperbole.View.Forms
   , submit
   , formData
   , Form (..)
+  , formParseParam
+  , formLookupParam
   , formFields
   , formFieldsWith
   , Field
@@ -31,7 +33,7 @@ module Web.Hyperbole.View.Forms
   , Identity
 
     -- * Re-exports
-  , FromQueryData
+  , FromParam
   , Generic
   , GenFields (..)
   , GenField (..)
@@ -49,10 +51,10 @@ import GHC.Generics
 import Text.Casing (kebab)
 import Web.FormUrlEncoded (FormOptions (..), defaultFormOptions, parseUnique)
 import Web.FormUrlEncoded qualified as FE
+import Web.Hyperbole.Data.QueryData (FromParam (..))
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.QueryData (FromQueryData (..))
 import Web.Hyperbole.Effect.Request
-import Web.Hyperbole.Effect.Respond (parseError)
+import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.View.Event (onSubmit)
 import Web.View hiding (form, input, label)
@@ -390,6 +392,18 @@ class Form form (val :: Type -> Type) | form -> val where
   genFieldsWith fv = to $ gConvert (from fv)
 
 
+formParseParam :: (FromParam a) => Text -> FE.Form -> Either Text a
+formParseParam key frm = do
+  t <- FE.parseUnique @Text key frm
+  parseParam t
+
+
+formLookupParam :: (FromParam a) => Text -> FE.Form -> Either Text (Maybe a)
+formLookupParam key frm = do
+  mt <- FE.parseMaybe @Text key frm
+  maybe (pure Nothing) parseParam mt
+
+
 {- | Generate FormFields for the given instance of 'Form', with no validation information
 
 > let f = formFields @UserForm
@@ -438,12 +452,11 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
   gFormParse f = M1 <$> gFormParse f
 
 
-instance (Selector s, FromQueryData a) => GFormParse (M1 S s (K1 R a)) where
+instance (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
   gFormParse f = do
     let s = selName (undefined :: M1 S s (K1 R (f a)) p)
-    t <- parseUnique (pack s) f
-    traceM (show t)
-    M1 . K1 <$> parseQueryData t
+    t <- parseUnique @Text (pack s) f
+    M1 . K1 <$> parseParam t
 
 
 ------------------------------------------------------------------------------

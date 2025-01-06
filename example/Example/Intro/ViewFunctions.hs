@@ -35,6 +35,6 @@ goodbyeButton :: View Message ()
 goodbyeButton = do
   button (SetMessage "Goodbye") (border 1) "Say Goodbye"
 
-header :: Text -> View c ()
+header :: Text -> View context ()
 header txt = do
   el bold (text txt)

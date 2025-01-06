@@ -22,7 +22,7 @@ import Effectful
 import Effectful.Concurrent.Async
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
-import Network.HTTP.Types (parseQueryText)
+import Network.HTTP.Types as HTTP (parseQuery)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets (Connection, PendingConnection, defaultConnectionOptions)
@@ -97,7 +97,7 @@ socketApp actions pend = do
     parse url cook hst mbody = do
       (u, q) <- parseUrl url
       let path = paths u
-          query = parseQueryText (cs q)
+          query = HTTP.parseQuery (cs q)
           cookies = parseCookies $ cs $ header cook
           host = Host $ cs $ header hst
           method = "POST"

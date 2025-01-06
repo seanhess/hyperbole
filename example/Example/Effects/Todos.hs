@@ -2,21 +2,36 @@
 
 module Example.Effects.Todos where
 
-import Data.Maybe (catMaybes, fromMaybe)
 import Data.Text (Text, pack)
+import Data.Text qualified as T
 import Effectful
 import Effectful.Dispatch.Dynamic
 import System.Random (randomRIO)
-import Web.Hyperbole (FromQueryData (..), Hyperbole, ToQueryData (..), clearSession, session, setSession)
+import Web.Hyperbole
+import Web.Hyperbole.Data.QueryData qualified as QueryData
 
 type TodoId = Text
+
+newtype AllTodos = AllTodos [Todo]
+
+instance ToQuery AllTodos where
+  toQuery (AllTodos todos) =
+    foldr (\todo -> QueryData.insert todo.id todo) mempty todos
+
+instance FromQuery AllTodos where
+  parseQuery qd = do
+    let qd' = QueryData.filterKey isTodoItem qd
+    todos <- mapM parseParam $ QueryData.elems qd'
+    pure $ AllTodos todos
+   where
+    isTodoItem k = "todo-" `T.isPrefixOf` k
 
 data Todo = Todo
   { id :: TodoId
   , task :: Text
   , completed :: Bool
   }
-  deriving (Show, Read, ToQueryData, FromQueryData)
+  deriving (Show, Read, ToParam, FromParam)
 
 data Todos :: Effect where
   LoadAll :: Todos m [Todo]
@@ -31,31 +46,22 @@ runTodosSession
   -> Eff es a
 runTodosSession = interpret $ \_ -> \case
   LoadAll -> do
-    ids <- sessionTodoIds
-    catMaybes <$> mapM session ids
+    AllTodos todos <- session
+    pure todos
   Save todo -> do
-    setSession todo.id todo
+    setSessionKey todo.id todo
   Remove todoId -> do
-    ids <- sessionTodoIds
-    sessionSaveTodoIds $ filter (/= todoId) ids
-    clearSession todoId
+    deleteSessionKey todoId
   Create task -> do
     todoId <- randomId
     let todo = Todo todoId task False
-    ids <- sessionTodoIds
-    setSession todo.id todo
-    sessionSaveTodoIds (todo.id : ids)
+    setSessionKey todo.id todo
     pure todoId
  where
   randomId :: (IOE :> es) => Eff es Text
-  randomId = pack . show <$> randomRIO @Int (0, 9999999)
-
-  sessionTodoIds :: (Hyperbole :> es) => Eff es [TodoId]
-  sessionTodoIds = do
-    fromMaybe mempty <$> session "todoIds"
-
-  sessionSaveTodoIds :: (Hyperbole :> es) => [TodoId] -> Eff es ()
-  sessionSaveTodoIds = setSession "todoIds"
+  randomId = do
+    n <- randomRIO @Int (0, 9999999)
+    pure $ "todo-" <> pack (show n)
 
 loadAll :: (Todos :> es) => Eff es [Todo]
 loadAll = send LoadAll

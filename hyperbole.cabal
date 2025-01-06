@@ -33,12 +33,13 @@ library
   exposed-modules:
       Web.Hyperbole
       Web.Hyperbole.Application
+      Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Effect.Event
       Web.Hyperbole.Effect.Handler
       Web.Hyperbole.Effect.Hyperbole
-      Web.Hyperbole.Effect.QueryData
+      Web.Hyperbole.Effect.Query
       Web.Hyperbole.Effect.Request
-      Web.Hyperbole.Effect.Respond
+      Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Server
       Web.Hyperbole.Effect.Session
       Web.Hyperbole.HyperView
@@ -72,6 +73,7 @@ library
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
     , cookie ==0.4.*
+    , data-default >0.8 && <0.9
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
@@ -80,7 +82,7 @@ library
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
     , text >=1.2 && <3
-    , time
+    , time >=1.12 && <2
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
@@ -93,6 +95,7 @@ test-suite test
   main-is: Spec.hs
   other-modules:
       Test.FormSpec
+      Test.QuerySpec
       Test.RouteSpec
       Test.ViewActionSpec
       Test.ViewIdSpec
@@ -118,6 +121,7 @@ test-suite test
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
     , cookie ==0.4.*
+    , data-default >0.8 && <0.9
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , http-api-data ==0.6.*
@@ -128,7 +132,7 @@ test-suite test
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
     , text >=1.2 && <3
-    , time
+    , time >=1.12 && <2
     , wai >=3.2 && <4
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4

@@ -16,8 +16,8 @@ page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
 page = do
   -- setSession "color" Warning
   -- setSession "msg" ("________" :: Text)
-  (clr :: Maybe AppColor) <- session "color"
-  (msg :: Maybe Text) <- session "msg"
+  (clr :: Maybe AppColor) <- lookupSessionKey "color"
+  (msg :: Maybe Text) <- lookupSessionKey "msg"
   pure $ exampleLayout Route.Sessions $ col (pad 20 . gap 10) $ do
     hyper Contents $ viewContent clr msg
 
@@ -30,12 +30,12 @@ instance (Debug :> es) => HyperView Contents es where
     | SaveMessage Text
     deriving (Show, Read, ViewAction)
   update (SaveColor clr) = do
-    setSession "color" clr
-    msg <- session "msg"
+    setSessionKey "color" clr
+    msg <- lookupSessionKey "msg"
     pure $ viewContent (Just clr) msg
   update (SaveMessage msg) = do
-    setSession "msg" msg
-    clr <- session "color"
+    setSessionKey "msg" msg
+    clr <- lookupSessionKey "color"
     pure $ viewContent clr (Just msg)
 
 viewContent :: Maybe AppColor -> Maybe Text -> View Contents ()

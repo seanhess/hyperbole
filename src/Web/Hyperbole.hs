@@ -65,20 +65,36 @@ module Web.Hyperbole
   , Hyperbole
 
     -- ** Request
-  , reqParam
-  , reqParams
   , request
-  , lookupParam
-  , hasParam
   , formBody
   , formData
-  , ToQueryData (..)
-  , FromQueryData (..)
 
     -- ** Response
   , notFound
   , redirect
   , respondEarly
+
+    -- ** Query
+  , param
+  , lookupParam
+  , setParam
+  , deleteParam
+  , query
+  , setQuery
+  , queryParams
+  , ToParam (..)
+  , FromParam (..)
+  , ToQuery (..)
+  , FromQuery (..)
+
+    -- ** Session
+  , sessionKey
+  , lookupSessionKey
+  , setSessionKey
+  , deleteSessionKey
+  , session
+  , setSession
+  , sessionParams
 
     -- * HyperView
   , HyperView (..)
@@ -123,19 +139,12 @@ module Web.Hyperbole
   , placeholder
   , InputType (..)
 
-    -- ** Handlers
-
     -- ** Validation
   , Validated (..)
   , validate
   , fieldValid
   , invalidText
   , anyInvalid
-
-    -- ** Sessions
-  , session
-  , setSession
-  , clearSession
 
     -- * Advanced
   , target
@@ -171,11 +180,13 @@ import Effectful (Eff, (:>))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Hyperbole.Application
+import Web.Hyperbole.Data.QueryData (FromParam (..), FromQuery (..), ToParam (..), ToQuery (..))
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.QueryData (FromQueryData (..), ToQueryData (..))
-import Web.Hyperbole.Effect.Request (formBody, hasParam, lookupParam, reqParam, reqParams, request)
-import Web.Hyperbole.Effect.Respond (notFound, redirect, respondEarly, view)
+import Web.Hyperbole.Effect.Query
+import Web.Hyperbole.Effect.Request
+import Web.Hyperbole.Effect.Response (notFound, redirect, respondEarly, view)
 import Web.Hyperbole.Effect.Server
+import Web.Hyperbole.Effect.Session
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Page (Page, runPage)
 import Web.Hyperbole.Route
@@ -434,7 +445,7 @@ See this technique used in the [TodoMVC Example](https://docs.hyperbole.live/tod
 
 {- $reusable
 
-You may be tempted to use 'HyperView's to create reusable "Components". This leads to object-oriented designs that don't compose well. We are using a functional language, so our main unit of reuse should be functions!
+You may be tempted to use 'HyperView's to create reusable \"Components\". This leads to object-oriented designs that don't compose well. We are using a functional language, so our main unit of reuse should be functions!
 
 We showed earlier that we can write a [View Function](#g:view-functions) with a generic 'context' that we can reuse in any view.  A function like this might help us reuse styles:
 

@@ -1,4 +1,4 @@
-module Web.Hyperbole.Effect.Respond where
+module Web.Hyperbole.Effect.Response where
 
 import Data.Text (Text)
 import Effectful

@@ -10,7 +10,7 @@ import Effectful.Reader.Dynamic
 import Web.Hyperbole.Effect.Event (getEvent, lookupEvent)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (request)
-import Web.Hyperbole.Effect.Respond (respondEarly)
+import Web.Hyperbole.Effect.Response (respondEarly)
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
 import Web.View
@@ -59,8 +59,8 @@ runLoad loadPage = do
 
 guardNoEvent :: (Hyperbole :> es) => Eff es ()
 guardNoEvent = do
-  r <- request
-  case lookupEvent r.query of
+  q <- (.query) <$> request
+  case lookupEvent q of
     -- Are id and action set to something?
     Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
     Nothing -> pure ()

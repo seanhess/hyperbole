@@ -45,6 +45,7 @@ executable docgen
     , casing
     , containers
     , cookie
+    , data-default
     , directory
     , effectful
     , file-embed
@@ -130,6 +131,7 @@ executable examples
     , casing
     , containers
     , cookie
+    , data-default
     , effectful
     , file-embed
     , foreign-store
