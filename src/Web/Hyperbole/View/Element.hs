@@ -76,6 +76,7 @@ search go delay f = do
   tag "input" (onInput go delay . f) none
 
 
+
 {- | A hyperlink to another route
 
 >>> route (User 100) id "View User"

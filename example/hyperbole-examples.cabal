@@ -45,6 +45,7 @@ executable docgen
     , casing
     , containers
     , cookie
+    , data-default
     , directory
     , effectful
     , file-embed
@@ -70,12 +71,13 @@ executable examples
   other-modules:
       Web.Hyperbole
       Web.Hyperbole.Application
+      Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Effect.Event
       Web.Hyperbole.Effect.Handler
       Web.Hyperbole.Effect.Hyperbole
-      Web.Hyperbole.Effect.QueryData
+      Web.Hyperbole.Effect.Query
       Web.Hyperbole.Effect.Request
-      Web.Hyperbole.Effect.Respond
+      Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Server
       Web.Hyperbole.Effect.Session
       Web.Hyperbole.HyperView
@@ -150,6 +152,7 @@ executable examples
     , casing
     , containers
     , cookie
+    , data-default
     , effectful
     , file-embed
     , http-api-data

@@ -1,13 +1,13 @@
-export function actionUrl(id:ViewId, action:string):URL {
+export function actionUrl(id: ViewId, action: string): URL {
   let url = new URL(window.location.href)
-  url.searchParams.append("id", id)
-  url.searchParams.append("action", action)
+  url.searchParams.append("hyp-id", id)
+  url.searchParams.append("hyp-action", action)
   return url
 }
 
-export function toSearch(form?:FormData):URLSearchParams | undefined {
+export function toSearch(form?: FormData): URLSearchParams | undefined {
   if (!form) return undefined
-    
+
   const params = new URLSearchParams()
 
   form.forEach((value, key) => {
@@ -17,7 +17,7 @@ export function toSearch(form?:FormData):URLSearchParams | undefined {
   return params
 }
 
-export function actionMessage(id:ViewId, action:string, form?:FormData):ActionMessage {
+export function actionMessage(id: ViewId, action: string, form?: FormData): ActionMessage {
   let url = actionUrl(id, action)
   return { id, url, form: toSearch(form) }
 }

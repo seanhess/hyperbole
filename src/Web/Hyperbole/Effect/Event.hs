@@ -1,19 +1,19 @@
 module Web.Hyperbole.Effect.Event where
 
-import Control.Monad (join)
-import Data.String.Conversions
+import Data.ByteString (ByteString)
+import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Effectful
-import Network.HTTP.Types (QueryText)
+import Network.HTTP.Types (Query)
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
-import Web.Hyperbole.Effect.Request (reqParams)
-import Web.Hyperbole.Effect.Server (Event (..))
+import Web.Hyperbole.Effect.Request (request)
+import Web.Hyperbole.Effect.Server (Event (..), Request (..))
 import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..), ViewId (..))
 
 
 getEvent :: (HyperView id es, Hyperbole :> es) => Eff es (Maybe (Event id (Action id)))
 getEvent = do
-  q <- reqParams
+  q <- (.query) <$> request
   pure $ do
     Event ti ta <- lookupEvent q
     vid <- parseViewId ti
@@ -21,13 +21,16 @@ getEvent = do
     pure $ Event vid act
 
 
-lookupEvent :: QueryText -> Maybe (Event Text Text)
-lookupEvent q' =
-  Event
-    <$> lookupParam "id" q'
-    <*> lookupParam "action" q'
+lookupEvent :: Query -> Maybe (Event Text Text)
+lookupEvent q = do
+  viewId <- lookupParam "hyp-id" q
+  action <- lookupParam "hyp-action" q
+  pure $ Event{viewId, action}
 
--- -- | Lookup the query param in the 'Query'
-lookupParam :: Text -> QueryText -> Maybe Text
-lookupParam p q =
-  fmap cs <$> join $ lookup p q
+
+-- | Lower-level lookup straight from the request
+lookupParam :: ByteString -> Query -> Maybe Text
+lookupParam key q = do
+  mval <- lookup key q
+  val <- mval
+  pure $ cs val

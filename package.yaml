@@ -42,6 +42,7 @@ dependencies:
   - bytestring >= 0.11 && <0.13
   - containers >= 0.6 && <1
   - casing > 0.1 && <0.2
+  - data-default > 0.8 && <0.9
   - effectful >= 2.4 && <3
   - text >= 1.2 && <3
   - time >= 1.12 && <2

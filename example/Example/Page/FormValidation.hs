@@ -33,7 +33,7 @@ instance HyperView FormView es where
 -- Form Fields
 newtype User = User {username :: Text}
   deriving (Generic)
-  deriving newtype (FromQueryData)
+  deriving newtype (FromParam)
 
 data UserForm f = UserForm
   { user :: Field f User

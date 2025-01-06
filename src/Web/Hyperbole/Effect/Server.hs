@@ -12,22 +12,21 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (HeaderName, Method, status200, status400, status401, status404, status500)
+import Network.HTTP.Types (HeaderName, Method, Query, status200, status400, status401, status404, status500, urlDecode)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
 import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
-import Web.Hyperbole.Effect.Session
+import Web.Hyperbole.Data.QueryData as QueryData
 import Web.Hyperbole.Route
 import Web.View (Segment, View, renderLazyByteString, renderUrl)
-import Network.HTTP.Types.URI (QueryText, queryToQueryText)
 
 
 -- | Low level effect mapping request/response to either HTTP or WebSockets
 data Server :: Effect where
   LoadRequest :: Server m Request
-  SendResponse :: Session -> Response -> Server m ()
+  SendResponse :: Client -> Response -> Server m ()
 
 
 type instance DispatchOf Server = 'Dynamic
@@ -44,22 +43,23 @@ runServerWai toDoc req respond =
   reinterpret runLocal $ \_ -> \case
     LoadRequest -> do
       fromWaiRequest req
-    SendResponse sess r -> do
-      rr <- liftIO $ sendResponse sess r
+    SendResponse client r -> do
+      rr <- liftIO $ sendResponse client r
       put (Just rr)
  where
   runLocal :: (IOE :> es) => Eff (State (Maybe ResponseReceived) : es) a -> Eff es (Maybe ResponseReceived)
   runLocal = execState Nothing
 
-  sendResponse :: Session -> Response -> IO Wai.ResponseReceived
-  sendResponse sess r =
+  sendResponse :: Client -> Response -> IO Wai.ResponseReceived
+  sendResponse client r =
     respond $ response r
    where
     response :: Response -> Wai.Response
     response NotFound = respError status404 "Not Found"
     response Empty = respError status500 "Empty Response"
     response (Err (ErrParse e)) = respError status400 ("Parse Error: " <> cs e)
-    response (Err (ErrParam e)) = respError status400 $ "ErrParam: " <> cs e
+    response (Err (ErrQuery e)) = respError status400 $ "ErrQuery: " <> cs e
+    response (Err (ErrSession e)) = respError status400 $ "ErrSession: " <> cs e
     response (Err (ErrOther e)) = respError status500 $ "Server Error: " <> cs e
     response (Err ErrAuth) = respError status401 "Unauthorized"
     response (Err (ErrNotHandled e)) = respError status400 $ cs $ errNotHandled e
@@ -78,11 +78,14 @@ runServerWai toDoc req respond =
 
     respHtml body =
       -- always set the session...
-      let headers = contentType ContentHtml : setCookies
+      let headers = contentType ContentHtml : (setCookies <> setQuery client.query)
        in Wai.responseLBS status200 headers body
 
     setCookies =
-      [("Set-Cookie", sessionSetCookie sess)]
+      [("Set-Cookie", sessionSetCookie client.session)]
+
+    setQuery qd =
+      [("Set-Query", QueryData.render qd)]
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
   addDocument :: Method -> BL.ByteString -> BL.ByteString
@@ -93,7 +96,7 @@ runServerWai toDoc req respond =
   fromWaiRequest wr = do
     body <- liftIO $ Wai.consumeRequestBodyLazy wr
     let path = Wai.pathInfo wr
-        query = queryToQueryText (Wai.queryString wr)
+        query = Wai.queryString wr
         headers = Wai.requestHeaders wr
         cookie = fromMaybe "" $ L.lookup "Cookie" headers
         host = Host $ fromMaybe "" $ L.lookup "Host" headers
@@ -110,13 +113,15 @@ runServerSockets
   -> Eff es Response
 runServerSockets conn req = reinterpret runLocal $ \_ -> \case
   LoadRequest -> pure req -- receiveRequest conn
-  SendResponse sess res -> do
+  SendResponse client res -> do
     case res of
-      (Response vid vw) -> sendView (sessionMeta sess) vid vw
+      (Response vid vw) -> do
+        let meta = sessionMeta client.session <> queryMeta client.query
+        sendView meta vid vw
       (Err r) -> sendError r
       Empty -> sendError $ ErrOther "Empty"
       NotFound -> sendError $ ErrOther "NotFound"
-      (Redirect url) -> sendRedirect (sessionMeta sess) url
+      (Redirect url) -> sendRedirect (sessionMeta client.session) url
  where
   runLocal = runErrorNoCallStackWith @SocketError onSocketError
 
@@ -152,6 +157,10 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
   sessionMeta :: Session -> Metadata
   sessionMeta sess = Metadata [("SESSION", cs (sessionSetCookie sess))]
 
+  queryMeta :: QueryData -> Metadata
+  queryMeta q =
+    Metadata [("QUERY", cs $ QueryData.render q)]
+
   viewIdMeta :: TargetViewId -> Metadata
   viewIdMeta (TargetViewId vid) = Metadata [("VIEW-ID", cs vid)]
 
@@ -176,6 +185,13 @@ errNotHandled ev =
     , "    pure $ hyper Contents contentsView"
     , "</pre>"
     ]
+type Session = QueryData
+
+
+data Client = Client
+  { session :: Session
+  , query :: QueryData
+  }
 
 
 data SocketError
@@ -204,7 +220,7 @@ newtype Host = Host {text :: BS.ByteString}
 data Request = Request
   { host :: Host
   , path :: [Segment]
-  , query :: QueryText
+  , query :: Query
   , body :: BL.ByteString
   , method :: Method
   , cookies :: [(BS.ByteString, BS.ByteString)]
@@ -229,7 +245,8 @@ data Response
 
 data ResponseError
   = ErrParse Text
-  | ErrParam Text
+  | ErrQuery Text
+  | ErrSession Text
   | ErrOther Text
   | ErrNotHandled (Event Text Text)
   | ErrAuth
@@ -249,3 +266,17 @@ data Event id act = Event
 
 instance (Show act, Show id) => Show (Event id act) where
   show e = "Event " <> show e.viewId <> " " <> show e.action
+
+
+sessionParse :: BS.ByteString -> Session
+sessionParse = QueryData.parse . urlDecode True
+
+
+sessionFromCookies :: [(BS.ByteString, BS.ByteString)] -> Session
+sessionFromCookies cks = fromMaybe mempty $ do
+  bs <- L.lookup "session" cks
+  pure $ QueryData.parse bs
+
+
+sessionSetCookie :: Session -> BS.ByteString
+sessionSetCookie ss = "session=" <> QueryData.render ss <> "; SameSite=None; secure; path=/"

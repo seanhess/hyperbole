@@ -3,14 +3,13 @@
 
 module Web.Hyperbole.Effect.Hyperbole where
 
-import Data.Text (Text)
+import Data.ByteString qualified as BS
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Web.Hyperbole.Effect.QueryData
+import Web.Hyperbole.Data.QueryData (queryData)
 import Web.Hyperbole.Effect.Server
-import Web.Hyperbole.Effect.Session as Session
 
 
 {- | In any 'load' or 'handle', you can use this Effect to get extra request information or control the response manually.
@@ -20,8 +19,8 @@ For most 'Page's, you won't need to use this effect directly. Use custom 'Route'
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondEarly :: Response -> Hyperbole m a
-  ModSession :: (Session -> Session) -> Hyperbole m ()
-  GetSession :: Hyperbole m Session
+  ModClient :: (Client -> Client) -> Hyperbole m ()
+  GetClient :: Hyperbole m Client
 
 
 type instance DispatchOf Hyperbole = 'Dynamic
@@ -36,20 +35,27 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
   GetRequest -> do
     gets @HyperState (.request)
   RespondEarly r -> do
-    s <- gets @HyperState (.session)
+    s <- gets @HyperState (.client)
     send $ SendResponse s r
     throwError_ r
-  GetSession -> do
-    gets @HyperState (.session)
-  ModSession f -> do
-    modify @HyperState $ \st -> st{session = f st.session}
+  GetClient -> do
+    gets @HyperState (.client)
+  ModClient f -> do
+    modify @HyperState $ \st -> st{client = f st.client}
  where
   runLocal :: (Server :> es) => Eff (State HyperState : Error Response : es) a -> Eff es (Either Response (a, HyperState))
   runLocal eff = do
     -- Load the request ONCE right when we start
     r <- send LoadRequest
-    let st = HyperState r (sessionFromCookies r.cookies)
+    let client = Client (sessionFromCookies r.cookies) (queryData $ queryParams r)
+    let st = HyperState r client
     runErrorNoCallStack @Response . runState st $ eff
+
+  queryParams request =
+    filter (not . isSystemParam) request.query
+
+  isSystemParam (key, _) =
+    "hyp-" `BS.isPrefixOf` key
 
   combine :: (Server :> es) => Eff es (Either Response (Response, HyperState)) -> Eff es Response
   combine eff = do
@@ -59,30 +65,11 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
         -- responded early, don't need to respond again
         pure res
       Right (res, st) -> do
-        send $ SendResponse st.session res
+        send $ SendResponse st.client res
         pure res
 
 
 data HyperState = HyperState
   { request :: Request
-  , session :: Session
+  , client :: Client
   }
-
-
--- | Lookup a session variable by keyword
-session :: (FromQueryData a, Hyperbole :> es) => Text -> Eff es (Maybe a)
-session k = do
-  s <- send GetSession
-  pure $ sessionLookup k s
-
-
--- | Set a session variable by keyword
-setSession :: (ToQueryData a, Hyperbole :> es) => Text -> a -> Eff es ()
-setSession k v = do
-  send $ ModSession (sessionSet k v)
-
-
--- | Clear a session variable
-clearSession :: (Hyperbole :> es) => Text -> Eff es ()
-clearSession k = do
-  send $ ModSession (sessionDel k)

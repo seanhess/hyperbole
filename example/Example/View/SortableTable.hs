@@ -26,9 +26,9 @@ cell :: Mod c
 cell = pad 4 . bord
 
 dataTable :: Mod c
-dataTable = alternatingRows . textAlign AlignCenter
+dataTable = alternatingRows
 
-sortColumn :: (ViewAction (Action id)) => Text -> Action id -> (dt -> Text) -> Eff '[Writer [TableColumn id dt]] ()
-sortColumn lbl click cellText = tcol (hd sortBtn) $ \item -> td cell $ text $ cellText item
+sortColumn :: (ViewAction (Action id)) => Text -> Action id -> Mod () -> (dt -> Text) -> Eff '[Writer [TableColumn id dt]] ()
+sortColumn lbl click f cellText = tcol (hd sortBtn) $ \item -> td (cell . f) $ text $ cellText item
  where
   sortBtn = button click Style.link (text lbl)

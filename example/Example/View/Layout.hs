@@ -90,7 +90,7 @@ exampleMenu current = do
 routeTitle :: AppRoute -> Text
 routeTitle (Hello _) = "Hello World"
 routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
-routeTitle Filter = "Search - Basic Filter"
+routeTitle Filter = "Search - Filters"
 routeTitle LiveSearch = "Search - Autocomplete"
 routeTitle Todos = "TodoMVC"
 routeTitle FormSimple = "Forms - Simple"
