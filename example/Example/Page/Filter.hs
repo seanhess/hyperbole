@@ -1,54 +1,122 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Example.Page.Filter where
 
-import Data.Maybe (fromMaybe)
-import Data.Text (Text)
-import Effectful
+import Data.Text (Text, pack)
+import Effectful hiding (Dynamic)
 import Example.AppRoute qualified as Route
 import Example.Colors
-import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguage (..), allLanguages, isMatchLanguage)
+import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguage (..), TypeFeature (..), allLanguages, isMatchLanguage)
 import Example.View.Icon as Icon
+import Example.View.Inputs (toggleCheckBtn)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
-page :: (Hyperbole :> es) => Eff es (Page '[Filter])
+page :: (Hyperbole :> es) => Eff es (Page '[Languages])
 page = do
-  term <- fromMaybe "" <$> lookupParam "term"
-  let matched = filter (isMatchLanguage term) allLanguages
-
+  filters <- query
   pure $ exampleLayout Route.Filter $ col (pad 20 . grow) $ do
-    hyper Filter $ filterView matched Nothing
+    hyper Languages $ languagesView filters
 
-data Filter = Filter
+data Languages = Languages
   deriving (Show, Read, ViewId)
 
 type Term = Text
 
-instance HyperView Filter es where
-  data Action Filter
+-- Filters available from the query
+data Filters = Filters
+  { features :: [TypeFeature]
+  , family :: Maybe LanguageFamily
+  , term :: Term
+  }
+  deriving (Generic, FromQuery, ToQuery)
+
+instance HyperView Languages es where
+  data Action Languages
     = SearchTerm Text
     | Select ProgrammingLanguage
+    | Feature TypeFeature Bool
+    | Family (Maybe LanguageFamily)
     deriving (Show, Read, ViewAction)
 
-  update (SearchTerm term) = do
-    -- save the search term as a query param
-    setParam "term" term
+  update = \case
+    Select lang -> do
+      pure $ chosenView lang
+    SearchTerm term -> do
+      filters <- modFilters $ \f -> f{term}
+      pure $ languagesView filters
+    Feature feature selected -> do
+      filters <- modFilters $ \f -> setFeatures feature selected f
+      pure $ languagesView filters
+    Family f -> do
+      filters <- modFilters $ \Filters{features, term} -> Filters{family = f, features, term}
+      pure $ languagesView filters
+   where
+    setFeatures feature selected Filters{term, family, features} =
+      let features' = if selected then addFeature feature features else delFeature feature features
+       in Filters{term, family, features = features'}
+    addFeature f fs
+      | f `elem` fs = fs
+      | otherwise = f : fs
+    delFeature feature =
+      filter (/= feature)
+    modFilters f = do
+      filts <- query
+      let filts' = f filts
+      setQuery filts'
+      pure filts'
 
-    let matched = filter (isMatchLanguage term) allLanguages
-    pure $ filterView matched Nothing
-  update (Select lang) = do
-    pure $ filterView [] (Just lang)
+-- apply our filters, return any languages that match
+filterLanguages :: Filters -> [ProgrammingLanguage]
+filterLanguages filts =
+  filter match allLanguages
+ where
+  match lang =
+    isMatchLanguage filts.term lang
+      && matchFamily filts.family lang
+      && matchFeatures filts.features lang
+  matchFamily Nothing _ = True
+  matchFamily (Just fam) lang = lang.family == fam
+  matchFeatures feats lang =
+    all (\f -> f `elem` lang.features) feats
 
-filterView :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View Filter ()
-filterView langs selected =
+languagesView :: Filters -> View Languages ()
+languagesView filters = do
+  let matched = filterLanguages filters
   col (gap 10 . grow) $ do
-    stack grow $ do
-      layer $ search SearchTerm 200 (placeholder "filter programming languages" . border 1 . pad 10)
-    -- clearButton SearchTerm term
-    chosenView selected
-    resultsTable Select langs
+    filtersView filters
+    resultsTable Select matched
+
+filtersView :: Filters -> View Languages ()
+filtersView filters = do
+  stack grow $ do
+    layer $ search SearchTerm 200 (placeholder "filter programming languages" . border 1 . pad 10)
+  -- clearButton SearchTerm term
+
+  row id $ do
+    col (gap 5) $ do
+      el bold "Language Family"
+      dropdown Family (== filters.family) (border 1 . pad 10) $ do
+        option Nothing "Any"
+        option (Just ObjectOriented) "Object Oriented"
+        option (Just Functional) "Functional"
+    space
+    col (gap 5) $ do
+      el bold "Type System Features"
+      feature Dynamic
+      feature Typed
+      feature Generics
+      feature TypeClasses
+      feature TypeFamilies
+ where
+  feature f =
+    row (gap 10) $ do
+      toggleCheckBtn (Feature f) (f `elem` filters.features)
+      el_ $ text (featureName f)
+
+  featureName f = pack $ show f
 
 -- It's not recommended to attempt to clear the value. Setting the value on inputs results in unexpected behavior.
 -- if you need this, use a javascript component
@@ -62,9 +130,8 @@ clearButton clear term =
       "" -> hide
       _ -> id
 
-chosenView :: Maybe ProgrammingLanguage -> View c ()
-chosenView Nothing = none
-chosenView (Just lang) = do
+chosenView :: ProgrammingLanguage -> View c ()
+chosenView lang = do
   row (gap 10) $ do
     el_ "You chose:"
     el_ $ text lang.name

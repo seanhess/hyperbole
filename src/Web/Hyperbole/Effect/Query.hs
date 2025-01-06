@@ -64,10 +64,10 @@ query = do
     Right a -> pure a
 
 
--- should set all of the values from it
+-- replace the query with this
 setQuery :: (Hyperbole :> es, ToQuery a) => a -> Eff es ()
 setQuery a = do
-  modifyQuery (QueryData.insertAll a)
+  modifyQuery (const $ toQuery a)
 
 
 {- | Return the entire 'Query'

@@ -41,7 +41,7 @@ instance (IOE :> es) => HyperView LiveSearch es where
 selectedView :: ProgrammingLanguage -> View LiveSearch ()
 selectedView selected = do
   col (gap 10) $ do
-    Filter.chosenView (Just selected)
+    Filter.chosenView selected
 
 liveSearchView :: [ProgrammingLanguage] -> Int -> Term -> View LiveSearch ()
 liveSearchView langs current term = do

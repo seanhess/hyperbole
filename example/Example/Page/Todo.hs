@@ -133,13 +133,13 @@ instance (Todos :> es) => HyperView TodoView es where
   type Require TodoView = '[AllTodos]
 
   data Action TodoView
-    = ToggleComplete Todo
+    = SetCompleted Todo Bool
     | Edit Todo
     | SubmitEdit Todo
     deriving (Show, Read, ViewAction)
 
-  update (ToggleComplete todo) = do
-    updated <- Todos.setCompleted (not todo.completed) todo
+  update (SetCompleted todo completed) = do
+    updated <- Todos.setCompleted completed todo
     pure $ todoView updated
   update (Edit todo) = do
     pure $ todoEditView todo
@@ -151,7 +151,7 @@ instance (Todos :> es) => HyperView TodoView es where
 todoView :: Todo -> View TodoView ()
 todoView todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
-    toggleCheckBtn (ToggleComplete todo) todo.completed
+    toggleCheckBtn (SetCompleted todo) todo.completed
     el (completed . pad (XY 18 4) . onDblClick (Edit todo)) $ text todo.task
  where
   completed = if todo.completed then Style.strikethrough else id

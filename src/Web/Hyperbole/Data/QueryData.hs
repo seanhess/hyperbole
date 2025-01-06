@@ -1,11 +1,14 @@
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.Data.QueryData where
 
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
+import Data.Default (Default (..))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
+import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Time (UTCTime)
@@ -106,6 +109,8 @@ instance FromQuery QueryData where
 -- | Encode an type to a full Query
 class ToQuery a where
   toQuery :: a -> QueryData
+  default toQuery :: (Generic a, GToQuery (Rep a)) => a -> QueryData
+  toQuery = gToQuery . from
 
 
 instance ToQuery QueryData where
@@ -116,14 +121,14 @@ instance ToQuery Query where
   toQuery = queryData
 
 
--- | Reimplement 'ToHttpApiData' based on Show
+-- | Encode a datatype into a querystring parameter value. Used for both setting the browser url and saving data to a session. Reimplements 'ToHttpApiData' based on Show.
 class ToParam a where
   toParam :: a -> Text
   default toParam :: (Show a) => a -> Text
   toParam = showQueryParam
 
 
--- | Reimplement 'FromHttpApiData' based on Read
+-- | Decode a datatype into a querystring parameter value. Used for both setting the browser url and saving data to a session. Reimplements 'FromHttpApiData based on Show.
 class FromParam a where
   parseParam :: Text -> Either Text a
   default parseParam :: (Read a) => Text -> Either Text a
@@ -236,8 +241,6 @@ instance (FromParam a, FromParam b) => FromParam (Either a b) where
 
 
 -- | Encode a Show as a query param
-
--- TODO: urlEncode
 showQueryParam :: (Show a) => a -> Text
 showQueryParam a = toQueryParam $ show a
 
@@ -256,7 +259,7 @@ parseParams :: (Traversable t, FromParam a) => t Text -> Either Text (t a)
 parseParams = traverse parseParam
 
 
--- Generic From Query for records
+-- | Generic decoding of records from a Query
 class GFromQuery f where
   gParseQuery :: QueryData -> Either Text (f p)
 
@@ -276,13 +279,14 @@ instance (GFromQuery f) => GFromQuery (M1 C c f) where
   gParseQuery q = M1 <$> gParseQuery q
 
 
-instance (Selector s, FromParam a) => GFromQuery (M1 S s (K1 R a)) where
+instance (Selector s, FromParam a, DefaultParam a) => GFromQuery (M1 S s (K1 R a)) where
   gParseQuery q = do
     let s = selName (undefined :: M1 S s (K1 R (f a)) p)
-    val <- require (pack s) q
-    pure $ M1 $ K1 val
+    let mval = lookup (pack s) q
+    pure $ M1 $ K1 $ fromMaybe defaultParam mval
 
 
+-- | Generic encoding of records to a Query
 class GToQuery f where
   gToQuery :: f p -> QueryData
 
@@ -299,7 +303,24 @@ instance (GToQuery f) => GToQuery (M1 C d f) where
   gToQuery (M1 f) = gToQuery f
 
 
-instance (Selector s, ToParam a) => GToQuery (M1 S s (K1 R a)) where
-  gToQuery (M1 (K1 a)) =
-    let sel = pack $ selName (undefined :: M1 S s (K1 R (f a)) p)
-     in singleton sel (toParam a)
+instance (Selector s, ToParam a, Eq a, DefaultParam a) => GToQuery (M1 S s (K1 R a)) where
+  gToQuery (M1 (K1 a))
+    | a == defaultParam = mempty
+    | otherwise =
+        let sel = pack $ selName (undefined :: M1 S s (K1 R (f a)) p)
+         in singleton sel (toParam a)
+
+
+-- | Data.Default doesn't have a Text instance! This is better than an orphan instance
+class DefaultParam a where
+  defaultParam :: a
+  default defaultParam :: (Default a) => a
+  defaultParam = def
+
+
+instance {-# OVERLAPPABLE #-} (Default a) => DefaultParam a where
+  defaultParam = def
+
+
+instance {-# OVERLAPS #-} DefaultParam Text where
+  defaultParam = ""
