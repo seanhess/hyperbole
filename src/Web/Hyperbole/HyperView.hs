@@ -8,7 +8,7 @@ import Data.Text (Text)
 import Effectful
 import Effectful.Reader.Dynamic
 import GHC.TypeLits hiding (Mod)
-import Web.Hyperbole.Data.QueryData (readQueryParam, showQueryParam)
+import Web.Hyperbole.Data.QueryData (ParamValue (..), readQueryParam, showQueryParam)
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
 import Web.Hyperbole.TypeList
 import Web.View (View, addContext, att, context, el, flexCol, none)
@@ -164,13 +164,13 @@ hyperUnsafe vid vw = do
 class ViewAction a where
   toAction :: a -> Text
   default toAction :: (Show a) => a -> Text
-  toAction = showQueryParam
+  toAction = (.text) . showQueryParam
 
 
   parseAction :: Text -> Maybe a
   default parseAction :: (Read a) => Text -> Maybe a
   parseAction t =
-    either (const Nothing) pure $ readQueryParam t
+    either (const Nothing) pure $ readQueryParam (ParamValue t)
 
 
 instance ViewAction () where
@@ -181,13 +181,13 @@ instance ViewAction () where
 class ViewId a where
   toViewId :: a -> Text
   default toViewId :: (Show a) => a -> Text
-  toViewId = showQueryParam
+  toViewId = (.text) . showQueryParam
 
 
   parseViewId :: Text -> Maybe a
   default parseViewId :: (Read a) => Text -> Maybe a
   parseViewId t =
-    either (const Nothing) pure $ readQueryParam t
+    either (const Nothing) pure $ readQueryParam (ParamValue t)
 
 
 class HasViewId m view where

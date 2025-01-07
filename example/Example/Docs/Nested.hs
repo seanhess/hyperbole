@@ -1,4 +1,4 @@
-module Example.Intro.Nested where
+module Example.Docs.Nested where
 
 import Control.Monad (forM_)
 import Data.Text (Text)

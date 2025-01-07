@@ -37,7 +37,7 @@ import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed)
 
 {- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
 
-> #EMBED Example/Intro/BasicPage.hs main
+> #EMBED Example/Docs/BasicPage.hs main
 -}
 liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, Concurrent, IOE] Response -> Wai.Application
 liveApp toDoc app =
@@ -116,18 +116,12 @@ socketApp actions pend = do
 'liveApp' (basicDocument "App Title") ('routeRequest' router)
 @
 
-You may want to specify a custom document function instead:
+You may want to specify a custom document function to import custom javascript, css, or add other information to the \<head\>
 
-> myDocument :: ByteString -> ByteString
-> myDocument content =
->   [i|<html>
->     <head>
->       <title>#{title}</title>
->       <script type="text/javascript">#{scriptEmbed}</script>
->       <style type="text/css">#{cssResetEmbed}</style>
->     </head>
->     <body>#{content}</body>
->   </html>|]
+> import Data.String.Interpolate (i)
+> import Web.Hyperbole (scriptEmbed, cssResetEmbed)
+>
+> #EMBED Example/Docs/App.hs customDocument
 -}
 basicDocument :: Text -> BL.ByteString -> BL.ByteString
 basicDocument title cnt =
@@ -145,26 +139,15 @@ basicDocument title cnt =
 
 
 @
-import Page.Messages qualified as Messages
-import Page.Users qualified as Users
+#EMBED Example/Docs/App.hs import Example.Docs.Page
 
-data AppRoute
-  = Main
-  | Messages
-  | Users UserId
-  deriving (Eq, Generic, 'Route')
+#EMBED Example/Docs/App.hs type UserId
 
-router :: ('Hyperbole' :> es) => AppRoute -> 'Eff' es 'Response'
-router Messages = 'page' Messages.page
-router (Users uid) = 'page' $ Users.page uid
-router Main = do
-  'view' $ do
-    'el_' "click a link below to visit a page"
-    'route' Messages id \"Messages\"
+#EMBED Example/Docs/App.hs data AppRoute
 
-main = do
-  'run' 3000 $ do
-    'liveApp' ('basicDocument' \"Example\") (routeRequest router)
+#EMBED Example/Docs/App.hs instance Route
+
+#EMBED Example/Docs/App.hs router
 @
 -}
 routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response

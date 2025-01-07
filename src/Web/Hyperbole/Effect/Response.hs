@@ -20,17 +20,9 @@ respondEarly i vw = do
 {- | Respond immediately with 404 Not Found
 
 @
-userLoad :: (Hyperbole :> es, Users :> es) => UserId -> Eff es User
-userLoad uid = do
-  mu <- send (LoadUser uid)
-  maybe notFound pure mu
+#EMBED Example/Docs/App.hs findUser
 
-myPage :: (Hyperbole :> es, Users :> es) => Eff es View
-myPage = do
-  load $ do
-    u <- userLoad 100
-    -- skipped if user = Nothing
-    pure $ userView u
+#EMBED Example/Docs/App.hs userPage
 @
 -}
 notFound :: (Hyperbole :> es) => Eff es a

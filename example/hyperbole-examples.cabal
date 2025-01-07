@@ -93,19 +93,25 @@ executable examples
       Example.AppRoute
       Example.Colors
       Example.Data.ProgrammingLanguage
+      Example.Docs.App
+      Example.Docs.BasicPage
+      Example.Docs.Component
+      Example.Docs.Encoding
+      Example.Docs.Interactive
+      Example.Docs.MultiPage
+      Example.Docs.MultiView
+      Example.Docs.Nested
+      Example.Docs.Page.Messages
+      Example.Docs.Page.Users
+      Example.Docs.Params
+      Example.Docs.Sessions
+      Example.Docs.SideEffects
+      Example.Docs.State
+      Example.Docs.Toggles
+      Example.Docs.ViewFunctions
       Example.Effects.Debug
       Example.Effects.Todos
       Example.Effects.Users
-      Example.Intro.BasicPage
-      Example.Intro.Component
-      Example.Intro.Interactive
-      Example.Intro.MultiPage
-      Example.Intro.MultiView
-      Example.Intro.Nested
-      Example.Intro.SideEffects
-      Example.Intro.State
-      Example.Intro.Toggles
-      Example.Intro.ViewFunctions
       Example.Page.Concurrent
       Example.Page.Contact
       Example.Page.Contacts

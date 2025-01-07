@@ -79,7 +79,7 @@ Examples
 The example directory contains an app demonstrating various features. See it in action at https://docs.hyperbole.live
 
 <a href="https://docs.hyperbole.live">
-  <img alt="Hyperbole Examples" src="example/doc/examples.png"/>
+  <img alt="Hyperbole Examples" src="example/static/examples.png"/>
 </a>
 
 

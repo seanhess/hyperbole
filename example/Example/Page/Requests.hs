@@ -5,7 +5,6 @@ import Effectful
 import Example.AppRoute qualified as Route
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
-import Web.Hyperbole.Effect.Server (Request (..))
 
 page :: (Hyperbole :> es) => Eff es (Page '[])
 page = do

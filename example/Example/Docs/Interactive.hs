@@ -1,4 +1,4 @@
-module Example.Intro.Interactive where
+module Example.Docs.Interactive where
 
 import Data.Text (Text)
 import Web.Hyperbole

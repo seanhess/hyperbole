@@ -1,9 +1,10 @@
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
-module Example.Intro.BasicPage where
+module Example.Docs.BasicPage where
 
 import Web.Hyperbole
 
+main :: IO ()
 main = do
   run 3000 $ do
     liveApp (basicDocument "Example") (runPage messagePage)

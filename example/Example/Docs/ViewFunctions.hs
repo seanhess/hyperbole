@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Intro.ViewFunctions where
+module Example.Docs.ViewFunctions where
 
 import Data.Text (Text)
 import Web.Hyperbole

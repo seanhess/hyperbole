@@ -1,4 +1,4 @@
-module Example.Intro.SideEffects where
+module Example.Docs.SideEffects where
 
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)

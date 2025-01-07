@@ -9,6 +9,7 @@ import Data.Default (Default (..))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Maybe (fromMaybe)
+import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Time (UTCTime)
@@ -21,20 +22,28 @@ import Web.HttpApiData (parseQueryParam, toQueryParam)
 import Prelude hiding (lookup)
 
 
+newtype Param = Param {text :: Text}
+  deriving newtype (Show, Eq, Ord, IsString)
+
+
+newtype ParamValue = ParamValue {text :: Text}
+  deriving newtype (Show, Eq, Ord, IsString)
+
+
 -- | Key-value store for query params and sessions
-newtype QueryData = QueryData (Map Text Text)
+newtype QueryData = QueryData (Map Param ParamValue)
   deriving (Show)
   deriving newtype (Monoid, Semigroup)
 
 
-singleton :: (ToParam a) => Text -> a -> QueryData
+singleton :: (ToParam a) => Param -> a -> QueryData
 singleton key a = QueryData $ M.singleton key (toParam a)
 
 
-insert :: (ToParam a) => Text -> a -> QueryData -> QueryData
-insert k a (QueryData m) =
+insert :: (ToParam a) => Param -> a -> QueryData -> QueryData
+insert p a (QueryData m) =
   let val = toParam a
-   in QueryData $ M.insert k val m
+   in QueryData $ M.insert p val m
 
 
 insertAll :: (ToQuery a) => a -> QueryData -> QueryData
@@ -43,41 +52,43 @@ insertAll a (QueryData m) =
    in QueryData $ M.union kvs m
 
 
-delete :: Text -> QueryData -> QueryData
-delete k (QueryData m) =
-  QueryData $ M.delete k m
+delete :: Param -> QueryData -> QueryData
+delete p (QueryData m) =
+  QueryData $ M.delete p m
 
 
-lookup :: (FromParam a) => Text -> QueryData -> Maybe a
+lookup :: (FromParam a) => Param -> QueryData -> Maybe a
 lookup k (QueryData m) = do
   t <- M.lookup k m
   either (const Nothing) pure $ parseParam t
 
 
-require :: (FromParam a) => Text -> QueryData -> Either Text a
-require k qd = do
-  case lookup k qd of
-    Nothing -> Left $ "Missing Key: " <> k
-    Just t -> parseParam t
+require :: (FromParam a) => Param -> QueryData -> Either Text a
+require p qd = do
+  case lookup p qd of
+    Nothing -> Left $ "Missing Key: " <> p.text
+    Just val -> val
 
 
-filterKey :: (Text -> Bool) -> QueryData -> QueryData
+filterKey :: (Param -> Bool) -> QueryData -> QueryData
 filterKey p (QueryData m) =
   QueryData $ M.filterWithKey (\k _ -> p k) m
 
 
-member :: Text -> QueryData -> Bool
+member :: Param -> QueryData -> Bool
 member k (QueryData qd) = M.member k qd
 
 
-elems :: QueryData -> [Text]
+elems :: QueryData -> [ParamValue]
 elems (QueryData m) = M.elems m
 
 
 render :: QueryData -> ByteString
 render (QueryData m) =
   -- urlEncode True
-  renderQuery False (HTTP.toQuery $ M.toList m)
+  renderQuery False (HTTP.toQuery $ fmap queryItem $ M.toList m)
+ where
+  queryItem (Param k, ParamValue val) = (k, val)
 
 
 parse :: ByteString -> QueryData
@@ -88,14 +99,25 @@ parse =
 
 queryData :: Query -> QueryData
 queryData =
-  QueryData . M.fromList . map (bimap cs value)
+  QueryData . M.fromList . map (bimap (Param . cs) value)
  where
   -- empty / missing values are encoded as empty strings
   value Nothing = ""
-  value (Just v) = cs v
+  value (Just v) = ParamValue (cs v)
 
 
--- | Decode a type from a Query
+{- | Decode a type from a 'QueryData'. Missing fields are set to 'defaultParam'
+
+@
+#EMBED Example/Docs/Encoding.hs data Filters
+@
+
+>>> parseQuery $ parse "active=true&search=asdf"
+Right (Filters True "asdf")
+
+>>> parseQuery $ parse "search=asdf"
+Right (Filters False "asdf")
+-}
 class FromQuery a where
   parseQuery :: QueryData -> Either Text a
   default parseQuery :: (Generic a, GFromQuery (Rep a)) => QueryData -> Either Text a
@@ -106,7 +128,23 @@ instance FromQuery QueryData where
   parseQuery = pure
 
 
--- | Encode an type to a full Query
+{- | Sessions, Query Params, and Forms all encode their data as query strings. ToQuery and 'FromQuery' control how a datatype is encoded to a full query string
+
+@
+#EMBED Example/Docs/Encoding.hs data Filters
+@
+
+>>> render $ toQuery $ Filter True "asdf"
+"active=true&search=asdf"
+
+If the value of a field is the same as 'DefaultParam', it will be omitted from the query string
+
+>>> render $ toQuery $ Filter True ""
+"active=true"
+
+>>> render $ toQuery $ Filter False ""
+""
+-}
 class ToQuery a where
   toQuery :: a -> QueryData
   default toQuery :: (Generic a, GToQuery (Rep a)) => a -> QueryData
@@ -121,96 +159,118 @@ instance ToQuery Query where
   toQuery = queryData
 
 
--- | Encode a datatype into a querystring parameter value. Used for both setting the browser url and saving data to a session. Reimplements 'ToHttpApiData' based on Show.
+{- | Encode data into a query parameter value
+
+@
+#EMBED Example/Effects/Todos.hs data Todo = Todo
+@
+
+@
+#EMBED Example/Docs/Encoding.hs data Tags
+
+#EMBED Example/Docs/Encoding.hs instance ToParam Tags
+@
+-}
 class ToParam a where
-  toParam :: a -> Text
-  default toParam :: (Show a) => a -> Text
+  toParam :: a -> ParamValue
+  default toParam :: (Show a) => a -> ParamValue
   toParam = showQueryParam
 
 
--- | Decode a datatype into a querystring parameter value. Used for both setting the browser url and saving data to a session. Reimplements 'FromHttpApiData based on Show.
+{- | Decode data from a query parameter value
+
+@
+#EMBED Example/Effects/Todos.hs data Todo = Todo
+@
+
+@
+#EMBED Example/Docs/Encoding.hs data Tags
+
+#EMBED Example/Docs/Encoding.hs instance FromParam Tags
+@
+-}
 class FromParam a where
-  parseParam :: Text -> Either Text a
-  default parseParam :: (Read a) => Text -> Either Text a
+  parseParam :: ParamValue -> Either Text a
+  default parseParam :: (Read a) => ParamValue -> Either Text a
   parseParam = readQueryParam
 
 
 instance ToParam Int where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Int where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Integer where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Integer where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Float where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Float where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Double where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Double where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Word where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Word where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Word8 where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Word8 where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Word16 where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Word16 where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Word32 where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Word32 where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Word64 where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Word64 where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Bool where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Bool where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Text where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Text where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam Char where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam Char where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance ToParam UTCTime where
-  toParam = toQueryParam
+  toParam = ParamValue . toQueryParam
 instance FromParam UTCTime where
-  parseParam = parseQueryParam
+  parseParam (ParamValue t) = parseQueryParam t
 
 
 instance (Show a) => ToParam [a] where
@@ -231,23 +291,23 @@ instance (ToParam a, ToParam b) => ToParam (Either a b) where
   toParam (Left a) = toParam a
   toParam (Right b) = toParam b
 instance (FromParam a, FromParam b) => FromParam (Either a b) where
-  parseParam t =
-    case parseParam @a t of
+  parseParam val =
+    case parseParam @a val of
       Right a -> pure $ Left a
       Left _ -> do
-        case parseParam @b t of
-          Left _ -> Left $ "Could not parseParam Either: " <> t
+        case parseParam @b val of
+          Left _ -> Left $ "Could not parseParam Either: " <> val.text
           Right b -> pure $ Right b
 
 
 -- | Encode a Show as a query param
-showQueryParam :: (Show a) => a -> Text
-showQueryParam a = toQueryParam $ show a
+showQueryParam :: (Show a) => a -> ParamValue
+showQueryParam a = ParamValue $ toQueryParam $ show a
 
 
 -- | Decode a Read as a query param
-readQueryParam :: (Read a) => Text -> Either Text a
-readQueryParam t = do
+readQueryParam :: (Read a) => ParamValue -> Either Text a
+readQueryParam (ParamValue t) = do
   str <- parseQueryParam t
   case readMaybe str of
     Nothing -> Left $ pack $ "Could not read query param: " <> str
@@ -255,7 +315,7 @@ readQueryParam t = do
 
 
 -- | Parse a Traversable (list) of params
-parseParams :: (Traversable t, FromParam a) => t Text -> Either Text (t a)
+parseParams :: (Traversable t, FromParam a) => t ParamValue -> Either Text (t a)
 parseParams = traverse parseParam
 
 
@@ -282,7 +342,7 @@ instance (GFromQuery f) => GFromQuery (M1 C c f) where
 instance (Selector s, FromParam a, DefaultParam a) => GFromQuery (M1 S s (K1 R a)) where
   gParseQuery q = do
     let s = selName (undefined :: M1 S s (K1 R (f a)) p)
-    let mval = lookup (pack s) q
+    let mval = lookup (Param $ pack s) q
     pure $ M1 $ K1 $ fromMaybe defaultParam mval
 
 
@@ -307,8 +367,8 @@ instance (Selector s, ToParam a, Eq a, DefaultParam a) => GToQuery (M1 S s (K1 R
   gToQuery (M1 (K1 a))
     | a == defaultParam = mempty
     | otherwise =
-        let sel = pack $ selName (undefined :: M1 S s (K1 R (f a)) p)
-         in singleton sel (toParam a)
+        let sel = Param $ pack $ selName (undefined :: M1 S s (K1 R (f a)) p)
+         in singleton sel a
 
 
 -- | Data.Default doesn't have a Text instance! This is better than an orphan instance

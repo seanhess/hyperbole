@@ -1,4 +1,4 @@
-module Example.Intro.Toggles where
+module Example.Docs.Toggles where
 
 import Data.Text (Text)
 import Web.Hyperbole

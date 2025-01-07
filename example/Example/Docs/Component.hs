@@ -1,4 +1,4 @@
-module Example.Intro.Component where
+module Example.Docs.Component where
 
 import Data.Text (Text)
 import Example.Colors

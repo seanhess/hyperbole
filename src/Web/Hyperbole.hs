@@ -52,8 +52,8 @@ module Web.Hyperbole
     liveApp
   , Warp.run
   , basicDocument
-  , runPage
   , Page
+  , runPage
 
     -- ** Type-Safe Routes
   , routeRequest -- maybe belongs in an application section
@@ -64,36 +64,31 @@ module Web.Hyperbole
     -- * Hyperbole Effect
   , Hyperbole
 
-    -- ** Request
-  , request
-  , formBody
-  , formData
-
     -- ** Response
   , notFound
   , redirect
   , respondEarly
 
-    -- ** Query
+    -- ** Request
+  , request
+  , Request (..)
+
+    -- ** Query Params #query#
+  , query
+  , setQuery
   , param
   , lookupParam
   , setParam
   , deleteParam
-  , query
-  , setQuery
   , queryParams
-  , ToParam (..)
-  , FromParam (..)
-  , ToQuery (..)
-  , FromQuery (..)
 
-    -- ** Session
+    -- ** Sessions #sessions#
+  , session
+  , setSession
   , sessionKey
   , lookupSessionKey
   , setSessionKey
   , deleteSessionKey
-  , session
-  , setSession
   , sessionParams
 
     -- * HyperView
@@ -122,6 +117,7 @@ module Web.Hyperbole
     -- * Type-Safe Forms
 
     -- | Painless forms with type-checked field names, and support for validation. See [Example.Forms](https://docs.hyperbole.live/formsimple)
+  , formData
   , Form (..)
   , formFields
   , formFieldsWith
@@ -146,12 +142,18 @@ module Web.Hyperbole
   , invalidText
   , anyInvalid
 
+    -- * Query Param Encoding
+  , ToQuery (..)
+  , FromQuery (..)
+  , ToParam (..)
+  , FromParam (..)
+
     -- * Advanced
   , target
   , view
+  , Response
   , ViewId
   , ViewAction
-  , Response
   , Root
   , HyperViewHandled
 
@@ -241,9 +243,9 @@ module Main where
 
 import Web.Hyperbole
 
-#EMBED Example/Intro/BasicPage.hs main
+#EMBED Example/Docs/BasicPage.hs main
 
-#EMBED Example/Intro/BasicPage.hs messagePage
+#EMBED Example/Docs/BasicPage.hs messagePage
 @
 -}
 
@@ -253,7 +255,7 @@ import Web.Hyperbole
 We can include one or more 'HyperView's to add type-safe interactivity to live subsections of the 'Page'. To start, first define a data type (a 'ViewId') that uniquely identifies that subsection of the page:
 
 @
-#EMBED Example/Intro/Interactive.hs data Message
+#EMBED Example/Docs/Interactive.hs data Message
 @
 
 Make our 'ViewId' an instance of 'HyperView' by:
@@ -262,14 +264,14 @@ Make our 'ViewId' an instance of 'HyperView' by:
 * Write an 'update' for each 'Action'
 
 @
-#EMBED Example/Intro/Interactive.hs instance HyperView Message
+#EMBED Example/Docs/Interactive.hs instance HyperView Message
 @
 
 
 Replace the static message with our new 'HyperView' using 'hyper', and add our 'ViewId' to the 'Page' type signature. Then add a 'button' to trigger the 'Action':
 
 @
-#EMBED Example/Intro/Interactive.hs messagePage
+#EMBED Example/Docs/Interactive.hs messagePage
 @
 
 The contents of `hyper` will be replaced with the result of 'update', leaving the rest of the page untouched.
@@ -283,33 +285,33 @@ Rather than showing a completely different HTML 'View' on each update, we can cr
 Each 'HyperView' should have a main view function that renders it based on its state:
 
 @
-#EMBED Example/Intro/ViewFunctions.hs messageView
+#EMBED Example/Docs/ViewFunctions.hs messageView
 @
 
 Now we can refactor to use the same view function for both the initial 'hyper' and the 'update'. The only thing that will change on an update is the text of the message.
 
 @
-#EMBED Example/Intro/ViewFunctions.hs messagePage
+#EMBED Example/Docs/ViewFunctions.hs messagePage
 
-#EMBED Example/Intro/ViewFunctions.hs instance HyperView Message
+#EMBED Example/Docs/ViewFunctions.hs instance HyperView Message
 @
 
 We can create multiple view functions with our 'HyperView' as the 'context', and factor them however is most convenient.
 
 @
-#EMBED Example/Intro/ViewFunctions.hs goodbyeButton
+#EMBED Example/Docs/ViewFunctions.hs goodbyeButton
 @
 
 We can also create view functions that work in any context.
 
 @
-#EMBED Example/Intro/ViewFunctions.hs header
+#EMBED Example/Docs/ViewFunctions.hs header
 @
 
 Factored this way, our main 'View' for 'Message' becomes:
 
 @
-#EMBED Example/Intro/ViewFunctions.hs messageView'
+#EMBED Example/Docs/ViewFunctions.hs messageView'
 @
 -}
 
@@ -329,22 +331,22 @@ We've mentioned most of the Architecture of a hyperbole application, but let's g
 
 We can add as many 'HyperView's to a page as we want. Let's create another 'HyperView' for a simple counter
 
-From [Example.Intro.MultiView](https://github.com/seanhess/hyperbole/blob/latest/example/Example/Intro/MultiView.hs)
+From [Example.Docs.MultiView](https://github.com/seanhess/hyperbole/blob/latest/example/Example/Docs/MultiView.hs)
 
 @
-#EMBED Example/Intro/MultiView.hs data Count
+#EMBED Example/Docs/MultiView.hs data Count
 
 
-#EMBED Example/Intro/MultiView.hs instance HyperView Count
+#EMBED Example/Docs/MultiView.hs instance HyperView Count
 
 
-#EMBED Example/Intro/MultiView.hs countView
+#EMBED Example/Docs/MultiView.hs countView
 @
 
 We can use both 'Message' and 'Count' 'HyperView's in our page, and they will update independently:
 
 @
-#EMBED Example/Intro/MultiView.hs page
+#EMBED Example/Docs/MultiView.hs page
 @
 -}
 
@@ -383,27 +385,27 @@ From [Example.Contacts](https://docs.hyperbole.live/contacts)
 An app has multiple 'Page's with different 'Route's that each map to a unique url path:
 
 @
-#EMBED Example/Intro/MultiPage.hs data AppRoute
+#EMBED Example/Docs/MultiPage.hs data AppRoute
 @
 
 When we define our app, we define a function that maps a 'Route' to a 'Page'
 
 @
-#EMBED Example/Intro/MultiPage.hs main
+#EMBED Example/Docs/MultiPage.hs main
 @
 
 Each 'Page' is completely independent. The web page is freshly reloaded each time you switch routes. We can add type-safe links to other pages using 'route'
 
 @
-#EMBED Example/Intro/MultiPage.hs menu
+#EMBED Example/Docs/MultiPage.hs menu
 @
 
 If you need the same header or menu on all pages, use a view function:
 
 @
-#EMBED Example/Intro/MultiPage.hs exampleLayout
+#EMBED Example/Docs/MultiPage.hs exampleLayout
 
-#EMBED Example/Intro/MultiPage.hs examplePage
+#EMBED Example/Docs/MultiPage.hs examplePage
 @
 
 As shown above, each 'Page' can contain multiple interactive 'HyperView's to add interactivity
@@ -416,12 +418,12 @@ We can nest smaller, specific 'HyperView's inside of a larger parent. You might 
 
 Let's imagine we want to display a list of Todos. The user can mark individual todos complete, and have them update independently. The specific 'HyperView' might look like this:
 
-From [Example.Intro.Nested](https://github.com/seanhess/hyperbole/blob/latest/example/Example/Intro/Nested.hs)
+From [Example.Docs.Nested](https://github.com/seanhess/hyperbole/blob/latest/example/Example/Docs/Nested.hs)
 
 @
-#EMBED Example/Intro/Nested.hs data TodoItem
+#EMBED Example/Docs/Nested.hs data TodoItem
 
-#EMBED Example/Intro/Nested.hs instance HyperView TodoItem
+#EMBED Example/Docs/Nested.hs instance HyperView TodoItem
 @
 
 But we also want the entire list to refresh when a user adds a new todo. We need to create a parent 'HyperView' for the whole list.
@@ -429,15 +431,15 @@ But we also want the entire list to refresh when a user adds a new todo. We need
 List all allowed nested views by adding them to 'Require'
 
 @
-#EMBED Example/Intro/Nested.hs data AllTodos
+#EMBED Example/Docs/Nested.hs data AllTodos
 
-#EMBED Example/Intro/Nested.hs instance HyperView AllTodos
+#EMBED Example/Docs/Nested.hs instance HyperView AllTodos
 @
 
 Then we can embed the child 'HyperView' into the parent with 'hyper'
 
 @
-#EMBED Example/Intro/Nested.hs todosView
+#EMBED Example/Docs/Nested.hs todosView
 @
 See this technique used in the [TodoMVC Example](https://docs.hyperbole.live/todos)
 -}
@@ -450,13 +452,13 @@ You may be tempted to use 'HyperView's to create reusable \"Components\". This l
 We showed earlier that we can write a [View Function](#g:view-functions) with a generic 'context' that we can reuse in any view.  A function like this might help us reuse styles:
 
 @
-#EMBED Example/Intro/ViewFunctions.hs header
+#EMBED Example/Docs/ViewFunctions.hs header
 @
 
 What if we want to reuse functionality too? We can pass an 'Action' into the view function as a parameter:
 
 @
-#EMBED Example/Intro/Component.hs styledButton
+#EMBED Example/Docs/Component.hs styledButton
 @
 
 We can create more complex view functions by passing state in as a parameter. Here's a button that toggles between a checked and unchecked state:
@@ -495,9 +497,9 @@ The [National Solar Observatory](https://nso.edu) uses Hyperbole for the Level 2
 From [Example.Page.Simple](https://docs.hyperbole.live/simple)
 
 @
-#EMBED Example/Intro/State.hs instance HyperView Message
+#EMBED Example/Docs/State.hs instance HyperView Message
 
-#EMBED Example/Intro/State.hs messageView
+#EMBED Example/Docs/State.hs messageView
 @
 -}
 
@@ -511,9 +513,9 @@ Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) t
 From [Example.Page.Simple](https://docs.hyperbole.live/simple)
 
 @
-#EMBED Example/Intro/SideEffects.hs messagePage
+#EMBED Example/Docs/SideEffects.hs messagePage
 
-#EMBED Example/Intro/SideEffects.hs instance HyperView Message
+#EMBED Example/Docs/SideEffects.hs instance HyperView Message
 @
 
 

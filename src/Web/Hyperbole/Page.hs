@@ -9,14 +9,25 @@ import Web.Hyperbole.HyperView (Root)
 import Web.View (View)
 
 
--- type Page (es :: [Effect]) (views :: [Type]) = Eff es (View (Root views) ())
+{- | Conceptually, an application is dividied up into multiple [Pages](#g:pages). Each page module should have a function that returns a 'Page'. The 'Page' itself is a 'View' with a type-level list of 'HyperView's used on the page.
+
+@
+#EMBED Example/Docs/MultiView.hs page
+@
+-}
 type Page (views :: [Type]) = View (Root views) ()
 
 
--- | Run a 'Page' in 'Hyperbole'
+{- | Run a 'Page' and return a 'Response'
+
+@
+#EMBED Example/Docs/BasicPage.hs main
+
+#EMBED Example/Docs/BasicPage.hs messagePage
+@
+-}
 runPage
-  :: forall views es
-   . (Hyperbole :> es, RunHandlers views es)
+  :: (Hyperbole :> es, RunHandlers views es)
   => Eff es (Page views)
   -> Eff es Response
 runPage = runLoad

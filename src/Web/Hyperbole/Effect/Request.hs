@@ -1,6 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE UndecidableInstances #-}
-
 module Web.Hyperbole.Effect.Request where
 
 import Effectful

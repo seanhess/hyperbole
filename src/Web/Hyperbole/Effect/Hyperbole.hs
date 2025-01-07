@@ -12,10 +12,7 @@ import Web.Hyperbole.Data.QueryData (queryData)
 import Web.Hyperbole.Effect.Server
 
 
-{- | In any 'load' or 'handle', you can use this Effect to get extra request information or control the response manually.
-
-For most 'Page's, you won't need to use this effect directly. Use custom 'Route's for request info, and return 'View's to respond
--}
+-- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', the Session, and maniupulate the Client.
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondEarly :: Response -> Hyperbole m a

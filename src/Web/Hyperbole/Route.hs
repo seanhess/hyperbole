@@ -22,15 +22,17 @@ import Prelude hiding (dropWhile)
 
 {- | Derive this class to use a sum type as a route. Constructors and Selectors map intuitively to url patterns
 
-> data AppRoute
->  = HomePage
->  | Users
->  | User Int
->  deriving (Generic, Route)
->
-> /         -> HomePage
-> /users/   -> Users
-> /user/100 -> User 100
+@
+#EMBED Example/Docs/App.hs data AppRoute
+
+#EMBED Example/Docs/App.hs instance Route
+@
+
+>>> routeUrl Main
+/
+
+>>> routeUrl (User 9)
+/user/9
 -}
 class Route a where
   -- | The route to use if attempting to match on empty segments

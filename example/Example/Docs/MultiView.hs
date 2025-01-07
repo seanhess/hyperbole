@@ -1,12 +1,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Intro.MultiView where
+module Example.Docs.MultiView where
 
 import Data.Text (pack)
-import Example.Intro.Interactive (Message (..), messageView)
+import Example.Docs.Interactive (Message (..), messageView)
 import Web.Hyperbole
 
-page :: Eff es (Page '[Message, Count])
+page :: Eff es (Page [Message, Count])
 page = do
   pure $ do
     row id $ do

@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Intro.State where
+module Example.Docs.State where
 
 import Data.Text (Text)
 import Web.Hyperbole

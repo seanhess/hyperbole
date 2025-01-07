@@ -51,7 +51,7 @@ import GHC.Generics
 import Text.Casing (kebab)
 import Web.FormUrlEncoded (FormOptions (..), defaultFormOptions, parseUnique)
 import Web.FormUrlEncoded qualified as FE
-import Web.Hyperbole.Data.QueryData (FromParam (..))
+import Web.Hyperbole.Data.QueryData (FromParam (..), Param (..), ParamValue (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
@@ -392,16 +392,16 @@ class Form form (val :: Type -> Type) | form -> val where
   genFieldsWith fv = to $ gConvert (from fv)
 
 
-formParseParam :: (FromParam a) => Text -> FE.Form -> Either Text a
-formParseParam key frm = do
+formParseParam :: (FromParam a) => Param -> FE.Form -> Either Text a
+formParseParam (Param key) frm = do
   t <- FE.parseUnique @Text key frm
-  parseParam t
+  parseParam (ParamValue t)
 
 
-formLookupParam :: (FromParam a) => Text -> FE.Form -> Either Text (Maybe a)
-formLookupParam key frm = do
+formLookupParam :: (FromParam a) => Param -> FE.Form -> Either Text (Maybe a)
+formLookupParam (Param key) frm = do
   mt <- FE.parseMaybe @Text key frm
-  maybe (pure Nothing) parseParam mt
+  maybe (pure Nothing) (parseParam . ParamValue) mt
 
 
 {- | Generate FormFields for the given instance of 'Form', with no validation information
@@ -456,7 +456,7 @@ instance (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
   gFormParse f = do
     let s = selName (undefined :: M1 S s (K1 R (f a)) p)
     t <- parseUnique @Text (pack s) f
-    M1 . K1 <$> parseParam t
+    M1 . K1 <$> parseParam (ParamValue t)
 
 
 ------------------------------------------------------------------------------

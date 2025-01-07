@@ -143,7 +143,6 @@ expandEmbed embed = do
     T.replace "\"" "\\\"" . highlightTermsLine
   markupLinePrefix line =
     embed.prefix <> line
-
 highlightTermsLine :: Text -> Text
 highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
  where
@@ -182,6 +181,11 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
     , "routeRequest"
     , "route"
     , "layout"
+    , "Response"
+    , "FromParam"
+    , "ToParam"
+    , "FromQuery"
+    , "ToQuery"
     ]
 
 -- returns lines of a top-level definition

@@ -1,9 +1,9 @@
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
-module Example.Intro.MultiPage where
+module Example.Docs.MultiPage where
 
-import Example.Intro.Interactive qualified as Message
-import Example.Intro.MultiView qualified as Counter
+import Example.Docs.Interactive qualified as Message
+import Example.Docs.MultiView qualified as Counter
 import Web.Hyperbole
 
 data AppRoute
