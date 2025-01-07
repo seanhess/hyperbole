@@ -62,6 +62,7 @@
                   effectful = hfinal.effectful_2_5_0_0;
                   effectful-core = hfinal.effectful-core_2_5_0_0;
                   scotty = hfinal.scotty_0_22;
+                  data-default = hfinal.callHackage "data-default" "0.8.0.0" { };
                 }
               );
             });
@@ -72,6 +73,7 @@
                   effectful-core = hfinal.effectful-core_2_5_0_0;
                   http-api-data = hfinal.http-api-data_0_6_1;
                   uuid-types = hfinal.uuid-types_1_0_6;
+                  data-default = hfinal.callHackage "data-default" "0.8.0.0" { };
                 }
               );
             });
