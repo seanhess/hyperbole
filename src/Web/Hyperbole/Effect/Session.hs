@@ -3,7 +3,6 @@
 
 module Web.Hyperbole.Effect.Session where
 
-import Data.Default (Default (..))
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
@@ -25,10 +24,10 @@ import Prelude
 #EMBED Example/Docs/Sessions.hs page
 @
 -}
-session :: (Session a, Default a, FromParam a, Hyperbole :> es) => Eff es a
+session :: (Session a, DefaultParam a, FromParam a, Hyperbole :> es) => Eff es a
 session = do
   ms <- lookupSession
-  pure $ fromMaybe def ms
+  pure $ fromMaybe defaultParam ms
 
 
 lookupSession :: forall a es. (Session a, FromParam a, Hyperbole :> es) => Eff es (Maybe a)
@@ -50,7 +49,7 @@ saveSession a = do
   setSessionParam key a
 
 
-modifySession :: (Session a, Default a, ToParam a, FromParam a, Hyperbole :> es) => (a -> a) -> Eff es a
+modifySession :: (Session a, DefaultParam a, ToParam a, FromParam a, Hyperbole :> es) => (a -> a) -> Eff es a
 modifySession f = do
   s <- session
   let updated = f s
@@ -58,7 +57,7 @@ modifySession f = do
   pure updated
 
 
-modifySession_ :: (Session a, Default a, ToParam a, FromParam a, Hyperbole :> es) => (a -> a) -> Eff es ()
+modifySession_ :: (Session a, DefaultParam a, ToParam a, FromParam a, Hyperbole :> es) => (a -> a) -> Eff es ()
 modifySession_ f = do
   _ <- modifySession f
   pure ()

@@ -146,6 +146,8 @@ module Web.Hyperbole
   , FromQuery (..)
   , ToParam (..)
   , FromParam (..)
+  , QueryData
+  , DefaultParam (..)
 
     -- * Advanced
   , target
@@ -181,7 +183,7 @@ import Effectful (Eff, (:>))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Hyperbole.Application
-import Web.Hyperbole.Data.QueryData (FromParam (..), FromQuery (..), ToParam (..), ToQuery (..))
+import Web.Hyperbole.Data.QueryData (DefaultParam (..), FromParam (..), FromQuery (..), QueryData, ToParam (..), ToQuery (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
 import Web.Hyperbole.Effect.Request
@@ -507,9 +509,9 @@ From [Example.Page.Simple](https://docs.hyperbole.live/simple)
 
 For any real application with more complex state and data persistence, we need side effects.
 
-Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use effects in a 'Page' or an 'update'. The 'Hyperbole' effect gives us access to the 'request' and 'Client' state, including 'Session's and the 'QueryData'. In this example, each client stores the latest message in their session.
+Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use effects in a 'Page' or an 'update'. The 'Hyperbole' effect gives us access to the 'request' and 'Client' state, including 'session's and the 'query' 'param's. In this example the 'Page' keeps the message in the 'query' 'param's
 
-From [Example.Page.Simple](https://docs.hyperbole.live/simple)
+From [Example.Docs.SideEffects](https://github.com/seanhess/hyperbole/blob/latest/example/Example/Docs/SideEffects.hs)
 
 @
 #EMBED Example/Docs/SideEffects.hs messagePage
