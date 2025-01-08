@@ -30,7 +30,7 @@ import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (reqPath)
-import Web.Hyperbole.Effect.Server (Host (..), Request (..), Response (..), Server, SocketError (..), runServerSockets, runServerWai)
+import Web.Hyperbole.Effect.Server (Host (..), Request (..), Response (..), Server, SocketError (..), cookiesFromHeader, runServerSockets, runServerWai)
 import Web.Hyperbole.Route
 import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed)
 
@@ -98,7 +98,7 @@ socketApp actions pend = do
       (u, q) <- parseUrl url
       let path = paths u
           query = HTTP.parseQuery (cs q)
-          cookies = parseCookies $ cs $ header cook
+          cookies = cookiesFromHeader $ parseCookies $ cs $ header cook
           host = Host $ cs $ header hst
           method = "POST"
           body = cs $ fromMaybe "" mbody

@@ -22,4 +22,4 @@ page = do
         text $ cs $ show r.query
       el_ $ do
         text "Cookies: "
-        text $ cs $ show $ fmap fst r.cookies
+        text $ cs $ show r.cookies

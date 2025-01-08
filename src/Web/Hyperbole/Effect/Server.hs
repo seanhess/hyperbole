@@ -12,13 +12,14 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (HeaderName, Method, Query, status200, status400, status401, status404, status500, urlDecode)
+import Network.HTTP.Types (HeaderName, Method, Query, status200, status400, status401, status404, status500, urlDecode, urlEncode)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
 import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
 import Web.Hyperbole.Data.QueryData as QueryData
+import Web.Hyperbole.Data.Session as Cookies
 import Web.Hyperbole.Route
 import Web.View (Segment, View, renderLazyByteString, renderUrl)
 
@@ -59,7 +60,7 @@ runServerWai toDoc req respond =
     response Empty = respError status500 "Empty Response"
     response (Err (ErrParse e)) = respError status400 ("Parse Error: " <> cs e)
     response (Err (ErrQuery e)) = respError status400 $ "ErrQuery: " <> cs e
-    response (Err (ErrSession e)) = respError status400 $ "ErrSession: " <> cs e
+    response (Err (ErrSession param e)) = respError status400 $ "ErrSession: " <> cs (show param) <> " " <> cs e
     response (Err (ErrOther e)) = respError status500 $ "Server Error: " <> cs e
     response (Err ErrAuth) = respError status401 "Unauthorized"
     response (Err (ErrNotHandled e)) = respError status400 $ cs $ errNotHandled e
@@ -82,7 +83,11 @@ runServerWai toDoc req respond =
        in Wai.responseLBS status200 headers body
 
     setCookies =
-      [("Set-Cookie", sessionSetCookie client.session)]
+      fmap setCookie $ Cookies.toList client.session
+
+    setCookie :: Cookie -> (HeaderName, BS.ByteString)
+    setCookie cookie =
+      ("Set-Cookie", renderCookie (Wai.pathInfo req) cookie)
 
     setQuery qd =
       [("Set-Query", QueryData.render qd)]
@@ -100,9 +105,29 @@ runServerWai toDoc req respond =
         headers = Wai.requestHeaders wr
         cookie = fromMaybe "" $ L.lookup "Cookie" headers
         host = Host $ fromMaybe "" $ L.lookup "Host" headers
-        cookies = parseCookies cookie
+        cookies = cookiesFromHeader (parseCookies cookie)
         method = Wai.requestMethod wr
     pure $ Request{body, path, query, method, cookies, host}
+
+
+renderCookie :: [Segment] -> Cookie -> BS.ByteString
+renderCookie requestPath cookie =
+  let path = fromMaybe requestPath cookie.path
+   in key <> "=" <> value cookie.value <> "; SameSite=None; secure; path=" <> cs (renderUrl (pathUrl path))
+ where
+  key = cs cookie.key.text
+  value Nothing = "; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+  value (Just val) = urlEncode True (cs val.text)
+
+
+cookiesFromHeader :: [(BS.ByteString, BS.ByteString)] -> Cookies
+cookiesFromHeader cks = do
+  Cookies.fromList $ fmap toCookie cks
+ where
+  toCookie (k, v) =
+    let value = ParamValue (cs $ urlDecode True v)
+        key = Param (cs k)
+     in Cookie key (Just value) Nothing
 
 
 runServerSockets
@@ -116,12 +141,12 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
   SendResponse client res -> do
     case res of
       (Response vid vw) -> do
-        let meta = sessionMeta client.session <> queryMeta client.query
+        let meta = sessionMetas client.session <> queryMeta client.query
         sendView meta vid vw
       (Err r) -> sendError r
       Empty -> sendError $ ErrOther "Empty"
       NotFound -> sendError $ ErrOther "NotFound"
-      (Redirect url) -> sendRedirect (sessionMeta client.session) url
+      (Redirect url) -> sendRedirect (sessionMetas client.session) url
  where
   runLocal = runErrorNoCallStackWith @SocketError onSocketError
 
@@ -154,8 +179,12 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
     let r = metadata "REDIRECT" (renderUrl u)
     sendMessage (r <> meta) ""
 
-  sessionMeta :: QueryData -> Metadata
-  sessionMeta sess = Metadata [("SESSION", cs (sessionSetCookie sess))]
+  sessionMetas :: Cookies -> Metadata
+  sessionMetas cookies = mconcat $ fmap cookieMeta $ Cookies.toList cookies
+
+  cookieMeta :: Cookie -> Metadata
+  cookieMeta cookie =
+    Metadata [("COOKIE", cs (renderCookie req.path cookie))]
 
   queryMeta :: QueryData -> Metadata
   queryMeta q =
@@ -188,7 +217,7 @@ errNotHandled ev =
 
 
 data Client = Client
-  { session :: QueryData
+  { session :: Cookies
   , query :: QueryData
   }
 
@@ -222,7 +251,7 @@ data Request = Request
   , query :: Query
   , body :: BL.ByteString
   , method :: Method
-  , cookies :: [(BS.ByteString, BS.ByteString)]
+  , cookies :: Cookies
   }
   deriving (Show)
 
@@ -245,7 +274,7 @@ data Response
 data ResponseError
   = ErrParse Text
   | ErrQuery Text
-  | ErrSession Text
+  | ErrSession Param Text
   | ErrOther Text
   | ErrNotHandled (Event Text Text)
   | ErrAuth
@@ -265,17 +294,3 @@ data Event id act = Event
 
 instance (Show act, Show id) => Show (Event id act) where
   show e = "Event " <> show e.viewId <> " " <> show e.action
-
-
-sessionParse :: BS.ByteString -> QueryData
-sessionParse = QueryData.parse . urlDecode True
-
-
-sessionFromCookies :: [(BS.ByteString, BS.ByteString)] -> QueryData
-sessionFromCookies cks = fromMaybe mempty $ do
-  bs <- L.lookup "session" cks
-  pure $ QueryData.parse bs
-
-
-sessionSetCookie :: QueryData -> BS.ByteString
-sessionSetCookie ss = "session=" <> QueryData.render ss <> "; SameSite=None; secure; path=/"

@@ -87,10 +87,9 @@ export class SocketConnection {
         }
 
 
-        if (metadata.session) {
-          // console.log("setting cookie", metadata.session)
-          document.cookie = metadata.session
-        }
+        metadata.cookies.forEach(cookie => {
+          document.cookie = cookie
+        })
 
         if (metadata.redirect) {
           window.location.href = metadata.redirect
@@ -140,7 +139,7 @@ type SocketResponse = {
 
 type Metadata = {
   viewId?: ViewId
-  session?: string
+  cookies: string[]
   redirect?: string
   error?: string
   query?: string
@@ -172,7 +171,7 @@ function parseMetadataResponse(ret: string): SocketResponse {
 
 function parseMetas(meta: Meta[]): Metadata {
   return {
-    session: meta.find(m => m.key == "SESSION")?.value,
+    cookies: meta.filter(m => m.key == "COOKIE").map(m => m.value),
     redirect: meta.find(m => m.key == "REDIRECT")?.value,
     error: meta.find(m => m.key == "ERROR")?.value,
     viewId: meta.find(m => m.key == "VIEW-ID")?.value,

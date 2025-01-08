@@ -106,6 +106,14 @@ queryData =
   value (Just v) = ParamValue (cs v)
 
 
+fromList :: [(Param, ParamValue)] -> QueryData
+fromList = QueryData . M.fromList
+
+
+toList :: QueryData -> [(Param, ParamValue)]
+toList (QueryData m) = M.toList m
+
+
 {- | Decode a type from a 'QueryData'. Missing fields are set to 'defaultParam'
 
 @

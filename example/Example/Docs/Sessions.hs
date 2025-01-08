@@ -1,16 +1,12 @@
 module Example.Docs.Sessions where
 
-import Data.Default (Default(..))
 import Web.Hyperbole
-import Web.Hyperbole.Data.QueryData (DefaultParam (..))
 
 data AppColor
   = White
   | Red
   | Green
   deriving (Show, Read, Eq, ToParam, FromParam)
-instance DefaultParam AppColor where
-  defaultParam = White
 
 instance ToColor AppColor where
   colorValue White = "#FFF"
@@ -21,8 +17,8 @@ data Preferences = Preferences
   { color :: AppColor
   }
   deriving (Generic, Show, Read, ToParam, FromParam, Session)
-instance Default Preferences where
-  def = Preferences White
+instance DefaultParam Preferences where
+  defaultParam = Preferences White
 
 page :: (Hyperbole :> es) => Eff es (Page '[Content])
 page = do

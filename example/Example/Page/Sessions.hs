@@ -1,9 +1,8 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Example.Page.Sessions where
 
-import Data.Default
 import Data.Text (Text)
 import Effectful
 import Example.AppRoute qualified as Route
@@ -18,9 +17,8 @@ data Preferences = Preferences
   , color :: AppColor
   }
   deriving (Generic, Show, Read, ToParam, FromParam, Session)
-instance Default Preferences where
-  def = Preferences "_" White
-
+instance DefaultParam Preferences where
+  defaultParam = Preferences "_" White
 
 page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
 page = do
@@ -35,6 +33,7 @@ instance (Debug :> es) => HyperView Contents es where
   data Action Contents
     = SaveColor AppColor
     | SaveMessage Text
+    | ClearSession
     deriving (Show, Read, ViewAction)
   update (SaveColor clr) = do
     prefs <- modifySession $ \p -> p{color = clr}
@@ -42,12 +41,16 @@ instance (Debug :> es) => HyperView Contents es where
   update (SaveMessage msg) = do
     prefs <- modifySession $ \p -> p{message = msg}
     pure $ viewContent prefs
+  update ClearSession = do
+    deleteSession @Preferences
+    pure $ viewContent defaultParam
 
 viewContent :: Preferences -> View Contents ()
-viewContent prefs =
+viewContent prefs = do
   col (gap 20) $ do
     viewColorPicker prefs.color
     viewMessage prefs.message
+    button ClearSession Style.btnLight "Clear"
 
 viewColorPicker :: AppColor -> View Contents ()
 viewColorPicker clr = do
@@ -66,4 +69,3 @@ viewMessage msg = do
     row (gap 10) $ do
       button (SaveMessage "Hello") Style.btnLight "Msg: Hello"
       button (SaveMessage "Goodbye") Style.btnLight "Msg: Goodbye"
-      button (SaveMessage "________") Style.btnLight "Clear"

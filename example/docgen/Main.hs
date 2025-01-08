@@ -182,10 +182,14 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
     , "route"
     , "layout"
     , "Response"
-    , "FromParam"
     , "ToParam"
+    , "FromParam"
+    , "Session"
     , "FromQuery"
     , "ToQuery"
+    , "lookupParam"
+    , "setParam"
+    , "DefaultParam"
     ]
 
 -- returns lines of a top-level definition

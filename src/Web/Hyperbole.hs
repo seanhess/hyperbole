@@ -88,6 +88,7 @@ module Web.Hyperbole
   , lookupSession
   , modifySession
   , modifySession_
+  , deleteSession
   , Session (..)
 
     -- * HyperView
@@ -183,7 +184,8 @@ import Effectful (Eff, (:>))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Hyperbole.Application
-import Web.Hyperbole.Data.QueryData (DefaultParam (..), FromParam (..), FromQuery (..), QueryData, ToParam (..), ToQuery (..))
+import Web.Hyperbole.Data.QueryData
+import Web.Hyperbole.Data.Session
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
 import Web.Hyperbole.Effect.Request
@@ -483,6 +485,7 @@ https://docs.hyperbole.live is full of live examples demonstrating different fea
 * [Lazy Loading](https://docs.hyperbole.live/lazyloading)
 * [Forms](https://docs.hyperbole.live/formsimple)
 * [Data Table](https://docs.hyperbole.live/datatable)
+* [Sessions](https://docs.hyperbole.live/sessions)
 * [Filter Items](https://docs.hyperbole.live/filter)
 * [Autocomplete](https://docs.hyperbole.live/livesearch)
 * [Todo MVC](https://docs.hyperbole.live/todos)
@@ -529,6 +532,8 @@ From [Example.Page.Counter](https://docs.hyperbole.live/counter)
 
 #EMBED Example/Page/Counter.hs instance (Reader
 @
+
+* Read more about [Effectful](https://hackage.haskell.org/package/effectful)
 -}
 
 

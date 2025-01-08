@@ -2,7 +2,6 @@
 
 module Example.Effects.Todos where
 
-import Data.Default
 import Data.Map (Map)
 import Data.Map.Strict qualified as M
 import Data.Text (Text, pack)
@@ -18,8 +17,8 @@ newtype AllTodos = AllTodos (Map TodoId Todo)
 
 instance Session AllTodos where
   sessionKey = "todos"
-instance Default AllTodos where
-  def = AllTodos mempty
+instance DefaultParam AllTodos where
+  defaultParam = AllTodos mempty
 
 data Todo = Todo
   { id :: TodoId

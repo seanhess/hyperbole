@@ -62,7 +62,6 @@ exampleMenu current = do
   example Simple
   example Counter
   example Transitions
-  example Sessions
   example Requests
   example Redirects
   example RedirectNow
@@ -71,6 +70,7 @@ exampleMenu current = do
   example FormSimple
   example FormValidation
   example DataTable
+  example Sessions
   example Filter
   example LiveSearch
   example Todos

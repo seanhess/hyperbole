@@ -44,7 +44,7 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
   runLocal eff = do
     -- Load the request ONCE right when we start
     r <- send LoadRequest
-    let client = Client (sessionFromCookies r.cookies) (queryData $ queryParams r)
+    let client = Client mempty (queryData $ queryParams r)
     let st = HyperState r client
     runErrorNoCallStack @Response . runState st $ eff
 

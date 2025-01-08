@@ -34,6 +34,7 @@ library
       Web.Hyperbole
       Web.Hyperbole.Application
       Web.Hyperbole.Data.QueryData
+      Web.Hyperbole.Data.Session
       Web.Hyperbole.Effect.Event
       Web.Hyperbole.Effect.Handler
       Web.Hyperbole.Effect.Hyperbole
