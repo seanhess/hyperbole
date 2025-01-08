@@ -65,8 +65,7 @@ library:
 tests:
   test:
     main:        Spec.hs
-    source-dirs: test/
-    build-tools: skeletest:skeletest-preprocessor
+    source-dirs: test
     ghc-options:
     - -threaded
     - -rtsopts
@@ -76,6 +75,3 @@ tests:
       - hyperbole
       - Diff >= 0.5 && <1.0
       - skeletest
-
-
-

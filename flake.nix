@@ -1,87 +1,232 @@
 {
-  description = "A flake for hyperbole development";
+  description = "hyperbole overlay, development and hyperbole-examples";
 
   inputs = {
-    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
+    pre-commit-hooks = {
+      url = "github:cachix/pre-commit-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixpkgs.url = "nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    nix-filter.url = "github:numtide/nix-filter/main";
+    web-view.url = "github:seanhess/web-view";
   };
 
-  outputs = { self, nixpkgs, flake-utils, pre-commit-hooks }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      nix-filter,
+      flake-utils,
+      pre-commit-hooks,
+      web-view,
+    }:
+    let
+      packageName = "hyperbole";
+      examplesName = "hyperbole-examples";
+      src = nix-filter.lib {
+        root = ./.;
+        include = [
+          "src"
+          "client/dist"
+          "test"
+          "example/Example"
+          "example/docgen"
+          "example/BulkUpdate.hs"
+          "example/HelloWorld.hs"
+          "example/Main.hs"
+          "example/DevelMain.hs"
+          ./${packageName}.cabal
+          ./cabal.project
+          ./package.yaml
+          ./fourmolu.yaml
+          ./README.md
+          ./CHANGELOG.md
+          ./LICENSE
+        ];
+      };
+
+      overlay = final: prev: {
+        haskell = prev.haskell // {
+          packageOverrides = prev.lib.composeExtensions prev.haskell.packageOverrides (
+            hfinal: hprev: {
+              "${packageName}" = hfinal.callCabal2nix packageName src { };
+            }
+          );
+          packages = prev.haskell.packages // {
+            ghc982 = prev.haskell.packages.ghc982.override (old: {
+              overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
+                hfinal: hprev: {
+                  http-api-data = hfinal.http-api-data_0_6_1;
+                  uuid-types = hfinal.uuid-types_1_0_6;
+                  effectful = hfinal.effectful_2_5_0_0;
+                  effectful-core = hfinal.effectful-core_2_5_0_0;
+                  scotty = hfinal.scotty_0_22;
+                  data-default = hfinal.callHackage "data-default" "0.8.0.0" { };
+                }
+              );
+            });
+            ghc966 = prev.haskell.packages.ghc966.override (old: {
+              overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
+                hfinal: hprev: {
+                  effectful = hfinal.effectful_2_5_0_0;
+                  effectful-core = hfinal.effectful-core_2_5_0_0;
+                  http-api-data = hfinal.http-api-data_0_6_1;
+                  uuid-types = hfinal.uuid-types_1_0_6;
+                  data-default = hfinal.callHackage "data-default" "0.8.0.0" { };
+                }
+              );
+            });
+          };
+        };
+      };
+    in
+    {
+      overlays.default = nixpkgs.lib.composeExtensions web-view.overlays.default overlay;
+    }
+    // flake-utils.lib.eachDefaultSystem (
+      system:
       let
-        packageName = "hyperbole";
-        pkgs = nixpkgs.legacyPackages.${system};
-
-        haskellPackages = pkgs.haskellPackages.override {
-          overrides = self: super: {
-            # Tests for web-view version 0.4.0 are broken, so we disable them
-            web-view =
-              pkgs.haskell.lib.dontCheck (super.callHackageDirect
-                {
-                  pkg = "web-view";
-                  ver = "0.4.0";
-                  sha256 = "sha256-ug5pduRQEfgcKRCDNP/UmGS3jGNVKlSPrDk06Dp6sYc=";
-                }
-                { });
-
-            http-api-data =
-              pkgs.haskell.lib.doJailbreak (super.callHackageDirect
-                {
-                  pkg = "http-api-data";
-                  ver = "0.6.1";
-                  sha256 = "sha256-WKXZcCW5+l4caZcZMG6gNFe6y4WMigit5w1WgShmeZk=";
-                }
-                { });
-
-            envparse =
-              super.callHackageDirect
-                {
-                  pkg = "envparse";
-                  ver = "0.4.1";
-                  sha256 = "sha256-Xf7z9UptgkY6C0etLonsCWRh3MrWjFlnnbrLGDfpDto=";
-                }
-                { };
-
-          };
+        pkgs = import nixpkgs {
+          inherit system;
         };
-      in
-      rec {
-        packages.default = self.packages.${system}.${packageName};
-        packages.${packageName} =
-          haskellPackages.callCabal2nix packageName self { };
 
-        checks = {
-          hyperbole-check = packages.${packageName};
-          pre-commit-check = pre-commit-hooks.lib.${system}.run {
-            src = ./.;
-            hooks = {
-              hlint.enable = true;
-              hpack.enable = true;
-              fourmolu.enable = true;
-              nixpkgs-fmt.enable = true;
+        example-src = nix-filter.lib {
+          root = ./example;
+          include = [
+            "Example"
+            (nix-filter.lib.matchExt "hs")
+            ./example/${examplesName}.cabal
+            # ./example/cabal.project
+            "docgen"
+          ];
+        };
+
+        # Define GHC versions list
+        ghcVersions = [
+          "966"
+          "982"
+        ];
+
+        overridePkgs = import nixpkgs {
+          inherit system;
+          overlays = [ self.overlays.default ];
+        };
+
+        # Create an attrset of GHC packages
+        ghcPkgs = builtins.listToAttrs (
+          map (ghcVer: {
+            name = "ghc${ghcVer}";
+            value = (
+              overridePkgs.haskell.packages."ghc${ghcVer}".extend (
+                pkgs.haskell.lib.compose.packageSourceOverrides {
+                  ${examplesName} = example-src;
+                }
+              )
+            );
+          }) ghcVersions
+        );
+
+        pre-commit = pre-commit-hooks.lib.${system}.run {
+          src = src;
+          hooks = {
+            hlint.enable = true;
+            fourmolu.enable = true;
+            hpack.enable = true;
+            nixfmt-rfc-style.enable = true;
+            flake-checker = {
+              enable = true;
+              args = [ "--no-telemetry" ];
             };
+            check-merge-conflicts.enable = true;
           };
         };
 
-        devShells.default = pkgs.haskellPackages.shellFor rec {
-          inherit (self.checks.${system}.pre-commit-check) shellHook;
-
-          packages = p: [ self.packages.${system}.${packageName} ];
+        shellCommon = version: {
+          inherit (pre-commit) shellHook;
 
           # Programs that will be available in the development shell
-          buildInputs = with pkgs; [
-            nodePackages_latest.webpack-cli
-            haskellPackages.cabal-install
-            haskellPackages.haskell-language-server
-            haskellPackages.fourmolu
-            ghciwatch
-            hpack
+          buildInputs = with pkgs.haskell.packages."ghc${version}"; [
+            pkgs.nodePackages_latest.webpack-cli
+            pkgs.nodePackages_latest.webpack
+            pkgs.nodejs
+            cabal-install
+            haskell-language-server
+            fourmolu
+            fast-tags
+            ghcid
+            pkgs.ghciwatch
+            pkgs.hpack
           ];
+          withHoogle = true;
+          doBenchmark = true;
 
+          CABAL_CONFIG = "/dev/null";
           # Ensure that libz.so and other libraries are available to TH
           # splices, cabal repl, etc.
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.libz ];
         };
-      });
+
+        exe =
+          version:
+          pkgs.haskell.lib.justStaticExecutables self.packages.${system}."ghc${version}-${examplesName}";
+
+      in
+      {
+        checks = builtins.listToAttrs (
+          map (version: {
+            name = "ghc${version}-check-${examplesName}";
+            value = pkgs.runCommand "ghc${version}-check-example" {
+              buildInputs = [ (exe version) ];
+            } "type examples; type docgen; touch $out";
+          }) ghcVersions
+        );
+
+        apps =
+          {
+            default = self.apps.${system}."ghc966-${examplesName}";
+          }
+          // builtins.listToAttrs (
+            # Generate apps
+            map (version: {
+              name = "ghc${version}-${examplesName}";
+              value = {
+                type = "app";
+                program = "${exe version}/bin/examples";
+              };
+            }) ghcVersions
+          );
+
+        packages =
+          {
+            default = self.packages.${system}."ghc982-${examplesName}";
+          }
+          // builtins.listToAttrs (
+            map (version: {
+              name = "ghc${version}-${examplesName}";
+              value = ghcPkgs."ghc${version}".${examplesName};
+            }) ghcVersions
+          );
+
+        devShells =
+          {
+            default = self.devShells.${system}.ghc982-shell;
+          }
+          // builtins.listToAttrs (
+            # Generate devShells
+            map (version: {
+              name = "ghc${version}-shell";
+              value = ghcPkgs."ghc${version}".shellFor (
+                shellCommon version
+                // {
+                  packages = p: [
+                    p.${packageName}
+                    p.${examplesName}
+                  ];
+                }
+              );
+            }) ghcVersions
+          );
+      }
+    );
 }

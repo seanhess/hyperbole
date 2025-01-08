@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.36.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -103,7 +103,7 @@ test-suite test
   autogen-modules:
       Paths_hyperbole
   hs-source-dirs:
-      test/
+      test
   default-extensions:
       OverloadedStrings
       OverloadedRecordDot
@@ -114,8 +114,6 @@ test-suite test
       DerivingStrategies
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N -F -pgmF=skeletest-preprocessor
-  build-tool-depends:
-      skeletest:skeletest-preprocessor
   build-depends:
       Diff >=0.5 && <1.0
     , base >=4.16 && <5

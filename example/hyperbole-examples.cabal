@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.36.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -69,26 +69,6 @@ executable docgen
 executable examples
   main-is: Main.hs
   other-modules:
-      Web.Hyperbole
-      Web.Hyperbole.Application
-      Web.Hyperbole.Data.QueryData
-      Web.Hyperbole.Effect.Event
-      Web.Hyperbole.Effect.Handler
-      Web.Hyperbole.Effect.Hyperbole
-      Web.Hyperbole.Effect.Query
-      Web.Hyperbole.Effect.Request
-      Web.Hyperbole.Effect.Response
-      Web.Hyperbole.Effect.Server
-      Web.Hyperbole.Effect.Session
-      Web.Hyperbole.HyperView
-      Web.Hyperbole.Page
-      Web.Hyperbole.Route
-      Web.Hyperbole.TypeList
-      Web.Hyperbole.View
-      Web.Hyperbole.View.Element
-      Web.Hyperbole.View.Embed
-      Web.Hyperbole.View.Event
-      Web.Hyperbole.View.Forms
       BulkUpdate
       Example.AppRoute
       Example.Colors
@@ -133,7 +113,6 @@ executable examples
   autogen-modules:
       Paths_hyperbole_examples
   hs-source-dirs:
-      ../src
       ./
   default-extensions:
       OverloadedStrings
@@ -155,10 +134,13 @@ executable examples
     , data-default
     , effectful
     , file-embed
+    , foreign-store
     , http-api-data
     , http-types
+    , hyperbole
     , network
     , random
+    , safe
     , string-conversions
     , string-interpolate
     , text

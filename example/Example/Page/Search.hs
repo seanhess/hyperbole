@@ -3,7 +3,6 @@
 module Example.Page.Search where
 
 import Control.Monad (forM_)
-import Data.List ((!?))
 import Data.Text (Text)
 import Data.Text qualified as T
 import Effectful
@@ -12,6 +11,7 @@ import Example.Colors
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages, isMatchLanguage)
 import Example.Page.Filter as Filter (chosenView, resultsTable)
 import Example.View.Layout (exampleLayout)
+import Safe (atMay)
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
@@ -54,7 +54,7 @@ liveSearchView langs current term = do
  where
   matchedLanguages = filter (isMatchLanguage term) langs
 
-  currentSearchLang = matchedLanguages !? current
+  currentSearchLang = matchedLanguages `atMay` current
 
   -- Only show the search popup if there is a search term
   shownIfTerm = if T.null term then hide else flexCol
