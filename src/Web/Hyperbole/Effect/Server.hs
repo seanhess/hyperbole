@@ -154,7 +154,7 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
     let r = metadata "REDIRECT" (renderUrl u)
     sendMessage (r <> meta) ""
 
-  sessionMeta :: Session -> Metadata
+  sessionMeta :: QueryData -> Metadata
   sessionMeta sess = Metadata [("SESSION", cs (sessionSetCookie sess))]
 
   queryMeta :: QueryData -> Metadata
@@ -185,11 +185,10 @@ errNotHandled ev =
     , "    pure $ hyper Contents contentsView"
     , "</pre>"
     ]
-type Session = QueryData
 
 
 data Client = Client
-  { session :: Session
+  { session :: QueryData
   , query :: QueryData
   }
 
@@ -268,15 +267,15 @@ instance (Show act, Show id) => Show (Event id act) where
   show e = "Event " <> show e.viewId <> " " <> show e.action
 
 
-sessionParse :: BS.ByteString -> Session
+sessionParse :: BS.ByteString -> QueryData
 sessionParse = QueryData.parse . urlDecode True
 
 
-sessionFromCookies :: [(BS.ByteString, BS.ByteString)] -> Session
+sessionFromCookies :: [(BS.ByteString, BS.ByteString)] -> QueryData
 sessionFromCookies cks = fromMaybe mempty $ do
   bs <- L.lookup "session" cks
   pure $ QueryData.parse bs
 
 
-sessionSetCookie :: Session -> BS.ByteString
+sessionSetCookie :: QueryData -> BS.ByteString
 sessionSetCookie ss = "session=" <> QueryData.render ss <> "; SameSite=None; secure; path=/"

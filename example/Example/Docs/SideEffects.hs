@@ -1,13 +1,18 @@
+
 module Example.Docs.SideEffects where
 
-import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Web.Hyperbole
+import Data.Default (Default(..))
+
+data MessageSession = MessageSession { message :: Text }
+  deriving (Show, Read, Generic, ToParam, FromParam, Session)
+instance Default MessageSession where
+  def = MessageSession mempty
 
 messagePage :: (Hyperbole :> es) => Eff es (Page '[Message])
 messagePage = do
-  stored <- lookupSessionKey @Text "message"
-  let msg = fromMaybe "Hello" stored
+  MessageSession msg <- session
   pure $ do
     hyper Message $ messageView msg
 
@@ -21,7 +26,7 @@ instance HyperView Message es where
 
   update (Louder m) = do
     let new = m <> "!"
-    setSessionKey "message" new
+    saveSession $ MessageSession new
     pure $ messageView new
 
 messageView :: Text -> View Message ()

@@ -2,29 +2,24 @@
 
 module Example.Effects.Todos where
 
+import Data.Default
+import Data.Map (Map)
+import Data.Map.Strict qualified as M
 import Data.Text (Text, pack)
-import Data.Text qualified as T
 import Effectful
 import Effectful.Dispatch.Dynamic
 import System.Random (randomRIO)
 import Web.Hyperbole
-import Web.Hyperbole.Data.QueryData qualified as QueryData
 
 type TodoId = Text
 
-newtype AllTodos = AllTodos [Todo]
+newtype AllTodos = AllTodos (Map TodoId Todo)
+  deriving newtype (Show, Read, ToParam, FromParam)
 
-instance ToQuery AllTodos where
-  toQuery (AllTodos todos) =
-    foldr (\todo -> QueryData.insert todo.id todo) mempty todos
-
-instance FromQuery AllTodos where
-  parseQuery qd = do
-    let qd' = QueryData.filterKey isTodoItem qd
-    todos <- mapM parseParam $ QueryData.elems qd'
-    pure $ AllTodos todos
-   where
-    isTodoItem k = "todo-" `T.isPrefixOf` k
+instance Session AllTodos where
+  sessionKey = "todos"
+instance Default AllTodos where
+  def = AllTodos mempty
 
 data Todo = Todo
   { id :: TodoId
@@ -47,21 +42,29 @@ runTodosSession
 runTodosSession = interpret $ \_ -> \case
   LoadAll -> do
     AllTodos todos <- session
-    pure todos
+    pure $ M.elems todos
   Save todo -> do
-    setSessionKey todo.id todo
+    modifySession_ $ insert todo
   Remove todoId -> do
-    deleteSessionKey todoId
+    modifySession_ $ delete todoId
   Create task -> do
     todoId <- randomId
     let todo = Todo todoId task False
-    setSessionKey todo.id todo
+    modifySession_ $ insert todo
     pure todoId
  where
   randomId :: (IOE :> es) => Eff es Text
   randomId = do
     n <- randomRIO @Int (0, 9999999)
     pure $ "todo-" <> pack (show n)
+
+  insert :: Todo -> AllTodos -> AllTodos
+  insert todo (AllTodos m) =
+    AllTodos (M.insert todo.id todo m)
+
+  delete :: TodoId -> AllTodos -> AllTodos
+  delete todoId (AllTodos m) =
+    AllTodos (M.delete todoId m)
 
 loadAll :: (Todos :> es) => Eff es [Todo]
 loadAll = send LoadAll

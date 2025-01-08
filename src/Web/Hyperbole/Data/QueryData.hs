@@ -64,10 +64,10 @@ lookup k (QueryData m) = do
 
 
 require :: (FromParam a) => Param -> QueryData -> Either Text a
-require p qd = do
-  case lookup p qd of
+require p (QueryData m) = do
+  case M.lookup p m of
     Nothing -> Left $ "Missing Key: " <> p.text
-    Just val -> val
+    Just val -> parseParam val
 
 
 filterKey :: (Param -> Bool) -> QueryData -> QueryData
@@ -276,6 +276,12 @@ instance FromParam UTCTime where
 instance (Show a) => ToParam [a] where
   toParam = showQueryParam
 instance (Read a) => FromParam [a] where
+  parseParam = readQueryParam
+
+
+instance (Show k, Show v) => ToParam (Map k v) where
+  toParam = showQueryParam
+instance (Read k, Read v, Ord k) => FromParam (Map k v) where
   parseParam = readQueryParam
 
 

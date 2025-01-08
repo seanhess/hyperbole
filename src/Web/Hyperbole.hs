@@ -84,12 +84,11 @@ module Web.Hyperbole
 
     -- ** Sessions #sessions#
   , session
-  , setSession
-  , sessionKey
-  , lookupSessionKey
-  , setSessionKey
-  , deleteSessionKey
-  , sessionParams
+  , saveSession
+  , lookupSession
+  , modifySession
+  , modifySession_
+  , Session (..)
 
     -- * HyperView
   , HyperView (..)
@@ -508,7 +507,7 @@ From [Example.Page.Simple](https://docs.hyperbole.live/simple)
 
 For any real application with more complex state and data persistence, we need side effects.
 
-Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use effects in a 'Page' or an 'update'. In this example, each client stores the latest message in their session.
+Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use effects in a 'Page' or an 'update'. The 'Hyperbole' effect gives us access to the 'request' and 'Client' state, including 'Session's and the 'QueryData'. In this example, each client stores the latest message in their session.
 
 From [Example.Page.Simple](https://docs.hyperbole.live/simple)
 

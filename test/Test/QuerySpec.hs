@@ -5,9 +5,11 @@ module Test.QuerySpec where
 import Data.Function ((&))
 import Data.String.Conversions (cs)
 import Data.Text (Text)
+import GHC.Generics (Generic)
 import Network.HTTP.Types (urlEncode)
 import Skeletest
 import Web.Hyperbole.Data.QueryData as QueryData
+import Web.Hyperbole.Effect.Session as Session
 
 
 spec :: Spec
@@ -15,6 +17,17 @@ spec = do
   describe "param" paramSpec
   describe "render" renderSpec
   describe "multi" multiSpec
+  describe "session" sessionSpec
+
+
+data Woot
+  deriving (Generic, SessionKey)
+
+
+sessionSpec :: Spec
+sessionSpec = do
+  it "should session key" $ do
+    sessionKey @Woot `shouldBe` "Woot"
 
 
 paramSpec :: Spec
@@ -32,7 +45,7 @@ paramSpec = do
 
     it "should encode lists as show" $ do
       let list = ["one", "two"]
-      toParam @[Text] list `shouldBe` cs (show list)
+      toParam @[Text] list `shouldBe` ParamValue (cs (show list))
 
   describe "FromParam" $ do
     it "should parse text" $ do

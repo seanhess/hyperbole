@@ -1,5 +1,6 @@
 module Example.Docs.Sessions where
 
+import Data.Default (Default(..))
 import Web.Hyperbole
 import Web.Hyperbole.Data.QueryData (DefaultParam (..))
 
@@ -19,7 +20,9 @@ instance ToColor AppColor where
 data Preferences = Preferences
   { color :: AppColor
   }
-  deriving (Generic, ToQuery, FromQuery)
+  deriving (Generic, Show, Read, ToParam, FromParam, Session)
+instance Default Preferences where
+  def = Preferences White
 
 page :: (Hyperbole :> es) => Eff es (Page '[Content])
 page = do
@@ -36,5 +39,5 @@ instance HyperView Content es where
 
   update (SetColor clr) = do
     let prefs = Preferences clr
-    setSession prefs
+    saveSession prefs
     pure $ el (bg prefs.color) "Custom Background"
