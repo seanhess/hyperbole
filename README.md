@@ -82,6 +82,9 @@ The example directory contains an app demonstrating various features. See it in 
   <img alt="Hyperbole Examples" src="example/static/examples.png"/>
 </a>
 
+### Try Example Project with Nix
+
+If you want to get a feel for hyperbole without cloning the project run `nix run github:seanhess/hyperbole` to run the example webserver locally
 
 Learn More
 ----------
@@ -106,11 +109,59 @@ The NSO uses Hyperbole for the Level 2 Data creation tool for the [DKIST telesco
 Local Development
 -----------------
 
-### Dependencies with Nix
+### Recommended ghcid command
 
+If you want to work on both the hyperbole library and example code, this `ghcid` command will run (and hot reload) the examples server as you change any non-testing code.
 
-With nix installed, you can use `nix develop` to get a shell with all dependencies installed.
+```
+ghcid --setup=Main.update --command="cabal repl exe:examples lib:hyperbole" --run=Main.update --warnings --reload=./client/dist/hyperbole.js
+```
 
+If you want to work on the test suite, this will run the tests each time any library code is changed.
+
+```
+ghcid --command="cabal repl test lib:hyperbole" --run=Main.main --warnings --reload=./client/dist/hyperbole.js
+```
+
+### Nix
+
+Prepend targets with ghc982 or ghc966 to use GHC 9.8.2 or GHC 9.6.6
+
+- `nix run` or `nix run .#ghc966-hyperbole-examples` to start the example project with GHC 9.8.2
+- `nix develop` or `nix develop .#ghc982-shell` to get a shell with all dependencies installed for GHC 9.8.2. 
+
+You can import this flake's overlay to add `hyperbole` to all package sets and override ghc966 and ghc982 with the packages to satisfy `hyperbole`'s dependencies.
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    hyperbole.url = "github:seanhess/hyperbole"; # or "path:/path/to/cloned/hyperbole";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, hyperbole, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ hyperbole.overlays.default ];
+        };
+        haskellPackagesOverride = pkgs.haskell.packages.ghc966.override (old: {
+          overrides = pkgs.lib.composeExtensions (old.overrides or (_: _: { })) (hfinal: hprev: {
+            # your overrides here
+          });
+        });
+      in
+      {
+        devShells.default = haskellPackagesOverride.shellFor {
+          packages = p: [ p.hyperbole ];
+        };
+      }
+    );
+}
+```
 
 ### Manual dependency installation
 
