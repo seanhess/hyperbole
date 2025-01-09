@@ -30,5 +30,7 @@ instance HyperView Count es where
 countView :: Int -> View Count ()
 countView n = do
   el_ $ text $ pack $ show n
-  button (Increment n) (border 1) "Increment"
-  button (Decrement n) (border 1) "Decrement"
+  button (Increment n) btn "Increment"
+  button (Decrement n) btn "Decrement"
+ where
+  btn = border 1

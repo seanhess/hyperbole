@@ -23,7 +23,7 @@ type Page (views :: [Type]) = View (Root views) ()
 @
 #EMBED Example/Docs/BasicPage.hs main
 
-#EMBED Example/Docs/BasicPage.hs messagePage
+#EMBED Example/Docs/BasicPage.hs page
 @
 -}
 runPage

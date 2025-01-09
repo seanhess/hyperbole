@@ -54,3 +54,7 @@ getCount = readTVarIO =<< ask
 
 initCounter :: (Concurrent :> es) => Eff es (TVar Int)
 initCounter = newTVarIO 0
+
+app :: TVar Int -> Application
+app var = do
+  liveApp (basicDocument "Example") (runReader var . runConcurrent $ runPage page)

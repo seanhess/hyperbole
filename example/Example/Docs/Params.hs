@@ -38,11 +38,11 @@ loadTodos _ = pure []
 todosView :: [Todo] -> View Todos ()
 todosView _ = none
 
-messagePage :: (Hyperbole :> es) => Eff es (Page '[Message])
-messagePage = do
-  msg <- param "message"
-  pure $ do
-    hyper Message $ messageView msg
+-- messagePage :: (Hyperbole :> es) => Eff es (Page '[Message])
+-- messagePage = do
+--   msg <- param "message"
+--   pure $ do
+--     hyper Message $ messageView msg
 
 messageView :: Text -> View Message ()
 messageView m = do

@@ -8,10 +8,10 @@ import Web.Hyperbole
 messageView :: Text -> View Message ()
 messageView m = do
   button (Louder m) (border 1) "Louder"
-  el bold $ text $ "Message: " <> m
+  el bold $ text m
 
-messagePage :: Eff es (Page '[Message])
-messagePage = do
+page :: Eff es (Page '[Message])
+page = do
   pure $ do
     hyper Message $ messageView "Hello"
 

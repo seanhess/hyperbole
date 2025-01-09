@@ -1,13 +1,11 @@
-
 module Example.Docs.SideEffects where
 
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Web.Hyperbole
-import Data.Maybe (fromMaybe)
 
-
-messagePage :: (Hyperbole :> es) => Eff es (Page '[Message])
-messagePage = do
+page :: (Hyperbole :> es) => Eff es (Page '[Message])
+page = do
   prm <- lookupParam "msg"
   let msg = fromMaybe "hello" prm
   pure $ do

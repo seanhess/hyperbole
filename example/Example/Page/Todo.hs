@@ -8,7 +8,7 @@ import Data.Text (Text, pack)
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
-import Example.Effects.Todos (Todo (..), TodoId, Todos)
+import Example.Effects.Todos (Todo (..), TodoId, Todos, runTodosSession)
 import Example.Effects.Todos qualified as Todos
 import Example.Style qualified as Style
 import Example.View.Icon qualified as Icon
@@ -163,3 +163,8 @@ todoEditView todo = do
     form @TodoForm (SubmitEdit todo) (pad (TRBL 0 0 0 46)) $ do
       field f.task (const id) $ do
         input TextInput (pad 4 . value todo.task)
+
+main :: IO ()
+main = do
+  run 3000 $ do
+    liveApp (basicDocument "Example") (runTodosSession $ runPage page)

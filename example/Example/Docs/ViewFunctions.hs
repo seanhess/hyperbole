@@ -5,13 +5,8 @@ module Example.Docs.ViewFunctions where
 import Data.Text (Text)
 import Web.Hyperbole
 
-messageView :: Text -> View Message ()
-messageView m = do
-  el bold $ text $ "Message: " <> m
-  button (SetMessage "Goodbye") (border 1) "Say Goodbye"
-
-messagePage :: Eff es (Page '[Message])
-messagePage = do
+page :: Eff es (Page '[Message])
+page = do
   pure $ do
     hyper Message $ messageView "Hello"
 
@@ -26,14 +21,16 @@ instance HyperView Message es where
   update (SetMessage t) =
     pure $ messageView t
 
-messageView' :: Text -> View Message ()
-messageView' m = do
-  header $ "Message: " <> m
-  goodbyeButton
+messageView :: Text -> View Message ()
+messageView m = do
+  header m
+  messageButton "Salutations!"
+  messageButton "Good Morning!"
+  messageButton "Goodbye"
 
-goodbyeButton :: View Message ()
-goodbyeButton = do
-  button (SetMessage "Goodbye") (border 1) "Say Goodbye"
+messageButton :: Text -> View Message ()
+messageButton msg = do
+  button (SetMessage msg) (border 1) (text $ "Say " <> msg)
 
 header :: Text -> View context ()
 header txt = do

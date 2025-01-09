@@ -20,8 +20,8 @@ page = do
     hyper Message1 $ messageView "Hello"
     hyper Message2 $ messageView "World!"
 
-messagePage :: Eff es (Page '[Message])
-messagePage = do
+page' :: Eff es (Page '[Message])
+page' = do
   pure $ do
     hyper Message1 $ messageView "Hello"
     hyper Message2 $ messageView "World!"
