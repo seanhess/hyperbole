@@ -5,11 +5,11 @@ module Test.QuerySpec where
 import Data.Function ((&))
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import GHC.Generics (Generic)
 import Network.HTTP.Types (urlEncode)
 import Skeletest
+import Web.Hyperbole
 import Web.Hyperbole.Data.QueryData as QueryData
-import Web.Hyperbole.Effect.Session as Session
+import Web.Hyperbole.Effect.Server
 
 
 spec :: Spec
@@ -21,7 +21,7 @@ spec = do
 
 
 data Woot
-  deriving (Generic, SessionKey)
+  deriving (Generic, Session)
 
 
 sessionSpec :: Spec
@@ -44,8 +44,8 @@ paramSpec = do
       toParam @(Maybe Int) (Just 23) `shouldBe` "23"
 
     it "should encode lists as show" $ do
-      let list = ["one", "two"]
-      toParam @[Text] list `shouldBe` ParamValue (cs (show list))
+      let items = ["one", "two"]
+      toParam @[Text] items `shouldBe` ParamValue (cs (show items))
 
   describe "FromParam" $ do
     it "should parse text" $ do
@@ -85,9 +85,9 @@ renderSpec = do
     QueryData.lookup "msg" q' `shouldBe` Just msg
 
   it "should render lists" $ do
-    let list = ["one", "two"]
-    let q = mempty & QueryData.insert @[Text] "list" list
-    QueryData.render q `shouldBe` "list=" <> urlEncode True (cs $ show list)
+    let items = ["one", "two"]
+    let q = mempty & QueryData.insert @[Text] "items" items
+    QueryData.render q `shouldBe` "items=" <> urlEncode True (cs $ show items)
 
 
 data Filters = Filters
