@@ -19,7 +19,7 @@ data Cookie = Cookie
   }
   deriving (Show, Eq)
 newtype Cookies = Cookies (Map Param Cookie)
-  deriving newtype (Monoid, Semigroup, Show)
+  deriving newtype (Monoid, Semigroup, Show, Eq)
 
 
 insert :: Cookie -> Cookies -> Cookies
@@ -30,6 +30,7 @@ insert cookie (Cookies m) =
 delete :: Param -> Cookies -> Cookies
 delete key (Cookies m) =
   Cookies $ M.delete key m
+
 
 
 lookup :: Param -> Cookies -> Maybe ParamValue

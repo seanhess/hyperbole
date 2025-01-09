@@ -9,6 +9,7 @@ import Network.HTTP.Types (urlEncode)
 import Skeletest
 import Web.Hyperbole
 import Web.Hyperbole.Data.QueryData as QueryData
+import Web.Hyperbole.Data.Session as Session
 import Web.Hyperbole.Effect.Server
 
 
@@ -20,14 +21,29 @@ spec = do
   describe "session" sessionSpec
 
 
-data Woot
-  deriving (Generic, Session)
+data Woot = Woot Text
+  deriving (Generic, Show, ToParam)
+instance Session Woot where
+  cookiePath = Just ["somepage"]
 
 
 sessionSpec :: Spec
 sessionSpec = do
-  it "should session key" $ do
-    sessionKey @Woot `shouldBe` "Woot"
+  it "should create cookie" $ do
+    let woot = Woot "hello"
+    sessionCookie woot `shouldBe` Cookie "Woot" (Just (toParam woot)) (Just ["somepage"])
+
+  it "should render cookie with root path" $ do
+    let cookie = Cookie "Woot" (Just "Woot") Nothing
+    renderCookie [] cookie `shouldBe` "Woot=Woot; SameSite=None; secure; path=/"
+
+  it "should render complex cookie with included path" $ do
+    let woot = Woot "hello"
+    let cookie = sessionCookie woot
+    renderCookie [] cookie `shouldBe` "Woot=" <> urlEncode True (cs (show woot)) <> "; SameSite=None; secure; path=/somepage"
+
+  it "should parse cookies" $ do
+    cookiesFromHeader [("Woot", "Woot")] `shouldBe` Session.fromList [Cookie "Woot" (Just "Woot") Nothing]
 
 
 paramSpec :: Spec
