@@ -18,7 +18,7 @@ type DelayMs = Int
 {- | Send the action after N milliseconds. Can be used to implement lazy loading or polling. See [Example.Page.Concurrent](https://docs.hyperbole.live/concurrent)
 
 @
-#EMBED Example/Page/Concurrent.hs viewPoll
+#EMBED Example/Page/Concurrent.hs viewProgress
 @
 -}
 onLoad :: (ViewAction (Action id)) => Action id -> DelayMs -> Mod id

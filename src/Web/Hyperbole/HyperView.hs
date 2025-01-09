@@ -202,9 +202,9 @@ class ViewId a where
 {- | Access the 'viewId' in a 'View' or 'update'
 
 @
-#EMBED Example/Page/Concurrent.hs data Poller
+#EMBED Example/Page/Contact.hs data Contact
 
-#EMBED Example/Page/Concurrent.hs instance (Debug
+#EMBED Example/Page/Contact.hs instance (Users :> es
 @
 -}
 class HasViewId m view where
