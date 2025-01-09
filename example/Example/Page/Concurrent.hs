@@ -25,7 +25,6 @@ instance (Debug :> es) => HyperView Poller es where
     deriving (Show, Read, ViewAction)
   update (Load n) = do
     Poller dl <- viewId
-    -- BUG: this is blocking the thread, so the short poll has to wait for the long to finish before continuing
     delay dl
     pure $ viewPoll (n + 1)
 

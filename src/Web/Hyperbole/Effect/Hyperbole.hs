@@ -12,7 +12,7 @@ import Web.Hyperbole.Data.QueryData (queryData)
 import Web.Hyperbole.Effect.Server
 
 
--- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', the Session, and maniupulate the Client.
+-- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', manually 'respondEarly', and manipulate the Client 'session' and 'query'.
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondEarly :: Response -> Hyperbole m a

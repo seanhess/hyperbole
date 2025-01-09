@@ -19,30 +19,36 @@ import Web.View (View, addContext, att, context, el, flexCol, none)
 Create an instance with a unique view id type and a sum type describing the actions the HyperView supports. The View Id can contain context (a database id, for example)
 
 @
-data Message = Message Int
-  deriving (Generic, 'Param')
+#EMBED Example/Docs/Interactive.hs data Message
 
-data MessageAction
-  = Louder Text
-  | ClearMessage
-  deriving (Generic, 'Param')
-
-instance HyperView Message where
-  type Action Message = MessageAction
+#EMBED Example/Docs/Interactive.hs instance HyperView Message es where
 @
 -}
 class (ViewId id, ViewAction (Action id)) => HyperView id es where
+  -- | Outline all actions that are permitted in this HyperView
+  --
+  -- > data Action Message = SetMessage Text | ClearMessage
+  -- >   deriving (Show, Read, ViewAction)
   data Action id
 
 
+  -- | Include any child hyperviews here. The compiler will make sure that the page knows how to handle them
+  --
+  -- > type Require = '[ChildView]
   type Require id :: [Type]
+
+
   type Require id = '[]
 
 
+  -- | Specify how the view should be updated for each Action
+  --
+  -- > update (SetMessage msg) = pure $ messageView msg
+  -- > update ClearMessage = pure $ messageView ""
   update :: (Hyperbole :> es) => Action id -> Eff (Reader id : es) (View id ())
 
 
--- | The top-level view created by 'load'. Carries the views in its type to check that we handled all our views
+-- | The top-level view returned by a 'Page'. It carries a type-level list of every 'HyperView' used in our 'Page' so the compiler can check our work and wire everything together.
 data Root (views :: [Type]) = Root
   deriving (Show, Read, ViewId)
 
@@ -143,9 +149,12 @@ type family AllInPage ids total :: Constraint where
     (ElemOr x total (NotInPage x total), AllInPage xs total)
 
 
--- TODO: if I'm going to limit it, it's going to happen here
--- AND all their children have to be there
--- , All (Elem (Require ctx)) (Require id)
+{- | Embed a 'HyperView' into another 'View'
+
+@
+#EMBED Example/Docs/Interactive.hs page
+@
+-}
 hyper
   :: forall id ctx
    . (HyperViewHandled id ctx, ViewId id)
@@ -190,8 +199,18 @@ class ViewId a where
     either (const Nothing) pure $ readQueryParam (ParamValue t)
 
 
+{- | Access the 'viewId' in a 'View' or 'update'
+
+@
+#EMBED Example/Page/Concurrent.hs data Poller
+
+#EMBED Example/Page/Concurrent.hs instance (Debug
+@
+-}
 class HasViewId m view where
   viewId :: m view
+
+
 instance HasViewId (View ctx) ctx where
   viewId = context
 instance HasViewId (Eff (Reader view : es)) view where

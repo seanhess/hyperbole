@@ -40,7 +40,7 @@ setQuery a = do
 {- | Parse a single query parameter. Return a 400 status if missing or if parsing fails. See 'FromParam'
 
 @
-#EMBED Example/Docs/Params.hs page
+#EMBED Example/Docs/Params.hs page'
 @
 -}
 param :: (FromParam a, Hyperbole :> es) => Param -> Eff es a

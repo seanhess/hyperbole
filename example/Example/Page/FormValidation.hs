@@ -111,43 +111,6 @@ formView v = do
   valStyle Valid = Style.success
   valStyle _ = id
 
-formViewEmpty :: View FormView ()
-formViewEmpty = do
-  let f = formFields @UserForm
-  form @UserForm Submit (gap 10 . pad 10) $ do
-    el Style.h1 "Sign Up"
-
-    field f.user valStyle $ do
-      label "Username"
-      input Username (inp . placeholder "username")
-
-      fv <- fieldValid
-      case fv of
-        Invalid t -> el_ (text t)
-        Valid -> el_ "Username is available"
-        _ -> none
-
-    field f.age valStyle $ do
-      label "Age"
-      input Number (inp . placeholder "age" . value "0")
-      el_ invalidText
-
-    field f.pass1 valStyle $ do
-      label "Password"
-      input NewPassword (inp . placeholder "password")
-      el_ invalidText
-
-    field f.pass2 (const id) $ do
-      label "Repeat Password"
-      input NewPassword (inp . placeholder "repeat password")
-
-    submit Style.btn "Submit"
- where
-  inp = Style.input
-  valStyle (Invalid _) = Style.invalid
-  valStyle Valid = Style.success
-  valStyle _ = id
-
 userView :: UserForm Identity -> View FormView ()
 userView u = do
   el (bold . Style.success) "Accepted Signup"

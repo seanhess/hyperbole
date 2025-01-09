@@ -105,37 +105,17 @@ data InputType
   deriving (Show)
 
 
-{- | Validation results for a 'form'
+{- | Validation results for a 'Form'. See 'validate'
 
 @
-data UserForm f = UserForm
-  { username :: Field f
-  , age :: Field f Int
-  }
-  deriving (Generic)
+#EMBED Example/Page/FormValidation.hs data UserForm
+#EMBED Example/Page/FormValidation.hs instance Form UserForm
 
+#EMBED Example/Page/FormValidation.hs validateForm
 
-validateUsername :: Username -> Validated Username
-validateUsername (Username u) =
-  mconcat
-    [ validate (T.elem ' ' u) "Username must not contain spaces"
-    , validate (T.length u < 4) "Username must be at least 4 chars"
-    , if u == "admin" || u == "guest"
-        then Invalid "Username is already in use"
-        else Valid
-    ]
-
-formAction :: ('Hyperbole' :> es, 'UserDB' :> es) => FormView -> FormAction -> 'Eff' es ('View' FormView ())
-formAction _ SignUp = do
-  u <- 'formField' \@Age
-
-  case validateUser u a of
-    'Validation' [] -> successView
-    errs -> userForm v
+#EMBED Example/Page/FormValidation.hs validateAge
 @
 -}
-
--- would be easier if you pass in your own data. Right now everything is indexed by type
 data Validated a = Invalid Text | NotInvalid | Valid
   deriving (Show)
 
@@ -151,18 +131,6 @@ instance Semigroup (Validated a) where
 instance Monoid (Validated a) where
   mempty = NotInvalid
 
-
--- type Validation = Validation' Validated
---
---
--- newtype Validation' validated a = Validation [(Text, validated ())]
---   deriving newtype (Semigroup, Monoid)
-
--- instance (Show (v ())) => Show (Validation' v fs) whervalid   show (Validation v) = show v
---
---
--- validation :: forall a fs v. (FormField a, Elem a fs, ValidationState v, Monoid (v a)) => Validation' v fs -> v a
--- validation (Validation vs) = mconcat $ fmap (convert . snd) $ filter ((== inputName @a) . fst) vs
 
 class ValidationState (v :: Type -> Type) where
   convert :: v a -> v b
@@ -181,12 +149,8 @@ instance ValidationState Validated where
   isInvalid _ = False
 
 
-{-
+{- Only shows if 'Validated' is 'Invalid'. See 'formFieldsWith'
 @
-'field' \@User id Style.invalid $ do
-  'label' \"Username\"
-  'input' Username ('placeholder' "username")
-  el_ 'invalidText'
 @
 -}
 invalidText :: forall a id. View (Input id Validated a) ()
@@ -197,7 +161,12 @@ invalidText = do
     _ -> none
 
 
--- | specify a check for a 'Validation'
+{- | specify a check for a 'Validation'
+
+@
+#EMBED Example/Page/FormValidation.hs validateAge
+@
+-}
 validate :: Bool -> Text -> Validated a
 validate True t = Invalid t -- Validation [(inputName @a, Invalid t)]
 validate False _ = NotInvalid -- Validation [(inputName @a, NotInvalid)]
@@ -213,6 +182,7 @@ anyInvalid f = any isInvalid (collectValids f :: [val ()])
 
 -- any (isInvalid . snd) vs
 
+-- | Returns the 'Validated' for the 'field'. See 'formFieldsWith'
 fieldValid :: View (Input id v a) (v a)
 fieldValid = do
   Input _ v <- context
@@ -232,18 +202,7 @@ data Input (id :: Type) (valid :: Type -> Type) (a :: Type) = Input
   }
 
 
-{- | Display a 'FormField'
-
-@
-data Age = Age Int deriving (Generic, FormField)
-
-myForm = do
-  'form' SignUp mempty id $ do
-    field @Age id id $ do
-     'label' "Age"
-     'input' Number (placeholder "42")
-@
--}
+-- | Display a 'FormField'. See 'form' and 'Form'
 field
   :: forall (id :: Type) (v :: Type -> Type) (a :: Type)
    . FormField v a
@@ -291,22 +250,7 @@ textarea f mDefaultText = do
 {- | Type-safe \<form\>. Calls (Action id) on submit
 
 @
-userForm :: 'Validation' -> 'View' FormView ()
-userForm v = do
-  form Signup v id $ do
-    el Style.h1 "Sign Up"
-
-    'field' \@User id Style.invalid $ do
-      'label' \"Username\"
-      'input' Username ('placeholder' "username")
-      el_ 'invalidText'
-
-    'field' \@Age id Style.invalid $ do
-      'label' \"Age\"
-      'input' Number ('placeholder' "age")
-      el_ 'invalidText'
-
-    'submit' (border 1) \"Submit\"
+#EMBED Example/Page/FormSimple.hs formView
 @
 -}
 form :: (Form form v, ViewAction (Action id)) => Action id -> Mod id -> View (FormFields id) () -> View id ()
@@ -327,7 +271,14 @@ submit :: Mod (FormFields id) -> View (FormFields id) () -> View (FormFields id)
 submit f = tag "button" (att "type" "submit" . f)
 
 
+{- | Field allows a Higher Kinded 'Form' to reuse the same selectors for form parsing, generating html forms, and validation
+
+> Field Identity Text ~ Text
+> Field Maybe Text ~ Maybe Text
+-}
 type family Field (context :: Type -> Type) a
+
+
 type instance Field Identity a = a
 type instance Field FieldName a = FieldName a
 type instance Field (FormField v) a = FormField v a
@@ -346,28 +297,15 @@ formData = do
     Right a -> pure a
 
 
-{- | Parse a 'FormField' from the request
+{- | A Form is a Higher Kinded record listing each 'Field'. `ContactForm` `Identity` behaves like a normal record, while `ContactForm` `Maybe` would be maybe values for each field
+
+From [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
 
 @
-formAction :: ('Hyperbole' :> es, 'UserDB' :> es) => FormView -> FormAction -> 'Eff' es ('View' FormView ())
-formAction _ SignUp = do
-  a <- formField \@Age
-  u <- formField \@User
-  saveUserToDB u a
-  pure $ el_ "Saved!"
+#EMBED Example/Page/FormSimple.hs data ContactForm
+#EMBED Example/Page/FormSimple.hs instance Form ContactForm
 @
 -}
-
--- formField :: forall a es. (FormField a, Hyperbole :> es) => Eff es a
--- formField = do
---   f <- formData
---   case fieldParse f of
---     Left e -> parseError e
---     Right a -> pure a
-
--- WARNING: needs the capability to
--- TODO: Generate an empty set of field names?
--- TODO: Merge Validation and FieldNames
 class Form form (val :: Type -> Type) | form -> val where
   formParse :: FE.Form -> Either Text (form Identity)
   default formParse :: (Generic (form Identity), GFormParse (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
@@ -404,26 +342,22 @@ formLookupParam (Param key) frm = do
   maybe (pure Nothing) (parseParam . ParamValue) mt
 
 
-{- | Generate FormFields for the given instance of 'Form', with no validation information
+{- | Generate FormFields for the given instance of 'Form', with no validation information. See [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
 
-> let f = formFields @UserForm
-> form @UserForm Submit id $ do
->   field f.user id $ do
->     label "Username"
->     input Username (placeholder "Username")
+> #EMBED Example/Page/FormSimple.hs data ContactForm
+>
+> #EMBED Example/Page/FormSimple.hs formView
 -}
 formFields :: (Form form val) => form (FormField val)
 formFields = genFieldsWith genForm
 
 
-{- | Generate FormFields for the givne instance of 'Form' from validation data
+{- | Generate FormFields for the given instance of 'Form' from validation data. See [Example.Page.FormValidation](https://docs.hyperbole.live/formvalidation)
 
-> let valids = UserForm { user = Valid, age = Invalid "must be 20 years old" }
-> let f = formFieldsWith @UserForm valids
-> form @UserForm Submit id $ do
->   field f.user id $ do
->     label "Username"
->     input Username (placeholder "Username")
+> #EMBED Example/Page/FormValidation.hs data UserForm
+> #EMBED Example/Page/FormValidation.hs instance Form UserForm
+>
+> #EMBED Example/Page/FormValidation.hs formView
 -}
 formFieldsWith :: (Form form val) => form val -> form (FormField val)
 formFieldsWith = genFieldsWith

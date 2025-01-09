@@ -7,10 +7,11 @@ import Control.Monad (forM_)
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
-import Example.Page.Contact (contactEdit', contactForm, contactLoading, contactView', parseUser)
 import Example.Effects.Debug
 import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
+import Example.Page.Contact (contactForm, contactLoading, contactView', parseUser)
+import Example.Page.Contact qualified as Contact
 import Example.Style qualified as Style
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
@@ -132,5 +133,5 @@ contactEdit :: User -> View InlineContact ()
 contactEdit u = do
   el (hide . onRequest flexCol) contactLoading
   col (onRequest hide . gap 10) $ do
-    contactEdit' View Save u
+    Contact.contactEdit View Save u
     target Contacts $ button (DeleteUser u.id) (Style.btn' Danger . pad (XY 10 0)) (text "Delete")

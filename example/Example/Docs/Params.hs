@@ -23,9 +23,9 @@ instance HyperView Todos es where
     = SetFilters Filters
     deriving (Show, Read, ViewAction)
 
-  update (SetFilters f) = do
-    setQuery f
-    todos <- loadTodos f
+  update (SetFilters filters) = do
+    setQuery filters
+    todos <- loadTodos filters
     pure $ todosView todos
 
 -- Fake User effect
@@ -38,11 +38,11 @@ loadTodos _ = pure []
 todosView :: [Todo] -> View Todos ()
 todosView _ = none
 
--- messagePage :: (Hyperbole :> es) => Eff es (Page '[Message])
--- messagePage = do
---   msg <- param "message"
---   pure $ do
---     hyper Message $ messageView msg
+page' :: (Hyperbole :> es) => Eff es (Page '[Message])
+page' = do
+  msg <- param "message"
+  pure $ do
+    hyper Message $ messageView msg
 
 messageView :: Text -> View Message ()
 messageView m = do

@@ -39,7 +39,7 @@ redirect :: (Hyperbole :> es) => Url -> Eff es a
 redirect = send . RespondEarly . Redirect
 
 
--- | Manually set the response to the given view. Normally you return a 'View' from 'load' or 'handle' instead of using this
+-- | Manually set the response to the given view. Normally you would return a 'View' from 'runPage' instead
 view :: (Hyperbole :> es) => View () () -> Eff es Response
 view vw = do
   pure $ Response (TargetViewId "") vw

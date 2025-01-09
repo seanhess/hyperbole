@@ -16,23 +16,10 @@ button action f cd = do
   tag "button" (onClick action . f) cd
 
 
-{- | Type-safe dropdown. Sends (opt -> Action id) when selected. The selection predicate (opt -> Bool) controls which option is selected. See [Example.Contacts](https://github.com/seanhess/hyperbole/blob/main/example/Example/Contacts.hs)
+{- | Type-safe dropdown. Sends (opt -> Action id) when selected. The selection predicate (opt -> Bool) controls which option is selected. See [Example.Page.Filter](https://docs.hyperbole.live/filter)
 
 @
-data ContactsAction
-  = Reload (Maybe Filter)
-  | Delete Int
-  deriving (Generic, Param)
-
-allContactsView :: Maybe Filter -> View Contacts ()
-allContactsView fil = do
-  row (gap 10) $ do
-    el (pad 10) "Filter: "
-    dropdown Reload (== fil) id $ do
-      option Nothing ""
-      option (Just Active) "Active!"
-      option (Just Inactive) \"Inactive\"
-  ...
+#EMBED Example/Page/Filter.hs familyDropdown
 @
 -}
 dropdown
@@ -74,7 +61,6 @@ data Option opt id action = Option
 search :: (ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod id -> View id ()
 search go delay f = do
   tag "input" (onInput go delay . f) none
-
 
 
 {- | A hyperlink to another route

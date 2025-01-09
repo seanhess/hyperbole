@@ -68,9 +68,9 @@ module Web.Hyperbole
   , Hyperbole
 
     -- ** Response
+  , respondEarly
   , notFound
   , redirect
-  , respondEarly
 
     -- ** Request
   , request
@@ -99,6 +99,13 @@ module Web.Hyperbole
   , hyper
   , HasViewId (..)
 
+    -- * Interactive Elements
+  , button
+  , search
+  , dropdown
+  , option
+  , Option
+
     -- * Events
   , onClick
   , onDblClick
@@ -109,13 +116,6 @@ module Web.Hyperbole
   , onRequest
   , Key (..)
   , DelayMs
-
-    -- * Interactive Elements
-  , button
-  , search
-  , dropdown
-  , option
-  , Option
 
     -- * Type-Safe Forms
 
@@ -160,7 +160,6 @@ module Web.Hyperbole
   , ViewId
   , ViewAction
   , Root
-  , HyperViewHandled
 
     -- * Exports
 

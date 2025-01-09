@@ -38,7 +38,7 @@ instance HyperView Languages es where
     = SearchTerm Text
     | Select ProgrammingLanguage
     | Feature TypeFeature Bool
-    | Family (Maybe LanguageFamily)
+    | SetFamily (Maybe LanguageFamily)
     deriving (Show, Read, ViewAction)
 
   update = \case
@@ -50,7 +50,7 @@ instance HyperView Languages es where
     Feature feature selected -> do
       filters <- modFilters $ \f -> setFeatures feature selected f
       pure $ languagesView filters
-    Family f -> do
+    SetFamily f -> do
       filters <- modFilters $ \Filters{features, term} -> Filters{family = f, features, term}
       pure $ languagesView filters
    where
@@ -98,10 +98,7 @@ filtersView filters = do
   row id $ do
     col (gap 5) $ do
       el bold "Language Family"
-      dropdown Family (== filters.family) (border 1 . pad 10) $ do
-        option Nothing "Any"
-        option (Just ObjectOriented) "Object Oriented"
-        option (Just Functional) "Functional"
+      familyDropdown filters
     space
     col (gap 5) $ do
       el bold "Type System Features"
@@ -117,6 +114,13 @@ filtersView filters = do
       el_ $ text (featureName f)
 
   featureName f = pack $ show f
+
+familyDropdown :: Filters -> View Languages ()
+familyDropdown filters =
+  dropdown SetFamily (== filters.family) (border 1 . pad 10) $ do
+    option Nothing "Any"
+    option (Just ObjectOriented) "Object Oriented"
+    option (Just Functional) "Functional"
 
 -- It's not recommended to attempt to clear the value. Setting the value on inputs results in unexpected behavior.
 -- if you need this, use a javascript component

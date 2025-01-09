@@ -256,13 +256,7 @@ data Request = Request
   deriving (Show)
 
 
-{- | Valid responses for a 'Hyperbole' effect. Use 'notFound', etc instead. Reminds you to use 'load' in your 'Page'
-
-> myPage :: (Hyperbole :> es) => Page es Response
-> myPage = do
->   -- compiler error: () does not equal Response
->   pure ()
--}
+-- | Valid responses for a 'Hyperbole' effect. Use 'notFound', etc instead.
 data Response
   = Response TargetViewId (View () ())
   | NotFound

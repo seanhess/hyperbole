@@ -51,7 +51,7 @@ instance (Users :> es, Debug :> es) => HyperView Contact es where
       View -> do
         pure $ contactView u
       Edit -> do
-        pure $ contactEdit u
+        pure $ contactEditView u
       Save -> do
         delay 1000
         unew <- parseUser uid
@@ -102,13 +102,13 @@ contactView' edit u = do
  where
   fld = gap 10
 
-contactEdit :: User -> View Contact ()
-contactEdit u = do
+contactEditView :: User -> View Contact ()
+contactEditView u = do
   el (hide . onRequest flexCol) contactLoading
-  el (onRequest hide) $ contactEdit' View Save u
+  el (onRequest hide) $ contactEdit View Save u
 
-contactEdit' :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
-contactEdit' onView onSave u = do
+contactEdit :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
+contactEdit onView onSave u = do
   contactForm onSave contactFromUser
   col (gap 10) $ do
     button onView Style.btnLight (text "Cancel")

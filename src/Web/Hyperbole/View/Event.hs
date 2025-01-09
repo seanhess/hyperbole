@@ -15,14 +15,10 @@ import Web.View.View (viewModContents)
 type DelayMs = Int
 
 
-{- | Send the action after N milliseconds. Can be used to implement lazy loading or polling
+{- | Send the action after N milliseconds. Can be used to implement lazy loading or polling. See [Example.Page.Concurrent](https://docs.hyperbole.live/concurrent)
 
 @
-pollMessageView :: Text -> 'View' Message ()
-pollMessageView m = do
-  onLoad LoadMessage 1000 $ do
-    'el' 'bold' "Current Message. Reloading in 1s"
-    'el_' ('text' m)
+#EMBED Example/Page/Concurrent.hs viewPoll
 @
 -}
 onLoad :: (ViewAction (Action id)) => Action id -> DelayMs -> Mod id
@@ -109,12 +105,10 @@ toActionInput con =
   T.dropEnd 3 $ toAction $ con ""
 
 
-{- | Apply a Mod only when a request is in flight
+{- | Apply a Mod only when a request is in flight. See [Example.Page.Contact](https://docs.hyperbole.live/contacts/1)
 
 @
-myView = do
-  el (hide . onRequest flexCol) 'el_' "Loading..."
-  el (onRequest hide) "Loaded"
+#EMBED Example/Page/Contact.hs contactEditView
 @
 -}
 onRequest :: Mod id -> Mod id
@@ -127,17 +121,7 @@ dataTarget :: (ViewId a) => a -> Mod x
 dataTarget = att "data-target" . toViewId
 
 
-{- | Trigger actions for another view. They will update the view specified
-
-> otherView :: View OtherView ()
-> otherView = do
->   el_ "This is not a message view"
->   button OtherAction id "Do Something"
->
->   target (Message 2) $ do
->     el_ "Now we can trigger a MessageAction which will update our Message HyperView, not this one"
->     button ClearMessage id "Clear Message #2"
--}
+-- | Allow inputs to trigger actions for a different view
 target :: forall id ctx. (HyperViewHandled id ctx, ViewId id) => id -> View id () -> View ctx ()
 target newId view = do
   addContext newId $ do

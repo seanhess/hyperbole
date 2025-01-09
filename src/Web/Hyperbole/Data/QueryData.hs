@@ -136,7 +136,7 @@ instance FromQuery QueryData where
   parseQuery = pure
 
 
-{- | Sessions, Query Params, and Forms all encode their data as query strings. ToQuery and 'FromQuery' control how a datatype is encoded to a full query string
+{- | A page can store state in the browser 'query' string. ToQuery and 'FromQuery' control how a datatype is encoded to a full query string
 
 @
 #EMBED Example/Docs/Encoding.hs data Filters
@@ -167,7 +167,7 @@ instance ToQuery Query where
   toQuery = queryData
 
 
-{- | Encode data into a query parameter value
+{- | 'session's, 'form's, and 'query's all encode data as query strings. ToParam and FromParam control how a datatype is encoded to a parameter. By default it simply url-encodes the show instance.
 
 @
 #EMBED Example/Effects/Todos.hs data Todo = Todo
@@ -185,7 +185,7 @@ class ToParam a where
   toParam = showQueryParam
 
 
-{- | Decode data from a query parameter value
+{- | Decode data from a 'query', 'session', or 'form' parameter value
 
 @
 #EMBED Example/Effects/Todos.hs data Todo = Todo
@@ -385,7 +385,7 @@ instance (Selector s, ToParam a, Eq a, DefaultParam a) => GToQuery (M1 S s (K1 R
          in singleton sel a
 
 
--- | Data.Default doesn't have a Text instance! This is better than an orphan instance
+-- | Data.Default doesn't have a Text instance. This class does
 class DefaultParam a where
   defaultParam :: a
   default defaultParam :: (Default a) => a
