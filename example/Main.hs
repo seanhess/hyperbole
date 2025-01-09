@@ -31,6 +31,7 @@ import Effectful.State.Static.Local
 import Example.AppRoute
 import Example.Colors
 import Example.Effects.Debug as Debug
+import Example.Effects.Random (GenRandom, runRandom)
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
 import Example.Page.Concurrent qualified as Concurrent
@@ -97,8 +98,8 @@ app users count = do
     toDocument
     (runApp . routeRequest $ router)
  where
-  runApp :: (Hyperbole :> es, IOE :> es) => Eff (Concurrent : Debug : Users : Todos : es) a -> Eff es a
-  runApp = runTodosSession . runUsersIO users . runDebugIO . runConcurrent
+  runApp :: (Hyperbole :> es, IOE :> es) => Eff (GenRandom : Concurrent : Debug : Users : Todos : es) a -> Eff es a
+  runApp = runTodosSession . runUsersIO users . runDebugIO . runConcurrent . runRandom
 
   router :: forall es. (Hyperbole :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es) => AppRoute -> Eff es Response
   router (Hello h) = runPage $ hello h
