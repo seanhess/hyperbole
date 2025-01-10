@@ -8,6 +8,11 @@ on:
 
 permissions:
   contents: read
+  packages: write # Added for container registry access
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
@@ -28,3 +33,41 @@ jobs:
       - name: Check packages
         run: |
           nix flake check
+
+      # Docker steps start here
+      - name: Build container
+        run: nix build .#docker
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Load and push image
+        if: github.event_name != 'pull_request'
+        run: |
+          # Load the image
+          docker load < result
+          
+          # Get the image ID
+          IMAGE_ID=$(docker images --format '{{.ID}}' | head -n1)
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          
+          # Set version tag
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/v,,')
+          else
+            VERSION=latest
+          fi
+          
+          # Tag the image
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_ID $REGISTRY/$IMAGE_NAME:$VERSION
+          
+          # Push the image
+          docker push $REGISTRY/$IMAGE_NAME:$VERSION
+

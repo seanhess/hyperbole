@@ -119,8 +119,8 @@
             name = "ghc${ghcVer}";
             value = (
               overridePkgs.haskell.packages."ghc${ghcVer}".extend (
-                pkgs.haskell.lib.compose.packageSourceOverrides {
-                  ${examplesName} = example-src;
+                hfinal: hprev: {
+                  ${examplesName} = hfinal.callCabal2nix examplesName example-src { };
                 }
               )
             );
@@ -171,6 +171,36 @@
           version:
           pkgs.haskell.lib.justStaticExecutables self.packages.${system}."ghc${version}-${examplesName}";
 
+        docker =
+          version:
+          pkgs.dockerTools.buildImage {
+            name = examplesName;
+            created = "now";
+            tag = "latest";
+            copyToRoot = pkgs.buildEnv {
+              name = "image-root";
+              paths = [
+                pkgs.tree
+                pkgs.bash
+                (exe version)
+                (pkgs.runCommand "static-files" { } ''
+                  mkdir -p $out/example/static
+                  mkdir -p $out/client/dist
+                  cp -r ${./example/static}/* $out/example/static/
+                  cp -r ${./client/dist}/* $out/client/dist
+                '')
+              ];
+              pathsToLink = [
+                "/bin"
+                "/example/static"
+                "/client/dist"
+              ];
+            };
+            config = {
+              Entrypoint = [ "/bin/examples" ];
+              WorkingDir = "/";
+            };
+          };
       in
       {
         checks = builtins.listToAttrs (
@@ -200,12 +230,19 @@
         packages =
           {
             default = self.packages.${system}."ghc982-${examplesName}";
+            docker = self.packages.${system}."ghc982-docker";
           }
           // builtins.listToAttrs (
-            map (version: {
-              name = "ghc${version}-${examplesName}";
-              value = ghcPkgs."ghc${version}".${examplesName};
-            }) ghcVersions
+            builtins.concatMap (version: [
+              {
+                name = "ghc${version}-${examplesName}";
+                value = ghcPkgs."ghc${version}".${examplesName};
+              }
+              {
+                name = "ghc${version}-docker";
+                value = docker version;
+              }
+            ]) ghcVersions
           );
 
         devShells =
