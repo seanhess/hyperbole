@@ -66,8 +66,9 @@ jobs:
           # Tag the image
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
-          docker tag $IMAGE_ID $REGISTRY/$IMAGE_NAME:$VERSION
+          REPO_NAME=$(echo "$REGISTRY/$IMAGE_NAME" | tr '[A-Z]' '[a-z]')
+          docker tag $IMAGE_ID $REPO_NAME:$VERSION
           
           # Push the image
-          docker push $REGISTRY/$IMAGE_NAME:$VERSION
+          docker push $REPO_NAME:$VERSION
 
