@@ -505,6 +505,13 @@ We can create more complex view functions by passing state in as a parameter. He
 #EMBED Example/View/Inputs.hs toggleCheckBtn
 @
 
+View functions can wrap other Views:
+
+@
+#EMBED Example/View/Inputs.hs progressBar
+@
+
+
 Don't leverage 'HyperView's for code reuse. Think about which subsections of a page ought to update independently. Those are 'HyperView's. If you need reusable functionality, use [view functions](#g:viewfunctions) instead.
 
 * See [Example.View.DataTable](https://docs.hyperbole.live/datatable) for a more complex example
