@@ -82,9 +82,17 @@ The example directory contains an app demonstrating various features. See it in 
   <img alt="Hyperbole Examples" src="example/static/examples.png"/>
 </a>
 
-### Try Example Project with Nix
+### Try Example Project Locally
 
-If you want to get a feel for hyperbole without cloning the project run `nix run github:seanhess/hyperbole` to run the example webserver locally
+These will run the examples webserver
+
+#### With Nix
+
+`nix run github:seanhess/hyperbole`
+
+#### With Docker
+
+`docker run -it -p 3000:3000 ghcr.io/seanhess/hyperbole:latest`
 
 Learn More
 ----------
@@ -162,6 +170,8 @@ You can import this flake's overlay to add `hyperbole` to all package sets and o
     );
 }
 ```
+
+Note: You can always run `cachix use hyperbole` to use the GitHub CI populated cache if you didn't allow adding 'extra-substituters' when first using this flake.
 
 ### Manual dependency installation
 
