@@ -1,6 +1,15 @@
 {
   description = "hyperbole overlay, development and hyperbole-examples";
 
+  nixConfig = {
+    extra-substituters = [
+      "https://hyperbole.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "hyperbole.cachix.org-1:9Pl9dJXuJrAxGkrG8WNQ/hlO9rKt9b5IPksG7y78UGQ="
+    ];
+  };
+
   inputs = {
     pre-commit-hooks = {
       url = "github:cachix/pre-commit-hooks.nix";
@@ -207,8 +216,10 @@
           map (version: {
             name = "ghc${version}-check-${examplesName}";
             value = pkgs.runCommand "ghc${version}-check-example" {
-              buildInputs = [ (exe version) ];
-            } "type examples; type docgen; touch $out";
+              buildInputs = [
+                (exe version)
+              ] ++ self.devShells.${system}."ghc${version}-shell".buildInputs;
+            } "type examples; type docgen; CABAL_CONFIG=/dev/null cabal --dry-run repl; touch $out";
           }) ghcVersions
         );
 
@@ -229,7 +240,7 @@
 
         packages =
           {
-            default = self.packages.${system}."ghc982-${examplesName}";
+            default = self.packages.${system}."ghc982-${packageName}";
             docker = self.packages.${system}."ghc982-docker";
           }
           // builtins.listToAttrs (
@@ -241,6 +252,10 @@
               {
                 name = "ghc${version}-docker";
                 value = docker version;
+              }
+              {
+                name = "ghc${version}-${packageName}";
+                value = ghcPkgs."ghc${version}".${packageName};
               }
             ]) ghcVersions
           );
