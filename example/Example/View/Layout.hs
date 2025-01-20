@@ -102,13 +102,52 @@ pageDescription = \case
     el_ "HyperViews update independently. In this example, two Message HyperViews are embedded into the same page with different ids."
     el_ "Try inspecting the page in the Chrome dev tools and watching both the DOM and messages"
   Counter -> do
-    el_ "Pages and update functions can run side effects before rendering. Here we use a `Reader (TVar Int)` to track the count"
-    el_ "Notice how the view function expects the current state as a parameter"
+    el_ $ do
+      text "Pages and update functions can run side effects before rendering. Here we use a "
+      code id "Reader (TVar Int)"
+      text "to track the count"
+    ol (pad (XY 15 0)) $ do
+      item $ do
+        text "Uses a view function to render the state: "
+        code id "viewCount :: Int -> View Counter ()"
+    el_ "Notice how the view function expects the current count as a parameter"
   Transitions -> do
     el_ "We can use web-view to animate transitions"
   Sessions -> do
     el_ "Reload your browser after changing these settings to see the session information preserved"
-  _ -> none
+  Requests -> do
+    el_ "The Hyperbole Effect allows us to access the Request, and manipulate the Client"
+  Redirects -> none
+  RedirectNow -> none
+  LazyLoading -> do
+    el_ "We can use onLoad to lazily load content and poll for changes"
+  FormSimple -> do
+    el_ "Use a Higher Kinded Type to define form fields"
+  FormValidation ->
+    el_ $ do
+      code id "instance Form MyForm Validated"
+      text " allows us to manage validation states for each field"
+  Filter ->
+    el_ "Easily serialize a datatype to the querystring, preserving faceted search in the url"
+  LiveSearch ->
+    el_ "Create a serverside autocomplete with a combination of onInput and onKeyDown"
+  DataTable -> do
+    el_ "Complex reusable View Functions allow us to "
+  Concurrent ->
+    el_ "Separate HyperViews can overlap updates without issues"
+  Todos ->
+    row (gap 5) $ do
+      el_ "Implementation of "
+      link "https://todomvc.com/" Style.link "TodoMVC"
+  Contacts _ -> do
+    el_ "This complex example combines various features"
+  Examples -> none
+  Errors -> none
+  Main -> none
+  Hello _ -> none
+  Query -> none
+ where
+  item = li (list Disc)
 
 examplesView :: View c ()
 examplesView = rootLayout Examples $ do

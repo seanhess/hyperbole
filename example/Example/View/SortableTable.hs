@@ -29,6 +29,7 @@ dataTable :: Mod c
 dataTable = alternatingRows
 
 sortColumn :: (ViewAction (Action id)) => Text -> Action id -> Mod () -> (dt -> Text) -> Eff '[Writer [TableColumn id dt]] ()
-sortColumn lbl click f cellText = tcol (hd sortBtn) $ \item -> td (cell . f) $ text $ cellText item
+sortColumn lbl click f cellText =
+  tcol (hd sortBtn) $ \item -> td (cell . f) $ text $ cellText item
  where
   sortBtn = button click Style.link (text lbl)

@@ -25,8 +25,8 @@ instance HyperView FormView es where
     pure $ contactView cf
 
 -- Define a forms as a "Higher Kinded Types"
--- ContactForm Identity behaves as you expect: myForm.name == "bob"
--- ContactForm Maybe would make each field a maybe
+-- ContactForm Identity behaves just like a simple record: myForm.name == "bob"
+-- ContactForm Maybe would make each field (Maybe a)
 data ContactForm f = ExampleForm
   { name :: Field f Text
   , age :: Field f Int
