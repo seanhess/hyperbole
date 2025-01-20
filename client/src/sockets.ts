@@ -80,7 +80,7 @@ export class SocketConnection {
 
         let { metadata, rest } = parseMetadataResponse(data)
 
-        console.log("META", metadata)
+        // console.log("META", metadata)
 
         if (metadata.error) {
           throw socketError(metadata.error)
@@ -127,7 +127,6 @@ function socketError(inp: string): Error {
 }
 
 
-console.log("CONNECTING", window.location)
 
 
 

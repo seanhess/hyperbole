@@ -23,7 +23,7 @@ let addedRulesIndex = new Set();
 
 async function sendAction(msg: ActionMessage) {
   async function sendActionHttp(msg: ActionMessage) {
-    console.log("HTTP sendAction", msg.url.toString())
+    // console.log("HTTP sendAction", msg.url.toString())
 
     let res = await fetch(msg.url, {
       method: "POST",
@@ -109,7 +109,7 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   const old: VNode = create(target)
   patch(next, old)
 
-  console.log("NEXT", next)
+  // console.log("NEXT", next)
 
   // Emit relevant events
   let newTarget = document.getElementById(target.id)
@@ -171,38 +171,38 @@ function init() {
   listenLoad(document.body)
 
   listenClick(async function(target: HTMLElement, action: string) {
-    console.log("CLICK", target.id, action)
+    // console.log("CLICK", target.id, action)
     runAction(target, action)
   })
 
   listenDblClick(async function(target: HTMLElement, action: string) {
-    console.log("DBLCLICK", target.id, action)
+    // console.log("DBLCLICK", target.id, action)
     runAction(target, action)
   })
 
   listenKeydown(async function(target: HTMLElement, action: string) {
-    console.log("KEYDOWN", target.id, action)
+    // console.log("KEYDOWN", target.id, action)
     runAction(target, action)
   })
 
   listenKeyup(async function(target: HTMLElement, action: string) {
-    console.log("KEYUP", target.id, action)
+    // console.log("KEYUP", target.id, action)
     runAction(target, action)
   })
 
   listenFormSubmit(async function(target: HTMLElement, action: string, form: FormData) {
-    console.log("FORM", target.id, action, form)
+    // console.log("FORM", target.id, action, form)
     runAction(target, action, form)
   })
 
   listenChange(async function(target: HTMLElement, action: string) {
-    console.log("CHANGE", target.id, action)
+    // console.log("CHANGE", target.id, action)
     runAction(target, action)
   })
 
   // WARNING: security flaw, unescaped output. no closing quotes allowed?
   listenInput(async function(target: HTMLElement, actionConstructor: string, term: string) {
-    console.log("INPUT", target.id, actionConstructor, term)
+    // console.log("INPUT", target.id, actionConstructor, term)
     let action = `${actionConstructor} "${sanitizeInput(term)}"`
     runAction(target, action)
   })

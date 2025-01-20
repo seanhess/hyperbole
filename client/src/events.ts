@@ -44,7 +44,7 @@ export function listenDblClick(cb: (target: HTMLElement, action: string) => void
   document.addEventListener("dblclick", function(e) {
     let el = e.target as HTMLInputElement
 
-    console.log("DBL", el.dataset)
+    // console.log("DBL", el.dataset)
 
     // clicks can fire on internal elements. Find the parent with a click handler
     let source = el.closest("[data-on-dblclick]") as HTMLElement

@@ -1,10 +1,10 @@
 
 export function setQuery(query: string = "") {
-  console.log("setQuery", query)
-  if (query) {
-    window.history.replaceState({}, "", location.pathname + "?" + query)
-  }
-  else {
-    window.history.replaceState({}, "", location.pathname)
+
+  if (location.search != query) {
+    if (query != "") query = "?" + query
+    let url = location.pathname + query
+    console.log("history.replaceState(", url, ")")
+    window.history.replaceState({}, "", url)
   }
 }
