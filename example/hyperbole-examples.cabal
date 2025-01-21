@@ -62,7 +62,7 @@ executable docgen
     , wai
     , wai-websockets
     , warp
-    , web-view >=0.7 && <1
+    , web-view
     , websockets
   default-language: GHC2021
 
@@ -154,6 +154,6 @@ executable examples
     , wai-middleware-static
     , wai-websockets
     , warp
-    , web-view >=0.7 && <1
+    , web-view
     , websockets
   default-language: GHC2021
