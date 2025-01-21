@@ -1,4 +1,4 @@
-![Hyperbole](example/static/logo-robot.png)
+![Hyperbole](https://github.com/seanhess/hyperbole/raw/main/example/static/logo-robot.png)
 
 [![Hackage](https://img.shields.io/hackage/v/hyperbole.svg?color=success)](https://hackage.haskell.org/package/hyperbole)
 
