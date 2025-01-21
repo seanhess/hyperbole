@@ -6,11 +6,12 @@ on:
 
 permissions:
   contents: read
-  packages: write # Added for container registry access
+  packages: write
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  DIGITAL_OCEAN_REGISTRY: registry.digitalocean.com
 
 jobs:
   build:
@@ -39,6 +40,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    environment: prod
     
     steps:
       - uses: actions/checkout@v4
@@ -77,12 +79,25 @@ jobs:
             VERSION=latest
           fi
           
-          # Tag the image
+          # Tag and push to GitHub
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
-          REPO_NAME=$(echo "$REGISTRY/$IMAGE_NAME" | tr '[A-Z]' '[a-z]')
-          docker tag $IMAGE_ID $REPO_NAME:$VERSION
-          
-          # Push the image
-          docker push $REPO_NAME:$VERSION
+          GITHUB_REPO=$(echo "$REGISTRY/$IMAGE_NAME" | tr '[A-Z]' '[a-z]')
+          docker tag $IMAGE_ID $GITHUB_REPO:$VERSION
+          docker push $GITHUB_REPO:$VERSION
+
+      - name: Log into Digital Ocean Registry
+        if: env.DIGITAL_OCEAN_API != '' && env.DIGITAL_OCEAN_USERNAME != ''
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.DIGITAL_OCEAN_REGISTRY }}
+          username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+          password: ${{ secrets.DIGITAL_OCEAN_API }}
+
+      - name: Push to Digital Ocean
+        if: env.DIGITAL_OCEAN_API != '' && env.DIGITAL_OCEAN_USERNAME != ''
+        run: |
+          DO_REPO=$(echo "$DIGITAL_OCEAN_REGISTRY/$IMAGE_NAME" | tr '[A-Z]' '[a-z]')
+          docker tag $IMAGE_ID $DO_REPO:$VERSION
+          docker push $DO_REPO:$VERSION
 
