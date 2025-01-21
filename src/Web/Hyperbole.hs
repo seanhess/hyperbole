@@ -529,7 +529,7 @@ https://docs.hyperbole.live is full of live examples demonstrating different fea
 * [Data Table](https://docs.hyperbole.live/datatable)
 * [Sessions](https://docs.hyperbole.live/sessions)
 * [Filter Items](https://docs.hyperbole.live/filter)
-* [Autocomplete](https://docs.hyperbole.live/livesearch)
+* [Autocomplete](https://docs.hyperbole.live/autocomplete)
 * [Todo MVC](https://docs.hyperbole.live/todos)
 
 The [National Solar Observatory](https://nso.edu) uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). This production application contains complex interfaces, workers, databases, and more.

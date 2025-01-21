@@ -92,6 +92,7 @@ executable examples
       Example.Effects.Random
       Example.Effects.Todos
       Example.Effects.Users
+      Example.Page.Autocomplete
       Example.Page.Concurrent
       Example.Page.Contact
       Example.Page.Contacts
@@ -104,7 +105,6 @@ executable examples
       Example.Page.LazyLoading
       Example.Page.Redirects
       Example.Page.Requests
-      Example.Page.Search
       Example.Page.Sessions
       Example.Page.Simple
       Example.Page.Todo

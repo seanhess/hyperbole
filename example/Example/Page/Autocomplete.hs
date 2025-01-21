@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Page.Search where
+module Example.Page.Autocomplete where
 
 import Control.Monad (forM_)
 import Data.Text (Text)
@@ -17,7 +17,7 @@ import Prelude hiding (even, odd)
 
 page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])
 page = do
-  pure $ exampleLayout Route.LiveSearch $ col (pad 20 . grow) $ do
+  pure $ exampleLayout Route.Autocomplete $ col (pad 20 . grow) $ do
     hyper LiveSearch $ liveSearchView allLanguages 0 mempty
 
 data LiveSearch = LiveSearch

@@ -34,6 +34,7 @@ import Example.Effects.Debug as Debug
 import Example.Effects.Random (GenRandom, runRandom)
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
+import Example.Page.Autocomplete qualified as Autocomplete
 import Example.Page.Concurrent qualified as Concurrent
 import Example.Page.Contact qualified as Contact
 import Example.Page.Contacts qualified as Contacts
@@ -46,7 +47,6 @@ import Example.Page.FormValidation qualified as FormValidation
 import Example.Page.LazyLoading qualified as LazyLoading
 import Example.Page.Redirects qualified as Redirects
 import Example.Page.Requests qualified as Requests
-import Example.Page.Search qualified as Search
 import Example.Page.Sessions qualified as Sessions
 import Example.Page.Simple qualified as Simple
 import Example.Page.Todo qualified as Todo
@@ -114,7 +114,7 @@ app users count = do
   router FormSimple = runPage FormSimple.page
   router FormValidation = runPage FormValidation.page
   router LazyLoading = runPage LazyLoading.page
-  router LiveSearch = runPage Search.page
+  router Autocomplete = runPage Autocomplete.page
   router Query = do
     p <- param "key"
     view $ el (pad 20) $ do

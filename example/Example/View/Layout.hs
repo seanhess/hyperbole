@@ -22,7 +22,7 @@ exampleLayout rt pageView = do
     row (bg White) $ do
       pageView
  where
-  sourceUrl = "https://github.com/seanhess/hyperbole/blob/latest/example/" <> routeSource rt
+  sourceUrl = "https://github.com/seanhess/hyperbole/blob/0.7/example/" <> routeSource rt
 
   routeSource :: AppRoute -> Url
   routeSource = \case
@@ -39,7 +39,7 @@ exampleLayout rt pageView = do
     Redirects -> "Example/Page/Redirects.hs"
     Requests -> "Example/Page/Requests.hs"
     Filter -> "Example/Page/Filter.hs"
-    LiveSearch -> "Example/Page/LiveSearch.hs"
+    Autocomplete -> "Example/Page/Autocomplete.hs"
     Errors -> "Example/Page/Errors.hs"
     RedirectNow -> "Main.hs"
     Query -> "Main.hs"
@@ -72,7 +72,7 @@ exampleMenu current = do
   example DataTable
   example Sessions
   example Filter
-  example LiveSearch
+  example Autocomplete
   example Todos
   example (Contacts ContactsAll)
  where
@@ -91,7 +91,7 @@ routeTitle :: AppRoute -> Text
 routeTitle (Hello _) = "Hello World"
 routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
 routeTitle Filter = "Search - Filters"
-routeTitle LiveSearch = "Search - Autocomplete"
+routeTitle Autocomplete = "Search - Autocomplete"
 routeTitle Todos = "TodoMVC"
 routeTitle FormSimple = "Forms - Simple"
 routeTitle FormValidation = "Forms - Validation"
@@ -130,7 +130,7 @@ pageDescription = \case
       text " allows us to manage validation states for each field"
   Filter ->
     el_ "Easily serialize a datatype to the querystring, preserving faceted search in the url"
-  LiveSearch ->
+  Autocomplete ->
     el_ "Create a serverside autocomplete with a combination of onInput and onKeyDown"
   DataTable -> do
     el_ "Complex reusable View Functions allow us to "

@@ -15,7 +15,7 @@ data AppRoute
   | Counter
   | FormSimple
   | FormValidation
-  | LiveSearch
+  | Autocomplete
   | Filter
   | Sessions
   | Requests

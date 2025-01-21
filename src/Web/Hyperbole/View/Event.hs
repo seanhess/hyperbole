@@ -88,16 +88,6 @@ data Key
   deriving (Show, Read)
 
 
--- addDataKey :: Key -> Mod c
--- addDataKey k atts =
---   atts{other = M.alter merge "data-key" atts.other}
---  where
---   merge :: Maybe AttValue -> Maybe AttValue
---   merge Nothing = pure $ toKeyValue k
---   merge (Just keys) = pure $ toKeyValue k <> " " <> keys
-
--- let keyAtt = "data-" <> keyDataAttribute key
-
 -- | Serialize a constructor that expects a single 'Text', like `data MyAction = GoSearch Text`
 toActionInput :: (ViewAction a) => (Text -> a) -> Text
 toActionInput con =
