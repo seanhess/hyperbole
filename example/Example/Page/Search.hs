@@ -46,27 +46,30 @@ selectedView selected = do
 liveSearchView :: [ProgrammingLanguage] -> Int -> Term -> View LiveSearch ()
 liveSearchView langs current term = do
   col (gap 10) $ do
-    stack id $ do
-      layer $ search (SearchTerm current) 200 (searchKeys . placeholder "search programming languages" . border 1 . pad 10)
+    stack (bg Danger) $ do
+      layer flexCol $ do
+        search (SearchTerm current) 200 (searchKeys . placeholder "search programming languages" . border 1 . pad 10 . grow)
       -- Filter.clearButton (SearchTerm current) term
-      searchPopup matchedLanguages currentSearchLang shownIfTerm
+      layer (popup (TRBL 50 0 0 0) . shownIfMatches) $ do
+        searchPopup matchedLanguages currentSearchLang
     Filter.resultsTable (Select . Just) langs
  where
   matchedLanguages = filter (isMatchLanguage term) langs
 
   currentSearchLang = matchedLanguages `atMay` current
 
-  -- Only show the search popup if there is a search term
-  shownIfTerm = if T.null term then hide else flexCol
+  -- Only show the search popup if there is a search term and matchedLanguages
+  shownIfMatches =
+    if T.null term || null matchedLanguages then hide else flexCol
 
   searchKeys =
     onKeyDown Enter (Select currentSearchLang)
       . onKeyDown ArrowDown (SearchTerm (current + 1) term)
       . onKeyDown ArrowUp (SearchTerm (current - 1) term)
 
-searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> Mod LiveSearch -> Layer LiveSearch ()
-searchPopup shownLangs highlighted f = do
-  popout (offset (TRBL 50 0 0 0) . border 1 . bg White . f) $ do
+searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View LiveSearch ()
+searchPopup shownLangs highlighted = do
+  col (border 1 . bg White) $ do
     forM_ shownLangs $ \lang -> do
       button (Select (Just lang)) (hover (bg Light) . selected lang . pad 5) $ do
         text lang.name
