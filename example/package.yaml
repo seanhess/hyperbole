@@ -42,7 +42,7 @@ dependencies:
   - random
   - wai
   - warp
-  - web-view >= 0.7 && <1
+  - web-view == 0.6.2
   - string-conversions
   - wai-websockets
   - network

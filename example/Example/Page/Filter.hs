@@ -92,7 +92,7 @@ languagesView filters = do
 filtersView :: Filters -> View Languages ()
 filtersView filters = do
   stack grow $ do
-    layer id $ search SearchTerm 200 (placeholder "filter programming languages" . border 1 . pad 10)
+    layer $ search SearchTerm 200 (placeholder "filter programming languages" . border 1 . pad 10)
   -- clearButton SearchTerm term
 
   row id $ do
@@ -126,7 +126,7 @@ familyDropdown filters =
 -- if you need this, use a javascript component
 clearButton :: (ViewAction (Action id)) => (Term -> Action id) -> Term -> Layer id ()
 clearButton clear term =
-  layer (popup (R 0) . pad 10 . showClearBtn) $ do
+  popout (offset (R 0) . pad 10 . showClearBtn) $ do
     button (clear "") (width 24 . hover (color PrimaryLight)) Icon.xCircle
  where
   showClearBtn =

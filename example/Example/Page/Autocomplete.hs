@@ -47,10 +47,10 @@ liveSearchView :: [ProgrammingLanguage] -> Int -> Term -> View LiveSearch ()
 liveSearchView langs current term = do
   col (gap 10) $ do
     stack (bg Danger) $ do
-      layer flexCol $ do
+      layer $ do
         search (SearchTerm current) 200 (searchKeys . placeholder "search programming languages" . border 1 . pad 10 . grow)
       -- Filter.clearButton (SearchTerm current) term
-      layer (popup (TRBL 50 0 0 0) . shownIfMatches) $ do
+      popout (offset (TRBL 50 0 0 0) . shownIfMatches) $ do
         searchPopup matchedLanguages currentSearchLang
     Filter.resultsTable (Select . Just) langs
  where
