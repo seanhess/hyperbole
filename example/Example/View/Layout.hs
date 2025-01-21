@@ -75,8 +75,9 @@ exampleMenu current = do
   example LiveSearch
   example Todos
   example (Contacts ContactsAll)
-  example Errors
  where
+  -- example Errors
+
   -- link "/query?key=value" lnk "Query Params"
 
   example rt =
