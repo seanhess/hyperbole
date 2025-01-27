@@ -5,10 +5,12 @@ module Example.View.Layout where
 import Data.Function ((&))
 import Data.String.Conversions (cs)
 import Data.Text (Text)
+import Data.Version (showVersion)
 import Example.AppRoute
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.View.Icon as Icon (hamburger)
+import Paths_hyperbole_examples (version)
 import Text.Casing (fromHumps, toWords)
 import Web.Hyperbole
 import Web.View.Style (addClass, cls, prop)
@@ -166,6 +168,11 @@ navigation rt = do
           el (color White . width 50 . height 50) Icon.hamburger
     col (onMobile hide . menuTarget) $ do
       exampleMenu rt
+      space
+      el (pad 10 . fontSize 12) $ do
+        text "v"
+        text $ cs $ showVersion version
+      
  where
   showMenu =
     addClass $
