@@ -115,9 +115,15 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   let newTarget = document.getElementById(target.id)
   // let event = new Event("content", {bubbles:true})
   // newTarget.dispatchEvent(event)
+  //
 
   // load doesn't bubble
-  listenLoad(newTarget)
+  if (newTarget) {
+    listenLoad(newTarget)
+  }
+  else {
+    console.warn("Target Missing: ", target.id)
+  }
   // setCheckboxes(newTarget)
 
   // Remove loading and clear add timeout
