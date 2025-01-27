@@ -1,5 +1,5 @@
 
-export function setQuery(query: string = "") {
+export function setQuery(query: string) {
   if (query != currentQuery()) {
     if (query != "") query = "?" + query
     let url = location.pathname + query

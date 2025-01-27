@@ -96,7 +96,9 @@ export class SocketConnection {
           return
         }
 
-        setQuery(metadata.query)
+        if (metadata.query !== undefined) {
+          setQuery(metadata.query)
+        }
 
         if (metadata.viewId != id) {
           // console.warn("Mismatched ids, ignoring", metadata.viewId, id)

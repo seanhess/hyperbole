@@ -14,7 +14,7 @@ import { setQuery } from "./browser"
 // const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole 0.4.2")
+console.log("Hyperbole 0.4.3a")
 
 
 let rootStyles: HTMLStyleElement;
@@ -46,7 +46,9 @@ async function sendAction(msg: ActionMessage) {
       return
     }
 
-    setQuery(res.headers.get("set-query"))
+    if (res.headers.has("set-query")) {
+      setQuery(res.headers.get("set-query"))
+    }
 
     if (!res.ok) {
       let error = new Error()

@@ -89,7 +89,8 @@ runServerWai toDoc req respond =
     setCookie cookie =
       ("Set-Cookie", renderCookie (Wai.pathInfo req) cookie)
 
-    setQuery qd =
+    setQuery Nothing = []
+    setQuery (Just qd) =
       [("Set-Query", QueryData.render qd)]
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
@@ -186,8 +187,9 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
   cookieMeta cookie =
     Metadata [("COOKIE", cs (renderCookie req.path cookie))]
 
-  queryMeta :: QueryData -> Metadata
-  queryMeta q =
+  queryMeta :: Maybe QueryData -> Metadata
+  queryMeta Nothing = mempty
+  queryMeta (Just q) =
     Metadata [("QUERY", cs $ QueryData.render q)]
 
   viewIdMeta :: TargetViewId -> Metadata
@@ -218,7 +220,7 @@ errNotHandled ev =
 
 data Client = Client
   { session :: Cookies
-  , query :: QueryData
+  , query :: Maybe QueryData
   }
 
 

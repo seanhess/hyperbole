@@ -3,12 +3,10 @@
 
 module Web.Hyperbole.Effect.Hyperbole where
 
-import Data.ByteString qualified as BS
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Web.Hyperbole.Data.QueryData (queryData)
 import Web.Hyperbole.Effect.Server
 
 
@@ -44,15 +42,9 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
   runLocal eff = do
     -- Load the request ONCE right when we start
     r <- send LoadRequest
-    let client = Client mempty (queryData $ queryParams r)
+    let client = Client mempty mempty
     let st = HyperState r client
     runErrorNoCallStack @Response . runState st $ eff
-
-  queryParams request =
-    filter (not . isSystemParam) request.query
-
-  isSystemParam (key, _) =
-    "hyp-" `BS.isPrefixOf` key
 
   combine :: (Server :> es) => Eff es (Either Response (Response, HyperState)) -> Eff es Response
   combine eff = do

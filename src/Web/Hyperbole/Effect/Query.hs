@@ -1,12 +1,15 @@
 module Web.Hyperbole.Effect.Query where
 
+import Data.ByteString qualified as BS
+import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Effectful
 import Effectful.Dispatch.Dynamic (send)
-import Web.Hyperbole.Data.QueryData (FromParam (..), FromQuery (..), Param, QueryData (..), ToParam (..), ToQuery (..))
+import Web.Hyperbole.Data.QueryData (FromParam (..), FromQuery (..), Param, QueryData (..), ToParam (..), ToQuery (..), queryData)
 import Web.Hyperbole.Data.QueryData qualified as QueryData
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
-import Web.Hyperbole.Effect.Server (Client (..), Response (..), ResponseError (..))
+import Web.Hyperbole.Effect.Request (request)
+import Web.Hyperbole.Effect.Server (Client (..), Request (..), Response (..), ResponseError (..))
 import Prelude
 
 
@@ -77,10 +80,23 @@ deleteParam key = do
 -- | Return the query from 'Request' as a 'QueryData'
 queryParams :: (Hyperbole :> es) => Eff es QueryData
 queryParams = do
-  (.query) <$> send GetClient
+  cq <- clientQuery
+  rq <- requestQuery
+  pure $ fromMaybe rq cq
+ where
+  clientQuery = (.query) <$> send GetClient
+
+  requestQuery :: (Hyperbole :> es) => Eff es QueryData
+  requestQuery = do
+    r <- request
+    pure $ queryData $ filter (not . isSystemParam) r.query
+
+  isSystemParam (key, _) =
+    "hyp-" `BS.isPrefixOf` key
 
 
 modifyQuery :: (Hyperbole :> es) => (QueryData -> QueryData) -> Eff es ()
-modifyQuery f =
+modifyQuery f = do
+  q <- queryParams
   send $ ModClient $ \client ->
-    Client{query = f client.query, session = client.session}
+    Client{query = Just $ f q, session = client.session}
