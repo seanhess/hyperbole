@@ -29,3 +29,16 @@ export type ActionMessage = {
 }
 
 export type ViewId = string
+
+
+export function inputToAction(action: string, value: string): string {
+  return action.replace(/%HYP-INP%/, sanitizeInput(value))
+}
+
+// WARNING: security flaw, unescaped output. no closing quotes allowed?
+function sanitizeInput(input: string): string {
+  // replace any escape characters: '/' etc
+  // replace any quotes with escaped quotes
+  return input.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
+}
+
