@@ -14,8 +14,8 @@ instance Eq ProgrammingLanguage where
   p1 == p2 = p1.name == p2.name
 
 data LanguageFamily
-  = ObjectOriented
-  | Functional
+  = Functional
+  | ObjectOriented
   deriving (Show, Read, Eq, Ord, ToParam, FromParam)
 
 data TypeFeature
