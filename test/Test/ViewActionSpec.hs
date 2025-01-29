@@ -4,6 +4,7 @@ import Data.Text (Text)
 import GHC.Generics
 import Skeletest
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.View.Event (toActionInput)
 
 
 data Simple = Simple
@@ -21,6 +22,8 @@ data Product' = Product' HasText Int
 data Sum
   = SumA
   | SumB Int
+  | SubC Text
+  | SubD (Maybe Text)
   deriving (Generic, Show, Eq, Read, ViewAction)
 
 
@@ -58,6 +61,13 @@ spec = do
       it "product" $ toAction (Product "hello world" 123) `shouldBe` "Product \"hello world\" 123"
       it "sum" $ toAction (SumB 123) `shouldBe` "SumB 123"
       it "compound" $ toAction (Compound (Product "hello world" 123)) `shouldBe` "Compound (Product \"hello world\" 123)"
+
+    describe "toActionInput" $ withMarkers ["focus"] $ do
+      it "Constructor Text" $ do
+        toActionInput SubC `shouldBe` "SubC \"%HYP-INP%\""
+
+      it "Constructor (Maybe Text)" $ do
+        toActionInput (SubD . Just) `shouldBe` "SubD (Just \"%HYP-INP%\")"
 
     describe "parseAction" $ do
       it "simple" $ parseAction "Simple" `shouldBe` Just Simple

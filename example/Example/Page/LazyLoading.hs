@@ -3,38 +3,41 @@
 module Example.Page.LazyLoading where
 
 import Control.Monad (forM_)
+import Data.Function ((&))
 import Data.Text (Text, pack)
 import Effectful
 import Example.AppRoute as Route
 import Example.Colors
-import Example.Style
 import Example.Effects.Debug
 import Example.Effects.Random
+import Example.Style
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
+import Web.View.Style (addClass, cls, prop)
 
-page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[SimplePolling, LazyData])
+page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Polling, LazyData])
 page = do
   pure $ exampleLayout LazyLoading $ do
     col (gap 20 . pad 20) $ do
-      el (bold . fontSize 24) "Simple Polling"
+      el (bold . fontSize 24) "Polling"
       col (pad 15 . border 1) $ do
-        hyper SimplePolling viewInit
+        hyper Polling viewInit
 
       el (bold . fontSize 24) "Lazy Loading Items"
-      col (gap 10) $ do
+      row (gap 10 . flexWrap) $ do
         forM_ pretendTasks $ \taskId -> do
-          hyper (LazyData taskId) viewTaskLoad
+          el (border 1 . width 120 . pad 5) $ do
+            hyper (LazyData taskId) viewTaskLoad
 
 -----------------------------------------------------------
 -- Simple Polling
 -----------------------------------------------------------
 
-data SimplePolling = SimplePolling
+data Polling = Polling
   deriving (Show, Read, ViewId)
 
-instance (Debug :> es) => HyperView SimplePolling es where
-  data Action SimplePolling
+instance (Debug :> es) => HyperView Polling es where
+  data Action Polling
     = Reload Int
     | Stop
     | Pause Int
@@ -48,30 +51,32 @@ instance (Debug :> es) => HyperView SimplePolling es where
   update (Reload n) = do
     pure $ viewPoll n
 
-viewInit :: View SimplePolling ()
+viewInit :: View Polling ()
 viewInit = do
-  button (Reload 1) btn "Start Polling"
+  row id $ do
+    button (Reload 1) btn "Start Polling"
 
-viewStopped :: View SimplePolling ()
+viewStopped :: View Polling ()
 viewStopped = do
-  button (Reload 1) btn "Restart Polling"
+  row id $ do
+    button (Reload 1) btn "Restart Polling"
 
-viewPaused :: Int -> View SimplePolling ()
+viewPaused :: Int -> View Polling ()
 viewPaused n = do
   col (gap 10) $ do
-    button (Reload n) btn "Resume"
+    row id $ do
+      button (Reload n) btn "Resume"
     viewStatus n
 
-viewPoll :: Int -> View SimplePolling ()
+viewPoll :: Int -> View Polling ()
 viewPoll n = do
-  col ((onLoad (Reload (n + 1)) 1000) . gap 10) $ do
+  col (onLoad (Reload (n + 1)) 1000 . gap 10) $ do
     row (gap 5) $ do
       button (Pause n) btn "Pause"
       button Stop btn "Stop"
     viewStatus n
 
-
-viewStatus :: Int -> View SimplePolling ()
+viewStatus :: Int -> View Polling ()
 viewStatus n = do
   el id $ do
     text "Polling... "
@@ -80,24 +85,6 @@ viewStatus n = do
 -----------------------------------------------------------
 -- Lazy Loading Expensive Data
 -----------------------------------------------------------
-
-type TaskId = Text
-
-data Task = Task
-  { taskId :: TaskId
-  , details :: Text
-  }
-
-pretendLoadTask :: (Debug :> es, GenRandom :> es) => TaskId -> Eff es Task
-pretendLoadTask taskId = do
-  -- pretend it takes time to load
-  randomDelay <- genRandom (100, 1000)
-  delay randomDelay
-
-  pure $ Task taskId $ "Details for " <> taskId
-
-pretendTasks :: [TaskId]
-pretendTasks = fmap (pack . show @Int) [0 .. 100]
 
 data LazyData = LazyData TaskId
   deriving (Show, Read, ViewId)
@@ -115,10 +102,33 @@ instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
 viewTaskLoad :: View LazyData ()
 viewTaskLoad = do
   -- 100ms after rendering, get the details
-  el (onLoad Details 100 . color Secondary) $ do
+  el (onLoad Details 100 . bg GrayLight . textAlign AlignCenter) $ do
     text "..."
 
 viewTaskDetails :: Task -> View LazyData ()
 viewTaskDetails task = do
   row (color Success) $ do
     text task.details
+
+flexWrap :: Mod c
+flexWrap = addClass $ cls "fwrap" & prop @Text "flex-wrap" "wrap"
+
+-- Fake Tasks Effect ----------------------------------------
+
+type TaskId = Text
+
+data Task = Task
+  { taskId :: TaskId
+  , details :: Text
+  }
+
+pretendLoadTask :: (Debug :> es, GenRandom :> es) => TaskId -> Eff es Task
+pretendLoadTask taskId = do
+  -- pretend it takes a little time to load
+  randomDelay <- genRandom (100, 1000)
+  delay randomDelay
+
+  pure $ Task taskId $ "Details for " <> taskId
+
+pretendTasks :: [TaskId]
+pretendTasks = fmap (pack . show @Int) [1 .. 100]

@@ -1,5 +1,6 @@
 
 import * as debounce from 'debounce'
+import { inputToAction } from './action'
 
 export type UrlFragment = string
 
@@ -109,7 +110,7 @@ interface LiveInputElement extends HTMLInputElement {
   debouncedCallback?: Function;
 }
 
-export function listenInput(cb: (target: HTMLElement, actionConstructor: string, term: string) => void): void {
+export function listenInput(cb: (target: HTMLElement, action: string) => void): void {
   document.addEventListener("input", function(e) {
     let el = e.target as HTMLElement
     let source = el.closest("[data-on-input]") as LiveInputElement
@@ -131,12 +132,16 @@ export function listenInput(cb: (target: HTMLElement, actionConstructor: string,
     let target = nearestTarget(source)
 
     if (!source.debouncedCallback) {
-      source.debouncedCallback = debounce(() => cb(target, source.dataset.onInput, source.value), delay)
+      source.debouncedCallback = debounce(() => {
+        let action = inputToAction(source.dataset.onInput, source.value)
+        cb(target, action)
+      }, delay)
     }
 
     source.debouncedCallback()
   })
 }
+
 
 
 export function listenFormSubmit(cb: (target: HTMLElement, action: string, form: FormData) => void): void {

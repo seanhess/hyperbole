@@ -10,7 +10,13 @@ btn :: Mod id
 btn = btn' Primary
 
 btn' :: AppColor -> Mod id
-btn' clr = bg clr . hover (bg (hovClr clr)) . color (txtClr clr) . pad 10
+btn' clr =
+  bg clr
+    . hover (bg (hovClr clr))
+    . color (txtClr clr)
+    . pad 10
+    . shadow ()
+    . rounded 3
  where
   hovClr Primary = PrimaryLight
   hovClr c = c

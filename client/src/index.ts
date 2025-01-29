@@ -14,7 +14,7 @@ import { setQuery } from "./browser"
 // const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole 0.4.3a")
+console.log("Hyperbole 0.4.3c")
 
 
 let rootStyles: HTMLStyleElement;
@@ -88,9 +88,10 @@ async function fetchAction(msg: ActionMessage): Promise<string> {
 async function runAction(target: HTMLElement, action: string, form?: FormData) {
 
   let timeout = setTimeout(() => {
-    // add loading after 200ms, not right away
+    // add loading after 100ms, not right away
+    // if it runs shorter than that we probably don't want to add loading effects
     target.classList.add("hyp-loading")
-  }, 200)
+  }, 100)
 
   let msg = actionMessage(target.id, action, form)
 
@@ -129,6 +130,7 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   // setCheckboxes(newTarget)
 
   // Remove loading and clear add timeout
+
   clearTimeout(timeout)
   target.classList.remove("hyp-loading")
 }
@@ -208,17 +210,12 @@ function init() {
     runAction(target, action)
   })
 
-  // WARNING: security flaw, unescaped output. no closing quotes allowed?
-  listenInput(async function(target: HTMLElement, actionConstructor: string, term: string) {
-    // console.log("INPUT", target.id, actionConstructor, term)
-    let action = `${actionConstructor} "${sanitizeInput(term)}"`
+  listenInput(async function(target: HTMLElement, action: string) {
+    console.log("INPUT", target.id, action)
     runAction(target, action)
   })
 }
 
-function sanitizeInput(input: string): string {
-  return input.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
-}
 
 document.addEventListener("DOMContentLoaded", init)
 
