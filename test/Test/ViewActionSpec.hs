@@ -67,7 +67,7 @@ spec = do
         toActionInput SubC `shouldBe` "SubC \"%HYP-INP%\""
 
       it "Constructor (Maybe Text)" $ do
-        toActionInput (SubD . Just) `shouldBe` "SubD (Just \"%HYP-TXT%\")"
+        toActionInput (SubD . Just) `shouldBe` "SubD (Just \"%HYP-INP%\")"
 
     describe "parseAction" $ do
       it "simple" $ parseAction "Simple" `shouldBe` Just Simple
