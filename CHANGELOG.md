@@ -1,5 +1,9 @@
 # Revision history for hyperbole
 
+## 0.4.3 -- 2024-01-31
+
+* Bug fixes and improvements
+
 ## 0.4.2 -- 2024-01-21
 
 * Cleaner HyperView class [(@cgeorgii)](https://github.com/cgeorgii)
