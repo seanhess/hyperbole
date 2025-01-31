@@ -87,6 +87,11 @@ async function fetchAction(msg: ActionMessage): Promise<string> {
 
 async function runAction(target: HTMLElement, action: string, form?: FormData) {
 
+  if (action === undefined) {
+    console.error("Undefined Action!", target, "this is a bug, please report: https://github.com/seanhess/hyperbole")
+    return
+  }
+
   let timeout = setTimeout(() => {
     // add loading after 100ms, not right away
     // if it runs shorter than that we probably don't want to add loading effects
@@ -95,7 +100,9 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
 
   let msg = actionMessage(target.id, action, form)
 
+  // console.log("FETCH", target.id, action)
   let ret = await fetchAction(msg)
+  // console.log("  √  ", target.id, action)
 
   let res = parseResponse(ret)
 
@@ -174,7 +181,6 @@ function init() {
   rootStyles = document.querySelector('style')
 
   listenLoadDocument(async function(target: HTMLElement, action: string) {
-    // console.log("INIT LOAD", target.id, action)
     runAction(target, action)
   })
 

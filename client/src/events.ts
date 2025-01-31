@@ -62,8 +62,7 @@ export function listenDblClick(cb: (target: HTMLElement, action: string) => void
 
 export function listenLoadDocument(cb: (target: HTMLElement, action: string) => void): void {
   document.addEventListener("hyp-load", function(e: CustomEvent) {
-    let load = e.target as HTMLElement
-    let action = load.dataset.onLoad
+    let action = e.detail.onLoad
     let target = e.detail.target
     cb(target, action)
   })
@@ -76,9 +75,21 @@ export function listenLoad(node: HTMLElement): void {
   // it doesn't really matter WHO runs this except that it should have target
   node.querySelectorAll("[data-on-load]").forEach((load: HTMLElement) => {
     let delay = parseInt(load.dataset.delay) || 0
+    let onLoad = load.dataset.onLoad
+    // console.log("load start", load.dataset.onLoad)
 
+    // load no longer exists!
+    // we should clear the timeout or back out if the dom is replaced in the interem
     setTimeout(() => {
-      const event = new CustomEvent("hyp-load", { bubbles: true, detail: { target: nearestTarget(load) } })
+      let target = nearestTarget(load)
+      // console.log("load go", load.dataset.onLoad)
+
+      if (load.dataset.onLoad != onLoad) {
+        // the onLoad no longer exists
+        return
+      }
+
+      const event = new CustomEvent("hyp-load", { bubbles: true, detail: { target, onLoad } })
       load.dispatchEvent(event)
     }, delay)
   })

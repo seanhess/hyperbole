@@ -98,5 +98,5 @@ queryParams = do
 modifyQuery :: (Hyperbole :> es) => (QueryData -> QueryData) -> Eff es ()
 modifyQuery f = do
   q <- queryParams
-  send $ ModClient $ \client ->
-    Client{query = Just $ f q, session = client.session}
+  send $ ModClient $ \Client{session, requestId} ->
+    Client{query = Just $ f q, session, requestId}

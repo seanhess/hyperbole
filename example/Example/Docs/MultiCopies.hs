@@ -5,10 +5,7 @@
 module Example.Docs.MultiCopies where
 
 import Data.Text (Text)
-import Example.AppRoute qualified as Route
-import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
-
 
 page :: Eff es (Page '[Message])
 page = do
