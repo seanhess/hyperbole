@@ -24,7 +24,7 @@ page = do
         hyper Polling viewInit
 
       el (bold . fontSize 24) "Lazy Loading Items"
-      row (gap 10 . flexWrap) $ do
+      row (gap 10 . flexWrap WrapReverse) $ do
         forM_ pretendTasks $ \taskId -> do
           el (border 1 . width 120 . pad 5) $ do
             hyper (LazyData taskId) viewTaskLoad
@@ -109,9 +109,6 @@ viewTaskDetails :: Task -> View LazyData ()
 viewTaskDetails task = do
   row (color Success) $ do
     text task.details
-
-flexWrap :: Mod c
-flexWrap = addClass $ cls "fwrap" & prop @Text "flex-wrap" "wrap"
 
 -- Fake Tasks Effect ----------------------------------------
 
