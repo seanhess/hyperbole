@@ -91,7 +91,7 @@ setCookie ck = do
 modifyCookies :: (Hyperbole :> es) => (Cookies -> Cookies) -> Eff es ()
 modifyCookies f =
   send $ ModClient $ \client ->
-    Client{session = f client.session, query = client.query}
+    Client{session = f client.session, query = client.query, requestId = client.requestId}
 
 
 -- | Return all the cookies, both those sent in the request and others added by the page

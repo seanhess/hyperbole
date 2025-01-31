@@ -24,7 +24,7 @@ page = do
         hyper Polling viewInit
 
       el (bold . fontSize 24) "Lazy Loading Items"
-      row (gap 10 . flexWrap) $ do
+      row (gap 10 . fwrap) $ do
         forM_ pretendTasks $ \taskId -> do
           el (border 1 . width 120 . pad 5) $ do
             hyper (LazyData taskId) viewTaskLoad
@@ -70,7 +70,8 @@ viewPaused n = do
 
 viewPoll :: Int -> View Polling ()
 viewPoll n = do
-  col (onLoad (Reload (n + 1)) 1000 . gap 10) $ do
+  -- reload every 200ms + round trip delay
+  col (onLoad (Reload (n + 1)) 200 . gap 10) $ do
     row (gap 5) $ do
       button (Pause n) btn "Pause"
       button Stop btn "Stop"
@@ -132,3 +133,9 @@ pretendLoadTask taskId = do
 
 pretendTasks :: [TaskId]
 pretendTasks = fmap (pack . show @Int) [1 .. 100]
+
+fwrap :: Mod c
+fwrap =
+  addClass $
+    cls "wrap"
+      & prop @Text "flex-wrap" "wrap"

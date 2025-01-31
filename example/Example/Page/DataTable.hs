@@ -15,7 +15,7 @@ import Prelude hiding (even, odd)
 page :: (Hyperbole :> es) => Eff es (Page '[Languages])
 page = do
   pure $ exampleLayout Route.DataTable $ col (pad 20 . grow) $ do
-    hyper Languages $ languagesView allLanguages
+    hyper Languages $ languagesView Nothing allLanguages
 
 data Languages = Languages
   deriving (Show, Read, ViewId)
@@ -24,7 +24,7 @@ data SortField
   = SortName
   | SortDescription
   | SortFamily
-  deriving (Show, Read)
+  deriving (Show, Read, Eq)
 
 instance HyperView Languages es where
   data Action Languages
@@ -33,7 +33,7 @@ instance HyperView Languages es where
 
   update (SortOn fld) = do
     let sorted = sortOnField fld allLanguages
-    pure $ languagesView sorted
+    pure $ languagesView (Just fld) sorted
 
 sortOnField :: SortField -> [ProgrammingLanguage] -> [ProgrammingLanguage]
 sortOnField = \case
@@ -41,11 +41,9 @@ sortOnField = \case
   SortDescription -> sortOn (.description)
   SortFamily -> sortOn (.family)
 
-languagesView :: [ProgrammingLanguage] -> View Languages ()
-languagesView langs =
+languagesView :: Maybe SortField -> [ProgrammingLanguage] -> View Languages ()
+languagesView fld langs =
   table dataTable langs $ do
-    sortColumn "Language" (SortOn SortName) center (.name)
-    sortColumn "Family" (SortOn SortFamily) center $ \d -> pack $ show d.family
-    sortColumn "Description" (SortOn SortDescription) id (.description)
- where
-  center = textAlign AlignCenter
+    sortColumn "Language" (SortOn SortName) (fld == Just SortName) id (.name)
+    sortColumn "Family" (SortOn SortFamily) (fld == Just SortFamily) id $ \d -> pack $ show d.family
+    sortColumn "Description" (SortOn SortDescription) (fld == Just SortDescription) id (.description)

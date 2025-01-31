@@ -106,9 +106,10 @@ runServerWai toDoc req respond =
         headers = Wai.requestHeaders wr
         cookie = fromMaybe "" $ L.lookup "Cookie" headers
         host = Host $ fromMaybe "" $ L.lookup "Host" headers
+        requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Request-Id" headers
         cookies = cookiesFromHeader (parseCookies cookie)
         method = Wai.requestMethod wr
-    pure $ Request{body, path, query, method, cookies, host}
+    pure $ Request{body, path, query, method, cookies, host, requestId}
 
 
 renderCookie :: [Segment] -> Cookie -> BS.ByteString
@@ -142,12 +143,11 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
   SendResponse client res -> do
     case res of
       (Response vid vw) -> do
-        let meta = sessionMetas client.session <> queryMeta client.query
-        sendView meta vid vw
+        sendView client vid vw
       (Err r) -> sendError r
       Empty -> sendError $ ErrOther "Empty"
       NotFound -> sendError $ ErrOther "NotFound"
-      (Redirect url) -> sendRedirect (sessionMetas client.session) url
+      (Redirect url) -> sendRedirect client url
  where
   runLocal = runErrorNoCallStackWith @SocketError onSocketError
 
@@ -157,39 +157,51 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
     sendError r
     pure $ Err r
 
+  -- low level message. Use sendResponse
   sendMessage :: (MonadIO m) => Metadata -> BL.ByteString -> m ()
-  sendMessage meta cnt = do
-    let msg = renderMetadata meta <> "\n" <> cnt
+  sendMessage meta' cnt = do
+    let msg = renderMetadata meta' <> "\n" <> cnt
     liftIO $ WS.sendTextData conn msg
+
+  -- send response with client metadata
+  sendResponse :: (MonadIO m) => Client -> Metadata -> BL.ByteString -> m ()
+  sendResponse client meta =
+    sendMessage (responseMeta <> meta)
+   where
+    responseMeta :: Metadata
+    responseMeta =
+      metaRequestId client.requestId <> metaSession client.session <> metaQuery client.query
 
   sendError :: (IOE :> es) => ResponseError -> Eff es ()
   sendError r = do
     -- TODO: better error handling!
-    sendMessage (metadata "ERROR" (pack (show r))) ""
+    sendMessage (metaRequestId req.requestId <> metadata "ERROR" (pack (show r))) ""
 
-  sendView :: (IOE :> es) => Metadata -> TargetViewId -> View () () -> Eff es ()
-  sendView meta vid vw = do
-    sendMessage (viewIdMeta vid <> meta) (renderLazyByteString vw)
+  sendView :: (IOE :> es) => Client -> TargetViewId -> View () () -> Eff es ()
+  sendView client vid vw = do
+    sendResponse client (viewIdMeta vid) (renderLazyByteString vw)
 
   renderMetadata :: Metadata -> BL.ByteString
   renderMetadata (Metadata m) = BL.intercalate "\n" $ fmap (uncurry metaLine) m
 
-  sendRedirect :: (IOE :> es) => Metadata -> Url -> Eff es ()
-  sendRedirect meta u = do
-    -- conn <- ask @Connection
-    let r = metadata "REDIRECT" (renderUrl u)
-    sendMessage (r <> meta) ""
+  sendRedirect :: (IOE :> es) => Client -> Url -> Eff es ()
+  sendRedirect client u = do
+    sendResponse client (metadata "REDIRECT" (renderUrl u)) ""
 
-  sessionMetas :: Cookies -> Metadata
-  sessionMetas cookies = mconcat $ fmap cookieMeta $ Cookies.toList cookies
+  metaSession :: Cookies -> Metadata
+  metaSession cookies = mconcat $ fmap metaCookie $ Cookies.toList cookies
+   where
+    metaCookie :: Cookie -> Metadata
+    metaCookie cookie =
+      Metadata [("COOKIE", cs (renderCookie req.path cookie))]
 
-  cookieMeta :: Cookie -> Metadata
-  cookieMeta cookie =
-    Metadata [("COOKIE", cs (renderCookie req.path cookie))]
+  metaRequestId :: RequestId -> Metadata
+  metaRequestId (RequestId reqId) =
+    Metadata [("REQUEST-ID", cs reqId)]
 
-  queryMeta :: Maybe QueryData -> Metadata
-  queryMeta Nothing = mempty
-  queryMeta (Just q) =
+  metaQuery :: Maybe QueryData -> Metadata
+  metaQuery Nothing = mempty
+  metaQuery (Just q) =
     Metadata [("QUERY", cs $ QueryData.render q)]
 
   viewIdMeta :: TargetViewId -> Metadata
@@ -219,7 +231,8 @@ errNotHandled ev =
 
 
 data Client = Client
-  { session :: Cookies
+  { requestId :: RequestId
+  , session :: Cookies
   , query :: Maybe QueryData
   }
 
@@ -254,7 +267,12 @@ data Request = Request
   , body :: BL.ByteString
   , method :: Method
   , cookies :: Cookies
+  , requestId :: RequestId
   }
+  deriving (Show)
+
+
+newtype RequestId = RequestId Text
   deriving (Show)
 
 

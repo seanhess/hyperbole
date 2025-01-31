@@ -6,6 +6,7 @@ const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
 
 
+
 export class SocketConnection {
 
 
@@ -52,20 +53,20 @@ export class SocketConnection {
 
   async sendAction(action: ActionMessage): Promise<string> {
     // console.log("SOCKET sendAction", action)
+    let reqId = requestId()
     let msg = [action.url.pathname + action.url.search
       , "Host: " + window.location.host
       , "Cookie: " + document.cookie
+      , "Request-Id: " + reqId
       , action.form
     ].join("\n")
-    let { metadata, rest } = await this.fetch(action.id, msg)
-
-
+    let { metadata, rest } = await this.fetch(reqId, action.id, msg)
     return rest
   }
 
-  async fetch(id: ViewId, msg: string): Promise<SocketResponse> {
+  async fetch(reqId: RequestId, id: ViewId, msg: string): Promise<SocketResponse> {
     this.sendMessage(msg)
-    let res = await this.waitMessage(id)
+    let res = await this.waitMessage(reqId, id)
     return res
   }
 
@@ -73,19 +74,35 @@ export class SocketConnection {
     this.socket.send(msg)
   }
 
-  private async waitMessage(id: ViewId): Promise<SocketResponse> {
+  private async waitMessage(reqId: RequestId, id: ViewId): Promise<SocketResponse> {
     return new Promise((resolve, reject) => {
       const onMessage = (event: MessageEvent) => {
         let data = event.data
 
         let { metadata, rest } = parseMetadataResponse(data)
 
-        // console.log("META", metadata)
+
+        if (!metadata.requestId) {
+          console.error("Missing RequestId!", metadata, event.data)
+          return
+        }
+
+        if (metadata.requestId != reqId) {
+          // skip, it's not us!
+          return
+        }
+
+        if (metadata.viewId != id) {
+          console.error("Mismatched ids!", reqId, id, data)
+          return
+        }
+
+        // We have found our message. Remove the listener
+        this.socket.removeEventListener('message', onMessage)
 
         if (metadata.error) {
           throw socketError(metadata.error)
         }
-
 
         metadata.cookies.forEach(cookie => {
           document.cookie = cookie
@@ -100,15 +117,7 @@ export class SocketConnection {
           setQuery(metadata.query)
         }
 
-        if (metadata.viewId != id) {
-          // console.warn("Mismatched ids, ignoring", metadata.viewId, id)
-          return
-        }
-
         resolve({ metadata, rest })
-
-        // we should only resolve if we have found our message
-        this.socket.removeEventListener('message', onMessage)
       }
 
       this.socket.addEventListener('message', onMessage)
@@ -144,6 +153,7 @@ type Metadata = {
   redirect?: string
   error?: string
   query?: string
+  requestId?: string
 }
 
 type Meta = { key: string, value: string }
@@ -171,11 +181,21 @@ function parseMetadataResponse(ret: string): SocketResponse {
 }
 
 function parseMetas(meta: Meta[]): Metadata {
+
+  let requestId = meta.find(m => m.key == "REQUEST-ID")?.value
+
   return {
     cookies: meta.filter(m => m.key == "COOKIE").map(m => m.value),
     redirect: meta.find(m => m.key == "REDIRECT")?.value,
     error: meta.find(m => m.key == "ERROR")?.value,
     viewId: meta.find(m => m.key == "VIEW-ID")?.value,
-    query: meta.find(m => m.key == "QUERY")?.value
+    query: meta.find(m => m.key == "QUERY")?.value,
+    requestId
   }
+}
+
+type RequestId = string
+
+function requestId(): RequestId {
+  return Math.random().toString(36).substring(2, 8)
 }

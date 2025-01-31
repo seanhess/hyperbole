@@ -30,7 +30,7 @@ import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (reqPath)
-import Web.Hyperbole.Effect.Server (Host (..), Request (..), Response (..), Server, SocketError (..), cookiesFromHeader, runServerSockets, runServerWai)
+import Web.Hyperbole.Effect.Server (Host (..), Request (..), RequestId (..), Response (..), Server, SocketError (..), cookiesFromHeader, runServerSockets, runServerWai)
 import Web.Hyperbole.Route
 import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed)
 
@@ -83,8 +83,8 @@ socketApp actions pend = do
   parseMessage :: Text -> Either SocketError Request
   parseMessage t = do
     case T.splitOn "\n" t of
-      [url, host, cook, body] -> parse url cook host (Just body)
-      [url, host, cook] -> parse url cook host Nothing
+      [url, host, cook, reqId, body] -> parse url cook host reqId (Just body)
+      [url, host, cook, reqId] -> parse url cook host reqId Nothing
       _ -> Left $ InvalidMessage t
    where
     parseUrl :: Text -> Either SocketError (Text, Text)
@@ -93,8 +93,8 @@ socketApp actions pend = do
         [url, query] -> pure (url, query)
         _ -> Left $ InvalidMessage u
 
-    parse :: Text -> Text -> Text -> Maybe Text -> Either SocketError Request
-    parse url cook hst mbody = do
+    parse :: Text -> Text -> Text -> Text -> Maybe Text -> Either SocketError Request
+    parse url cook hst reqId mbody = do
       (u, q) <- parseUrl url
       let path = paths u
           query = HTTP.parseQuery (cs q)
@@ -102,7 +102,8 @@ socketApp actions pend = do
           host = Host $ cs $ header hst
           method = "POST"
           body = cs $ fromMaybe "" mbody
-      pure $ Request{path, host, query, body, method, cookies}
+          requestId = RequestId $ header reqId
+      pure $ Request{path, host, query, body, method, cookies, requestId}
 
     paths p = filter (/= "") $ T.splitOn "/" p
 

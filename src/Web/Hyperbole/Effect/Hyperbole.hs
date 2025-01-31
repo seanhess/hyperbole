@@ -42,7 +42,7 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
   runLocal eff = do
     -- Load the request ONCE right when we start
     r <- send LoadRequest
-    let client = Client mempty mempty
+    let client = Client r.requestId mempty mempty
     let st = HyperState r client
     runErrorNoCallStack @Response . runState st $ eff
 

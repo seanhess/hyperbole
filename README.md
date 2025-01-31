@@ -6,6 +6,7 @@ Create interactive HTML applications with type-safe serverside Haskell. Inspired
 
 [Learn more about Hyperbole on Hackage](https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html)
 
+
 ```haskell
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -47,6 +48,8 @@ messageView msg = do
     button (Louder msg) id "Louder"
     el_ $ text msg
 ```
+
+View this example live: [https://docs.hyperbole.live/simple](https://docs.hyperbole.live/simple)
 
 Getting Started with Cabal
 --------------------------
