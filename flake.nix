@@ -18,7 +18,7 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter/main";
-    web-view.url = "github:seanhess/web-view";
+    # web-view.url = "github:seanhess/web-view";
   };
 
   outputs =
@@ -28,7 +28,7 @@
       nix-filter,
       flake-utils,
       pre-commit-hooks,
-      web-view,
+    # web-view,
     }:
     let
       packageName = "hyperbole";
@@ -61,6 +61,19 @@
                 effectful-core = hfinal.effectful-core_2_5_0_0;
                 scotty = hfinal.scotty_0_22;
                 data-default = hfinal.callHackage "data-default" "0.8.0.0" { };
+                web-view = prev.haskell.lib.dontCheck (
+                  hfinal.callHackageDirect {
+                    pkg = "web-view";
+                    ver = "0.7.0";
+                    sha256 = "sha256-50bJvoffv/ZPR98qNgqO+aFfziBAZW4mh66IoCsFBgo=";
+                  } { }
+                );
+                skeletest = hprev.skeletest.overrideAttrs (old: {
+                  meta = old.meta // {
+                    broken = false;
+                  };
+                });
+                Diff = hfinal.callHackage "Diff" "0.5" { };
               }
             );
           });
@@ -73,6 +86,21 @@
                 http-api-data = hfinal.http-api-data_0_6_1;
                 uuid-types = hfinal.uuid-types_1_0_6;
                 data-default = hfinal.callHackage "data-default" "0.8.0.0" { };
+                web-view = prev.haskell.lib.dontCheck (
+                  hfinal.callHackageDirect {
+                    pkg = "web-view";
+                    ver = "0.7.0";
+                    sha256 = "sha256-50bJvoffv/ZPR98qNgqO+aFfziBAZW4mh66IoCsFBgo=";
+                  } { }
+                );
+                attoparsec-aeson = hfinal.callHackage "attoparsec-aeson" "2.2.0.0" { };
+                skeletest = hprev.skeletest.overrideAttrs (old: {
+                  meta = old.meta // {
+                    broken = false;
+                  };
+                });
+                Diff = hfinal.callHackage "Diff" "0.5" { };
+                aeson = hfinal.callHackage "aeson" "2.2.2.0" { };
               }
             );
           });
@@ -81,7 +109,8 @@
 
     in
     {
-      overlays.default = nixpkgs.lib.composeExtensions web-view.overlays.default overlay;
+      # overlays.default = nixpkgs.lib.composeExtensions web-view.overlays.default overlay;
+      overlays.default = overlay;
     }
     // flake-utils.lib.eachDefaultSystem (
       system:
@@ -248,6 +277,7 @@
               }
             ]) ghcVersions
           );
+        inherit pkgs;
 
         devShells =
           {

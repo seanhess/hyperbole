@@ -111,6 +111,9 @@ viewTaskDetails task = do
   row (color Success) $ do
     text task.details
 
+flexWrap :: Mod c
+flexWrap = addClass $ cls "fwrap" & prop @Text "flex-wrap" "wrap"
+
 -- Fake Tasks Effect ----------------------------------------
 
 type TaskId = Text

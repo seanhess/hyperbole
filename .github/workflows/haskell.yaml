@@ -12,6 +12,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   DIGITAL_OCEAN_REGISTRY: registry.digitalocean.com
+  HAS_DO_SECRETS: ${{ secrets.DIGITAL_OCEAN_USERNAME != '' && secrets.DIGITAL_OCEAN_API != '' }}
 
 jobs:
   build:
@@ -87,7 +88,7 @@ jobs:
           docker push $GITHUB_REPO:$VERSION
 
       - name: Log into Digital Ocean Registry
-        if: env.DIGITAL_OCEAN_API != '' && env.DIGITAL_OCEAN_USERNAME != ''
+        if: env.HAS_DO_SECRETS == 'true'
         uses: docker/login-action@v2
         with:
           registry: ${{ env.DIGITAL_OCEAN_REGISTRY }}
@@ -95,9 +96,29 @@ jobs:
           password: ${{ secrets.DIGITAL_OCEAN_API }}
 
       - name: Push to Digital Ocean
-        if: env.DIGITAL_OCEAN_API != '' && env.DIGITAL_OCEAN_USERNAME != ''
+        if: env.HAS_DO_SECRETS == 'true'
         run: |
-          DO_REPO=$(echo "$DIGITAL_OCEAN_REGISTRY/$IMAGE_NAME" | tr '[A-Z]' '[a-z]')
+          # Load the image
+          docker load < result
+
+          # Get the image ID
+          IMAGE_ID=$(docker images --format '{{.ID}}' | head -n1)
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          
+          # Set version tag
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/v,,')
+          else
+            VERSION=latest
+          fi
+          
+          # Tag and push to Digital Ocean
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          DO_REPO=$(echo "$DIGITAL_OCEAN_REGISTRY/hyperbole" | tr '[A-Z]' '[a-z]')
+          echo DO_REPO=$DO_REPO
+          echo docker tag $IMAGE_ID $DO_REPO:$VERSION
           docker tag $IMAGE_ID $DO_REPO:$VERSION
+          echo push $DO_REPO:$VERSION
           docker push $DO_REPO:$VERSION
 
