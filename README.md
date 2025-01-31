@@ -113,7 +113,7 @@ Full Production Example
 
 The NSO uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). This production application contains complex interfaces, workers, databases, and more.
 
-Import Flake
+How to Import Flake
 ------------
 
 You can import this flake's overlay to add `hyperbole` to all package sets and override ghc966 and ghc982 with the packages to satisfy `hyperbole`'s dependencies.

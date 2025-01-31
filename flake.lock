@@ -265,15 +265,15 @@
         "pre-commit-hooks": "pre-commit-hooks_2"
       },
       "locked": {
-        "lastModified": 1738192697,
-        "narHash": "sha256-S0lzIIJULvA/PyCTut8tSM087bNdrGePFvRisAMHZew=",
-        "owner": "Skyfold",
+        "lastModified": 1738250305,
+        "narHash": "sha256-XKE+gkNLp5mi/FlT1C2sw/Mgm+QdOFjjdCgrzEeCUc4=",
+        "owner": "seanhess",
         "repo": "web-view",
-        "rev": "d27f64df55c195427a9b0ec9fab8ddb75ce15eae",
+        "rev": "ae82448b4e6e764037d9c80a071993bf2ddde61b",
         "type": "github"
       },
       "original": {
-        "owner": "Skyfold",
+        "owner": "seanhess",
         "repo": "web-view",
         "type": "github"
       }

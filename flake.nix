@@ -18,7 +18,7 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter/main";
-    web-view.url = "github:Skyfold/web-view";
+    web-view.url = "github:seanhess/web-view";
   };
 
   outputs =
@@ -124,7 +124,7 @@
           hooks = {
             hlint.enable = true;
             fourmolu.enable = true;
-            hpack.enable = true;
+            hpack.enable = false;
             nixfmt-rfc-style.enable = true;
             flake-checker = {
               enable = true;
