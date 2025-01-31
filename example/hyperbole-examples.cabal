@@ -78,6 +78,7 @@ executable examples
       Example.Docs.Component
       Example.Docs.Encoding
       Example.Docs.Interactive
+      Example.Docs.MultiCopies
       Example.Docs.MultiPage
       Example.Docs.MultiView
       Example.Docs.Nested

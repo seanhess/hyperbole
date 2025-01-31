@@ -202,9 +202,9 @@ class ViewId a where
 {- | Access the 'viewId' in a 'View' or 'update'
 
 @
-#EMBED Example/Page/Contact.hs data Contact
+#EMBED Example/Page/LazyLoading.hs data LazyData
 
-#EMBED Example/Page/Contact.hs instance (Users :> es
+#EMBED Example/Page/LazyLoading.hs instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
 @
 -}
 class HasViewId m view where

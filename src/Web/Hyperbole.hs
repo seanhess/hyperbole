@@ -396,24 +396,24 @@ We can embed multiple copies of the same 'HyperView' as long as the value of 'Vi
 See [Example.Page.Simple](https://docs.hyperbole.live/simple)
 
 @
-#EMBED Example/Page/Simple.hs data Message
+#EMBED Example/Docs/MultiCopies.hs data Message
 @
 
 Now we can embed multiple `Message` 'HyperView's into the same page. Each will update independently.
 
 @
-#EMBED Example/Page/Simple.hs page'
+#EMBED Example/Docs/MultiCopies.hs page
 @
 
 
-This is especially useful if we put identifying information in our 'ViewId', such as a database id. The [Contacts Example](https://docs.hyperbole.live/contacts) uses this to allow the user to edit multiple contacts on the same page. The 'viewId' function gives us access to that info
+This is especially useful if we put identifying information in our 'ViewId', such as a database id. The 'viewId' function gives us access to that info. See the [Contacts Example](https://docs.hyperbole.live/contacts) and the [Lazy Loading Example](https://docs.hyperbole.live/lazyloading)
 
-From [Example.Contacts](https://docs.hyperbole.live/contacts)
+From [Example.Page.LazyLoading](https://docs.hyperbole.live/lazyloading)
 
 @
-#EMBED Example/Page/Contact.hs data Contact
+#EMBED Example/Page/LazyLoading.hs data LazyData
 
-#EMBED Example/Page/Contact.hs instance (Users :> es,
+#EMBED Example/Page/LazyLoading.hs instance (Debug :> es, GenRandom :> es) => HyperView
 @
 -}
 

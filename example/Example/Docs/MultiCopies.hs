@@ -2,21 +2,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Example.Page.Simple where
+module Example.Docs.MultiCopies where
 
 import Data.Text (Text)
 import Example.AppRoute qualified as Route
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 
-main :: IO ()
-main = do
-  run 3000 $ do
-    liveApp (basicDocument "Example") (runPage page)
 
-page :: (Hyperbole :> es) => Eff es (Page '[Message])
+page :: Eff es (Page '[Message])
 page = do
-  pure $ exampleLayout Route.Simple $ col (pad 20 . gap 10) $ do
+  pure $ do
     hyper Message1 $ messageView "Hello"
     hyper Message2 $ messageView "World!"
 
