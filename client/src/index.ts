@@ -14,7 +14,7 @@ import { setQuery } from "./browser"
 // const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole 0.4.3c")
+console.log("Hyperbole 0.4.3d")
 
 
 let rootStyles: HTMLStyleElement;
