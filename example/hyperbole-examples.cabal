@@ -71,6 +71,7 @@ executable examples
   other-modules:
       BulkUpdate
       Example.AppRoute
+      Example.Cache
       Example.Colors
       Example.Data.ProgrammingLanguage
       Example.Docs.App

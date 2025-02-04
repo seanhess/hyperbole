@@ -4,6 +4,7 @@ import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad
 import { actionMessage, ActionMessage } from './action'
 import { setQuery } from "./browser"
 
+let PACKAGE = require('../package.json');
 
 // import { listenEvents } from './events';
 // import { WEBSOCKET_ADDRESS, Messages } from './Messages'
@@ -14,7 +15,7 @@ import { setQuery } from "./browser"
 // const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole 0.4.3d")
+console.log("Hyperbole " + PACKAGE.version)
 
 
 let rootStyles: HTMLStyleElement;

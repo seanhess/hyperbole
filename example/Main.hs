@@ -23,12 +23,14 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as L
 import Data.Text.Lazy.Encoding qualified as L
+import Data.Version (showVersion)
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
 import Effectful.State.Static.Local
 import Example.AppRoute
+import Example.Cache (clientCache)
 import Example.Colors
 import Example.Effects.Debug as Debug
 import Example.Effects.Random (GenRandom, runRandom)
@@ -53,24 +55,16 @@ import Example.Page.Todo qualified as Todo
 import Example.Page.Transitions qualified as Transitions
 import Example.Style qualified as Style
 import Example.View.Layout as Layout (exampleLayout, examplesView)
-import Foreign.Store
-  ( Store (..)
-  , lookupStore
-  , readStore
-  , storeAction
-  , withStore
-  )
+import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
 import GHC.Generics (Generic)
-import Network.HTTP.Types (Method, QueryItem, methodPost, status200, status404)
+import Network.HTTP.Types (Header, Method, QueryItem, hCacheControl, methodPost, status200, status404)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
-import Network.Wai.Middleware.Static (addBase, staticPolicy)
+import Network.Wai.Middleware.Static as Static (CacheContainer, CachingStrategy (..), Options (..), addBase)
+import Network.Wai.Middleware.Static qualified as Static
 import Network.WebSockets (Connection, PendingConnection, acceptRequest, defaultConnectionOptions)
-import System.IO
-  ( BufferMode (LineBuffering)
-  , hSetBuffering
-  , stdout
-  )
+import Paths_hyperbole_examples (version)
+import System.IO (BufferMode (LineBuffering), hSetBuffering, stdout)
 import Web.Hyperbole
 import Web.Hyperbole.Effect.Handler (RunHandlers)
 import Web.Hyperbole.Effect.Server (Request (..))
@@ -87,9 +81,10 @@ main = do
   putStrLn "Starting Examples on http://localhost:3000"
   users <- Users.initUsers
   count <- runEff $ runConcurrent Counter.initCounter
+  cache <- clientCache
   Warp.run 3000 $
-    staticPolicy (addBase "client/dist") $
-      staticPolicy (addBase "example/static") $
+    Static.staticPolicyWithOptions cache (addBase "client/dist") $
+      Static.staticPolicy (addBase "example/static") $
         app users count
 
 app :: UserStore -> TVar Int -> Application
@@ -211,3 +206,8 @@ modifyStoredIORef :: Store (IORef a) -> (a -> IO a) -> IO ()
 modifyStoredIORef store f = withStore store $ \ref -> do
   v <- readIORef ref
   f v >>= writeIORef ref
+
+cacheMiddleware :: Application -> Application
+cacheMiddleware = Wai.modifyResponse addCache
+ where
+  addCache = Wai.mapResponseHeaders ((hCacheControl, "private, max-age=60") :)

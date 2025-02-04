@@ -1,5 +1,6 @@
- 
 const path = require('path');
+// var PACKAGE = require('./package.json');
+// var version = PACKAGE.version;
 
 module.exports = {
   entry: "./src/index.ts",
@@ -22,6 +23,7 @@ module.exports = {
   },
 
   output: {
+    // filename: `hyperbole-${version}.js`,
     filename: "hyperbole.js",
     path: path.resolve(__dirname, 'dist'),
   },
