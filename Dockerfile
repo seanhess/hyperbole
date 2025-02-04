@@ -33,7 +33,7 @@ ADD ./example ./example
 ADD *.md .
 ADD LICENSE .
 RUN hpack
-RUN cd example && hpack && cabal build examples
+RUN cd example && hpack && cabal build all
 RUN mkdir bin
 RUN cd example && export EXEC=$(cabal list-bin examples); cp $EXEC /opt/build/bin/examples
 
