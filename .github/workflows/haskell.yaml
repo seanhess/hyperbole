@@ -12,6 +12,32 @@ permissions:
 
 
 jobs:
+  build-cache:
+    runs-on: ubuntu-latest
+    container:
+      image: haskell:9.8.2
+    steps: 
+      - uses: actions/checkout@v4
+
+      - name: Cache Cabal
+        id: cache-cabal
+        uses: actions/cache@v4
+        with:
+          path: |
+            /root/.cache
+            /root/.local
+            /root/.config
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/cabal.project') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          cabal update
+          cabal build --only-dependencies --enable-tests --enable-benchmarks
+
   build-982:
     runs-on: ubuntu-latest
     container:
@@ -37,8 +63,15 @@ jobs:
         run: |
           cabal update
           cabal build --only-dependencies --enable-tests --enable-benchmarks
+
+      - name: Install skeletest-preprocessor
+        run: |
+          cabal install skeletest --installdir=$HOME/.local/bin --install-method=copy
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Build
         run: cabal build --enable-tests --enable-benchmarks all
+
       - name: Test
         run: cabal test
 
