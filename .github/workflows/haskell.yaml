@@ -9,8 +9,6 @@ on:
 permissions:
   contents: read
 
-steps: &cabal-test
-
 
 
 jobs:
