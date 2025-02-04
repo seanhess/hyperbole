@@ -26,6 +26,7 @@ jobs:
           path: |
             /github/home/.cache
             /github/home/.config
+            /github/home/.local
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
@@ -40,11 +41,17 @@ jobs:
         run: |
           cabal build --only-dependencies --enable-tests --enable-benchmarks
 
+      - name: Install skeletest-preprocessor
+        run: |
+          cabal install skeletest --installdir=$HOME/.local/bin --install-method=copy
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Check Cache
         run: |
           ls -ahl /github/home/
           ls -ahl /github/home/.cache
           ls -ahl /github/home/.config
+          ls -ahl /github/home/.local
 
   build-982:
     needs: build-cache
@@ -61,6 +68,7 @@ jobs:
           path: |
             /github/home/.cache
             /github/home/.config
+            /github/home/.local
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
@@ -72,6 +80,7 @@ jobs:
           ls -ahl /github/home/
           ls -ahl /github/home/.cache
           ls -ahl /github/home/.config
+          ls -ahl /github/home/.local
 
       - name: Install skeletest-preprocessor
         run: |
