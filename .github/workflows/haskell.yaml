@@ -24,6 +24,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            /github/home/.cache
             /github/home/.config
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
           restore-keys: |
@@ -35,13 +36,14 @@ jobs:
         run: |
           cabal update
 
-      - name: CHECK CACHE
-        run: |
-          ls -ahl /github/home/
-
       # - name: Build dependencies
       #   run: |
       #     cabal build --only-dependencies --enable-tests --enable-benchmarks
+
+      - name: Check Cache
+        run: |
+          ls -ahl /github/home/.cache
+          ls -ahl /github/home/.config
 
   build-982:
     needs: build-cache
@@ -53,7 +55,7 @@ jobs:
 
       - name: Cache Cabal Restore
         id: cache-cabal-restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache@v4
         with:
           path: |
             /github/home/.cache
@@ -64,8 +66,9 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
-      - name: CHECK CACHE
+      - name: Check Cache
         run: |
+          ls -ahl /github/home/.cache
           ls -ahl /github/home/.config
 
       - name: Install skeletest-preprocessor
