@@ -27,11 +27,9 @@ jobs:
             /github/home/.cache
             /github/home/.config
             /github/home/.local
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+          key: ${{ runner.os }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
+          # restore-keys: |
+          #   ${{ runner.os }}-
 
       - name: Install dependencies
         run: |
@@ -69,11 +67,11 @@ jobs:
             /github/home/.cache
             /github/home/.config
             /github/home/.local
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+          key: ${{ runner.os }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
+          # restore-keys: |
+          #   ${{ runner.os }}-build-${{ env.cache-name }}-
+          #   ${{ runner.os }}-build-
+          #   ${{ runner.os }}-
 
       - name: Check Cache
         run: |
