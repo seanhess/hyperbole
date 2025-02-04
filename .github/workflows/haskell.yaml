@@ -36,12 +36,13 @@ jobs:
         run: |
           cabal update
 
-      # - name: Build dependencies
-      #   run: |
-      #     cabal build --only-dependencies --enable-tests --enable-benchmarks
+      - name: Build dependencies
+        run: |
+          cabal build --only-dependencies --enable-tests --enable-benchmarks
 
       - name: Check Cache
         run: |
+          ls -ahl /github/home/
           ls -ahl /github/home/.cache
           ls -ahl /github/home/.config
 
@@ -68,6 +69,7 @@ jobs:
 
       - name: Check Cache
         run: |
+          ls -ahl /github/home/
           ls -ahl /github/home/.cache
           ls -ahl /github/home/.config
 
