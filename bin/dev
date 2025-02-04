@@ -6,7 +6,8 @@ package() {
 }
 
 compile() {
-  hpack example/
+  cd example/
+  hpack
   ghcid --setup=Main.update --command="cabal repl exe:examples lib:hyperbole" --run=Main.update --warnings --reload=./client/dist/hyperbole.js
 }
 

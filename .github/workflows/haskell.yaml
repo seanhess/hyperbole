@@ -25,9 +25,7 @@ jobs:
         with:
           path: |
             /root/.cache
-            /root/.local
-            /root/.config
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/cabal.project') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
@@ -36,7 +34,10 @@ jobs:
       - name: Install dependencies
         run: |
           cabal update
-          cabal build --only-dependencies --enable-tests --enable-benchmarks
+
+      # - name: Build dependencies
+      #   run: |
+      #     cabal build --only-dependencies --enable-tests --enable-benchmarks
 
   build-982:
     needs: build-cache
@@ -52,9 +53,7 @@ jobs:
         with:
           path: |
             /root/.cache
-            /root/.local
-            /root/.config
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/cabal.project') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
