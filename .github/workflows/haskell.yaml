@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /root/.cache
+            $HOME/.cache
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
@@ -52,7 +52,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /root/.cache
+            $HOME/.cache
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/cabal.project') }}-${{ hashFiles('**/*.cabal') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
