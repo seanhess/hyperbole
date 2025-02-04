@@ -45,10 +45,12 @@ instance (Debug :> es) => HyperView Polling es where
 
   -- to stop, return a view without an onLoad
   update (Pause n) = do
+    delay 1000
     pure $ viewPaused n
   update Stop = do
     pure viewStopped
   update (Reload n) = do
+    delay 500
     pure $ viewPoll n
 
 viewInit :: View Polling ()

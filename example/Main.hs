@@ -66,6 +66,7 @@ import Network.WebSockets (Connection, PendingConnection, acceptRequest, default
 import Paths_hyperbole_examples (version)
 import System.IO (BufferMode (LineBuffering), hSetBuffering, stdout)
 import Web.Hyperbole
+import Web.Hyperbole.Application (waiApp)
 import Web.Hyperbole.Effect.Handler (RunHandlers)
 import Web.Hyperbole.Effect.Server (Request (..))
 
@@ -84,7 +85,7 @@ main = do
   cache <- clientCache
   Warp.run 3000 $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
-      Static.staticPolicy (addBase "example/static") $
+      Static.staticPolicy (addBase "static") $
         app users count
 
 app :: UserStore -> TVar Int -> Application

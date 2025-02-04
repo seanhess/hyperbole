@@ -42,3 +42,9 @@ function sanitizeInput(input: string): string {
   return input.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
 }
 
+
+export type RequestId = string
+
+export function requestId(): RequestId {
+  return Math.random().toString(36).substring(2, 8)
+}

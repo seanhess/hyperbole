@@ -1,8 +1,10 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenLoadDocument, listenInput, listenKeydown, listenKeyup } from './events'
-import { actionMessage, ActionMessage } from './action'
+import { actionMessage, ActionMessage, requestId, RequestId } from './action'
+import { sendActionHttp } from './http'
 import { setQuery } from "./browser"
+import { parseResponse, Response, LiveUpdate } from './response'
 
 let PACKAGE = require('../package.json');
 
@@ -22,61 +24,37 @@ let rootStyles: HTMLStyleElement;
 let addedRulesIndex = new Set();
 
 
-async function sendAction(msg: ActionMessage) {
-  async function sendActionHttp(msg: ActionMessage) {
-    // console.log("HTTP sendAction", msg.url.toString())
-
-    let res = await fetch(msg.url, {
-      method: "POST",
-      headers: { 'Accept': 'text/html', 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: msg.form,
-      // we never want this to be redirected
-      redirect: "manual"
-    })
-
-    if (res.headers.get('location')) {
-      // manual redirect with status 200
-      console.log("Found Redirect", res.headers.get('location'))
-      window.location.href = res.headers.get('location')
-      return
-    }
-
-
-    if (res.headers.get("location")) {
-      window.location.href = res.headers.get("location")
-      return
-    }
-
-    if (res.headers.has("set-query")) {
-      setQuery(res.headers.get("set-query"))
-    }
-
-    if (!res.ok) {
-      let error = new Error()
-      error.name = "Fetch Error " + res.status
-      let body = await res.text()
-      error.message = body
-      throw error
-    }
-
-    return res.text()
-  }
-
+async function sendAction(reqId: RequestId, msg: ActionMessage): Promise<Response> {
   if (sock.isConnected) {
-    return sock.sendAction(msg)
+    return sock.sendAction(reqId, msg)
   }
   else {
-    return sendActionHttp(msg)
+    return sendActionHttp(reqId, msg)
   }
 }
 
 
-
-
-async function fetchAction(msg: ActionMessage): Promise<string> {
+async function fetchAction(reqId: RequestId, msg: ActionMessage): Promise<Response> {
   try {
-    let ret = await sendAction(msg)
-    return ret
+    let res = await sendAction(reqId, msg)
+
+    if (res.error) {
+      let err = new Error()
+      err.name = "Fetch Error"
+      err.message = res.error
+      throw err
+    }
+
+    if (res.location) {
+      window.location.href = res.location
+      return // not reachable
+    }
+
+    if (res.query != null) {
+      setQuery(res.query)
+    }
+
+    return res
   }
   catch (err) {
     // handle error here
@@ -93,6 +71,7 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
     return
   }
 
+
   let timeout = setTimeout(() => {
     // add loading after 100ms, not right away
     // if it runs shorter than that we probably don't want to add loading effects
@@ -101,22 +80,30 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
 
   let msg = actionMessage(target.id, action, form)
 
-  // console.log("FETCH", target.id, action)
-  let ret = await fetchAction(msg)
-  // console.log("  √  ", target.id, action)
+  // Set the requestId
+  let reqId = requestId()
+  target.dataset.requestId = reqId
 
-  let res = parseResponse(ret)
+  let res: Response = await fetchAction(reqId, msg)
 
-  if (!res.css || !res.content) {
+  if (reqId != target.dataset.requestId) {
+    console.warn("Ignoring Stale Action (" + reqId + "):", action)
+    return
+  }
+
+  let update: LiveUpdate = parseResponse(res.body)
+
+  if (!update.css || !update.content) {
+    // TODO: error handling
     console.error("Empty Response", res)
     return
   }
 
   // First, update the stylesheet
-  addCSS(res.css)
+  addCSS(update.css)
 
   // Patch the node
-  const next: VNode = create(res.content)
+  const next: VNode = create(update.content)
   const old: VNode = create(target)
   patch(next, old)
 
@@ -160,22 +147,6 @@ function addCSS(src: HTMLStyleElement) {
 //   })
 // }
 
-type Response = {
-  content: HTMLElement
-  css: HTMLStyleElement
-}
-
-function parseResponse(vw: string): Response {
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(vw, 'text/html')
-  const css = doc.querySelector("style") as HTMLStyleElement
-  const content = doc.querySelector("div") as HTMLElement
-
-  return {
-    content: content,
-    css: css
-  }
-}
 
 
 function init() {

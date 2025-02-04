@@ -12,7 +12,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (HeaderName, Method, Query, status200, status400, status401, status404, status500, urlDecode, urlEncode)
+import Network.HTTP.Types (Header, HeaderName, Method, Query, status200, status400, status401, status404, status500, urlDecode, urlEncode)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
 import Network.WebSockets (Connection)
@@ -72,15 +72,18 @@ runServerWai toDoc req respond =
       -- We have to use a 200 javascript redirect because javascript
       -- will redirect the fetch(), while we want to redirect the whole page
       -- see index.ts sendAction()
-      let headers = ("Location", cs url) : contentType ContentHtml : setCookies
-      Wai.responseLBS status200 headers $ "<script>window.location = '" <> cs url <> "'</script>"
+      let hs = ("Location", cs url) : contentType ContentHtml : headers
+      Wai.responseLBS status200 hs $ "<script>window.location = '" <> cs url <> "'</script>"
 
     respError s = Wai.responseLBS s [contentType ContentText]
 
     respHtml body =
       -- always set the session...
-      let headers = contentType ContentHtml : (setCookies <> setQuery client.query)
-       in Wai.responseLBS status200 headers body
+      let hs = contentType ContentHtml : (setQuery client.query <> headers)
+       in Wai.responseLBS status200 hs body
+
+    headers :: [Header]
+    headers = setRequestId client.requestId : setCookies
 
     setCookies =
       fmap setCookie $ Cookies.toList client.session
@@ -88,6 +91,10 @@ runServerWai toDoc req respond =
     setCookie :: Cookie -> (HeaderName, BS.ByteString)
     setCookie cookie =
       ("Set-Cookie", renderCookie (Wai.pathInfo req) cookie)
+
+    setRequestId :: RequestId -> (HeaderName, BS.ByteString)
+    setRequestId (RequestId rid) =
+      ("Request-Id", cs rid)
 
     setQuery Nothing = []
     setQuery (Just qd) =

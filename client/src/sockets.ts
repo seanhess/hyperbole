@@ -1,5 +1,6 @@
-import { ActionMessage, ViewId } from './action'
+import { ActionMessage, ViewId, RequestId } from './action'
 import { takeWhileMap, dropWhile } from "./lib"
+import { Response, ResponseBody } from "./response"
 import { setQuery } from "./browser"
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -51,17 +52,24 @@ export class SocketConnection {
     })
   }
 
-  async sendAction(action: ActionMessage): Promise<string> {
+  async sendAction(reqId: RequestId, action: ActionMessage): Promise<Response> {
     // console.log("SOCKET sendAction", action)
-    let reqId = requestId()
     let msg = [action.url.pathname + action.url.search
       , "Host: " + window.location.host
       , "Cookie: " + document.cookie
       , "Request-Id: " + reqId
       , action.form
     ].join("\n")
-    let { metadata, rest } = await this.fetch(reqId, action.id, msg)
-    return rest
+    let { metadata, body } = await this.fetch(reqId, action.id, msg)
+
+    return {
+      requestId: metadata.requestId,
+      location: metadata.redirect,
+      query: metadata.query,
+      error: metadata.error,
+      body
+    }
+
   }
 
   async fetch(reqId: RequestId, id: ViewId, msg: string): Promise<SocketResponse> {
@@ -79,8 +87,7 @@ export class SocketConnection {
       const onMessage = (event: MessageEvent) => {
         let data = event.data
 
-        let { metadata, rest } = parseMetadataResponse(data)
-
+        let { metadata, body } = parseMetadataResponse(data)
 
         if (!metadata.requestId) {
           console.error("Missing RequestId!", metadata, event.data)
@@ -100,24 +107,12 @@ export class SocketConnection {
         // We have found our message. Remove the listener
         this.socket.removeEventListener('message', onMessage)
 
-        if (metadata.error) {
-          throw socketError(metadata.error)
-        }
-
+        // set the cookies. These happen automatically in http
         metadata.cookies.forEach(cookie => {
           document.cookie = cookie
         })
 
-        if (metadata.redirect) {
-          window.location.href = metadata.redirect
-          return
-        }
-
-        if (metadata.query !== undefined) {
-          setQuery(metadata.query)
-        }
-
-        resolve({ metadata, rest })
+        resolve({ metadata, body })
       }
 
       this.socket.addEventListener('message', onMessage)
@@ -130,12 +125,12 @@ export class SocketConnection {
   }
 }
 
-function socketError(inp: string): Error {
-  let error = new Error()
-  error.name = inp.substring(0, inp.indexOf(' '));
-  error.message = inp.substring(inp.indexOf(' ') + 1);
-  return error
-}
+// function socketError(inp: string): Error {
+//   let error = new Error()
+//   error.name = inp.substring(0, inp.indexOf(' '));
+//   error.message = inp.substring(inp.indexOf(' ') + 1);
+//   return error
+// }
 
 
 
@@ -144,7 +139,7 @@ function socketError(inp: string): Error {
 
 type SocketResponse = {
   metadata: Metadata,
-  rest: string
+  body: ResponseBody
 }
 
 type Metadata = {
@@ -166,7 +161,7 @@ function parseMetadataResponse(ret: string): SocketResponse {
 
   return {
     metadata: parseMetas(metas),
-    rest: rest
+    body: rest
   }
 
   function parseMeta(line: string): Meta | undefined {
@@ -194,8 +189,3 @@ function parseMetas(meta: Meta[]): Metadata {
   }
 }
 
-type RequestId = string
-
-function requestId(): RequestId {
-  return Math.random().toString(36).substring(2, 8)
-}
