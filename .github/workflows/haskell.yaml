@@ -2,102 +2,47 @@ name: Haskell CI
 
 on:
   push:
+    branches: [ "main", "ci" ]
   pull_request:
+    branches: [ "main" ]
 
 permissions:
   contents: read
-  packages: write
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  DIGITAL_OCEAN_REGISTRY: registry.digitalocean.com
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
 
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: cachix/install-nix-action@v25
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-          
-      - uses: cachix/cachix-action@v14
-        with:
-          name: hyperbole
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-
-      - name: Check packages
-        run: |
-          nix flake check
-
-  docker:
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: prod
-    
+
+    container:
+      image: haskell:9.8.2
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: cachix/install-nix-action@v25
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-          
-      - uses: cachix/cachix-action@v14
-        with:
-          name: hyperbole
+    - uses: actions/checkout@v4
 
-      - name: Build container
-        run: nix build .#docker
+    # - uses: actions/setup-haskell@v1
+    #   with:
+    #     ghc-version: '9.6'
+    #     cabal-version: '3.2'
 
-      - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Cache
+    #   uses: actions/cache@v3
+    #   env:
+    #     cache-name: cache-cabal
+    #   with:
+    #     path: ~/.cabal
+    #     key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/cabal.project') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-build-${{ env.cache-name }}-
+    #       ${{ runner.os }}-build-
+    #       ${{ runner.os }}-
 
-      - name: Load and push image
-        run: |
-          # Load the image
-          docker load < result
-          
-          # Get the image ID
-          IMAGE_ID=$(docker images --format '{{.ID}}' | head -n1)
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          
-          # Set version tag
-          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
-            VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/v,,')
-          else
-            VERSION=latest
-          fi
-          
-          # Tag and push to GitHub
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-          GITHUB_REPO=$(echo "$REGISTRY/$IMAGE_NAME" | tr '[A-Z]' '[a-z]')
-          docker tag $IMAGE_ID $GITHUB_REPO:$VERSION
-          docker push $GITHUB_REPO:$VERSION
-
-      - name: Log into Digital Ocean Registry
-        if: env.DIGITAL_OCEAN_API != '' && env.DIGITAL_OCEAN_USERNAME != ''
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.DIGITAL_OCEAN_REGISTRY }}
-          username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
-          password: ${{ secrets.DIGITAL_OCEAN_API }}
-
-      - name: Push to Digital Ocean
-        if: env.DIGITAL_OCEAN_API != '' && env.DIGITAL_OCEAN_USERNAME != ''
-        run: |
-          DO_REPO=$(echo "$DIGITAL_OCEAN_REGISTRY/$IMAGE_NAME" | tr '[A-Z]' '[a-z]')
-          docker tag $IMAGE_ID $DO_REPO:$VERSION
-          docker push $DO_REPO:$VERSION
+    - name: Install dependencies
+      run: |
+        cabal update
+        cabal build --only-dependencies --enable-tests --enable-benchmarks
+    - name: Build
+      run: cabal build --enable-tests --enable-benchmarks all
+    - name: Test
+      run: cabal test
 
