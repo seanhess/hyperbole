@@ -1,5 +1,5 @@
 import { ActionMessage, RequestId } from './action'
-import { Response } from "./response"
+import { Response, fetchError } from "./response"
 
 export async function sendActionHttp(reqId: RequestId, msg: ActionMessage): Promise<Response> {
   // console.log("HTTP sendAction", msg.url.toString())
@@ -18,19 +18,18 @@ export async function sendActionHttp(reqId: RequestId, msg: ActionMessage): Prom
 
   let body = await res.text()
 
-  let error
   if (!res.ok) {
-    error = body
+    throw fetchError(body)
   }
 
   let response: Response = {
     requestId: res.headers.get("Request-Id"),
     location: res.headers.get("location"),
     query: res.headers.get("set-query"),
-    error: error,
     body
   }
 
   return response
 }
+
 

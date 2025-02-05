@@ -38,13 +38,6 @@ async function fetchAction(reqId: RequestId, msg: ActionMessage): Promise<Respon
   try {
     let res = await sendAction(reqId, msg)
 
-    if (res.error) {
-      let err = new Error()
-      err.name = "Fetch Error"
-      err.message = res.error
-      throw err
-    }
-
     if (res.location) {
       window.location.href = res.location
       return // not reachable

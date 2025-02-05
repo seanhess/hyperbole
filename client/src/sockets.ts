@@ -1,6 +1,6 @@
 import { ActionMessage, ViewId, RequestId } from './action'
 import { takeWhileMap, dropWhile } from "./lib"
-import { Response, ResponseBody } from "./response"
+import { Response, ResponseBody, fetchError } from "./response"
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
@@ -65,7 +65,6 @@ export class SocketConnection {
       requestId: metadata.requestId,
       location: metadata.redirect,
       query: metadata.query,
-      error: metadata.error,
       body
     }
 
@@ -98,9 +97,8 @@ export class SocketConnection {
           return
         }
 
-        if (metadata.viewId != id) {
-          console.error("Mismatched ids!", reqId, id, data)
-          return
+        if (metadata.error) {
+          throw fetchError(metadata.error)
         }
 
         // We have found our message. Remove the listener

@@ -6,7 +6,6 @@ export type Response = {
   requestId: string
   location?: string
   query?: string
-  error?: string
   body: ResponseBody
 }
 
@@ -27,4 +26,12 @@ export function parseResponse(res: ResponseBody): LiveUpdate {
 export type LiveUpdate = {
   content: HTMLElement
   css: HTMLStyleElement
+}
+
+
+export function fetchError(msg: string): Error {
+  let err = new Error()
+  err.name = "Fetch Error"
+  err.message = msg
+  return err
 }
