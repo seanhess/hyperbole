@@ -1,7 +1,6 @@
 import { ActionMessage, ViewId, RequestId } from './action'
 import { takeWhileMap, dropWhile } from "./lib"
 import { Response, ResponseBody } from "./response"
-import { setQuery } from "./browser"
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
