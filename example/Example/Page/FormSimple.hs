@@ -21,32 +21,28 @@ instance HyperView FormView es where
     deriving (Show, Read, ViewAction)
 
   update Submit = do
-    cf <- formData @ContactForm
+    cf <- formData
     pure $ contactView cf
 
--- Define a forms as a "Higher Kinded Types"
--- ContactForm Identity behaves just like a simple record: myForm.name == "bob"
--- ContactForm Maybe would make each field (Maybe a)
-data ContactForm f = ExampleForm
-  { name :: Field f Text
-  , age :: Field f Int
+-- Forms can be pretty simple. Just a type that can be parsed
+data ContactForm = ContactForm
+  { name :: Text
+  , age :: Int
   }
-  deriving (Generic)
-instance Form ContactForm Maybe
+  deriving (Generic, FromForm)
 
+-- and a view that displays an input for each field
 formView :: View FormView ()
 formView = do
-  -- create formfields for our form
-  let f = formFields @ContactForm
-  form @ContactForm Submit (gap 10 . pad 10) $ do
+  form Submit (gap 10 . pad 10) $ do
     el Style.h1 "Add Contact"
 
-    -- pass the form field into the 'field' function
-    field f.name (const id) $ do
+    -- You must make sure these names match the field names used by FormParse / formData
+    field "name" id $ do
       label "Contact Name"
       input Username (inp . placeholder "contact name")
 
-    field f.age (const id) $ do
+    field "age" id $ do
       label "Age"
       input Number (inp . placeholder "age" . value "0")
 
@@ -54,7 +50,48 @@ formView = do
  where
   inp = Style.input
 
-contactView :: ContactForm Identity -> View FormView ()
+-- Alternatively, use Higher Kinded Types, and Hyperbole can guarantee the field names are the same
+--
+-- ContactForm' Identity is exactly the same as ContactForm:
+-- ContactForm' { name :: Text, age :: Int }
+--
+-- ContactForm' FieldName:
+-- ContactForm' { name :: FieldName Text, age :: FieldName Int }
+--
+-- ContactForm' Maybe:
+-- ContactForm' { name :: Maybe Text, age :: Maybe Int }
+--
+-- You still have to remember to include all the fields somewhere in the form
+data ContactForm' f = ContactForm'
+  { name :: Field f Text
+  , age :: Field f Int
+  }
+  deriving (Generic, FromFormF, GenFields FieldName)
+
+formView' :: View FormView ()
+formView' = do
+  -- generate a ContactForm' FieldName
+  let f = fieldNames @ContactForm'
+  form Submit (gap 10 . pad 10) $ do
+    el Style.h1 "Add Contact"
+
+    -- f.name :: FieldName Text
+    -- f.name = FieldName "name"
+    field f.name id $ do
+      label "Contact Name"
+      input Username (inp . placeholder "contact name")
+
+    -- f.age :: FieldName Int
+    -- f.age = FieldName "age"
+    field f.age id $ do
+      label "Age"
+      input Number (inp . placeholder "age" . value "0")
+
+    submit Style.btn "Submit"
+ where
+  inp = Style.input
+
+contactView :: ContactForm -> View FormView ()
 contactView u = do
   el (bold . Style.success) "Accepted Signup"
   row (gap 5) $ do
