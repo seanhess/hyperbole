@@ -99,11 +99,19 @@ parse =
 
 queryData :: Query -> QueryData
 queryData =
-  QueryData . M.fromList . map (bimap (Param . cs) value)
+  fromList . map (bimap (Param . cs) value)
  where
   -- empty / missing values are encoded as empty strings
   value Nothing = ""
   value (Just v) = ParamValue (cs v)
+
+
+fromQueryData :: QueryData -> Query
+fromQueryData q =
+  fmap toQueryItem $ toList q
+ where
+  toQueryItem (Param prm, ParamValue val) =
+    (cs prm, Just $ cs val)
 
 
 fromList :: [(Param, ParamValue)] -> QueryData

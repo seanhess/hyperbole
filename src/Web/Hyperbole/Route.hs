@@ -5,9 +5,14 @@ module Web.Hyperbole.Route
   , findRoute
   , pathUrl
   , routeUrl
-  , GenRoute (..)
-  , genRouteRead
   , Url
+  , Segment
+  , GenRoute (..)
+  , genMatchRoute
+  , genRoutePath
+  , genRouteRead
+  , matchRouteRead
+  , routePathShow
   ) where
 
 import Control.Applicative ((<|>))

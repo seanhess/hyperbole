@@ -20,8 +20,7 @@ import Network.WebSockets qualified as WS
 import Web.Cookie (parseCookies)
 import Web.Hyperbole.Data.QueryData as QueryData
 import Web.Hyperbole.Data.Session as Cookies
-import Web.Hyperbole.Route
-import Web.View (Segment, View, renderLazyByteString, renderUrl)
+import Web.View (Segment, Url, View, pathUrl, renderLazyByteString, renderUrl)
 
 
 -- | Low level effect mapping request/response to either HTTP or WebSockets
