@@ -12,15 +12,14 @@ data Example f = Example
   , age :: Field f Int
   , whatever :: Field f (Maybe Float)
   }
-  deriving (Generic)
-instance Form Example Maybe
+  deriving (Generic, FromFormF, GenFields Maybe)
 
 
 spec :: Spec
 spec = do
   describe "forms" $ do
     it "should parse a form" $ do
-      case formParse @Example [("message", "hello"), ("age", "23"), ("whatever", "")] of
+      case fromForm @(Example Identity) [("message", "hello"), ("age", "23"), ("whatever", "")] of
         Left e -> fail $ show e
         Right a -> do
           a.message `shouldBe` "hello"

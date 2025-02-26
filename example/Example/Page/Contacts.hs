@@ -87,7 +87,7 @@ allContactsView fil us = col (gap 20) $ do
   el bold "Add Contact"
 
   row (pad 10 . gap 10 . border 1) $ do
-    contactForm AddUser genForm
+    contactForm AddUser genFields
  where
   filterUsers Nothing _ = True
   filterUsers (Just Active) u = u.isActive

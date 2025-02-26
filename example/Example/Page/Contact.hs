@@ -64,12 +64,11 @@ data ContactForm f = ContactForm
   , age :: Field f Int
   , info :: Field f Text
   }
-  deriving (Generic)
-instance Form ContactForm Maybe
+  deriving (Generic, FromFormF, GenFields FieldName, GenFields Maybe)
 
 parseUser :: (Hyperbole :> es) => Int -> Eff es User
 parseUser uid = do
-  ContactForm{firstName, lastName, age, info} <- formData @ContactForm
+  ContactForm{firstName, lastName, age, info} <- formData @(ContactForm Identity)
   pure User{id = uid, isActive = True, firstName, lastName, age, info}
 
 contactView :: User -> View Contact ()
@@ -124,21 +123,21 @@ contactEdit onView onSave u = do
 
 contactForm :: (ViewId id, ViewAction (Action id)) => Action id -> ContactForm Maybe -> View id ()
 contactForm onSubmit c = do
-  let f = genFieldsWith c
-  form @ContactForm onSubmit (gap 10) $ do
-    field f.firstName (const fld) $ do
+  let f = fieldNames @ContactForm
+  form onSubmit (gap 10) $ do
+    field f.firstName fld $ do
       label "First Name:"
       input Name (inp . maybe id value c.firstName)
 
-    field f.lastName (const fld) $ do
+    field f.lastName fld $ do
       label "Last Name:"
       input Name (inp . maybe id value c.lastName)
 
-    field f.info (const fld) $ do
+    field f.info fld $ do
       label "Info:"
       textarea inp c.info
 
-    field f.age (const fld) $ do
+    field f.age fld $ do
       label "Age:"
       input Number (inp . maybe id (value . pack . show) c.age)
 

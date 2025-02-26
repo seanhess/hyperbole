@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -56,7 +57,7 @@ instance (Todos :> es) => HyperView AllTodos es where
 
   update = \case
     SubmitTodo -> do
-      TodoForm task <- formData @TodoForm
+      TodoForm task <- formData @(TodoForm Identity)
       _ <- Todos.create task
       todos <- Todos.loadAll
       pure $ todosView FilterAll todos
@@ -90,19 +91,18 @@ todosView filt todos = do
 
 todoForm :: FilterTodo -> View AllTodos ()
 todoForm filt = do
-  let f = formFields @TodoForm
+  let f :: TodoForm FieldName = fieldNames
   row (border 1) $ do
     el (pad 8) $ do
       button (ToggleAll filt) (width 32 . hover (color Primary)) Icon.chevronDown
-    form @TodoForm SubmitTodo grow $ do
-      field f.task (const id) $ do
+    form SubmitTodo grow $ do
+      field f.task id $ do
         input TextInput (pad 12 . placeholder "What needs to be done?")
 
 data TodoForm f = TodoForm
   { task :: Field f Text
   }
-  deriving (Generic)
-instance Form TodoForm Maybe
+  deriving (Generic, FromFormF, GenFields FieldName)
 
 statusBar :: FilterTodo -> [Todo] -> View AllTodos ()
 statusBar filt todos = do
@@ -144,7 +144,7 @@ instance (Todos :> es) => HyperView TodoView es where
   update (Edit todo) = do
     pure $ todoEditView todo
   update (SubmitEdit todo) = do
-    TodoForm task <- formData
+    TodoForm task <- formData @(TodoForm Identity)
     updated <- Todos.setTask task todo
     pure $ todoView updated
 
@@ -158,10 +158,10 @@ todoView todo = do
 
 todoEditView :: Todo -> View TodoView ()
 todoEditView todo = do
-  let f = formFields @TodoForm
+  let f = fieldNames @TodoForm
   row (border (TRBL 0 0 1 0) . pad 10) $ do
-    form @TodoForm (SubmitEdit todo) (pad (TRBL 0 0 0 46)) $ do
-      field f.task (const id) $ do
+    form (SubmitEdit todo) (pad (TRBL 0 0 0 46)) $ do
+      field f.task id $ do
         input TextInput (pad 4 . value todo.task)
 
 main :: IO ()
