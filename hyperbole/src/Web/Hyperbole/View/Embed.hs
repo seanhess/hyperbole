@@ -13,4 +13,4 @@ import Web.View.Reset
 
 
 scriptEmbed :: ByteString
-scriptEmbed = $(embedFile "client/dist/hyperbole.js")
+scriptEmbed = $(embedFile "embed/hyperbole.js")

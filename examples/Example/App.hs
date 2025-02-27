@@ -76,7 +76,6 @@ import GHC.Word (Word32)
 
 -- import Network.Wai.Handler.WebSockets (websocketsOr)
 
-
 run :: IO ()
 run = do
   hSetBuffering stdout LineBuffering
@@ -85,7 +84,7 @@ run = do
   count <- runEff $ runConcurrent Counter.initCounter
   cache <- clientCache
   Warp.run 3000 $
-    Static.staticPolicyWithOptions cache (addBase "client/dist") $
+    Static.staticPolicyWithOptions cache (addBase "embed") $
       Static.staticPolicy (addBase "static") $
         app users count
 

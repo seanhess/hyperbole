@@ -1,0 +1,5 @@
+/*!
+  * @license MIT (https://github.com/geotrev/omdomdom/blob/master/LICENSE)
+  * Omdomdom v0.3.2 (https://github.com/geotrev/omdomdom)
+  * Copyright 2023 George Treviranus <geowtrev@gmail.com>
+  */

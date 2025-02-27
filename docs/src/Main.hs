@@ -39,8 +39,8 @@ copyExtraFilesTo tmpDir = do
   copyFile "hyperbole/README.md" (tmpDir </> "README.md")
   copyFile "hyperbole/CHANGELOG.md" (tmpDir </> "CHANGELOG.md")
   copyFile "hyperbole/LICENSE" (tmpDir </> "LICENSE")
-  createDirectoryIfMissing True (tmpDir </> "client/dist")
-  copyFile "client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
+  createDirectoryIfMissing True (tmpDir </> "embed")
+  copyFile "embed/hyperbole.js" (tmpDir </> "embed/hyperbole.js")
 
 
 expandAndCopyFileTo :: FilePath -> FilePath -> FilePath -> IO ()

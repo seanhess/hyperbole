@@ -25,7 +25,7 @@ module.exports = {
   output: {
     // filename: `hyperbole-${version}.js`,
     filename: "hyperbole.js",
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, '../embed'),
   },
 
   // devServer: {

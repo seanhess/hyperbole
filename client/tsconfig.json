@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
+    "outDir": "../embed/",
     "sourceMap": true,
     "noImplicitAny": true,
     "module": "es6",

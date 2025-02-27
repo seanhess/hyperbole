@@ -15,7 +15,7 @@ extra-doc-files:
   - CHANGELOG.md
 
 extra-source-files:
-  - client/dist/hyperbole.js
+  - embed/hyperbole.js
 
 language: GHC2021
 
