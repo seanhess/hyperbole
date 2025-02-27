@@ -9,45 +9,52 @@ import Data.Text.IO qualified as T
 import System.Directory
 import System.FilePath
 
+
 main :: IO ()
 main = do
   let tmpDir = "/tmp/hyperbole"
   copyExtraFilesTo tmpDir
   expandSourcesTo tmpDir
 
-test :: IO ()
-test = do
-  putStrLn "TEST"
-  src <- readSource "../src/Web/Hyperbole.hs"
-  SourceCode lns <- expandFile src
-  mapM_ print lns
+
+--
+-- test :: IO ()
+-- test = do
+--   putStrLn "TEST"
+--   src <- readSource "../src/Web/Hyperbole.hs"
+--   SourceCode lns <- expandFile src
+--   mapM_ print lns
 
 expandSourcesTo :: FilePath -> IO ()
 expandSourcesTo tmpDir = do
-  allFiles <- relativeSourceFiles "../src"
+  allFiles <- relativeSourceFiles "hyperbole" "src"
   print allFiles
-  mapM_ (expandAndCopyFileTo tmpDir) allFiles
+  mapM_ (expandAndCopyFileTo tmpDir "hyperbole") allFiles
+
 
 copyExtraFilesTo :: FilePath -> IO ()
 copyExtraFilesTo tmpDir = do
   createDirectoryIfMissing True tmpDir
-  copyFile "../hyperbole.cabal" (tmpDir </> "hyperbole.cabal")
-  copyFile "../README.md" (tmpDir </> "README.md")
-  copyFile "../CHANGELOG.md" (tmpDir </> "CHANGELOG.md")
-  copyFile "../LICENSE" (tmpDir </> "LICENSE")
+  copyFile "hyperbole/hyperbole.cabal" (tmpDir </> "hyperbole.cabal")
+  copyFile "hyperbole/README.md" (tmpDir </> "README.md")
+  copyFile "hyperbole/CHANGELOG.md" (tmpDir </> "CHANGELOG.md")
+  copyFile "hyperbole/LICENSE" (tmpDir </> "LICENSE")
   createDirectoryIfMissing True (tmpDir </> "client/dist")
-  copyFile "../client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
+  copyFile "client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
 
-expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
-expandAndCopyFileTo tmpDir path = do
-  src <- readSource path
+
+expandAndCopyFileTo :: FilePath -> FilePath -> FilePath -> IO ()
+expandAndCopyFileTo tmpDir localDir path = do
+  src <- readSource $ localDir </> path
   expanded <- expandFile src
   writeSource tmpDir path expanded
 
+
 readSource :: FilePath -> IO SourceCode
 readSource path = do
-  inp <- T.readFile path
+  inp <- T.readFile $ path
   pure $ SourceCode $ T.lines inp
+
 
 writeSource :: FilePath -> FilePath -> SourceCode -> IO ()
 writeSource tmpDir relPath src = do
@@ -59,20 +66,22 @@ writeSource tmpDir relPath src = do
   cleanRelativeDir =
     dropWhile (== '/') . dropWhile (== '.')
 
-relativeSourceFiles :: FilePath -> IO [FilePath]
-relativeSourceFiles dir = do
-  contents <- tryDirectory dir
-  putStrLn dir
+
+relativeSourceFiles :: FilePath -> FilePath -> IO [FilePath]
+relativeSourceFiles baseDir localDir = do
+  let srcDir = baseDir </> localDir
+  putStrLn $ baseDir ++ " </> " ++ localDir
+  contents <- tryDirectory srcDir
   let folders = filter isFolder contents
   let files = filter isSourceFile contents
 
-  files' <- mapM (relativeSourceFiles . addDir) folders
+  files' <- mapM (relativeSourceFiles baseDir . addDir) folders
 
   pure $ fmap addDir files <> mconcat files'
  where
   isSourceFile path = takeExtension path == ".hs"
   isFolder path = takeExtension path == ""
-  addDir = (dir </>)
+  addDir = (localDir </>)
   tryDirectory path = do
     res <- try $ listDirectory path
     case res of
@@ -80,6 +89,7 @@ relativeSourceFiles dir = do
         putStrLn $ "SKIPPED" <> path
         pure []
       Right files -> pure files
+
 
 data Embed = Embed
   { definition :: TopLevelDefinition
@@ -91,12 +101,15 @@ newtype SourceCode = SourceCode {lines :: [Text]}
 instance Show Embed where
   show e = "Embed " <> e.sourceFile <> " " <> show e.prefix <> " " <> show e.definition
 
+
 newtype TopLevelDefinition = TopLevelDefinition Text
   deriving newtype (Show, Eq)
+
 
 expandFile :: SourceCode -> IO SourceCode
 expandFile (SourceCode lns) =
   SourceCode . mconcat <$> mapM expandLine lns
+
 
 expandLine :: Text -> IO [Text]
 expandLine line = do
@@ -120,11 +133,12 @@ expandLine line = do
     let (src, def) = T.breakOn " " inp
      in pure (cs src, TopLevelDefinition $ T.drop 1 def)
 
+
 expandEmbed :: Embed -> IO [Text]
 expandEmbed embed = do
   print embed
-  source <- T.readFile embed.sourceFile
-  expanded <- requireTopLevel embed.definition (SourceCode $ T.lines source)
+  src <- readSource $ "examples" </> embed.sourceFile
+  expanded <- requireTopLevel embed.definition src
   pure $ fmap markupLine expanded
  where
   requireTopLevel :: TopLevelDefinition -> SourceCode -> IO [Text]
@@ -143,6 +157,8 @@ expandEmbed embed = do
     T.replace "\"" "\\\"" . highlightTermsLine
   markupLinePrefix line =
     embed.prefix <> line
+
+
 highlightTermsLine :: Text -> Text
 highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
  where
@@ -192,6 +208,7 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
     , "DefaultParam"
     ]
 
+
 -- returns lines of a top-level definition
 findTopLevel :: TopLevelDefinition -> SourceCode -> [Text]
 findTopLevel (TopLevelDefinition definition) source =
@@ -205,6 +222,7 @@ findTopLevel (TopLevelDefinition definition) source =
     isTopLevel line || not (isFullyOutdented line)
   dropWhileEnd p as =
     reverse $ dropWhile p $ reverse as
+
 
 isFullyOutdented :: Text -> Bool
 isFullyOutdented line =

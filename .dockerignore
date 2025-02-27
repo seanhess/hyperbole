@@ -1,5 +1,6 @@
 .git
 .stack-work
+.DS_Store
 client/node_modules
 Dockerfile
 dist-newstyle

@@ -1,8 +1,8 @@
--- bust ci cache 3
 tests: True
 multi-repl: True
 packages:
-  .
+  ./hyperbole/
+  ./examples/
+  ./docs/
   -- ../web-view/
-  -- temporary until https://github.com/seanhess/hyperbole/issues/76 is resolved
   -- https://hackage.haskell.org/package/web-view-0.7.0/candidate/web-view-0.7.0.tar.gz

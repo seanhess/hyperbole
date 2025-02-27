@@ -1,11 +1,10 @@
 #!/bin/bash
 
 set -e
+mkdir -p /tmp/hyperbole/
 
-cd example
-hpack
+hpack docs
 cabal run docgen
 
 cd /tmp/hyperbole
 cabal haddock
-

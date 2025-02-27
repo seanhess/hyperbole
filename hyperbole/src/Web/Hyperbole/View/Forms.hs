@@ -77,7 +77,6 @@ From [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
 
 @
 #EMBED Example/Page/FormSimple.hs data ContactForm
-#EMBED Example/Page/FormSimple.hs instance Form ContactForm
 @
 -}
 class FromFormF (f :: (Type -> Type) -> Type) where
@@ -271,7 +270,6 @@ textarea f mDefaultText = do
 
 @
 #EMBED Example/Page/FormValidation.hs data UserForm
-#EMBED Example/Page/FormValidation.hs instance Form UserForm
 
 #EMBED Example/Page/FormValidation.hs validateForm
 

@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 
-name:           hyperbole-examples
+name:           examples
 version:        0.4.3
 synopsis:       Interactive HTML apps using type-safe serverside Haskell
 description:    Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
@@ -20,56 +20,10 @@ source-repository head
   type: git
   location: https://github.com/seanhess/hyperbole
 
-executable docgen
-  main-is: Main.hs
-  other-modules:
-      Paths_hyperbole_examples
-  autogen-modules:
-      Paths_hyperbole_examples
-  hs-source-dirs:
-      ./docgen
-  default-extensions:
-      OverloadedStrings
-      OverloadedRecordDot
-      DuplicateRecordFields
-      NoFieldSelectors
-      TypeFamilies
-      DataKinds
-      DerivingStrategies
-      DeriveAnyClass
-  ghc-options: -Wall -fdefer-typed-holes
-  build-depends:
-      aeson
-    , base
-    , bytestring
-    , casing
-    , containers
-    , cookie
-    , data-default
-    , directory
-    , effectful
-    , file-embed
-    , filepath
-    , http-api-data
-    , http-types
-    , hyperbole
-    , network
-    , random
-    , string-conversions
-    , string-interpolate
-    , text
-    , time
-    , wai
-    , wai-websockets
-    , warp
-    , web-view
-    , websockets
-  default-language: GHC2021
-
 executable examples
   main-is: Main.hs
   other-modules:
-      BulkUpdate
+      Example.App
       Example.AppRoute
       Example.Cache
       Example.Colors
@@ -116,9 +70,9 @@ executable examples
       Example.View.Inputs
       Example.View.Layout
       Example.View.SortableTable
-      Paths_hyperbole_examples
+      Paths_examples
   autogen-modules:
-      Paths_hyperbole_examples
+      Paths_examples
   hs-source-dirs:
       ./
   default-extensions:

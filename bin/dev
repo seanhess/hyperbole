@@ -2,13 +2,13 @@
 
 
 package() {
-  hpack
+  hpack examples
+  hpack hyperbole
+  hpack docgen
 }
 
 compile() {
-  cd example/
-  hpack
-  ghcid --setup=Main.update --command="cabal repl exe:examples lib:hyperbole" --run=Main.update --warnings --reload=./client/dist/hyperbole.js
+  ghcid --command="cabal repl examples hyperbole" --run=Example.App.run --warnings --reload=./client/dist/hyperbole.js
 }
 
 client() {
@@ -20,4 +20,4 @@ client() {
 # run tests once (so we don't forget!)
 cabal test
 
-(trap 'kill 0' SIGINT; client & package && compile)
+(trap 'kill 0' SIGINT; package & client & compile)

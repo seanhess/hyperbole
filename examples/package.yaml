@@ -1,4 +1,4 @@
-name:               hyperbole-examples
+name:               examples
 version:            0.4.3
 synopsis:           Interactive HTML apps using type-safe serverside Haskell
 homepage:           https://github.com/seanhess/hyperbole
@@ -63,10 +63,3 @@ executables:
     - wai-middleware-static
     - safe
     - foreign-store
-  docgen:
-    main:                Main.hs
-    source-dirs:
-      - ./docgen
-    dependencies:
-      - directory
-      - filepath
