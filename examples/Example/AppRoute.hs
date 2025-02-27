@@ -27,6 +27,7 @@ data AppRoute
   | Examples
   | Todos
   | Errors
+  | WebView WebViewRoute
   deriving (Eq, Generic, Show)
 instance Route AppRoute where
   baseRoute = Just Main
@@ -52,3 +53,14 @@ data Hello
   = Greet Text
   | Redirected
   deriving (Eq, Generic, Route, Show)
+
+data WebViewRoute
+  = WebViewLinks
+  | Responsive
+  | Holygrail
+  | Stacks
+  | Buttons
+  | Texts
+  deriving (Eq, Generic, Show)
+instance Route WebViewRoute where
+  baseRoute = Just WebViewLinks

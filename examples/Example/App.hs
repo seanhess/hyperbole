@@ -41,6 +41,7 @@ import Example.Page.Concurrent qualified as Concurrent
 import Example.Page.Contact qualified as Contact
 import Example.Page.Contacts qualified as Contacts
 import Example.Page.Counter qualified as Counter
+import Example.Page.WebView qualified as WebView
 import Example.Page.DataTable qualified as DataTable
 import Example.Page.Errors qualified as Errors
 import Example.Page.Filter qualified as Filter
@@ -124,6 +125,14 @@ app users count = do
   router Simple = runPage Simple.page
   router Transitions = runPage Transitions.page
   router Todos = runPage Todo.page
+  router (WebView sub) =
+    case sub of
+      WebViewLinks -> view WebView.links
+      Responsive -> view WebView.responsive
+      Holygrail -> view WebView.holygrail
+      Stacks -> view WebView.stacks
+      Buttons -> view WebView.buttons
+      Texts -> view WebView.texts
   router Main = do
     redirect (routeUrl Simple)
 

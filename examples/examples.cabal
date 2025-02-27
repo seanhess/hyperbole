@@ -65,6 +65,7 @@ executable examples
       Example.Page.Simple
       Example.Page.Todo
       Example.Page.Transitions
+      Example.Page.WebView
       Example.Style
       Example.View.Icon
       Example.View.Inputs

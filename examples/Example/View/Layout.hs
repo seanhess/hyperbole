@@ -50,6 +50,7 @@ exampleLayout rt pageView = do
     Examples -> "Example/View/Layout.hs"
     Todos -> "Example/Page/Todo.hs"
     DataTable -> "Example/Page/DataTable.hs"
+    WebView _ -> "Example/Page/WebView.hs"
 
 rootLayout :: AppRoute -> View c () -> View c ()
 rootLayout rt content =
@@ -149,6 +150,7 @@ pageDescription = \case
   Main -> none
   Hello _ -> none
   Query -> none
+  WebView _ -> none
  where
   item = li (list Disc)
 
@@ -172,7 +174,6 @@ navigation rt = do
       el (pad 10 . fontSize 12) $ do
         text "v"
         text $ cs $ showVersion version
-      
  where
   showMenu =
     addClass $
