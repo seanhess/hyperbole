@@ -11,7 +11,7 @@ import Web.Hyperbole
 page :: (Hyperbole :> es) => Eff es (Page '[FormView])
 page = do
   pure $ exampleLayout Route.FormValidation $ row (pad 20) $ do
-    hyper FormView (formView genForm)
+    hyper FormView (formView genFields)
 
 data FormView = FormView
   deriving (Show, Read, ViewId)
@@ -22,7 +22,7 @@ instance HyperView FormView es where
     deriving (Show, Read, ViewAction)
 
   update Submit = do
-    uf <- formData @UserForm
+    uf <- formData @(UserForm Identity)
 
     let vals = validateForm uf
 
@@ -41,8 +41,11 @@ data UserForm f = UserForm
   , pass1 :: Field f Text
   , pass2 :: Field f Text
   }
-  deriving (Generic)
-instance Form UserForm Validated
+  deriving (Generic, FromFormF, GenFields Validated, GenFields FieldName)
+
+anyInvalid :: UserForm Validated -> Bool
+anyInvalid u =
+  or [isInvalid u.user, isInvalid u.age, isInvalid u.pass1, isInvalid u.pass2]
 
 validateForm :: UserForm Identity -> UserForm Validated
 validateForm u =
@@ -75,32 +78,31 @@ validatePass p1 p2 =
     ]
 
 formView :: UserForm Validated -> View FormView ()
-formView v = do
-  let f = formFieldsWith v
-  form @UserForm Submit (gap 10 . pad 10) $ do
+formView val = do
+  let f = fieldNames @UserForm
+  form Submit (gap 10 . pad 10) $ do
     el Style.h1 "Sign Up"
 
-    field f.user valStyle $ do
+    field f.user (valStyle val.user) $ do
       label "Username"
       input Username (inp . placeholder "username")
 
-      fv <- fieldValid
-      case fv of
+      case val.user of
         Invalid t -> el_ (text t)
         Valid -> el_ "Username is available"
         _ -> none
 
-    field f.age valStyle $ do
+    field f.age (valStyle val.age) $ do
       label "Age"
       input Number (inp . placeholder "age" . value "0")
-      el_ invalidText
+      el_ $ invalidText val.age
 
-    field f.pass1 valStyle $ do
+    field f.pass1 (valStyle val.pass1) $ do
       label "Password"
       input NewPassword (inp . placeholder "password")
-      el_ invalidText
+      el_ $ invalidText val.pass1
 
-    field f.pass2 (const id) $ do
+    field f.pass2 id $ do
       label "Repeat Password"
       input NewPassword (inp . placeholder "repeat password")
 
