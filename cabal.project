@@ -4,5 +4,6 @@ packages:
   ./hyperbole/
   ./examples/
   ./docs/
+  ./web-view/
   -- ../web-view/
   -- https://hackage.haskell.org/package/web-view-0.7.0/candidate/web-view-0.7.0.tar.gz

@@ -1,0 +1,6 @@
+<style type='text/css'>
+.bold { font-weight:bold }
+</style>
+
+<div class='empty'>i have no css</div>
+<div class='bold'>i have some css</div>

@@ -8,7 +8,7 @@ package() {
 }
 
 compile() {
-  ghcid --command="cabal repl examples hyperbole" --run=Example.App.run --warnings --reload=./client/dist/hyperbole.js
+  ghcid --command="cabal repl examples hyperbole web-view" --run=Example.App.run --warnings --reload=./client/dist/hyperbole.js
 }
 
 client() {

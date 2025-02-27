@@ -1,0 +1,100 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           web-view
+version:        0.7.0
+synopsis:       Type-safe HTML and CSS with intuitive layouts and composable styles.
+description:    Type-safe HTML and CSS with intuitive layouts and composable styles. Inspired by Tailwindcss and Elm-UI . See documentation for the @Web.View@ module below
+category:       Web
+homepage:       https://github.com/seanhess/web-view
+bug-reports:    https://github.com/seanhess/web-view/issues
+author:         Sean Hess
+maintainer:     seanhess@gmail.com
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Simple
+tested-with:
+    GHC == 9.8.2
+  , GHC == 9.6.6
+extra-source-files:
+    embed/preflight.css
+extra-doc-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/seanhess/web-view
+
+library
+  exposed-modules:
+      Web.View
+      Web.View.Element
+      Web.View.Layout
+      Web.View.Render
+      Web.View.Reset
+      Web.View.Style
+      Web.View.Types
+      Web.View.Types.Url
+      Web.View.View
+  other-modules:
+      Paths_web_view
+  autogen-modules:
+      Paths_web_view
+  hs-source-dirs:
+      src
+  default-extensions:
+      OverloadedStrings
+      OverloadedRecordDot
+      DuplicateRecordFields
+      NoFieldSelectors
+  ghc-options: -Wall -fdefer-typed-holes
+  build-depends:
+      base >=4.16 && <5
+    , bytestring >=0.11 && <0.13
+    , casing >0.1.3.0 && <0.2
+    , containers >=0.6 && <1
+    , effectful-core >=2.3 && <3
+    , file-embed >=0.0.10 && <0.1
+    , html-entities >=1.1.4.7 && <1.2
+    , http-types ==0.12.*
+    , string-interpolate >=0.3.2 && <0.4
+    , text >=1.2 && <3
+  default-language: GHC2021
+
+test-suite test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Test.RenderSpec
+      Test.StyleSpec
+      Test.UrlSpec
+      Test.ViewSpec
+      Paths_web_view
+  autogen-modules:
+      Paths_web_view
+  hs-source-dirs:
+      test/
+  default-extensions:
+      OverloadedStrings
+      OverloadedRecordDot
+      DuplicateRecordFields
+      NoFieldSelectors
+  ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N -F -pgmF=skeletest-preprocessor
+  build-depends:
+      base >=4.16 && <5
+    , bytestring >=0.11 && <0.13
+    , casing >0.1.3.0 && <0.2
+    , containers >=0.6 && <1
+    , effectful-core >=2.3 && <3
+    , file-embed >=0.0.10 && <0.1
+    , html-entities >=1.1.4.7 && <1.2
+    , http-types ==0.12.*
+    , skeletest
+    , string-interpolate >=0.3.2 && <0.4
+    , text >=1.2 && <3
+    , web-view
+  default-language: GHC2021

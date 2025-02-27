@@ -1,0 +1,7 @@
+<style type='text/css'>
+.bold { font-weight:bold }
+</style>
+
+<div class='bold'>
+  <svg>&"'</svg>
+</div>

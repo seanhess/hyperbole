@@ -1,0 +1,10 @@
+<style type='text/css'>
+.bold { font-weight:bold }
+.col { display:flex; flex-direction:column }
+.pad-10 { padding:0.625rem }
+</style>
+
+<div class='col pad-10'>
+  <div class='bold'>hello</div>
+  <div>world</div>
+</div>

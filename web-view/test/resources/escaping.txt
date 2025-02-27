@@ -1,0 +1,5 @@
+<div title='I have some apos&#39; and quotes &quot; and I&#39;m a &lt;&lt;great&gt;&gt; attribute!!!'>I am &lt;malicious&gt; &amp;apos;user</div>
+<div title='I have some apos&#39; and quotes &quot; and I&#39;m a &lt;&lt;great&gt;&gt; attribute!!!'>
+  <div>I am &lt;malicious&gt; &amp;apos;user</div>
+  <div>I am another &lt;malicious&gt; &amp;apos;user</div>
+</div>
