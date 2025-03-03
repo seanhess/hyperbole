@@ -107,14 +107,22 @@ View on Github
 * https://github.com/seanhess/hyperbole
 
 
-Full Production Example
------------------------
+Projects Using Hyperbole
+--------------------
+
+### Production
 
 <a href="https://nso.edu">
   <img alt="National Solar Observatory" src="https://nso1.b-cdn.net/wp-content/uploads/2020/03/NSO-logo-orange-text.png" width="400"/>
 </a>
 
 The NSO uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). This production application contains complex interfaces, workers, databases, and more.
+
+
+### Other Examples
+
+[HaskRead](https://github.com/tusharad/Reddit-Clone-Haskell) - A Reddit Clone
+
 
 How to Import Flake
 ------------
