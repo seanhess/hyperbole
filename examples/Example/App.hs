@@ -80,7 +80,7 @@ run = do
   cache <- clientCache
   Warp.run 3000 $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
-      Static.staticPolicy (addBase "static") $
+      Static.staticPolicy (addBase "examples/static") $
         app users count
 
 app :: UserStore -> TVar Int -> Application

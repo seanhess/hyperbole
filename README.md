@@ -1,4 +1,4 @@
-![Hyperbole](https://github.com/seanhess/hyperbole/raw/main/example/static/logo-robot.png)
+![Hyperbole](https://github.com/seanhess/hyperbole/raw/main/examples/static/logo-robot.png)
 
 [![Hackage](https://img.shields.io/hackage/v/hyperbole.svg?color=success)](https://hackage.haskell.org/package/hyperbole)
 
@@ -82,7 +82,7 @@ Examples
 The example directory contains an app demonstrating various features. See it in action at https://docs.hyperbole.live
 
 <a href="https://docs.hyperbole.live">
-  <img alt="Hyperbole Examples" src="example/static/examples.png"/>
+  <img alt="Hyperbole Examples" src="examples/static/examples.png"/>
 </a>
 
 ### Try Example Project Locally
