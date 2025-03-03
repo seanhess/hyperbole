@@ -3,7 +3,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 
-module Main where
+module Example.App where
 
 import Control.Concurrent
   ( MVar
@@ -57,27 +57,22 @@ import Example.Style qualified as Style
 import Example.View.Layout as Layout (exampleLayout, examplesView)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
 import GHC.Generics (Generic)
+import GHC.Word (Word32)
 import Network.HTTP.Types (Header, Method, QueryItem, hCacheControl, methodPost, status200, status404)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Middleware.Static as Static (CacheContainer, CachingStrategy (..), Options (..), addBase)
 import Network.Wai.Middleware.Static qualified as Static
 import Network.WebSockets (Connection, PendingConnection, acceptRequest, defaultConnectionOptions)
-import Paths_hyperbole_examples (version)
+import Paths_examples (version)
 import System.IO (BufferMode (LineBuffering), hSetBuffering, stdout)
 import Web.Hyperbole
 import Web.Hyperbole.Application (waiApp)
 import Web.Hyperbole.Effect.Handler (RunHandlers)
 import Web.Hyperbole.Effect.Server (Request (..))
 
--- import System.Process (callCommand)
--- import Network.Wai.Handler.Warp
-import GHC.Word (Word32)
-
--- import Network.Wai.Handler.WebSockets (websocketsOr)
-
-main :: IO ()
-main = do
+run :: IO ()
+run = do
   hSetBuffering stdout LineBuffering
   putStrLn "Starting Examples on http://localhost:3000"
   users <- Users.initUsers
@@ -194,7 +189,7 @@ update = do
     -> IO ThreadId
   start done = do
     forkFinally
-      main
+      Example.App.run
       -- Note that this implies concurrency
       -- between shutdownApp and the next app that is starting.
       -- Normally this should be fine

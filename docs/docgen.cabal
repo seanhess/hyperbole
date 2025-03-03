@@ -1,0 +1,47 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           docgen
+version:        0.4.3
+synopsis:       Interactive HTML apps using type-safe serverside Haskell
+description:    Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
+category:       Web, Network
+homepage:       https://github.com/seanhess/hyperbole
+bug-reports:    https://github.com/seanhess/hyperbole/issues
+author:         Sean Hess
+maintainer:     seanhess@gmail.com
+license:        BSD-3-Clause
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/seanhess/hyperbole
+
+executable docgen
+  main-is: Main.hs
+  other-modules:
+      Paths_docgen
+  autogen-modules:
+      Paths_docgen
+  hs-source-dirs:
+      ./
+  default-extensions:
+      OverloadedStrings
+      OverloadedRecordDot
+      DuplicateRecordFields
+      NoFieldSelectors
+      TypeFamilies
+      DataKinds
+      DerivingStrategies
+      DeriveAnyClass
+  ghc-options: -Wall -fdefer-typed-holes
+  build-depends:
+      base
+    , directory
+    , filepath
+    , string-conversions
+    , text
+  default-language: GHC2021

@@ -10,7 +10,7 @@ import Example.AppRoute
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.View.Icon as Icon (hamburger)
-import Paths_hyperbole_examples (version)
+import Paths_examples (version)
 import Text.Casing (fromHumps, toWords)
 import Web.Hyperbole
 import Web.View.Style (addClass, cls, prop)
@@ -172,7 +172,6 @@ navigation rt = do
       el (pad 10 . fontSize 12) $ do
         text "v"
         text $ cs $ showVersion version
-      
  where
   showMenu =
     addClass $
