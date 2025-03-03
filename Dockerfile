@@ -13,7 +13,9 @@ COPY --from=base /root/.config /root/.config
 
 # RUN apt-get update && apt-get install -y libpcre3 libpcre3-dev libcurl4-openssl-dev cron vim rsyslog
 ADD ./package.yaml .
-ADD ./cabal.project .
+# ADD ./cabal.project .
+# ADD ./docs/docgen.cabal .
+# ADD ./examples/examples.cabal .
 RUN hpack
 RUN cabal update
 RUN cabal build --only-dependencies
@@ -29,10 +31,13 @@ ADD ./client ./client
 ADD ./test ./test
 ADD ./src ./src
 ADD ./examples ./examples
+ADD ./docs ./docs
 ADD *.md .
 ADD LICENSE .
 RUN hpack
-RUN cd examples && hpack && cabal build all
+RUN hpack examples
+RUN hpack docs
+RUN cabal build examples
 RUN mkdir bin
 RUN cd examples && export EXEC=$(cabal list-bin examples); cp $EXEC /opt/build/bin/examples
 
