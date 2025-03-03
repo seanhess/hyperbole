@@ -2,87 +2,93 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Web.Hyperbole.View.Forms
-  ( FromForm (..)
-  , FromFormF (..)
+module Web.Hyperbole.Data.Form
+  ( -- * Form Parsing
+    FromForm (..)
   , formParam
   , formLookup
+  , formData
+
+    -- * Higher Kinded Forms
+  , FromFormF (..)
+  , Field
+
+    -- * Generate Fields
   , GenFields (..)
+  , GenField (..)
   , fieldNames
   , FieldName (..)
-  , FormFields (..)
-  , Field
-  , InputType (..)
-  , Input (..)
-  , field
-  , label
-  , input
-  , form
-  , textarea
-  , placeholder
-  , submit
-  , formData
-  , defaultFormOptions
-  , FormOptions (..)
+
+    -- * Validation
   , Validated (..)
   , isInvalid
-  , invalidText
   , validate
-  , Identity
 
-    -- * Re-exports
-  , FromParam
-  , Generic
+    -- * Exports
+
+    -- ** Generics
   , GFieldsGen (..)
-  , GenField (..)
+  , GFormParse (..)
+  , genericFromForm
+
+    -- ** Re-exports
+  , Identity
+  , Generic
   , Form (..)
   )
 where
 
-import Data.Function ((&))
 import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
-import Data.Maybe (fromMaybe)
 import Data.String (IsString (..))
 import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
-import Text.Casing (kebab)
-import Web.FormUrlEncoded (Form (..), FormOptions (..), defaultFormOptions, parseUnique)
+import Web.FormUrlEncoded (Form (..), parseUnique)
 import Web.FormUrlEncoded qualified as FE
 import Web.Hyperbole.Data.QueryData (FromParam (..), Param (..), ParamValue (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
-import Web.Hyperbole.HyperView
-import Web.Hyperbole.View.Event (onSubmit)
-import Web.View hiding (form, input, label)
-import Web.View.Style (addClass, cls, prop)
 
 
 ------------------------------------------------------------------------------
 -- FORM PARSING
 ------------------------------------------------------------------------------
 
--- | Equivalent to Web.FormUrlEncoded.FromForm, but uses 'FromParam' instead of 'FromHttpApiData'
-class FromForm (form :: Type) where
-  fromForm :: FE.Form -> Either Text form
-  default fromForm :: (Generic form, GFormParse (Rep form)) => FE.Form -> Either Text form
-  fromForm f = to <$> gFormParse f
-
-
-{- | A Higher-Kinded type that can be parsed from a 'Web.FormUrlEncoded.Form'
-
-From [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
+{- | Equivalent to Web.FormUrlEncoded.FromForm, but the generic implementation uses 'FromParam' instead of 'FromHttpApiData'
 
 @
 #EMBED Example/Page/FormSimple.hs data ContactForm
 @
 -}
-class FromFormF (f :: (Type -> Type) -> Type) where
-  fromFormF :: FE.Form -> Either Text (f Identity)
-  default fromFormF :: (Generic (f Identity), GFormParse (Rep (f Identity))) => FE.Form -> Either Text (f Identity)
-  fromFormF f = to <$> gFormParse f
+class FromForm (form :: Type) where
+  fromForm :: FE.Form -> Either Text form
+  default fromForm :: (Generic form, GFormParse (Rep form)) => FE.Form -> Either Text form
+  fromForm = genericFromForm
+
+
+{- | We can use Higher Kinded Types to make Forms more convenient. Practically, a Higher Kinded Form is a record with the same (f :: Type -> Type) type variable applied to each field, which makes it easy to use the same record structure for different data. For example:
+
+@
+#EMBED Example/Page/FormSimple.hs data ContactForm'
+@
+
+The same record can then be used to represent the same fields with many different (f :: Type -> Type)
+
+> contact :: ContactForm Identity
+> contact = ContactForm "Bob" 44
+
+> contactFields :: ContactForm FieldName
+> contactFields = ContactForm (FieldName "name") (FieldName "age")
+
+> contactValues :: ContactForm Maybe
+> contactValues = ContactForm Nothing (Just 44)
+-}
+class FromFormF (form :: (Type -> Type) -> Type) where
+  fromFormF :: FE.Form -> Either Text (form Identity)
+  default fromFormF :: (Generic (form Identity), GFormParse (Rep (form Identity))) => FE.Form -> Either Text (form Identity)
+  fromFormF = genericFromForm
 
 
 -- Any FromFormF can be parsed using fromForm @(form Identity)
@@ -90,7 +96,12 @@ instance (FromFormF form) => FromForm (form Identity) where
   fromForm = fromFormF
 
 
--- | Parse a full type from the form data
+{- | Parse a full type from a form url-encoded body
+
+@
+#EMBED Example/Page/Todo.hs   update (SubmitEdit todo) = do
+@
+-}
 formData :: forall form es. (FromForm form, Hyperbole :> es) => Eff es form
 formData = do
   f <- formBody
@@ -116,26 +127,28 @@ formLookup (Param key) frm = do
 -- GEN FIELDS: Generate a type from selector names
 ------------------------------------------------------------------------------
 
+{- | Field allows a Higher Kinded Form to resolve different f variables. Specifically:
+
+> Field Identity a ~ a
+> Field f a ~ f a
+-}
+type family Field (functor :: Type -> Type) a where
+  Field Identity a = a
+  Field f a = f a
+
+
+{- | Generate a Higher Kinded Type (form f)
+
+@
+#EMBED Example/Page/FormValidation.hs data UserForm
+
+#EMBED Example/Page/FormValidation.hs page
+@
+-}
 class GenFields f (form :: (Type -> Type) -> Type) where
-  -- {- | Generate a Higher Kinded Type (form f)
-  --
-  -- > #EMBED Example/Page/FormValidation.hs data UserForm
-  -- >
-  -- > #EMBED Example/Page/FormValidation.hs page
-  -- -}
   genFields :: form f
   default genFields :: (Generic (form f), GFieldsGen (Rep (form f))) => form f
   genFields = to gFieldsGen
-
-
--- {- | Generate FieldNames for a form. See [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
---
--- > #EMBED Example/Page/FormSimple.hs data ContactForm'
--- >
--- > #EMBED Example/Page/FormSimple.hs formView'
--- -}
-fieldNames :: forall form. (GenFields FieldName form) => form FieldName
-fieldNames = genFields
 
 
 -- Given a selector, generate the type
@@ -143,48 +156,16 @@ class GenField a where
   genField :: String -> a
 
 
-instance GenField (FieldName a) where
-  genField s = FieldName $ pack s
-
-
 instance GenField (Validated a) where
   genField = const NotInvalid
 
 
+instance GenField (FieldName a) where
+  genField s = FieldName $ pack s
+
+
 instance GenField (Maybe a) where
   genField _ = Nothing
-
-
-------------------------------------------------------------------------------
--- FORM VIEWS
-------------------------------------------------------------------------------
-
--- | Context that allows form fields
-data FormFields id = FormFields id
-
-
-{- | Type-safe \<form\>. Calls (Action id) on submit
-
-@
-#EMBED Example/Page/FormSimple.hs formView
-@
--}
-form :: (ViewAction (Action id)) => Action id -> Mod id -> View (FormFields id) () -> View id ()
-form a md cnt = do
-  vid <- context
-  tag "form" (onSubmit a . md . flexCol . marginEnd0) $ do
-    addContext (FormFields vid) cnt
- where
-  -- not sure why chrome is adding margin-block-end: 16 to forms? Add to web-view?
-  marginEnd0 =
-    addClass $
-      cls "mg-end-0"
-        & prop @PxRem "margin-block-end" 0
-
-
--- | Button that submits the 'form'
-submit :: Mod (FormFields id) -> View (FormFields id) () -> View (FormFields id) ()
-submit f = tag "button" (att "type" "submit" . f)
 
 
 -- | Form FieldName. This is embeded as the name attribute, and refers to the key need to parse the form when submitted. See 'fieldNames'
@@ -192,74 +173,14 @@ newtype FieldName a = FieldName Text
   deriving newtype (Show, IsString)
 
 
--- | Display a 'FormField'. See 'form' and 'Form'
-field
-  :: forall (id :: Type) (a :: Type)
-   . FieldName a
-  -> Mod (FormFields id)
-  -> View (Input id a) ()
-  -> View (FormFields id) ()
-field fn f inputs = do
-  tag "label" (f . flexCol) $ do
-    addContext (Input fn) inputs
+{- | Generate FieldNames for a form. See [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
 
-
--- | Choose one for 'input's to give the browser autocomplete hints
-data InputType
-  = -- TODO: there are many more of these: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
-    NewPassword
-  | CurrentPassword
-  | Username
-  | Email
-  | Number
-  | TextInput
-  | Name
-  | OneTimeCode
-  | Organization
-  | StreetAddress
-  | Country
-  | CountryName
-  | PostalCode
-  | Search
-  deriving (Show)
-
-
-data Input (id :: Type) (a :: Type) = Input
-  { inputName :: FieldName a
-  }
-
-
--- | label for a 'field'
-label :: Text -> View (Input id a) ()
-label = text
-
-
--- | input for a 'field'
-input :: InputType -> Mod (Input id a) -> View (Input id a) ()
-input ft f = do
-  Input (FieldName nm) <- context
-  tag "input" (f . name nm . att "type" (inpType ft) . att "autocomplete" (auto ft)) none
- where
-  inpType NewPassword = "password"
-  inpType CurrentPassword = "password"
-  inpType Number = "number"
-  inpType Email = "email"
-  inpType Search = "search"
-  inpType _ = "text"
-
-  auto :: InputType -> Text
-  auto = pack . kebab . show
-
-
-placeholder :: Text -> Mod id
-placeholder = att "placeholder"
-
-
--- | textarea for a 'field'
-textarea :: Mod (Input id a) -> Maybe Text -> View (Input id a) ()
-textarea f mDefaultText = do
-  Input (FieldName nm) <- context
-  tag "textarea" (f . name nm) (text $ fromMaybe "" mDefaultText)
+> #EMBED Example/Page/FormSimple.hs data ContactForm'
+>
+> #EMBED Example/Page/FormSimple.hs formView'
+-}
+fieldNames :: forall form. (GenFields FieldName form) => form FieldName
+fieldNames = genFields
 
 
 ------------------------------------------------------------------------------
@@ -320,17 +241,6 @@ class ValidateField a where
 --
 --
 
-{- Only shows if 'Validated' is 'Invalid'. See 'formFieldsWith'formform
-@
-@
--}
-invalidText :: forall a id. Validated a -> View (Input id a) ()
-invalidText v = do
-  case v of
-    Invalid t -> text t
-    _ -> none
-
-
 {- | specify a check for a 'Validation'
 
 @
@@ -342,25 +252,13 @@ validate True t = Invalid t -- Validation [(inputName @a, Invalid t)]
 validate False _ = NotInvalid -- Validation [(inputName @a, NotInvalid)]
 
 
-{- | Field allows a Higher Kinded 'Form' to reuse the same selectors for form parsing, generating html forms, and validation
-
-> Field Identity Text ~ Text
-> Field Maybe Text ~ Maybe Text
--}
-type family Field (context :: Type -> Type) a
-
-
--- type instance Field (FormField f) a = FormField f a
-type instance Field Identity a = a
-type instance Field FieldName a = FieldName a
-type instance Field Validated a = Validated a
-type instance Field Maybe a = Maybe a
-type instance Field (Either String) a = Either String a
-
-
 ------------------------------------------------------------------------------
 -- GENERIC FORM PARSE
 ------------------------------------------------------------------------------
+
+genericFromForm :: (Generic form, GFormParse (Rep form)) => FE.Form -> Either Text form
+genericFromForm f = to <$> gFormParse f
+
 
 class GFormParse f where
   gFormParse :: FE.Form -> Either Text (f p)

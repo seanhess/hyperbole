@@ -189,6 +189,7 @@ import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Hyperbole.Application
 import Web.Hyperbole.Data.QueryData
+import Web.Hyperbole.Data.Form
 import Web.Hyperbole.Data.Session
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
@@ -201,7 +202,7 @@ import Web.Hyperbole.Page (Page, runPage)
 import Web.Hyperbole.Route
 import Web.Hyperbole.View
 import Web.Hyperbole.View.Embed
-import Web.Hyperbole.View.Forms
+import Web.Hyperbole.View.Form
 import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)
 
 
@@ -371,7 +372,7 @@ We've mentioned most of the Architecture of a hyperbole application, but let's g
 
 We can add as many 'HyperView's to a page as we want. Let's create another 'HyperView' for a simple counter
 
-From [Example.Docs.MultiView](https://github.com/seanhess/hyperbole/blob/0.4/example/Example/Docs/MultiView.hs)
+From [Example.Docs.MultiView](https://github.com/seanhess/hyperbole/blob/latest/examples/Example/Docs/MultiView.hs)
 
 @
 #EMBED Example/Docs/MultiView.hs data Count
@@ -458,7 +459,7 @@ We can nest smaller, specific 'HyperView's inside of a larger parent. You might 
 
 Let's imagine we want to display a list of Todos. The user can mark individual todos complete, and have them update independently. The specific 'HyperView' might look like this:
 
-From [Example.Docs.Nested](https://github.com/seanhess/hyperbole/blob/0.4/example/Example/Docs/Nested.hs)
+From [Example.Docs.Nested](https://github.com/seanhess/hyperbole/blob/latest/examples/Example/Docs/Nested.hs)
 
 @
 #EMBED Example/Docs/Nested.hs data TodoItem
@@ -558,7 +559,7 @@ For any real application with more complex state and data persistence, we need s
 
 Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use effects in a page or an 'update'. The 'Hyperbole' effect gives us access to the 'request' and 'Client' state, including 'session's and the 'query' 'param's. In this example the page keeps the message in the 'query' 'param's
 
-From [Example.Docs.SideEffects](https://github.com/seanhess/hyperbole/blob/0.4/example/Example/Docs/SideEffects.hs)
+From [Example.Docs.SideEffects](https://github.com/seanhess/hyperbole/blob/latest/examples/Example/Docs/SideEffects.hs)
 
 @
 #EMBED Example/Docs/SideEffects.hs page
@@ -591,7 +592,7 @@ Then run the effect in your application
 
 A database is no different from any other 'Effect'. We recommend you create a custom effect to describe high-level data operations.
 
-From [Example.Effects.Todos](https://github.com/seanhess/hyperbole/blob/0.4/example/Example/Effects/Todos.hs)
+From [Example.Effects.Todos](https://github.com/seanhess/hyperbole/blob/latest/examples/Example/Effects/Todos.hs)
 
 @
 #EMBED Example/Effects/Todos.hs data Todos

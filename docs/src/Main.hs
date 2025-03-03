@@ -181,6 +181,7 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
     , "update"
     , "hyper"
     , "Page"
+    , "Field"
     , "liveApp"
     , "basicDocument"
     , "runPage"
@@ -206,6 +207,10 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
     , "lookupParam"
     , "setParam"
     , "DefaultParam"
+    , "Validated"
+    , "GenFields"
+    , "FromForm"
+    , "FromFormF"
     ]
 
 

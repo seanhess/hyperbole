@@ -41,7 +41,6 @@ import Example.Page.Concurrent qualified as Concurrent
 import Example.Page.Contact qualified as Contact
 import Example.Page.Contacts qualified as Contacts
 import Example.Page.Counter qualified as Counter
-import Example.Page.WebView qualified as WebView
 import Example.Page.DataTable qualified as DataTable
 import Example.Page.Errors qualified as Errors
 import Example.Page.Filter qualified as Filter
@@ -54,6 +53,7 @@ import Example.Page.Sessions qualified as Sessions
 import Example.Page.Simple qualified as Simple
 import Example.Page.Todo qualified as Todo
 import Example.Page.Transitions qualified as Transitions
+import Example.Page.WebView qualified as WebView
 import Example.Style qualified as Style
 import Example.View.Layout as Layout (exampleLayout, examplesView)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
@@ -86,7 +86,7 @@ run = do
   cache <- clientCache
   Warp.run 3000 $
     Static.staticPolicyWithOptions cache (addBase "embed") $
-      Static.staticPolicy (addBase "static") $
+      Static.staticPolicy (addBase "examples/static") $
         app users count
 
 app :: UserStore -> TVar Int -> Application

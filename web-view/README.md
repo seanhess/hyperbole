@@ -170,7 +170,8 @@ View Documentation on [Hackage][hackage]
 View on Github
 * https://github.com/seanhess/web-view
 
-View [Examples](https://github.com/seanhess/web-view/blob/latest/example/app/Main.hs)
+View Examples
+* https://docs.hyperbole.live
 
 
 [hackage]: https://hackage.haskell.org/package/web-view

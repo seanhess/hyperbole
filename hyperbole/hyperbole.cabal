@@ -33,6 +33,7 @@ library
   exposed-modules:
       Web.Hyperbole
       Web.Hyperbole.Application
+      Web.Hyperbole.Data.Form
       Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Data.Session
       Web.Hyperbole.Effect.Event
@@ -51,7 +52,7 @@ library
       Web.Hyperbole.View.Element
       Web.Hyperbole.View.Embed
       Web.Hyperbole.View.Event
-      Web.Hyperbole.View.Forms
+      Web.Hyperbole.View.Form
   other-modules:
       Paths_hyperbole
   autogen-modules:

@@ -1,5 +1,5 @@
-{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
 
@@ -279,7 +279,7 @@ instance ToStyleValue Ms where
   toStyleValue (Ms n) = StyleValue $ show n <> "ms"
 
 
--- | Media allows for responsive designs that change based on characteristics of the window. See [Layout Example](https://github.com/seanhess/web-view/blob/master/example/Example/Layout.hs)
+-- | Media allows for responsive designs that change based on characteristics of the window. See [Layout Example](https://github.com/seanhess/web-view/blob/latest/examples/Example/Layout.hs)
 data Media
   = MinWidth Int
   | MaxWidth Int
@@ -389,6 +389,7 @@ class Style cls value where
   styleValue :: value -> StyleValue
   default styleValue :: (ToStyleValue value) => value -> StyleValue
   styleValue = toStyleValue
+
 
 class ToClass cls value where
   toClass :: value -> Class
