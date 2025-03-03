@@ -2,7 +2,7 @@ FROM haskell:9.8.2 AS base
 WORKDIR /opt/build
 
 RUN cabal update
-RUN cabal install bytestring containers casing effectful text wai warp wai-websockets cookie string-conversions hpack
+RUN cabal install bytestring containers casing effectful text time string-interpolate file-embed http-api-data http-types wai warp wai-websockets network cookie string-conversions hpack websockets
 
 
 FROM haskell:9.8.2 AS dependencies
@@ -28,13 +28,13 @@ ADD ./cabal.project .
 ADD ./client ./client
 ADD ./test ./test
 ADD ./src ./src
-ADD ./example ./example
+ADD ./examples ./examples
 ADD *.md .
 ADD LICENSE .
 RUN hpack
-RUN cd example && hpack && cabal build all
+RUN cd examples && hpack && cabal build all
 RUN mkdir bin
-RUN cd example && export EXEC=$(cabal list-bin examples); cp $EXEC /opt/build/bin/examples
+RUN cd examples && export EXEC=$(cabal list-bin examples); cp $EXEC /opt/build/bin/examples
 
 
 FROM debian:10 AS app
@@ -42,7 +42,7 @@ WORKDIR /opt/app
 
 COPY --from=build /opt/build/bin/examples ./examples
 ADD ./client ./client
-ADD ./example/static ./static
+ADD ./examples/static ./static
 
 # ENV DYNAMO_LOCAL=False
 ENTRYPOINT ["/opt/app/examples"]
