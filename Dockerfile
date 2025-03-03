@@ -45,10 +45,9 @@ RUN cd examples && export EXEC=$(cabal list-bin examples); cp $EXEC /opt/build/b
 FROM debian:10 AS app
 WORKDIR /opt/app
 
-COPY --from=build /opt/build/bin/examples ./examples
+COPY --from=build /opt/build/bin/examples ./bin/examples
 ADD ./client ./client
-RUN mkdir ./examples
 ADD ./examples/static ./examples/static
 
 # ENV DYNAMO_LOCAL=False
-ENTRYPOINT ["/opt/app/examples"]
+ENTRYPOINT ["/opt/app/bin/examples"]
