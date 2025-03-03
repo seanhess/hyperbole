@@ -47,7 +47,7 @@ WORKDIR /opt/app
 
 COPY --from=build /opt/build/bin/examples ./examples
 ADD ./client ./client
-ADD ./examples/static ./static
+ADD ./examples/static ./examples/static
 
 # ENV DYNAMO_LOCAL=False
 ENTRYPOINT ["/opt/app/examples"]
