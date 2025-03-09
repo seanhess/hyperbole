@@ -24,7 +24,7 @@ exampleLayout rt pageView = do
     row (bg White) $ do
       pageView
  where
-  sourceUrl = "https://github.com/seanhess/hyperbole/blob/0.4/examples/" <> routeSource rt
+  sourceUrl = "https://github.com/seanhess/hyperbole/blob/0.4/example/" <> routeSource rt
 
   routeSource :: AppRoute -> Url
   routeSource = \case
