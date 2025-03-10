@@ -16,9 +16,9 @@ data Preferences = Preferences
   { message :: Text
   , color :: AppColor
   }
-  deriving (Generic, Show, Read, ToParam, FromParam, Session)
-instance DefaultParam Preferences where
-  defaultParam = Preferences "_" White
+  deriving (Generic, Show, ToJSON, FromJSON, FromParam, ToParam, Session)
+instance Default Preferences where
+  def = Preferences "_" White
 
 page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Contents])
 page = do
@@ -27,14 +27,14 @@ page = do
     hyper Contents $ viewContent prefs
 
 data Contents = Contents
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance (Debug :> es) => HyperView Contents es where
   data Action Contents
     = SaveColor AppColor
     | SaveMessage Text
     | ClearSession
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
   update (SaveColor clr) = do
     prefs <- modifySession $ \p -> p{color = clr}
     pure $ viewContent prefs
@@ -43,7 +43,7 @@ instance (Debug :> es) => HyperView Contents es where
     pure $ viewContent prefs
   update ClearSession = do
     deleteSession @Preferences
-    pure $ viewContent defaultParam
+    pure $ viewContent def
 
 viewContent :: Preferences -> View Contents ()
 viewContent prefs = do

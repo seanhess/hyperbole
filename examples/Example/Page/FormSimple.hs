@@ -13,12 +13,12 @@ page = do
     hyper FormView formView
 
 data FormView = FormView
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView FormView es where
   data Action FormView
     = Submit
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update Submit = do
     cf <- formData

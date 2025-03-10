@@ -2,6 +2,7 @@
 
 module Web.Hyperbole.Effect.Server where
 
+import Control.Exception (Exception, throwIO)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as L
@@ -12,15 +13,16 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (Header, HeaderName, Method, Query, status200, status400, status401, status404, status500, urlDecode, urlEncode)
+import Network.HTTP.Types (Header, HeaderName, Method, Query, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
 import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
-import Web.Cookie (parseCookies)
+import Web.Cookie qualified
+import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
+import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData as QueryData
-import Web.Hyperbole.Data.Session as Cookies
-import Web.View (Segment, Url, View, pathUrl, renderLazyByteString, renderUrl)
+import Web.View (Segment, Url, View, renderLazyByteString, renderUrl)
 
 
 -- | Low level effect mapping request/response to either HTTP or WebSockets
@@ -85,11 +87,11 @@ runServerWai toDoc req respond =
     headers = setRequestId client.requestId : setCookies
 
     setCookies =
-      fmap setCookie $ Cookies.toList client.session
+      fmap setCookie $ Cookie.toList client.session
 
     setCookie :: Cookie -> (HeaderName, BS.ByteString)
     setCookie cookie =
-      ("Set-Cookie", renderCookie (Wai.pathInfo req) cookie)
+      ("Set-Cookie", Cookie.render (Wai.pathInfo req) cookie)
 
     setRequestId :: RequestId -> (HeaderName, BS.ByteString)
     setRequestId (RequestId rid) =
@@ -113,29 +115,11 @@ runServerWai toDoc req respond =
         cookie = fromMaybe "" $ L.lookup "Cookie" headers
         host = Host $ fromMaybe "" $ L.lookup "Host" headers
         requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Request-Id" headers
-        cookies = cookiesFromHeader (parseCookies cookie)
         method = Wai.requestMethod wr
+
+    cookies <- fromCookieHeader cookie
+
     pure $ Request{body, path, query, method, cookies, host, requestId}
-
-
-renderCookie :: [Segment] -> Cookie -> BS.ByteString
-renderCookie requestPath cookie =
-  let path = fromMaybe requestPath cookie.path
-   in key <> "=" <> value cookie.value <> "; SameSite=None; secure; path=" <> cs (renderUrl (pathUrl path))
- where
-  key = cs cookie.key.text
-  value Nothing = "; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-  value (Just val) = urlEncode True (cs val.text)
-
-
-cookiesFromHeader :: [(BS.ByteString, BS.ByteString)] -> Cookies
-cookiesFromHeader cks = do
-  Cookies.fromList $ fmap toCookie cks
- where
-  toCookie (k, v) =
-    let value = ParamValue (cs $ urlDecode True v)
-        key = Param (cs k)
-     in Cookie key (Just value) Nothing
 
 
 runServerSockets
@@ -195,11 +179,11 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
     sendResponse client (metadata "REDIRECT" (renderUrl u)) ""
 
   metaSession :: Cookies -> Metadata
-  metaSession cookies = mconcat $ fmap metaCookie $ Cookies.toList cookies
+  metaSession cookies = mconcat $ fmap metaCookie $ Cookie.toList cookies
    where
     metaCookie :: Cookie -> Metadata
     metaCookie cookie =
-      Metadata [("COOKIE", cs (renderCookie req.path cookie))]
+      Metadata [("COOKIE", cs (Cookie.render req.path cookie))]
 
   metaRequestId :: RequestId -> Metadata
   metaRequestId (RequestId reqId) =
@@ -218,6 +202,14 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
 
   metaLine :: BL.ByteString -> Text -> BL.ByteString
   metaLine name value = "|" <> name <> "|" <> cs value
+
+
+-- Client only returns ONE Cookie header, with everything concatenated
+fromCookieHeader :: (MonadIO m) => BS.ByteString -> m Cookies
+fromCookieHeader h =
+  case Cookie.parse (Web.Cookie.parseCookies h) of
+    Left err -> liftIO $ throwIO $ InvalidCookie h err
+    Right a -> pure a
 
 
 errNotHandled :: Event Text Text -> String
@@ -243,9 +235,15 @@ data Client = Client
   }
 
 
+data InternalServerError
+  = InvalidCookie BS.ByteString Text
+  deriving (Show, Exception)
+
+
 data SocketError
   = InvalidMessage Text
-  deriving (Show, Eq)
+  | InternalSocket InternalServerError
+  deriving (Show)
 
 
 data ContentType
@@ -294,7 +292,7 @@ data Response
 data ResponseError
   = ErrParse Text
   | ErrQuery Text
-  | ErrSession Param Text
+  | ErrSession Text Text
   | ErrOther Text
   | ErrNotHandled (Event Text Text)
   | ErrAuth

@@ -16,12 +16,12 @@ messageView msg = do
   button (SetMessage "Goodbye") (border 1) "Say Goodbye"
 
 data Message = Message
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView Message es where
   data Action Message
     = SetMessage Text
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (SetMessage msg) =
     pure $ messageView msg

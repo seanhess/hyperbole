@@ -12,6 +12,7 @@ module Web.Hyperbole.Application
   ) where
 
 import Control.Monad (forever)
+import Data.Bifunctor (first)
 import Data.ByteString.Lazy qualified as BL
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
@@ -22,15 +23,17 @@ import Effectful
 import Effectful.Concurrent.Async
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
+import Effectful.Exception (SomeException, throwIO, trySync)
 import Network.HTTP.Types as HTTP (parseQuery)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets (Connection, PendingConnection, defaultConnectionOptions)
 import Network.WebSockets qualified as WS
-import Web.Cookie (parseCookies)
+import Web.Cookie qualified
+import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (reqPath)
-import Web.Hyperbole.Effect.Server (Host (..), Request (..), RequestId (..), Response (..), Server, SocketError (..), cookiesFromHeader, runServerSockets, runServerWai)
+import Web.Hyperbole.Effect.Server (Host (..), InternalServerError (..), Request (..), RequestId (..), Response (..), Server, SocketError (..), runServerSockets, runServerWai)
 import Web.Hyperbole.Route
 import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed)
 
@@ -40,11 +43,13 @@ import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed)
 > #EMBED Example/Docs/BasicPage.hs main
 -}
 liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, Concurrent, IOE] Response -> Wai.Application
-liveApp toDoc app =
+liveApp toDoc app req res = do
   websocketsOr
     defaultConnectionOptions
     (runEff . runConcurrent . socketApp app)
     (waiApp toDoc app)
+    req
+    res
 
 
 waiApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, Concurrent, IOE] Response -> Wai.Application
@@ -63,10 +68,20 @@ socketApp actions pend = do
     case ereq of
       Left e -> liftIO $ putStrLn $ "SOCKET ERROR " <> show e
       Right r -> do
-        a <- async (runServerSockets conn r $ runHyperbole actions)
-        -- throw exceptions in this thread
+        a <- async $ do
+          -- TODO: if we get an error, respond with an error?
+          -- still need better error handling
+          res <- trySync $ runServerSockets conn r $ runHyperbole actions
+          case res of
+            Left (ex :: SomeException) -> do
+              -- print the exception
+              liftIO $ print ex
+              -- swallows the exception for some reason, but maybe that behavior is ok?
+              -- keep responding to different messages
+              throwIO ex
+            Right _ -> pure ()
+        -- this doesn't seem to do anything! Exceptions are swallowed, so we print them above
         link a
-        pure ()
  where
   receiveRequest :: (IOE :> es, Error SocketError :> es) => Connection -> Eff es Request
   receiveRequest conn = do
@@ -98,11 +113,13 @@ socketApp actions pend = do
       (u, q) <- parseUrl url
       let path = paths u
           query = HTTP.parseQuery (cs q)
-          cookies = cookiesFromHeader $ parseCookies $ cs $ header cook
           host = Host $ cs $ header hst
           method = "POST"
           body = cs $ fromMaybe "" mbody
           requestId = RequestId $ header reqId
+
+      cookies <- first (InternalSocket . InvalidCookie (cs cook)) <$> Cookie.parse $ Web.Cookie.parseCookies $ cs $ header cook
+
       pure $ Request{path, host, query, body, method, cookies, requestId}
 
     paths p = filter (/= "") $ T.splitOn "/" p

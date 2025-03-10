@@ -1,16 +1,57 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DefaultSignatures #-}
 
 module Web.Hyperbole.Effect.Session where
 
+import Data.Aeson as A (FromJSON, ToJSON, eitherDecodeStrict, encode)
+import Data.Bifunctor (first)
+import Data.Default (Default (..))
 import Data.Maybe (fromMaybe)
+import Data.String.Conversions (cs)
+import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
-import Web.Hyperbole.Data.QueryData
-import Web.Hyperbole.Data.Session as Cookies
+import GHC.Generics
+import Web.Hyperbole.Data.Cookie as Cookie
+import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.Effect.Request (request)
 import Web.Hyperbole.Effect.Server (Client (..), Request (..), Response (..), ResponseError (..))
-import Prelude
+import Web.View.Types.Url (Segment)
+
+
+{- | Configure a data type to persist in the 'session' as a cookie. These are type-indexed, so only one of each can exist in the session
+
+@
+#EMBED Example/Docs/Sessions.hs data Preferences
+
+#EMBED Example/Docs/Sessions.hs instance DefaultParam Preferences
+@
+-}
+class Session a where
+  -- | Unique key for this Session Type. Defaults to the datatypeName
+  sessionKey :: Key
+  default sessionKey :: (Generic a, GDatatypeName (Rep a)) => Key
+  sessionKey = gDatatypeName $ from (undefined :: a)
+
+
+  -- | By default Sessions are persisted only to the current page. Set this to `Just []` to make an application-wide Session
+  cookiePath :: Maybe [Segment]
+  default cookiePath :: Maybe [Segment]
+  cookiePath = Nothing
+
+
+  -- | Encode type to a a cookie value. Defaults to ToJSON
+  toCookie :: a -> CookieValue
+  default toCookie :: (ToJSON a) => a -> CookieValue
+  toCookie = CookieValue . cs . A.encode
+
+
+  -- | Decode from a cookie value. Defaults to FromJSON
+  parseCookie :: CookieValue -> Either Text a
+  default parseCookie :: (FromJSON a) => CookieValue -> Either Text a
+  parseCookie (CookieValue bs) = do
+    first cs $ A.eitherDecodeStrict bs
 
 
 {- | Persist datatypes in browser cookies. If the session doesn't exist, the 'DefaultParam' is used
@@ -23,20 +64,20 @@ import Prelude
 #EMBED Example/Docs/Sessions.hs page
 @
 -}
-session :: (Session a, DefaultParam a, FromParam a, Hyperbole :> es) => Eff es a
+session :: (Session a, Default a, Hyperbole :> es) => Eff es a
 session = do
   ms <- lookupSession
-  pure $ fromMaybe defaultParam ms
+  pure $ fromMaybe def ms
 
 
 -- | Return a session if it exists
-lookupSession :: forall a es. (Session a, FromParam a, Hyperbole :> es) => Eff es (Maybe a)
+lookupSession :: forall a es. (Session a, Hyperbole :> es) => Eff es (Maybe a)
 lookupSession = do
   let key = sessionKey @a
-  mck <- Cookies.lookup key <$> sessionCookies
+  mck <- Cookie.lookup key <$> sessionCookies
   case mck of
     Nothing -> pure Nothing
-    Just val -> parseSession key val
+    Just val -> Just <$> parseSession key val
 
 
 {- | Persist datatypes in browser cookies
@@ -49,12 +90,12 @@ lookupSession = do
 #EMBED Example/Docs/Sessions.hs instance HyperView Content
 @
 -}
-saveSession :: (Session a, ToParam a, Hyperbole :> es) => a -> Eff es ()
+saveSession :: forall a es. (Session a, Hyperbole :> es) => a -> Eff es ()
 saveSession a = do
-  modifyCookies $ Cookies.insert (sessionCookie a)
+  modifyCookies $ Cookie.insert $ sessionCookie a
 
 
-modifySession :: (Session a, DefaultParam a, ToParam a, FromParam a, Hyperbole :> es) => (a -> a) -> Eff es a
+modifySession :: (Session a, Default a, Hyperbole :> es) => (a -> a) -> Eff es a
 modifySession f = do
   s <- session
   let updated = f s
@@ -62,7 +103,7 @@ modifySession f = do
   pure updated
 
 
-modifySession_ :: (Session a, DefaultParam a, ToParam a, FromParam a, Hyperbole :> es) => (a -> a) -> Eff es ()
+modifySession_ :: (Session a, Default a, Hyperbole :> es) => (a -> a) -> Eff es ()
 modifySession_ f = do
   _ <- modifySession f
   pure ()
@@ -71,12 +112,13 @@ modifySession_ f = do
 -- | Remove a single 'Session' from the browser cookies
 deleteSession :: forall a es. (Session a, Hyperbole :> es) => Eff es ()
 deleteSession = do
-  modifyCookies $ Cookies.insert (deletedCookie @a)
+  let cookie = Cookie (sessionKey @a) (cookiePath @a) Nothing
+  modifyCookies $ Cookie.insert cookie
 
 
-parseSession :: (FromParam a, Hyperbole :> es) => Param -> ParamValue -> Eff es a
-parseSession prm val = do
-  case parseParam val of
+parseSession :: (Session a, Hyperbole :> es) => Key -> CookieValue -> Eff es a
+parseSession prm cook = do
+  case parseCookie cook of
     Left e -> send $ RespondEarly $ Err $ ErrSession prm e
     Right a -> pure a
 
@@ -84,7 +126,7 @@ parseSession prm val = do
 -- | save a single datatype to a specific key in the session
 setCookie :: (ToParam a, Hyperbole :> es) => Cookie -> Eff es ()
 setCookie ck = do
-  modifyCookies (Cookies.insert ck)
+  modifyCookies (Cookie.insert ck)
 
 
 -- | Modify the client cookies
@@ -112,3 +154,23 @@ clientSessionCookies = do
 requestSessionCookies :: (Hyperbole :> es) => Eff es Cookies
 requestSessionCookies = do
   (.cookies) <$> request
+
+
+sessionCookie :: forall a. (Session a) => a -> Cookie
+sessionCookie a =
+  Cookie (sessionKey @a) (cookiePath @a) (Just $ toCookie a)
+
+
+-- | generic datatype name
+genericTypeName :: forall a. (Generic a, GDatatypeName (Rep a)) => Text
+genericTypeName =
+  gDatatypeName $ from (undefined :: a)
+
+
+class GDatatypeName f where
+  gDatatypeName :: f p -> Text
+
+
+instance (Datatype d) => GDatatypeName (M1 D d f) where
+  gDatatypeName _ =
+    cs $ datatypeName (undefined :: M1 D d f p)

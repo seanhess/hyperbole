@@ -12,12 +12,12 @@ page = do
     hyper Message $ messageView msg
 
 data Message = Message
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView Message es where
   data Action Message
     = Louder Text
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (Louder msg) = do
     let new = msg <> "!"

@@ -6,7 +6,7 @@ import Web.Hyperbole
 data Filters = Filters
   { search :: Text
   }
-  deriving (Generic, Show, Read, ToQuery, FromQuery)
+  deriving (ToQuery, FromQuery, Generic)
 
 page :: (Hyperbole :> es) => Eff es (Page '[Todos])
 page = do
@@ -16,14 +16,15 @@ page = do
     hyper Todos $ todosView todos
 
 data Todos = Todos
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView Todos es where
   data Action Todos
-    = SetFilters Filters
-    deriving (Show, Read, ViewAction)
+    = SetSearch Text
+    deriving (Generic, ViewAction)
 
-  update (SetFilters filters) = do
+  update (SetSearch term) = do
+    let filters = Filters term
     setQuery filters
     todos <- loadTodos filters
     pure $ todosView todos
@@ -50,12 +51,12 @@ messageView m = do
   button (SetMessage "Goodbye") (border 1) "Say Goodbye"
 
 data Message = Message
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView Message es where
   data Action Message
     = SetMessage Text
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (SetMessage msg) = do
     setParam "message" msg

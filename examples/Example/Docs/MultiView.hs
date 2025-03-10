@@ -14,13 +14,13 @@ page = do
       hyper Count $ countView 0
 
 data Count = Count
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView Count es where
   data Action Count
     = Increment Int
     | Decrement Int
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (Increment n) = do
     pure $ countView (n + 1)

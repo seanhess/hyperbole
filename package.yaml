@@ -39,6 +39,9 @@ default-extensions:
 
 dependencies:
   - base >=4.16 && <5
+  - aeson
+  - attoparsec
+  - attoparsec-aeson
   - bytestring >= 0.11 && <0.13
   - containers >= 0.6 && <1
   - casing > 0.1 && <0.2
