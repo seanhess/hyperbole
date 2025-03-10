@@ -12,11 +12,11 @@ page = do
     hyper Contents contentsView
 
 data Contents = Contents
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView Contents es where
   data Action Contents = RedirectAsAction
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
   update RedirectAsAction = do
     redirect "/hello/redirected"
 

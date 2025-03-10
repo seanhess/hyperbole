@@ -11,12 +11,12 @@ page = do
     hyper Message $ messageView "Hello"
 
 data Message = Message
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView Message es where
   data Action Message
     = SetMessage Text
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (SetMessage t) =
     pure $ messageView t

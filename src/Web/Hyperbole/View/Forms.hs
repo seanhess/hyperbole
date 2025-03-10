@@ -5,8 +5,6 @@
 module Web.Hyperbole.View.Forms
   ( FromForm (..)
   , FromFormF (..)
-  , formParam
-  , formLookup
   , GenFields (..)
   , fieldNames
   , FieldName (..)
@@ -22,7 +20,6 @@ module Web.Hyperbole.View.Forms
   , placeholder
   , submit
   , formData
-  , defaultFormOptions
   , FormOptions (..)
   , Validated (..)
   , isInvalid
@@ -31,7 +28,7 @@ module Web.Hyperbole.View.Forms
   , Identity
 
     -- * Re-exports
-  , FromParam
+  , FE.FromFormKey
   , Generic
   , GFieldsGen (..)
   , GenField (..)
@@ -48,9 +45,9 @@ import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
 import Text.Casing (kebab)
-import Web.FormUrlEncoded (Form (..), FormOptions (..), defaultFormOptions, parseUnique)
+import Web.FormUrlEncoded (Form (..), FormOptions (..), parseUnique)
 import Web.FormUrlEncoded qualified as FE
-import Web.Hyperbole.Data.QueryData (FromParam (..), Param (..), ParamValue (..))
+import Web.Hyperbole.Data.Param (FromParam (..), ParamValue (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
@@ -64,7 +61,6 @@ import Web.View.Style (addClass, cls, prop)
 -- FORM PARSING
 ------------------------------------------------------------------------------
 
--- | Equivalent to Web.FormUrlEncoded.FromForm, but uses 'FromParam' instead of 'FromHttpApiData'
 class FromForm (form :: Type) where
   fromForm :: FE.Form -> Either Text form
   default fromForm :: (Generic form, GFormParse (Rep form)) => FE.Form -> Either Text form
@@ -87,6 +83,7 @@ class FromFormF (f :: (Type -> Type) -> Type) where
 
 
 -- Any FromFormF can be parsed using fromForm @(form Identity)
+-- we can't make it an instance because it is an orphan instance
 instance (FromFormF form) => FromForm (form Identity) where
   fromForm = fromFormF
 
@@ -97,20 +94,6 @@ formData = do
   f <- formBody
   let ef = fromForm @form f :: Either Text form
   either parseError pure ef
-
-
--- | Parse a single param from a Form
-formParam :: (FromParam a) => Param -> FE.Form -> Either Text a
-formParam (Param key) frm = do
-  t <- FE.parseUnique @Text key frm
-  parseParam (ParamValue t)
-
-
--- | Lookup a single param from a Form
-formLookup :: (FromParam a) => Param -> FE.Form -> Either Text (Maybe a)
-formLookup (Param key) frm = do
-  mt <- FE.parseMaybe @Text key frm
-  maybe (pure Nothing) (parseParam . ParamValue) mt
 
 
 ------------------------------------------------------------------------------
@@ -294,20 +277,19 @@ instance Monoid (Validated a) where
   mempty = NotInvalid
 
 
-instance (FromParam a, ValidateField a) => FromParam (Validated a) where
-  parseParam inp = do
-    a <- parseParam @a inp
-    pure $ validateField a
-
+-- instance (FromParam a, ValidateField a) => FromParam (Validated a) where
+--   parseParam inp = do
+--     a <- parseParam @a inp
+--     pure $ validateField a
 
 isInvalid :: Validated a -> Bool
 isInvalid (Invalid _) = True
 isInvalid _ = False
 
 
-class ValidateField a where
-  validateField :: a -> Validated a
-
+-- class ValidateField a where
+--   validateField :: a -> Validated a
+--
 
 -- class ValidationState (v :: Type -> Type) where
 --   convert :: v a -> v b
@@ -386,8 +368,8 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
 instance (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
   gFormParse f = do
     let s = selName (undefined :: M1 S s (K1 R (f a)) p)
-    t <- parseUnique @Text (pack s) f
-    M1 . K1 <$> parseParam (ParamValue t)
+    pv <- parseUnique @Text (pack s) f
+    M1 . K1 <$> parseParam (ParamValue pv)
 
 
 ------------------------------------------------------------------------------

@@ -1,16 +1,16 @@
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Test.QuerySpec where
 
 import Data.Function ((&))
-import Data.String.Conversions (cs)
+import Data.Map qualified as M
 import Data.Text (Text)
-import Network.HTTP.Types (urlEncode)
+import Network.HTTP.Types qualified as HTTP
 import Skeletest
 import Web.Hyperbole
+import Web.Hyperbole.Data.Param as Param
 import Web.Hyperbole.Data.QueryData as QueryData
-import Web.Hyperbole.Data.Session as Session
-import Web.Hyperbole.Effect.Server
 
 
 spec :: Spec
@@ -18,62 +18,43 @@ spec = do
   describe "param" paramSpec
   describe "render" renderSpec
   describe "multi" multiSpec
-  describe "session" sessionSpec
 
 
 data Woot = Woot Text
-  deriving (Generic, Show, ToParam)
-instance Session Woot where
-  cookiePath = Just ["somepage"]
-
-
-sessionSpec :: Spec
-sessionSpec = do
-  it "should create cookie" $ do
-    let woot = Woot "hello"
-    sessionCookie woot `shouldBe` Cookie "Woot" (Just (toParam woot)) (Just ["somepage"])
-
-  it "should render cookie with root path" $ do
-    let cookie = Cookie "Woot" (Just "Woot") Nothing
-    renderCookie [] cookie `shouldBe` "Woot=Woot; SameSite=None; secure; path=/"
-
-  it "should render complex cookie with included path" $ do
-    let woot = Woot "hello"
-    let cookie = sessionCookie woot
-    renderCookie [] cookie `shouldBe` "Woot=" <> urlEncode True (cs (show woot)) <> "; SameSite=None; secure; path=/somepage"
-
-  it "should parse cookies" $ do
-    cookiesFromHeader [("Woot", "Woot")] `shouldBe` Session.fromList [Cookie "Woot" (Just "Woot") Nothing]
+  deriving (Generic, Show)
 
 
 paramSpec :: Spec
 paramSpec = do
   describe "ToParam" $ do
-    it "should encode text flat" $ do
+    it "should encode basics" $ do
       toParam @Text "hello" `shouldBe` "hello"
-
-    it "should encode int" $ do
       toParam @Int 23 `shouldBe` "23"
 
     it "should encode Maybe" $ do
       toParam @(Maybe Int) Nothing `shouldBe` ""
       toParam @(Maybe Int) (Just 23) `shouldBe` "23"
 
-    it "should encode lists as show" $ do
-      let items = ["one", "two"]
-      toParam @[Text] items `shouldBe` ParamValue (cs (show items))
+    -- it "should encode lists with spaces = plusses" $ do
+    --   toParam @[Int] [1, 2, 3] `shouldBe` ParamValue ("1+2+3")
+    --   toParam @[Text] ["one", "two"] `shouldBe` ParamValue ("one+two")
+    --   toParam @[Text] ["hello world", "friend"] `shouldBe` ParamValue ("hello%20world+friend")
+
+    it "should not escape text" $ do
+      toParam @Text "hello world" `shouldBe` "hello world"
 
   describe "FromParam" $ do
-    it "should parse text" $ do
+    it "should parse basics" $ do
       parseParam @Text "hello" `shouldBe` Right "hello"
-
-    it "should parse int" $ do
       parseParam @Int "3" `shouldBe` Right 3
 
-    it "should handle lists" $ do
-      let items = ["one", "two", "three"] :: [Text]
-      parseParam (toParam items) `shouldBe` Right items
 
+-- it "should decode lists with plusses" $ do
+--   parseParam @[Int] "1+2+3" `shouldBe` Right [1, 2, 3]
+--
+-- it "should decode lists with escapes" $ do
+--   let vals = ["hello world", "friend"] :: [Text]
+--   parseParam (toParam @[Text] vals) `shouldBe` Right vals
 
 renderSpec :: Spec
 renderSpec = do
@@ -100,18 +81,18 @@ renderSpec = do
     let q' = QueryData.parse out
     QueryData.lookup "msg" q' `shouldBe` Just msg
 
-  it "should render lists" $ do
-    let items = ["one", "two"]
-    let q = mempty & QueryData.insert @[Text] "items" items
-    QueryData.render q `shouldBe` "items=" <> urlEncode True (cs $ show items)
 
+-- it "should preserve plusses" $ do
+--   let QueryData q = QueryData $ M.fromList [("items", "one+two")]
+--   print $ HTTP.toQuery $ M.toList q
+--   QueryData.render (QueryData q) `shouldBe` "items=one+two"
 
 data Filters = Filters
   { term :: Text
   , isActive :: Bool
   , another :: Maybe Text
   }
-  deriving (Eq, Show, ToParam)
+  deriving (Eq, Show)
 
 
 instance ToQuery Filters where
@@ -130,21 +111,39 @@ instance FromQuery Filters where
     pure Filters{..}
 
 
-data Nested = Nested
-  { filters :: Filters
+data Filters' = Filters'
+  { term :: Text
+  , isActive :: Bool
   }
+  deriving (Generic, Eq, ToJSON, FromJSON, FromParam, ToParam)
+instance Default Filters' where
+  def = Filters' "" False
 
 
-instance ToQuery Nested where
-  toQuery n =
-    mempty & QueryData.insert "filters" n.filters
+data Nested = Nested
+  { filters :: Filters'
+  }
+  deriving (Generic, ToQuery, FromQuery)
 
+
+-- instance ToQuery Nested where
+--   toQuery n =
+--     mempty & QueryData.insert "filters" (JSON n.filters)
+--
+--
+-- instance FromQuery Nested where
+--   parseQuery q =
+--     mempty & QueryData.insert "filters" (JSON n.filters)
 
 multiSpec :: Spec
 multiSpec = do
   it "should convert to querydata" $ do
     let f = Filters "woot" False Nothing
     QueryData.render (toQuery f) `shouldBe` "another=&isActive=false&term=woot"
+
+  it "should convert to querydata 2" $ do
+    let f = Filters "woot" False (Just "ok")
+    QueryData.render (toQuery f) `shouldBe` "another=ok&isActive=false&term=woot"
 
   it "should parse from querydata" $ do
     let f = Filters "woot" False Nothing
@@ -155,6 +154,5 @@ multiSpec = do
   it "should work with Just" $ do
     let f = Filters "woot" False (Just "hello")
     let out = QueryData.render (toQuery f)
-    print out
     let q = QueryData.parse out
     parseQuery q `shouldBe` Right f

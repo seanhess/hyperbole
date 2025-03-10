@@ -5,7 +5,8 @@ import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Effectful
 import Effectful.Dispatch.Dynamic (send)
-import Web.Hyperbole.Data.QueryData (FromParam (..), FromQuery (..), Param, QueryData (..), ToParam (..), ToQuery (..), queryData)
+import Web.Hyperbole.Data.Param (FromParam (..), Param, ToParam (..))
+import Web.Hyperbole.Data.QueryData (FromQuery (..), QueryData (..), ToQuery (..), queryData)
 import Web.Hyperbole.Data.QueryData qualified as QueryData
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.Effect.Request (request)
@@ -16,7 +17,7 @@ import Prelude
 {- | Parse querystring from the 'Request' into a datatype. See 'FromQuery'
 
 @
-#EMBED Example/Docs/Encoding.hs data Filters
+#EMBED Example/Docs/Params.hs data Filters
 
 #EMBED Example/Docs/Params.hs page
 @

@@ -18,23 +18,21 @@ import Prelude hiding (even, odd)
 page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])
 page = do
   pure $ exampleLayout Route.Autocomplete $ col (pad 20 . grow) $ do
-    hyper LiveSearch $ liveSearchView allLanguages 0 mempty
+    hyper LiveSearch $ liveSearchView allLanguages 0 ""
 
 data LiveSearch = LiveSearch
-  deriving (Show, Read, ViewId)
-
-type Term = Text
+  deriving (Generic, ViewId)
 
 instance (IOE :> es) => HyperView LiveSearch es where
   data Action LiveSearch
-    = SearchTerm Int Term
+    = SearchTerm Int Text
     | Select (Maybe ProgrammingLanguage)
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (SearchTerm current term) = do
     pure $ liveSearchView allLanguages current term
   update (Select Nothing) = do
-    pure $ liveSearchView allLanguages 0 mempty
+    pure $ liveSearchView allLanguages 0 ""
   update (Select (Just lang)) = do
     pure $ selectedView lang
 
@@ -43,7 +41,7 @@ selectedView selected = do
   col (gap 10) $ do
     Filter.chosenView selected
 
-liveSearchView :: [ProgrammingLanguage] -> Int -> Term -> View LiveSearch ()
+liveSearchView :: [ProgrammingLanguage] -> Int -> Text -> View LiveSearch ()
 liveSearchView langs current term = do
   col (gap 10) $ do
     stack (bg Danger) $ do

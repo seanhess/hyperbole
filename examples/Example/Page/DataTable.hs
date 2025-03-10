@@ -18,18 +18,18 @@ page = do
     hyper Languages $ languagesView Nothing allLanguages
 
 data Languages = Languages
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 data SortField
   = SortName
   | SortDescription
   | SortFamily
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 
 instance HyperView Languages es where
   data Action Languages
     = SortOn SortField
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (SortOn fld) = do
     let sorted = sortOnField fld allLanguages

@@ -27,6 +27,7 @@ data AppRoute
   | Examples
   | Todos
   | Errors
+  | Javascript
   deriving (Eq, Generic, Show)
 instance Route AppRoute where
   baseRoute = Just Main

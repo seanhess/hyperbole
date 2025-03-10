@@ -16,17 +16,17 @@ data Todo = Todo
   { task :: Text
   , completed :: Bool
   }
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 
 data AllTodos = AllTodos
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView AllTodos es where
   type Require AllTodos = '[TodoItem]
 
   data Action AllTodos
     = AddTodo Text [Todo]
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (AddTodo txt todos) = do
     let new = Todo txt False : todos
@@ -39,12 +39,12 @@ todosView todos = do
   button (AddTodo "Shopping" todos) id "Add Shopping"
 
 data TodoItem = TodoItem
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView TodoItem es where
   data Action TodoItem
     = Complete Todo
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (Complete todo) = do
     let new = todo{completed = True}

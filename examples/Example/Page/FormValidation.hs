@@ -14,12 +14,12 @@ page = do
     hyper FormView (formView genFields)
 
 data FormView = FormView
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView FormView es where
   data Action FormView
     = Submit
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update Submit = do
     uf <- formData @(UserForm Identity)
@@ -32,7 +32,6 @@ instance HyperView FormView es where
 
 -- Form Fields
 newtype User = User {username :: Text}
-  deriving (Generic)
   deriving newtype (FromParam)
 
 data UserForm f = UserForm

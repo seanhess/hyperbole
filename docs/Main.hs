@@ -17,7 +17,6 @@ main = do
 
 test :: IO ()
 test = do
-  putStrLn "TEST"
   src <- readSource "../src/Web/Hyperbole.hs"
   SourceCode lns <- expandFile src
   mapM_ print lns

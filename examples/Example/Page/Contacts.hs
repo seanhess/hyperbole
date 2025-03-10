@@ -29,19 +29,19 @@ page = do
 -- Contacts ----------------------------------------------
 
 data Contacts = Contacts
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 data Filter
   = Active
   | Inactive
-  deriving (Eq, Show, Read)
+  deriving (Eq, Show, Read, Generic, ToJSON, FromJSON)
 
 instance (Users :> es, Debug :> es) => HyperView Contacts es where
   data Action Contacts
     = Reload (Maybe Filter)
     | AddUser
     | DeleteUser UserId
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   type Require Contacts = '[InlineContact]
 
@@ -99,14 +99,14 @@ allContactsView fil us = col (gap 20) $ do
 -- Just create functions to deduplicate code and use them here
 
 data InlineContact = InlineContact UserId
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance (Users :> es, Debug :> es) => HyperView InlineContact es where
   data Action InlineContact
     = Edit
     | View
     | Save
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   type Require InlineContact = '[Contacts]
 

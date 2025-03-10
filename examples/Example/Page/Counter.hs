@@ -19,13 +19,13 @@ page = do
       hyper Counter (viewCount n)
 
 data Counter = Counter
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance (Reader (TVar Int) :> es, Concurrent :> es) => HyperView Counter es where
   data Action Counter
     = Increment
     | Decrement
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update Increment = do
     n <- modify (+ 1)

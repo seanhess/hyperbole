@@ -1,7 +1,9 @@
+{-# LANGUAGE DerivingVia #-}
+
 module Example.Data.ProgrammingLanguage where
 
 import Data.Text (Text, isInfixOf, toLower)
-import Web.Hyperbole (FromParam, ToParam)
+import Web.Hyperbole
 
 data ProgrammingLanguage = ProgrammingLanguage
   { family :: LanguageFamily
@@ -9,14 +11,14 @@ data ProgrammingLanguage = ProgrammingLanguage
   , features :: [TypeFeature]
   , description :: Text
   }
-  deriving (Show, Read)
+  deriving (Generic, ToJSON, FromJSON)
 instance Eq ProgrammingLanguage where
   p1 == p2 = p1.name == p2.name
 
 data LanguageFamily
   = Functional
   | ObjectOriented
-  deriving (Show, Read, Eq, Ord, ToParam, FromParam)
+  deriving (Eq, Show, Ord, Generic, ToJSON, FromJSON, FromParam, ToParam)
 
 data TypeFeature
   = Dynamic
@@ -24,7 +26,7 @@ data TypeFeature
   | Generics
   | TypeClasses
   | TypeFamilies
-  deriving (Show, Read, Eq, ToParam, FromParam)
+  deriving (Eq, Show, Generic, ToJSON, FromJSON, ToParam, FromParam)
 
 isMatchLanguage :: Text -> ProgrammingLanguage -> Bool
 isMatchLanguage term p =

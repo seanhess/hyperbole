@@ -108,9 +108,10 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   // newTarget.dispatchEvent(event)
   //
 
-  // load doesn't bubble
   if (newTarget) {
+    // now way for these to bubble)
     listenLoad(newTarget)
+    enrichHyperViews(newTarget)
   }
   else {
     console.warn("Target Missing: ", target.id)
@@ -151,6 +152,8 @@ function init() {
 
   listenLoad(document.body)
 
+  enrichHyperViews(document.body)
+
   listenClick(async function(target: HTMLElement, action: string) {
     // console.log("CLICK", target.id, action)
     runAction(target, action)
@@ -184,6 +187,18 @@ function init() {
   listenInput(async function(target: HTMLElement, action: string) {
     console.log("INPUT", target.id, action)
     runAction(target, action)
+  })
+}
+
+function enrichHyperViews(node: HTMLElement): void {
+  // enrich all the hyperviews
+  node.querySelectorAll("[id]").forEach((element: any) => {
+    console.log("Found HyperView", element.dataset)
+
+    // Add 
+    element.runAction = function(action: string) {
+      runAction(this, action)
+    }.bind(element)
   })
 }
 
@@ -239,4 +254,44 @@ function errorHTML(error: Error): string {
   let details = `<div class='hyp-details'>${error.message}</div>`
 
   return ["<style>" + style.join("\n") + "</style>", content, details].join("\n")
+}
+
+
+declare global {
+  interface Window {
+    Hyperbole?: HyperboleAPI;
+  }
+}
+
+export interface HyperboleAPI {
+  runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
+  action(con: string, params: [any]): string
+  hyperView(viewId: ViewId): HyperView | undefined
+}
+
+
+
+
+export interface HyperView extends HTMLElement {
+  runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
+}
+
+export type ViewId = string
+
+
+window.Hyperbole =
+{
+  runAction: runAction,
+  action: function(con, params) {
+    let ps = params.reduce((str, val) => str + " " + JSON.stringify(val), "")
+    return con + ps
+  },
+  hyperView: function(viewId) {
+    let element = document.getElementById(viewId) as any
+    if (!element?.runAction) {
+      console.error("Element id=" + viewId + " was not a HyperView")
+      return undefined
+    }
+    return element
+  }
 }
