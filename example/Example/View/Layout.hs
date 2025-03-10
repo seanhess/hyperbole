@@ -135,7 +135,7 @@ pageDescription = \case
   Autocomplete ->
     el_ "Create a serverside autocomplete with a combination of onInput and onKeyDown"
   DataTable -> do
-    el_ "Complex reusable View Functions allow us to "
+    el_ "Complex reusable View Functions allow us to reuse code via composition instead of inheritance"
   Concurrent ->
     el_ "Separate HyperViews can overlap updates without issues"
   Todos ->
@@ -172,7 +172,6 @@ navigation rt = do
       el (pad 10 . fontSize 12) $ do
         text "v"
         text $ cs $ showVersion version
-      
  where
   showMenu =
     addClass $
