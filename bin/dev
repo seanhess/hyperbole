@@ -8,7 +8,7 @@ package() {
 }
 
 watch() {
-  ghcid --setup=Example.App.update --command="cabal repl examples lib:hyperbole" --run=Example.App.update --warnings --reload=./client/dist/hyperbole.js
+  ghcid -c "cabal repl examples lib:hyperbole" -T Example.App.run -W --reload=./client/dist/hyperbole.js
 }
 
 client() {

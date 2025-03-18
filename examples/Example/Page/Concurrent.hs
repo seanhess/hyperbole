@@ -25,12 +25,12 @@ page = do
 type TaskId = Int
 
 data Progress = Progress TaskId Milliseconds
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance (Debug :> es, GenRandom :> es) => HyperView Progress es where
   data Action Progress
     = CheckProgress Int
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
   update (CheckProgress prg) = do
     Progress _ dly <- viewId
 

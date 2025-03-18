@@ -34,14 +34,14 @@ page = do
 -- Contact ----------------------------------------------------
 
 data Contact = Contact UserId
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance (Users :> es, Debug :> es) => HyperView Contact es where
   data Action Contact
     = Edit
     | Save
     | View
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update action = do
     -- No matter which action we are performing, let's look up the user to make sure it exists

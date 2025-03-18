@@ -13,19 +13,19 @@ import Web.Hyperbole
 type TodoId = Text
 
 newtype AllTodos = AllTodos (Map TodoId Todo)
-  deriving newtype (Show, Read, ToParam, FromParam)
+  deriving newtype (ToJSON, FromJSON)
 
 instance Session AllTodos where
   sessionKey = "todos"
-instance DefaultParam AllTodos where
-  defaultParam = AllTodos mempty
+instance Default AllTodos where
+  def = AllTodos mempty
 
 data Todo = Todo
   { id :: TodoId
   , task :: Text
   , completed :: Bool
   }
-  deriving (Show, Read, ToParam, FromParam)
+  deriving (Generic, ToJSON, FromJSON)
 
 data Todos :: Effect where
   LoadAll :: Todos m [Todo]

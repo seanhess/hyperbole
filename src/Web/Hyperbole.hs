@@ -150,10 +150,10 @@ module Web.Hyperbole
     -- * Query Param Encoding
   , ToQuery (..)
   , FromQuery (..)
+  , QueryData
+  , Default (..)
   , ToParam (..)
   , FromParam (..)
-  , QueryData
-  , DefaultParam (..)
 
     -- * Advanced
   , target
@@ -161,6 +161,10 @@ module Web.Hyperbole
   , Response
   , ViewId
   , ViewAction
+  , ToHttpApiData
+  , FromHttpApiData
+  , ToJSON
+  , FromJSON
   , Root
 
     -- * Exports
@@ -182,14 +186,20 @@ module Web.Hyperbole
     -- ** Other
   , Application
   , Generic
+  , Rep
   ) where
 
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Default
 import Effectful (Eff, (:>))
+import GHC.Generics (Rep)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
+import Web.HttpApiData (FromHttpApiData, ToHttpApiData)
 import Web.Hyperbole.Application
+import Web.Hyperbole.Data.Encoded ()
+import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.QueryData
-import Web.Hyperbole.Data.Session
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
 import Web.Hyperbole.Effect.Request

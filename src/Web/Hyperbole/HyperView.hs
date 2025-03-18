@@ -1,5 +1,6 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Web.Hyperbole.HyperView where
 
@@ -7,8 +8,9 @@ import Data.Kind (Constraint, Type)
 import Data.Text (Text)
 import Effectful
 import Effectful.Reader.Dynamic
+import GHC.Generics
 import GHC.TypeLits hiding (Mod)
-import Web.Hyperbole.Data.QueryData (ParamValue (..), readQueryParam, showQueryParam)
+import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
 import Web.Hyperbole.TypeList
 import Web.View (View, addContext, att, context, el, flexCol, none)
@@ -28,7 +30,7 @@ class (ViewId id, ViewAction (Action id)) => HyperView id es where
   -- | Outline all actions that are permitted in this HyperView
   --
   -- > data Action Message = SetMessage Text | ClearMessage
-  -- >   deriving (Show, Read, ViewAction)
+  -- >   deriving (Generic, ViewAction)
   data Action id
 
 
@@ -50,12 +52,12 @@ class (ViewId id, ViewAction (Action id)) => HyperView id es where
 
 -- | The top-level view returned by a 'Page'. It carries a type-level list of every 'HyperView' used in our 'Page' so the compiler can check our work and wire everything together.
 data Root (views :: [Type]) = Root
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 
 instance HyperView (Root views) es where
   data Action (Root views) = RootNone
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
   type Require (Root views) = views
   update _ = pure none
 
@@ -172,14 +174,13 @@ hyperUnsafe vid vw = do
 
 class ViewAction a where
   toAction :: a -> Text
-  default toAction :: (Show a) => a -> Text
-  toAction = (.text) . showQueryParam
+  default toAction :: (Generic a, GToEncoded (Rep a)) => a -> Text
+  toAction = genericEncode
 
 
   parseAction :: Text -> Maybe a
-  default parseAction :: (Read a) => Text -> Maybe a
-  parseAction t =
-    either (const Nothing) pure $ readQueryParam (ParamValue t)
+  default parseAction :: (Generic a, GFromEncoded (Rep a)) => Text -> Maybe a
+  parseAction = genericDecode
 
 
 instance ViewAction () where
@@ -189,14 +190,13 @@ instance ViewAction () where
 
 class ViewId a where
   toViewId :: a -> Text
-  default toViewId :: (Show a) => a -> Text
-  toViewId = (.text) . showQueryParam
+  default toViewId :: (Generic a, GToEncoded (Rep a)) => a -> Text
+  toViewId = genericEncode
 
 
   parseViewId :: Text -> Maybe a
-  default parseViewId :: (Read a) => Text -> Maybe a
-  parseViewId t =
-    either (const Nothing) pure $ readQueryParam (ParamValue t)
+  default parseViewId :: (Generic a, GFromEncoded (Rep a)) => Text -> Maybe a
+  parseViewId = genericDecode
 
 
 {- | Access the 'viewId' in a 'View' or 'update'

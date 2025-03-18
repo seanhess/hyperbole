@@ -33,11 +33,14 @@ library
   exposed-modules:
       Web.Hyperbole
       Web.Hyperbole.Application
+      Web.Hyperbole.Data.Cookie
+      Web.Hyperbole.Data.Encoded
+      Web.Hyperbole.Data.Param
       Web.Hyperbole.Data.QueryData
-      Web.Hyperbole.Data.Session
       Web.Hyperbole.Effect.Event
       Web.Hyperbole.Effect.Handler
       Web.Hyperbole.Effect.Hyperbole
+      Web.Hyperbole.Effect.Javascript
       Web.Hyperbole.Effect.Query
       Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Response
@@ -69,7 +72,10 @@ library
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes
   build-depends:
-      base >=4.16 && <5
+      aeson
+    , attoparsec
+    , attoparsec-aeson
+    , base >=4.16 && <5
     , bytestring >=0.11 && <0.13
     , casing >0.1 && <0.2
     , containers >=0.6 && <1
@@ -95,9 +101,11 @@ test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Test.EncodedSpec
       Test.FormSpec
       Test.QuerySpec
       Test.RouteSpec
+      Test.SessionSpec
       Test.ViewActionSpec
       Test.ViewIdSpec
       Paths_hyperbole
@@ -116,7 +124,10 @@ test-suite test
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N -F -pgmF=skeletest-preprocessor
   build-depends:
-      base >=4.16 && <5
+      aeson
+    , attoparsec
+    , attoparsec-aeson
+    , base >=4.16 && <5
     , bytestring >=0.11 && <0.13
     , casing >0.1 && <0.2
     , containers >=0.6 && <1

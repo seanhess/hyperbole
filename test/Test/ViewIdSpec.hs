@@ -6,13 +6,14 @@ import Data.Text (Text, pack)
 import Data.Text qualified as T
 import GHC.Generics
 import Skeletest
+import Web.Hyperbole
+import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.HyperView
-import Web.View (att)
 import Web.View.Types
 
 
 data Thing = Thing
-  deriving (Generic, Show, Read, Eq, ViewId)
+  deriving (Generic, Show, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded, ViewId)
 
 
 data Custom = Custom
@@ -28,7 +29,7 @@ data Compound
   | Two Thing
   | WithId (Id Thing)
   | Compound Text Compound
-  deriving (Generic, Show, Eq, Read, ViewId)
+  deriving (Generic, Show, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded, ViewId)
 
 
 data Product4 = Product4 Text Text Text Text
@@ -36,7 +37,7 @@ data Product4 = Product4 Text Text Text Text
 
 
 newtype Id a = Id {fromId :: Text}
-  deriving newtype (Eq, Ord, Show, Read)
+  deriving newtype (Eq, Ord, Show, ToJSON, FromJSON)
   deriving (Generic)
 
 
@@ -69,7 +70,6 @@ spec = do
         parseViewId (toViewId inp) `shouldBe` Just inp
 
     describe "compound" $ do
-      it "should toparam" $ toViewId (Two Thing) `shouldBe` "Two Thing"
       it "double roundtrip" $ parseViewId (toViewId (Two Thing)) `shouldBe` Just (Two Thing)
 
     describe "nested" $ do
@@ -78,7 +78,9 @@ spec = do
 
     describe "big product" $ do
       let p = Product4 "one" "two" "three" "four"
-      it "should roundtrip" $ parseViewId (toViewId p) `shouldBe` Just p
+      it "should roundtrip" $ do
+        let vid = toViewId p
+        parseViewId vid `shouldBe` Just p
 
   describe "Param Attributes" $ do
     it "should serialize basic id" $ do
@@ -87,7 +89,7 @@ spec = do
 
     it "should serialize compound id" $ do
       let atts = mempty :: Attributes id
-      (setId (toViewId $ Two Thing) atts).other `shouldBe` [("id", pack $ show $ Two Thing)]
+      (setId (toViewId $ Two Thing) atts).other `shouldBe` [("id", toViewId $ Two Thing)]
 
     it "should serialize stringy id" $ do
       let atts = mempty :: Attributes id

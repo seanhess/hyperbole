@@ -34,14 +34,14 @@ page = do
 -----------------------------------------------------------
 
 data Polling = Polling
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance (Debug :> es) => HyperView Polling es where
   data Action Polling
     = Reload Int
     | Stop
     | Pause Int
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   -- to stop, return a view without an onLoad
   update (Pause n) = do
@@ -88,12 +88,12 @@ viewStatus n = do
 -----------------------------------------------------------
 
 data LazyData = LazyData TaskId
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
   data Action LazyData
     = Details
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update Details = do
     LazyData taskId <- viewId

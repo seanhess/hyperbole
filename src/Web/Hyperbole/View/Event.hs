@@ -4,6 +4,7 @@ module Web.Hyperbole.View.Event where
 
 import Data.String.Conversions (cs)
 import Data.Text (Text)
+import Data.Text qualified as T
 import Text.Casing (kebab)
 import Web.Hyperbole.HyperView
 import Web.View (Mod, View, addContext, att, parent)
@@ -90,8 +91,9 @@ data Key
 -- | Serialize a constructor that expects a single 'Text', like `data MyAction = GoSearch Text`
 toActionInput :: (ViewAction a) => (Text -> a) -> Text
 toActionInput con =
+  -- what if we wanted to input a number?
   let marker = "%HYP-INP%"
-   in toAction $ con marker
+   in T.replace " \"%HYP-INP%\"" "" $ toAction $ con marker
 
 
 {- | Apply a Mod only when a request is in flight. See [Example.Page.Contact](https://docs.hyperbole.live/contacts/1)
