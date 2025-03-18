@@ -8,11 +8,11 @@ window.onload = function() {
 
   if (message2) {
     // call runAction() on the HyperView
-    message2.runAction(Hyperbole.action('Louder', ["asdf"]))
+    message2.runAction(Hyperbole.action('Louder', "asdf"))
 
     // Alternatively, call runAction() on window.Hyperbole
     setTimeout(() => {
-      Hyperbole.runAction(message2, Hyperbole.action('Reset', ["reset"]))
+      Hyperbole.runAction(message2, Hyperbole.action('Reset', "reset"))
     }, 2000)
   }
 }
