@@ -265,7 +265,7 @@ declare global {
 
 export interface HyperboleAPI {
   runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
-  action(con: string, params: [any]): string
+  action(con: string, ...params: any[]): string
   hyperView(viewId: ViewId): HyperView | undefined
 }
 
@@ -282,8 +282,8 @@ export type ViewId = string
 window.Hyperbole =
 {
   runAction: runAction,
-  action: function(con, params) {
-    let ps = params.reduce((str, val) => str + " " + JSON.stringify(val), "")
+  action: function(con, ...params: any[]) {
+    let ps = params.reduce((str, param) => str + " " + JSON.stringify(param), "")
     return con + ps
   },
   hyperView: function(viewId) {
