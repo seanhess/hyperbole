@@ -43,7 +43,7 @@ data Nested
 
 
 data Product
-  = Product Text Int Text
+  = Product Text Int Bool
   deriving (Generic, Eq, ToEncoded, FromEncoded)
 
 
@@ -75,7 +75,7 @@ spec = withMarkers ["focus"] $ do
       genericToEncoded (Gogo One) `shouldBe` Encoded "Gogo" [toJSON One]
 
     it "product" $ do
-      genericToEncoded (Product "one" 2 "three") `shouldBe` Encoded "Product" [String "one", Number 2, String "three"]
+      genericToEncoded (Product "one" 2 True) `shouldBe` Encoded "Product" [String "one", Number 2, Bool True]
 
     it "product4" $ do
       let prod = Product4 "one" "two" "three" "four"
@@ -119,6 +119,9 @@ spec = withMarkers ["focus"] $ do
       encode (Num 1) `shouldBe` "Num 1"
       encode (Str "hello world") `shouldBe` "Str \"hello world\""
 
+    it "should encode prodcuts" $ do
+      encode (Product "hello world" 2 True) `shouldBe` "Product \"hello world\" 2 true"
+
     it "should encode nullary constructors" $ do
       encode (CTwo (Two2 3)) `shouldBe` "CTwo " <> cs (A.encode (Two2 3))
       encode (CTwo Two) `shouldBe` "CTwo " <> cs (A.encode Two)
@@ -140,6 +143,10 @@ spec = withMarkers ["focus"] $ do
     it "records" $ do
       let enc = genericToEncoded (Record 1 "two")
       genericParseEncoded enc `shouldBe` Right (Record 1 "two")
+
+    it "product" $ do
+      decode (encode (Product "hello world" 2 False)) `shouldBe` Just (Product "hello world" 2 False)
+      decode (encode (Product "bob" (-2) True)) `shouldBe` Just (Product "bob" (-2) True)
 
     it "nested product with records" $ do
       let r = RecordEx (Record 2 "three") 33
