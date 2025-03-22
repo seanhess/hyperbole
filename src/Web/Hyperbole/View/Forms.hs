@@ -15,6 +15,7 @@ module Web.Hyperbole.View.Forms
   , field
   , label
   , input
+  , checkbox
   , form
   , textarea
   , placeholder
@@ -52,6 +53,7 @@ import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.View.Element (checked)
 import Web.Hyperbole.View.Event (onSubmit)
 import Web.View hiding (form, input, label)
 import Web.View.Style (addClass, cls, prop)
@@ -222,7 +224,7 @@ label = text
 input :: InputType -> Mod (Input id a) -> View (Input id a) ()
 input ft f = do
   Input (FieldName nm) <- context
-  tag "input" (f . name nm . att "type" (inpType ft) . att "autocomplete" (auto ft)) none
+  tag "input" (att "type" (inpType ft) . name nm . att "autocomplete" (auto ft) . f) none
  where
   inpType NewPassword = "password"
   inpType CurrentPassword = "password"
@@ -233,6 +235,12 @@ input ft f = do
 
   auto :: InputType -> Text
   auto = pack . kebab . show
+
+
+checkbox :: Bool -> Mod (Input id a) -> View (Input id a) ()
+checkbox isChecked f = do
+  Input (FieldName nm) <- context
+  tag "input" (att "type" "checkbox" . name nm . checked isChecked . f) none
 
 
 placeholder :: Text -> Mod id
