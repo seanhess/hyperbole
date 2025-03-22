@@ -13,7 +13,7 @@ import Example.Effects.Todos (Todo (..), TodoId, Todos, runTodosSession)
 import Example.Effects.Todos qualified as Todos
 import Example.Style qualified as Style
 import Example.View.Icon qualified as Icon
-import Example.View.Inputs (toggleCheckBtn)
+import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole as Hyperbole
 
@@ -170,4 +170,3 @@ main :: IO ()
 main = do
   run 3000 $ do
     liveApp (basicDocument "Example") (runTodosSession $ runPage page)
-

@@ -387,10 +387,10 @@ instance {-# OVERLAPPING #-} (Selector s) => GFormParse (M1 S s (K1 R Bool)) whe
     M1 . K1 <$> do
       case mt of
         -- HTML forms submit checkboxes strangely
-        -- TODO: move to FromParam instance once moved?
+        -- TODO: move to FromParam instance once encoding refactor is merged?
         Nothing -> pure False
         Just "on" -> pure True
-        Just "off" -> pure True
+        Just "off" -> pure False
         Just t -> parseParam (ParamValue t)
 
 

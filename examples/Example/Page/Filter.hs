@@ -9,7 +9,7 @@ import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguage (..), TypeFeature (..), allLanguages, isMatchLanguage)
 import Example.View.Icon as Icon
-import Example.View.Inputs (toggleCheckBtn)
+import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 import Prelude hiding (even, odd)
@@ -18,7 +18,7 @@ page :: (Hyperbole :> es) => Eff es (Page '[Languages])
 page = do
   filters <- query
   pure $ exampleLayout Route.Filter $ col (pad 20 . grow) $ do
-    hyper Languages $ languagesView filters ""
+    hyper Languages $ languagesView filters
 
 data Languages = Languages
   deriving (Generic, ViewId)
@@ -45,13 +45,13 @@ instance HyperView Languages es where
       pure $ chosenView lang
     SearchTerm term -> do
       filters <- modFilters $ \f -> f{term}
-      pure $ languagesView filters term
+      pure $ languagesView filters
     Feature feature selected -> do
       filters <- modFilters $ \f -> setFeatures feature selected f
-      pure $ languagesView filters ""
+      pure $ languagesView filters
     SetFamily f -> do
       filters <- modFilters $ \Filters{features, term} -> Filters{family = f, features, term}
-      pure $ languagesView filters ""
+      pure $ languagesView filters
    where
     setFeatures feature selected Filters{term, family, features} =
       let features' = if selected then addFeature feature features else delFeature feature features
@@ -81,18 +81,18 @@ filterLanguages filts =
   matchFeatures feats lang =
     all (\f -> f `elem` lang.features) feats
 
-languagesView :: Filters -> Text -> View Languages ()
-languagesView filters term = do
+languagesView :: Filters -> View Languages ()
+languagesView filters = do
   let matched = filterLanguages filters
   col (gap 10 . grow) $ do
-    filtersView filters term
+    filtersView filters
     resultsTable Select matched
 
-filtersView :: Filters -> Text -> View Languages ()
-filtersView filters term = do
+filtersView :: Filters -> View Languages ()
+filtersView filters = do
   stack grow $ do
-    layer id $ search SearchTerm 200 (placeholder "filter programming languages" . border 1 . pad 10 . value term . autofocus)
-    clearButton SearchTerm term
+    layer id $ search SearchTerm 250 (placeholder "filter programming languages" . border 1 . pad 10 . value filters.term . autofocus)
+    clearButton SearchTerm filters.term
 
   row id $ do
     col (gap 5) $ do
@@ -109,7 +109,7 @@ filtersView filters term = do
  where
   feature f =
     row (gap 10) $ do
-      toggleCheckBtn (Feature f) (f `elem` filters.features)
+      toggleCheckbox (Feature f) (f `elem` filters.features)
       el_ $ text (featureName f)
 
   featureName f = pack $ show f
