@@ -53,6 +53,7 @@ instance (Todos :> es) => HyperView AllTodos es where
     | Filter FilterTodo
     | SubmitTodo
     | ToggleAll FilterTodo
+    | SetCompleted FilterTodo Todo Bool
     deriving (Show, Read, ViewAction)
 
   update = \case
@@ -71,6 +72,10 @@ instance (Todos :> es) => HyperView AllTodos es where
     Filter filt -> do
       todos <- filteredTodos filt
       pure $ todosView filt todos
+    SetCompleted filt todo completed -> do
+      _ <- Todos.setCompleted completed todo
+      todos <- filteredTodos filt
+      pure $ todosView filt todos
    where
     filteredTodos filt =
       filter (isFilter filt) <$> Todos.loadAll
@@ -86,7 +91,7 @@ todosView filt todos = do
   todoForm filt
   col id $ do
     forM_ todos $ \todo -> do
-      hyper (TodoView todo.id) $ todoView todo
+      hyper (TodoView todo.id) $ todoView filt todo
   statusBar filt todos
 
 todoForm :: FilterTodo -> View AllTodos ()
@@ -133,34 +138,31 @@ instance (Todos :> es) => HyperView TodoView es where
   type Require TodoView = '[AllTodos]
 
   data Action TodoView
-    = SetCompleted Todo Bool
-    | Edit Todo
-    | SubmitEdit Todo
+    = Edit FilterTodo Todo
+    | SubmitEdit FilterTodo Todo
     deriving (Show, Read, ViewAction)
 
-  update (SetCompleted todo completed) = do
-    updated <- Todos.setCompleted completed todo
-    pure $ todoView updated
-  update (Edit todo) = do
-    pure $ todoEditView todo
-  update (SubmitEdit todo) = do
+  update (Edit filt todo) = do
+    pure $ todoEditView filt todo
+  update (SubmitEdit filt todo) = do
     TodoForm task <- formData @(TodoForm Identity)
     updated <- Todos.setTask task todo
-    pure $ todoView updated
+    pure $ todoView filt updated
 
-todoView :: Todo -> View TodoView ()
-todoView todo = do
+todoView :: FilterTodo -> Todo -> View TodoView ()
+todoView filt todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
-    toggleCheckBtn (SetCompleted todo) todo.completed
-    el (completed . pad (XY 18 4) . onDblClick (Edit todo)) $ text todo.task
+    target AllTodos $ do
+      toggleCheckBtn (SetCompleted filt todo) todo.completed
+    el (completed . pad (XY 18 4) . onDblClick (Edit filt todo)) $ text todo.task
  where
   completed = if todo.completed then Style.strikethrough else id
 
-todoEditView :: Todo -> View TodoView ()
-todoEditView todo = do
+todoEditView :: FilterTodo -> Todo -> View TodoView ()
+todoEditView filt todo = do
   let f = fieldNames @TodoForm
   row (border (TRBL 0 0 1 0) . pad 10) $ do
-    form (SubmitEdit todo) (pad (TRBL 0 0 0 46)) $ do
+    form (SubmitEdit filt todo) (pad (TRBL 0 0 0 46)) $ do
       field f.task id $ do
         input TextInput (pad 4 . value todo.task)
 
