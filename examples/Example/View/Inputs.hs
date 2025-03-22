@@ -1,15 +1,13 @@
 module Example.View.Inputs where
 
 import Example.Colors
-import Example.View.Icon qualified as Icon (check)
 import Web.Hyperbole
 
-toggleCheckBtn :: (ViewAction (Action id)) => (Bool -> Action id) -> Bool -> View id ()
-toggleCheckBtn clickAction isSelected = do
-  button (clickAction (not isSelected)) circle contents
+toggleCheckbox :: (ViewAction (Action id)) => (Bool -> Action id) -> Bool -> View id ()
+toggleCheckbox clickAction isSelected = do
+  tag "input" (att "type" "checkbox" . checked isSelected . onClick (clickAction (not isSelected)) . big) none
  where
-  contents = if isSelected then Icon.check else " "
-  circle = width 32 . height 32 . border 1 . rounded 100
+  big = width 32 . height 32
 
 progressBar :: Float -> View context () -> View context ()
 progressBar pct content = do

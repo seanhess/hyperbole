@@ -2,6 +2,7 @@
 
 module Example.Page.Contact where
 
+import Data.Maybe (fromMaybe)
 import Data.String.Conversions
 import Data.Text (Text, pack)
 import Effectful
@@ -127,19 +128,19 @@ contactForm onSubmit c = do
   form onSubmit (gap 10) $ do
     field f.firstName fld $ do
       label "First Name:"
-      input Name (inp . maybe id value c.firstName)
+      input Name (inp . value (fromMaybe "" c.firstName))
 
     field f.lastName fld $ do
       label "Last Name:"
-      input Name (inp . maybe id value c.lastName)
+      input Name (inp . value (fromMaybe "" c.lastName))
 
     field f.info fld $ do
       label "Info:"
-      textarea inp c.info
+      textarea (inp . value (fromMaybe "" c.info)) c.info
 
     field f.age fld $ do
       label "Age:"
-      input Number (inp . maybe id (value . pack . show) c.age)
+      input Number (inp . value (fromMaybe "" $ pack . show <$> c.age))
 
     submit Style.btn "Submit"
  where
