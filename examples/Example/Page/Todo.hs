@@ -102,7 +102,7 @@ todoForm filt = do
       button (ToggleAll filt) (width 32 . hover (color Primary)) Icon.chevronDown
     form SubmitTodo grow $ do
       field f.task id $ do
-        input TextInput (pad 12 . placeholder "What needs to be done?")
+        input TextInput (pad 12 . placeholder "What needs to be done?" . value "")
 
 data TodoForm f = TodoForm
   { task :: Field f Text
@@ -164,9 +164,10 @@ todoEditView filt todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
     form (SubmitEdit filt todo) (pad (TRBL 0 0 0 46)) $ do
       field f.task id $ do
-        input TextInput (pad 4 . value todo.task)
+        input TextInput (pad 4 . value todo.task . autofocus)
 
 main :: IO ()
 main = do
   run 3000 $ do
     liveApp (basicDocument "Example") (runTodosSession $ runPage page)
+

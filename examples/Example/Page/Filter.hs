@@ -18,7 +18,7 @@ page :: (Hyperbole :> es) => Eff es (Page '[Languages])
 page = do
   filters <- query
   pure $ exampleLayout Route.Filter $ col (pad 20 . grow) $ do
-    hyper Languages $ languagesView filters
+    hyper Languages $ languagesView filters ""
 
 data Languages = Languages
   deriving (Generic, ViewId)
@@ -45,13 +45,13 @@ instance HyperView Languages es where
       pure $ chosenView lang
     SearchTerm term -> do
       filters <- modFilters $ \f -> f{term}
-      pure $ languagesView filters
+      pure $ languagesView filters term
     Feature feature selected -> do
       filters <- modFilters $ \f -> setFeatures feature selected f
-      pure $ languagesView filters
+      pure $ languagesView filters ""
     SetFamily f -> do
       filters <- modFilters $ \Filters{features, term} -> Filters{family = f, features, term}
-      pure $ languagesView filters
+      pure $ languagesView filters ""
    where
     setFeatures feature selected Filters{term, family, features} =
       let features' = if selected then addFeature feature features else delFeature feature features
@@ -81,18 +81,18 @@ filterLanguages filts =
   matchFeatures feats lang =
     all (\f -> f `elem` lang.features) feats
 
-languagesView :: Filters -> View Languages ()
-languagesView filters = do
+languagesView :: Filters -> Text -> View Languages ()
+languagesView filters term = do
   let matched = filterLanguages filters
   col (gap 10 . grow) $ do
-    filtersView filters
+    filtersView filters term
     resultsTable Select matched
 
-filtersView :: Filters -> View Languages ()
-filtersView filters = do
+filtersView :: Filters -> Text -> View Languages ()
+filtersView filters term = do
   stack grow $ do
-    layer id $ search (SearchTerm) 200 (placeholder "filter programming languages" . border 1 . pad 10)
-  -- clearButton SearchTerm term
+    layer id $ search SearchTerm 200 (placeholder "filter programming languages" . border 1 . pad 10 . value term . autofocus)
+    clearButton SearchTerm term
 
   row id $ do
     col (gap 5) $ do
@@ -121,9 +121,7 @@ familyDropdown filters =
     option (Just ObjectOriented) "Object Oriented"
     option (Just Functional) "Functional"
 
--- It's not recommended to attempt to clear the value. Setting the value on inputs results in unexpected behavior.
--- if you need this, use a javascript component
-clearButton :: (ViewAction (Action id)) => (Text -> Action id) -> Text -> Layer id ()
+clearButton :: (ViewAction (Action id)) => (Term -> Action id) -> Term -> Layer id ()
 clearButton clear term =
   layer (popup (R 0) . pad 10 . showClearBtn) $ do
     button (clear "") (width 24 . hover (color PrimaryLight)) Icon.xCircle
