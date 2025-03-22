@@ -1,5 +1,6 @@
 module Web.Hyperbole.View.Element where
 
+import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..))
 import Web.Hyperbole.Route (Route (..), routeUrl)
@@ -14,6 +15,15 @@ import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, labe
 button :: (ViewAction (Action id)) => Action id -> Mod id -> View id () -> View id ()
 button action f cd = do
   tag "button" (onClick action . f) cd
+
+
+{- | \<input type="checkbox"\> which toggles automatically
+
+> toggle True SetIsSelected id
+-}
+toggle :: (ViewAction (Action id)) => Bool -> (Bool -> Action id) -> Mod id -> View id ()
+toggle isSelected clickAction f = do
+  tag "input" (att "type" "checkbox" . checked isSelected . onClick (clickAction (not isSelected)) . f) none
 
 
 {- | Type-safe dropdown. Sends (opt -> Action id) when selected. The selection predicate (opt -> Bool) controls which option is selected. See [Example.Page.Filter](https://docs.hyperbole.live/filter)
@@ -70,3 +80,9 @@ search go delay f = do
 -}
 route :: (Route a) => a -> Mod c -> View c () -> View c ()
 route r = link (routeUrl r)
+
+
+checked :: Bool -> Mod id
+checked c =
+  att "data-checked" (cs $ show c)
+    . if c then att "checked" "" else id

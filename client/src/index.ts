@@ -136,6 +136,11 @@ function fixInputs(target: HTMLElement) {
       input.value = val
     }
   })
+
+  target.querySelectorAll("input[type=checkbox]").forEach((checkbox: HTMLInputElement) => {
+    let checked = checkbox.dataset.checked == "True"
+    checkbox.checked = checked
+  })
 }
 
 function addCSS(src: HTMLStyleElement) {

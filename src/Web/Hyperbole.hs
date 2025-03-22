@@ -101,6 +101,7 @@ module Web.Hyperbole
 
     -- * Interactive Elements
   , button
+  , toggle
   , search
   , dropdown
   , option
@@ -136,6 +137,7 @@ module Web.Hyperbole
   , field
   , label
   , input
+  , checkbox
   , textarea
   , submit
   , placeholder
