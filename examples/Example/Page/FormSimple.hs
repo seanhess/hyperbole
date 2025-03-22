@@ -113,3 +113,7 @@ contactView u = do
   row (gap 5) $ do
     el_ "Age:"
     el_ $ text $ pack (show u.age)
+
+  row (gap 5) $ do
+    el_ "Favorite:"
+    el_ $ text $ pack (show u.isFavorite)

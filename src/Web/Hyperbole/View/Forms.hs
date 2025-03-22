@@ -373,11 +373,25 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
   gFormParse f = M1 <$> gFormParse f
 
 
-instance (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
+instance {-# OVERLAPPABLE #-} (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
   gFormParse f = do
     let s = selName (undefined :: M1 S s (K1 R (f a)) p)
-    pv <- parseUnique @Text (pack s) f
-    M1 . K1 <$> parseParam (ParamValue pv)
+    t <- FE.parseUnique @Text (pack s) f
+    M1 . K1 <$> parseParam (ParamValue t)
+
+
+instance {-# OVERLAPPING #-} (Selector s) => GFormParse (M1 S s (K1 R Bool)) where
+  gFormParse f = do
+    let s = selName (undefined :: M1 S s (K1 R (f a)) p)
+    mt <- FE.parseMaybe @Text (pack s) f
+    M1 . K1 <$> do
+      case mt of
+        -- HTML forms submit checkboxes strangely
+        -- TODO: move to FromParam instance once moved?
+        Nothing -> pure False
+        Just "on" -> pure True
+        Just "off" -> pure True
+        Just t -> parseParam (ParamValue t)
 
 
 ------------------------------------------------------------------------------
