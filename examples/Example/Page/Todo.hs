@@ -13,7 +13,7 @@ import Example.Effects.Todos (Todo (..), TodoId, Todos, runTodosSession)
 import Example.Effects.Todos qualified as Todos
 import Example.Style qualified as Style
 import Example.View.Icon qualified as Icon
-import Example.View.Inputs (toggleCheckBtn)
+import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole as Hyperbole
 
@@ -151,7 +151,7 @@ instance (Todos :> es) => HyperView TodoView es where
 todoView :: Todo -> View TodoView ()
 todoView todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
-    toggleCheckBtn (SetCompleted todo) todo.completed
+    toggleCheckbox (SetCompleted todo) todo.completed
     el (completed . pad (XY 18 4) . onDblClick (Edit todo)) $ text todo.task
  where
   completed = if todo.completed then Style.strikethrough else id
@@ -168,4 +168,3 @@ main :: IO ()
 main = do
   run 3000 $ do
     liveApp (basicDocument "Example") (runTodosSession $ runPage page)
-

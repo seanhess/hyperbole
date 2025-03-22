@@ -17,13 +17,13 @@ button action f cd = do
   tag "button" (onClick action . f) cd
 
 
-{- | \<input type="checkbox"\> which toggles automatically
-
-> toggle True SetIsSelected id
--}
-toggle :: (ViewAction (Action id)) => Bool -> (Bool -> Action id) -> Mod id -> View id ()
-toggle isSelected clickAction f = do
-  tag "input" (att "type" "checkbox" . checked isSelected . onClick (clickAction (not isSelected)) . f) none
+-- {- | \<input type="checkbox"\> which toggles automatically
+--
+-- > toggle True SetIsSelected id
+-- -}
+-- toggle :: (ViewAction (Action id)) => Bool -> (Bool -> Action id) -> Mod id -> View id ()
+-- toggle isSelected clickAction f = do
+--   tag "input" (att "type" "checkbox" . checked isSelected . onClick (clickAction (not isSelected)) . f) none
 
 
 {- | Type-safe dropdown. Sends (opt -> Action id) when selected. The selection predicate (opt -> Bool) controls which option is selected. See [Example.Page.Filter](https://docs.hyperbole.live/filter)
