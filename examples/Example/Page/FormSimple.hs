@@ -37,7 +37,7 @@ formView = do
   form Submit (gap 10 . pad 10) $ do
     el Style.h1 "Add Contact"
 
-    -- You must make sure these names match the field names used by FormParse / formData
+    -- Make sure these names match the field names used by FormParse / formData
     field "name" id $ do
       label "Contact Name"
       input Username (inp . placeholder "contact name")
