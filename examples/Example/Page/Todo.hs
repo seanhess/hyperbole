@@ -13,7 +13,7 @@ import Example.Effects.Todos (Todo (..), TodoId, Todos, runTodosSession)
 import Example.Effects.Todos qualified as Todos
 import Example.Style qualified as Style
 import Example.View.Icon qualified as Icon
-import Example.View.Inputs (toggleCheckBtn)
+import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole as Hyperbole
 
@@ -102,7 +102,7 @@ todoForm filt = do
       button (ToggleAll filt) (width 32 . hover (color Primary)) Icon.chevronDown
     form SubmitTodo grow $ do
       field f.task id $ do
-        input TextInput (pad 12 . placeholder "What needs to be done?")
+        input TextInput (pad 12 . placeholder "What needs to be done?" . value "")
 
 data TodoForm f = TodoForm
   { task :: Field f Text
@@ -153,7 +153,7 @@ todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
     target AllTodos $ do
-      toggleCheckBtn (SetCompleted filt todo) todo.completed
+      toggleCheckbox (SetCompleted filt todo) todo.completed
     el (completed . pad (XY 18 4) . onDblClick (Edit filt todo)) $ text todo.task
  where
   completed = if todo.completed then Style.strikethrough else id
@@ -164,7 +164,7 @@ todoEditView filt todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
     form (SubmitEdit filt todo) (pad (TRBL 0 0 0 46)) $ do
       field f.task id $ do
-        input TextInput (pad 4 . value todo.task)
+        input TextInput (pad 4 . value todo.task . autofocus)
 
 main :: IO ()
 main = do

@@ -9,7 +9,7 @@ import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguage (..), TypeFeature (..), allLanguages, isMatchLanguage)
 import Example.View.Icon as Icon
-import Example.View.Inputs (toggleCheckBtn)
+import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole
 import Prelude hiding (even, odd)
@@ -91,8 +91,8 @@ languagesView filters = do
 filtersView :: Filters -> View Languages ()
 filtersView filters = do
   stack grow $ do
-    layer id $ search (SearchTerm) 200 (placeholder "filter programming languages" . border 1 . pad 10)
-  -- clearButton SearchTerm term
+    layer id $ search SearchTerm 250 (placeholder "filter programming languages" . border 1 . pad 10 . value filters.term . autofocus)
+    clearButton SearchTerm filters.term
 
   row id $ do
     col (gap 5) $ do
@@ -109,7 +109,7 @@ filtersView filters = do
  where
   feature f =
     row (gap 10) $ do
-      toggleCheckBtn (Feature f) (f `elem` filters.features)
+      toggleCheckbox (Feature f) (f `elem` filters.features)
       el_ $ text (featureName f)
 
   featureName f = pack $ show f
@@ -121,8 +121,6 @@ familyDropdown filters =
     option (Just ObjectOriented) "Object Oriented"
     option (Just Functional) "Functional"
 
--- It's not recommended to attempt to clear the value. Setting the value on inputs results in unexpected behavior.
--- if you need this, use a javascript component
 clearButton :: (ViewAction (Action id)) => (Text -> Action id) -> Text -> Layer id ()
 clearButton clear term =
   layer (popup (R 0) . pad 10 . showClearBtn) $ do

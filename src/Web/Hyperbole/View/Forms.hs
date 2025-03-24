@@ -15,6 +15,7 @@ module Web.Hyperbole.View.Forms
   , field
   , label
   , input
+  , checkbox
   , form
   , textarea
   , placeholder
@@ -45,13 +46,14 @@ import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
 import Text.Casing (kebab)
-import Web.FormUrlEncoded (Form (..), FormOptions (..), parseUnique)
+import Web.FormUrlEncoded (Form (..), FormOptions (..))
 import Web.FormUrlEncoded qualified as FE
 import Web.Hyperbole.Data.Param (FromParam (..), ParamValue (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.View.Element (checked)
 import Web.Hyperbole.View.Event (onSubmit)
 import Web.View hiding (form, input, label)
 import Web.View.Style (addClass, cls, prop)
@@ -222,7 +224,7 @@ label = text
 input :: InputType -> Mod (Input id a) -> View (Input id a) ()
 input ft f = do
   Input (FieldName nm) <- context
-  tag "input" (f . name nm . att "type" (inpType ft) . att "autocomplete" (auto ft)) none
+  tag "input" (att "type" (inpType ft) . name nm . att "autocomplete" (auto ft) . f) none
  where
   inpType NewPassword = "password"
   inpType CurrentPassword = "password"
@@ -233,6 +235,12 @@ input ft f = do
 
   auto :: InputType -> Text
   auto = pack . kebab . show
+
+
+checkbox :: Bool -> Mod (Input id a) -> View (Input id a) ()
+checkbox isChecked f = do
+  Input (FieldName nm) <- context
+  tag "input" (att "type" "checkbox" . name nm . checked isChecked . f) none
 
 
 placeholder :: Text -> Mod id
@@ -365,11 +373,25 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
   gFormParse f = M1 <$> gFormParse f
 
 
-instance (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
+instance {-# OVERLAPPABLE #-} (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
   gFormParse f = do
     let s = selName (undefined :: M1 S s (K1 R (f a)) p)
-    pv <- parseUnique @Text (pack s) f
-    M1 . K1 <$> parseParam (ParamValue pv)
+    t <- FE.parseUnique @Text (pack s) f
+    M1 . K1 <$> parseParam (ParamValue t)
+
+
+instance {-# OVERLAPPING #-} (Selector s) => GFormParse (M1 S s (K1 R Bool)) where
+  gFormParse f = do
+    let s = selName (undefined :: M1 S s (K1 R (f a)) p)
+    mt <- FE.parseMaybe @Text (pack s) f
+    M1 . K1 <$> do
+      case mt of
+        -- HTML forms submit checkboxes strangely
+        -- TODO: move to FromParam instance once encoding refactor is merged?
+        Nothing -> pure False
+        Just "on" -> pure True
+        Just "off" -> pure False
+        Just t -> parseParam (ParamValue t)
 
 
 ------------------------------------------------------------------------------

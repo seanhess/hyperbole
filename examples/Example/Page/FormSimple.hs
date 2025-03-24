@@ -10,7 +10,7 @@ import Web.Hyperbole
 page :: (Hyperbole :> es) => Eff es (Page '[FormView])
 page = do
   pure $ exampleLayout Route.FormSimple $ row (pad 20) $ do
-    hyper FormView formView
+    hyper FormView formView'
 
 data FormView = FormView
   deriving (Generic, ViewId)
@@ -28,16 +28,17 @@ instance HyperView FormView es where
 data ContactForm = ContactForm
   { name :: Text
   , age :: Int
+  , isFavorite :: Bool
   }
   deriving (Generic, FromForm)
 
 -- and a view that displays an input for each field
 formView :: View FormView ()
 formView = do
-  form Submit (gap 10 . pad 10) $ do
+  form Submit (gap 15 . pad 10) $ do
     el Style.h1 "Add Contact"
 
-    -- You must make sure these names match the field names used by FormParse / formData
+    -- Make sure these names match the field names used by FormParse / formData
     field "name" id $ do
       label "Contact Name"
       input Username (inp . placeholder "contact name")
@@ -45,6 +46,11 @@ formView = do
     field "age" id $ do
       label "Age"
       input Number (inp . placeholder "age" . value "0")
+
+    field "isFavorite" id $ do
+      row (gap 10) $ do
+        checkbox False (width 32)
+        label "Favorite?"
 
     submit Style.btn "Submit"
  where
@@ -65,6 +71,7 @@ formView = do
 data ContactForm' f = ContactForm'
   { name :: Field f Text
   , age :: Field f Int
+  , isFavorite :: Field f Bool
   }
   deriving (Generic, FromFormF, GenFields FieldName)
 
@@ -72,7 +79,7 @@ formView' :: View FormView ()
 formView' = do
   -- generate a ContactForm' FieldName
   let f = fieldNames @ContactForm'
-  form Submit (gap 10 . pad 10) $ do
+  form Submit (gap 15 . pad 10) $ do
     el Style.h1 "Add Contact"
 
     -- f.name :: FieldName Text
@@ -86,6 +93,11 @@ formView' = do
     field f.age id $ do
       label "Age"
       input Number (inp . placeholder "age" . value "0")
+
+    field f.isFavorite id $ do
+      row (gap 10) $ do
+        checkbox False (width 32)
+        label "Favorite?"
 
     submit Style.btn "Submit"
  where
@@ -101,3 +113,7 @@ contactView u = do
   row (gap 5) $ do
     el_ "Age:"
     el_ $ text $ pack (show u.age)
+
+  row (gap 5) $ do
+    el_ "Favorite:"
+    el_ $ text $ pack (show u.isFavorite)

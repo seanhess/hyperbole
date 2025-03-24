@@ -111,12 +111,12 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   if (newTarget) {
     // now way for these to bubble)
     listenLoad(newTarget)
+    fixInputs(newTarget)
     enrichHyperViews(newTarget)
   }
   else {
     console.warn("Target Missing: ", target.id)
   }
-  // setCheckboxes(newTarget)
 
   // Remove loading and clear add timeout
 
@@ -124,6 +124,24 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   target.classList.remove("hyp-loading")
 }
 
+function fixInputs(target: HTMLElement) {
+  let focused = target.querySelector("[autofocus]") as HTMLInputElement
+  if (focused?.focus) {
+    focused.focus()
+  }
+
+  target.querySelectorAll("input[value]").forEach((input: HTMLInputElement) => {
+    let val = input.getAttribute("value")
+    if (val !== undefined) {
+      input.value = val
+    }
+  })
+
+  target.querySelectorAll("input[type=checkbox]").forEach((checkbox: HTMLInputElement) => {
+    let checked = checkbox.dataset.checked == "True"
+    checkbox.checked = checked
+  })
+}
 
 function addCSS(src: HTMLStyleElement) {
   const rules: any = src.sheet.cssRules
@@ -135,11 +153,6 @@ function addCSS(src: HTMLStyleElement) {
   }
 }
 
-// function setCheckboxes(target: HTMLElement) {
-//   target.querySelectorAll("input[type=checkbox]").forEach(input => {
-//     console.log(input.attributes)
-//   })
-// }
 
 
 
