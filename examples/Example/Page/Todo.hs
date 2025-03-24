@@ -48,7 +48,7 @@ instance (Todos :> es) => HyperView AllTodos es where
     | SubmitTodo
     | ToggleAll FilterTodo
     | SetCompleted FilterTodo Todo Bool
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update = \case
     SubmitTodo -> do
@@ -140,7 +140,7 @@ instance (Todos :> es) => HyperView TodoView es where
   data Action TodoView
     = Edit FilterTodo Todo
     | SubmitEdit FilterTodo Todo
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (Edit filt todo) = do
     pure $ todoEditView filt todo
