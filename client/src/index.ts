@@ -112,6 +112,7 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
     // now way for these to bubble)
     listenLoad(newTarget)
     fixInputs(newTarget)
+    enrichHyperViews(newTarget)
   }
   else {
     console.warn("Target Missing: ", target.id)
@@ -129,8 +130,7 @@ function fixInputs(target: HTMLElement) {
     focused.focus()
   }
 
-  let inputsWithValue = target.querySelectorAll("[value]")
-  inputsWithValue.forEach((input: HTMLInputElement) => {
+  target.querySelectorAll("input[value]").forEach((input: HTMLInputElement) => {
     let val = input.getAttribute("value")
     if (val !== undefined) {
       input.value = val

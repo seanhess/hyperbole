@@ -121,7 +121,7 @@ familyDropdown filters =
     option (Just ObjectOriented) "Object Oriented"
     option (Just Functional) "Functional"
 
-clearButton :: (ViewAction (Action id)) => (Term -> Action id) -> Term -> Layer id ()
+clearButton :: (ViewAction (Action id)) => (Text -> Action id) -> Text -> Layer id ()
 clearButton clear term =
   layer (popup (R 0) . pad 10 . showClearBtn) $ do
     button (clear "") (width 24 . hover (color PrimaryLight)) Icon.xCircle

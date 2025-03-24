@@ -153,7 +153,7 @@ todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
     target AllTodos $ do
-      toggleCheckBtn (SetCompleted filt todo) todo.completed
+      toggleCheckbox (SetCompleted filt todo) todo.completed
     el (completed . pad (XY 18 4) . onDblClick (Edit filt todo)) $ text todo.task
  where
   completed = if todo.completed then Style.strikethrough else id

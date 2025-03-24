@@ -46,7 +46,7 @@ import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
 import Text.Casing (kebab)
-import Web.FormUrlEncoded (Form (..), FormOptions (..), parseUnique)
+import Web.FormUrlEncoded (Form (..), FormOptions (..))
 import Web.FormUrlEncoded qualified as FE
 import Web.Hyperbole.Data.Param (FromParam (..), ParamValue (..))
 import Web.Hyperbole.Effect.Hyperbole
