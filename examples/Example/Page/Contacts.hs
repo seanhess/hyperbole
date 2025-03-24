@@ -19,7 +19,7 @@ import Web.Hyperbole
 page
   :: forall es
    . (Hyperbole :> es, Users :> es, Debug :> es)
-  => Eff es (Page '[Contacts, InlineContact])
+  => Eff es (Page '[Contacts, InlineContact, NewContact])
 page = do
   us <- Users.all
   pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
@@ -43,7 +43,7 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
     | DeleteUser UserId
     deriving (Generic, ViewAction)
 
-  type Require Contacts = '[InlineContact]
+  type Require Contacts = '[InlineContact, NewContact]
 
   update = \case
     Reload mf -> do
@@ -84,14 +84,46 @@ allContactsView fil us = col (gap 20) $ do
     button (Reload Nothing) Style.btnLight "Reload"
     target (InlineContact 2) $ button Edit Style.btnLight "Edit Sara"
 
-  el bold "Add Contact"
-
-  row (pad 10 . gap 10 . border 1) $ do
-    contactForm AddUser genFields
+  hyper NewContact newContactButton
  where
   filterUsers Nothing _ = True
   filterUsers (Just Active) u = u.isActive
   filterUsers (Just Inactive) u = not u.isActive
+
+-- New Contact Form / Button ----------------------------------
+-- Note that it is easier to nest hyperviews here because NewContact has sufficiently different state
+--   * It doesn't need to know the users
+--   * It DOES need to track it's open / close state
+--   * We use target to submit the form to the Contacts parent view
+
+data NewContact = NewContact
+  deriving (Generic, ViewId)
+
+instance (Users :> es) => HyperView NewContact es where
+  data Action NewContact
+    = ShowForm
+    | CloseForm
+    deriving (Generic, ViewAction)
+
+  type Require NewContact = '[Contacts]
+
+  update action =
+    case action of
+      ShowForm -> pure newContactForm
+      CloseForm -> pure newContactButton
+
+newContactButton :: View NewContact ()
+newContactButton = do
+  button ShowForm Style.btn "Add Contact"
+
+newContactForm :: View NewContact ()
+newContactForm = do
+  row (pad 10 . gap 10 . border 1) $ do
+    target Contacts $ do
+      contactForm AddUser genFields
+    col id $ do
+      space
+      button CloseForm Style.btnLight "Cancel"
 
 -- Reuse Contact View ----------------------------------
 -- We want to use the same view as Example.Contact, but customize the edit view to have a delete button
