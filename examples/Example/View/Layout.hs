@@ -50,6 +50,7 @@ exampleLayout rt pageView = do
     Examples -> "Example/View/Layout.hs"
     Todos -> "Example/Page/Todo.hs"
     DataTable -> "Example/Page/DataTable.hs"
+    Javascript -> "Example/Page/Javascript.hs"
 
 rootLayout :: AppRoute -> View c () -> View c ()
 rootLayout rt content =
@@ -77,6 +78,7 @@ exampleMenu current = do
   example Autocomplete
   example Todos
   example (Contacts ContactsAll)
+  example Javascript
  where
   -- example Errors
 
@@ -149,6 +151,7 @@ pageDescription = \case
   Main -> none
   Hello _ -> none
   Query -> none
+  Javascript -> none
  where
   item = li (list Disc)
 

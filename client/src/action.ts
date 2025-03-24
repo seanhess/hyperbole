@@ -32,7 +32,7 @@ export type ViewId = string
 
 
 export function inputToAction(action: string, value: string): string {
-  return action.replace(/%HYP-INP%/, sanitizeInput(value))
+  return action + ' "' + sanitizeInput(value) + '"'
 }
 
 // WARNING: security flaw, unescaped output. no closing quotes allowed?

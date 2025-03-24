@@ -21,15 +21,14 @@ page = do
     hyper Languages $ languagesView filters
 
 data Languages = Languages
-  deriving (Show, Read, ViewId)
-
-type Term = Text
+  deriving (Generic, ViewId)
 
 -- Filters available from the query
+-- See Example.Data.ProgrammingLanguage
 data Filters = Filters
   { features :: [TypeFeature]
   , family :: Maybe LanguageFamily
-  , term :: Term
+  , term :: Text
   }
   deriving (Generic, FromQuery, ToQuery)
 
@@ -39,7 +38,7 @@ instance HyperView Languages es where
     | Select ProgrammingLanguage
     | Feature TypeFeature Bool
     | SetFamily (Maybe LanguageFamily)
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update = \case
     Select lang -> do
@@ -92,7 +91,7 @@ languagesView filters = do
 filtersView :: Filters -> View Languages ()
 filtersView filters = do
   stack grow $ do
-    layer id $ search SearchTerm 200 (placeholder "filter programming languages" . border 1 . pad 10)
+    layer id $ search (SearchTerm) 200 (placeholder "filter programming languages" . border 1 . pad 10)
   -- clearButton SearchTerm term
 
   row id $ do
@@ -124,7 +123,7 @@ familyDropdown filters =
 
 -- It's not recommended to attempt to clear the value. Setting the value on inputs results in unexpected behavior.
 -- if you need this, use a javascript component
-clearButton :: (ViewAction (Action id)) => (Term -> Action id) -> Term -> Layer id ()
+clearButton :: (ViewAction (Action id)) => (Text -> Action id) -> Text -> Layer id ()
 clearButton clear term =
   layer (popup (R 0) . pad 10 . showClearBtn) $ do
     button (clear "") (width 24 . hover (color PrimaryLight)) Icon.xCircle

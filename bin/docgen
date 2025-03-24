@@ -2,8 +2,8 @@
 
 set -e
 
-cd example
-hpack
+hpack examples
+hpack docs
 cabal run docgen
 
 cd /tmp/hyperbole

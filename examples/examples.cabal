@@ -58,6 +58,7 @@ executable examples
       Example.Page.Filter
       Example.Page.FormSimple
       Example.Page.FormValidation
+      Example.Page.Javascript
       Example.Page.LazyLoading
       Example.Page.Redirects
       Example.Page.Requests

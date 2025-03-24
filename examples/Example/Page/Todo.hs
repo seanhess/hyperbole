@@ -37,13 +37,7 @@ simplePage = do
 --- AllTodos ----------------------------------------------------------------------------
 
 data AllTodos = AllTodos
-  deriving (Show, Read, ViewId)
-
-data FilterTodo
-  = FilterAll
-  | Active
-  | Completed
-  deriving (Show, Read, Eq)
+  deriving (Generic, ViewId)
 
 instance (Todos :> es) => HyperView AllTodos es where
   type Require AllTodos = '[TodoView]
@@ -54,7 +48,7 @@ instance (Todos :> es) => HyperView AllTodos es where
     | SubmitTodo
     | ToggleAll FilterTodo
     | SetCompleted FilterTodo Todo Bool
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update = \case
     SubmitTodo -> do
@@ -85,6 +79,12 @@ instance (Todos :> es) => HyperView AllTodos es where
         FilterAll -> True
         Active -> not todo.completed
         Completed -> todo.completed
+
+data FilterTodo
+  = FilterAll
+  | Active
+  | Completed
+  deriving (Eq, Generic, ToJSON, FromJSON)
 
 todosView :: FilterTodo -> [Todo] -> View AllTodos ()
 todosView filt todos = do
@@ -132,7 +132,7 @@ statusBar filt todos = do
 --- TodoView ----------------------------------------------------------------------------
 
 data TodoView = TodoView TodoId
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance (Todos :> es) => HyperView TodoView es where
   type Require TodoView = '[AllTodos]
@@ -140,7 +140,7 @@ instance (Todos :> es) => HyperView TodoView es where
   data Action TodoView
     = Edit FilterTodo Todo
     | SubmitEdit FilterTodo Todo
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update (Edit filt todo) = do
     pure $ todoEditView filt todo

@@ -14,7 +14,7 @@ page = do
         hyper Contents viewSmall
 
 data Contents = Contents
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 data ContentsAction
 
@@ -22,7 +22,7 @@ instance HyperView Contents es where
   data Action Contents
     = Expand
     | Collapse
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
   update Expand = do
     pure viewBig
   update Collapse = do

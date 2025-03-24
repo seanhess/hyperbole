@@ -13,12 +13,12 @@ page = do
       hyper Contents viewContent
 
 data Contents = Contents
-  deriving (Show, Read, ViewId)
+  deriving (Generic, ViewId)
 
 instance HyperView Contents es where
   data Action Contents
     = CauseError
-    deriving (Show, Read, ViewAction)
+    deriving (Generic, ViewAction)
 
   update CauseError = do
     -- Return a not found error 404
