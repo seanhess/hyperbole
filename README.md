@@ -169,7 +169,7 @@ Local Development
 If you want to work on both the hyperbole library and example code, this `ghcid` command will run (and hot reload) the examples server as you change any non-testing code.
 
 ```
-ghcid --setup=Main.update --command="cabal repl exe:examples lib:hyperbole" --run=Main.update --warnings --reload=./client/dist/hyperbole.js
+ghcid --setup=Example.App.update --command="cabal repl exe:examples lib:hyperbole" --run=Example.App.update --warnings --reload=./client/dist/hyperbole.js
 ```
 
 If you want to work on the test suite, this will run the tests each time any library code is changed.
