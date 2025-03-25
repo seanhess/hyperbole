@@ -2,22 +2,23 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Page.Todo where
+module Example.Page.Todos.Todo where
 
 import Control.Monad (forM_)
-import Data.Text (Text, pack)
+import Data.Text (pack)
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
-import Example.Effects.Todos (Todo (..), TodoId, Todos, runTodosSession)
+import Example.Effects.Todos (Todo (..), TodoId, Todos)
 import Example.Effects.Todos qualified as Todos
+import Example.Page.Todos.Shared
 import Example.Style qualified as Style
 import Example.View.Icon qualified as Icon
 import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole as Hyperbole
 
-page :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
+page :: (Todos :> es) => Eff es (Page '[TodosView, TodoView])
 page = do
   todos <- Todos.loadAll
   pure $ exampleLayout Route.Todos $ do
@@ -26,23 +27,17 @@ page = do
         space
         el (Style.h1 . pad 10) "Todos"
         space
-      hyper AllTodos $ todosView FilterAll todos
+      hyper MkTodosView $ todosView FilterAll todos
 
-simplePage :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
-simplePage = do
-  todos <- Todos.loadAll
-  pure $ do
-    hyper AllTodos $ todosView FilterAll todos
+--- TodosView ----------------------------------------------------------------------------
 
---- AllTodos ----------------------------------------------------------------------------
-
-data AllTodos = AllTodos
+data TodosView = MkTodosView
   deriving (Generic, ViewId)
 
-instance (Todos :> es) => HyperView AllTodos es where
-  type Require AllTodos = '[TodoView]
+instance (Todos :> es) => HyperView TodosView es where
+  type Require TodosView = '[TodoView]
 
-  data Action AllTodos
+  data Action TodosView
     = ClearCompleted
     | Filter FilterTodo
     | SubmitTodo
@@ -80,21 +75,15 @@ instance (Todos :> es) => HyperView AllTodos es where
         Active -> not todo.completed
         Completed -> todo.completed
 
-data FilterTodo
-  = FilterAll
-  | Active
-  | Completed
-  deriving (Eq, Generic, ToJSON, FromJSON)
-
-todosView :: FilterTodo -> [Todo] -> View AllTodos ()
+todosView :: FilterTodo -> [Todo] -> View TodosView ()
 todosView filt todos = do
   todoForm filt
   col id $ do
     forM_ todos $ \todo -> do
-      hyper (TodoView todo.id) $ todoView filt todo
+      hyper (MkTodoView todo.id) $ todoView filt todo
   statusBar filt todos
 
-todoForm :: FilterTodo -> View AllTodos ()
+todoForm :: FilterTodo -> View TodosView ()
 todoForm filt = do
   let f :: TodoForm FieldName = fieldNames
   row (border 1) $ do
@@ -104,12 +93,7 @@ todoForm filt = do
       field f.task id $ do
         input TextInput (pad 12 . placeholder "What needs to be done?" . value "")
 
-data TodoForm f = TodoForm
-  { task :: Field f Text
-  }
-  deriving (Generic, FromFormF, GenFields FieldName)
-
-statusBar :: FilterTodo -> [Todo] -> View AllTodos ()
+statusBar :: FilterTodo -> [Todo] -> View TodosView ()
 statusBar filt todos = do
   row (pad 10 . color SecondaryLight) $ do
     let numLeft = length $ filter (\t -> not t.completed) todos
@@ -131,11 +115,11 @@ statusBar filt todos = do
 
 --- TodoView ----------------------------------------------------------------------------
 
-data TodoView = TodoView TodoId
+data TodoView = MkTodoView TodoId
   deriving (Generic, ViewId)
 
 instance (Todos :> es) => HyperView TodoView es where
-  type Require TodoView = '[AllTodos]
+  type Require TodoView = '[TodosView]
 
   data Action TodoView
     = Edit FilterTodo Todo
@@ -152,7 +136,7 @@ instance (Todos :> es) => HyperView TodoView es where
 todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
-    target AllTodos $ do
+    target MkTodosView $ do
       toggleCheckbox (SetCompleted filt todo) todo.completed
     el (completed . pad (XY 18 4) . onDblClick (Edit filt todo)) $ text todo.task
  where
@@ -165,8 +149,3 @@ todoEditView filt todo = do
     form (SubmitEdit filt todo) (pad (TRBL 0 0 0 46)) $ do
       field f.task id $ do
         input TextInput (pad 4 . value todo.task . autofocus)
-
-main :: IO ()
-main = do
-  run 3000 $ do
-    liveApp (basicDocument "Example") (runTodosSession $ runPage page)

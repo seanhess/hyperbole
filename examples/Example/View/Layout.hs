@@ -48,7 +48,8 @@ exampleLayout rt pageView = do
     Hello _ -> "Main.hs"
     Main -> "Main.hs"
     Examples -> "Example/View/Layout.hs"
-    Todos -> "Example/Page/Todo.hs"
+    Todos -> "Example/Page/Todos/Todo.hs"
+    TodosCSS -> "Example/Page/Todos/TodoCSS.hs"
     DataTable -> "Example/Page/DataTable.hs"
     Javascript -> "Example/Page/Javascript.hs"
 
@@ -77,6 +78,7 @@ exampleMenu current = do
   example Filter
   example Autocomplete
   example Todos
+  example TodosCSS
   example (Contacts ContactsAll)
   example Javascript
  where
@@ -97,6 +99,7 @@ routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
 routeTitle Filter = "Search - Filters"
 routeTitle Autocomplete = "Search - Autocomplete"
 routeTitle Todos = "TodoMVC"
+routeTitle TodosCSS = "TodoMVC (CSS version)"
 routeTitle FormSimple = "Forms - Simple"
 routeTitle FormValidation = "Forms - Validation"
 routeTitle r = cs $ toWords $ fromHumps $ show r
@@ -143,6 +146,10 @@ pageDescription = \case
   Todos ->
     row (gap 5) $ do
       el_ "Implementation of "
+      link "https://todomvc.com/" Style.link "TodoMVC"
+  TodosCSS ->
+    row (gap 5) $ do
+      el_ "CSS implementation of "
       link "https://todomvc.com/" Style.link "TodoMVC"
   Contacts _ -> do
     el_ "This complex example combines various features"

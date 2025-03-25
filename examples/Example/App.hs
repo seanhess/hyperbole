@@ -53,7 +53,8 @@ import Example.Page.Redirects qualified as Redirects
 import Example.Page.Requests qualified as Requests
 import Example.Page.Sessions qualified as Sessions
 import Example.Page.Simple qualified as Simple
-import Example.Page.Todo qualified as Todo
+import Example.Page.Todos.Todo qualified as Todo
+import Example.Page.Todos.TodoCSS qualified as TodoCSS
 import Example.Page.Transitions qualified as Transitions
 import Example.Style qualified as Style
 import Example.View.Layout as Layout (exampleLayout, examplesView)
@@ -61,6 +62,7 @@ import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore
 import GHC.Generics (Generic)
 import GHC.Word (Word32)
 import Network.HTTP.Types (Header, Method, QueryItem, hCacheControl, methodPost, status200, status404)
+import Network.Wai (pathInfo)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Middleware.Static as Static (CacheContainer, CachingStrategy (..), Options (..), addBase)
@@ -89,13 +91,46 @@ run = do
   cache <- clientCache
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
-      Static.staticPolicy (addBase "examples/static") $
-        app users count
+      Static.staticPolicy (addBase "examples/static") $ \req -> do
+        let doc = case pathInfo req of
+              "todoscss" : _ -> toDocumentTodosCSS
+              _ -> toDocument
+        (app doc users count) req
 
-app :: UserStore -> TVar Int -> Application
-app users count = do
+-- Use the embedded version for real applications (see basicDocument).
+-- The link to /hyperbole.js here is just to make local development easier
+toDocument :: BL.ByteString -> BL.ByteString
+toDocument cnt =
+  [i|<html>
+      <head>
+        <title>Hyperbole Examples</title>
+        <meta httpEquiv="Content-Type" content="text/html" charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="/hyperbole.js"></script>
+        <script type="text/javascript" src="/custom.js"></script>
+        <style type="text/css">#{cssResetEmbed}</style>
+        <style type="text/css">body { background-color: \#d3dceb }</style>
+      </head>
+      <body>#{cnt}</body>
+    </html>|]
+
+toDocumentTodosCSS :: BL.ByteString -> BL.ByteString
+toDocumentTodosCSS cnt =
+  [i|<html>
+        <head>
+        <title>Todo MVC</title>
+        <script type="text/javascript">#{scriptEmbed}</script>
+
+        <link href="https://cdn.jsdelivr.net/npm/todomvc-app-css@2.4.3/index.min.css"
+              rel="stylesheet">
+      </head>
+        <body>#{cnt}</body>
+      </html>|]
+
+app :: (BL.ByteString -> BL.ByteString) -> UserStore -> TVar Int -> Application
+app doc users count = do
   liveApp
-    toDocument
+    doc
     (runApp . routeRequest $ router)
  where
   runApp :: (Hyperbole :> es, IOE :> es) => Eff (GenRandom : Concurrent : Debug : Users : Todos : es) a -> Eff es a
@@ -128,6 +163,7 @@ app users count = do
   router Simple = runPage Simple.page
   router Transitions = runPage Transitions.page
   router Todos = runPage Todo.page
+  router TodosCSS = runPage TodoCSS.page
   router Javascript = runPage Javascript.page
   router Main = do
     redirect (routeUrl Simple)
@@ -141,23 +177,6 @@ app users count = do
         el_ $ text who
   hello Redirected = do
     pure $ exampleLayout RedirectNow $ el (pad 10) "You were redirected"
-
-  -- Use the embedded version for real applications (see basicDocument).
-  -- The link to /hyperbole.js here is just to make local development easier
-  toDocument :: BL.ByteString -> BL.ByteString
-  toDocument cnt =
-    [i|<html>
-      <head>
-        <title>Hyperbole Examples</title>
-        <meta httpEquiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script type="text/javascript" src="/hyperbole.js"></script>
-        <script type="text/javascript" src="/custom.js"></script>
-        <style type="text/css">#{cssResetEmbed}</style>
-        <style type="text/css">body { background-color: \#d3dceb }</style>
-      </head>
-      <body>#{cnt}</body>
-    </html>|]
 
 {- | Made for local development
  -
