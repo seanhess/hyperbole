@@ -278,3 +278,4 @@ Contributors
 * [Christian Georgii](https://github.com/cgeorgii)
 * [Pfalzgraf Martin](https://github.com/Skyfold)
 * [Tushar Adhatrao](https://github.com/tusharad)
+* [Benjamin Thomas](https://github.com/benjamin-thomas)
