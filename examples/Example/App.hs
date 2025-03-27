@@ -17,6 +17,7 @@ import Control.Concurrent
 import Control.Monad (forever, (>=>))
 import Data.ByteString.Lazy qualified as BL
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
+import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.String.Interpolate (i)
 import Data.Text (Text)
@@ -66,6 +67,8 @@ import Network.Wai.Middleware.Static as Static (CacheContainer, CachingStrategy 
 import Network.Wai.Middleware.Static qualified as Static
 import Network.WebSockets (Connection, PendingConnection, acceptRequest, defaultConnectionOptions)
 import Paths_examples (version)
+import Safe (readMay)
+import System.Environment qualified as SE
 import System.IO (BufferMode (LineBuffering), hSetBuffering, stdout)
 import Web.Hyperbole
 import Web.Hyperbole.Application (waiApp)
@@ -75,11 +78,16 @@ import Web.Hyperbole.Effect.Server (Request (..))
 run :: IO ()
 run = do
   hSetBuffering stdout LineBuffering
-  putStrLn "Starting Examples on http://localhost:3000"
+
+  port <- do
+    mStr <- SE.lookupEnv "PORT"
+    pure $ fromMaybe 3000 (readMay =<< mStr)
+  putStrLn $ "Starting Examples on http://localhost:" <> show port
+
   users <- Users.initUsers
   count <- runEff $ runConcurrent Counter.initCounter
   cache <- clientCache
-  Warp.run 3000 $
+  Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
       Static.staticPolicy (addBase "examples/static") $
         app users count
