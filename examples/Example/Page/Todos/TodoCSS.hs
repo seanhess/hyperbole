@@ -32,14 +32,14 @@ only need to add one manual rule to the footer, to override the CSS reset
 
 -}
 
-page :: (Todos :> es) => Eff es (Page '[TodosView, TodoView])
+page :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
 page = do
   todos <- Todos.loadAll
   pure $ do
     div' id $ do
       stylesheet "https://cdn.jsdelivr.net/npm/todomvc-app-css@2.4.3/index.min.css"
       section (extClass "todoapp") $ do
-        hyper MkTodosView $ todosView FilterAll todos
+        hyper AllTodos $ todosView FilterAll todos
       footer (extClass "info") $ do
         let p_ = p (style' "margin: 1em auto")
         p_ "Double-click to edit a todo"
@@ -53,13 +53,13 @@ page = do
 
 --- TodosView ----------------------------------------------------------------------------
 
-data TodosView = MkTodosView
+data AllTodos = AllTodos
   deriving (Generic, ViewId)
 
-instance (Todos :> es) => HyperView TodosView es where
-  type Require TodosView = '[TodoView]
+instance (Todos :> es) => HyperView AllTodos es where
+  type Require AllTodos = '[TodoView]
 
-  data Action TodosView
+  data Action AllTodos
     = ClearCompleted
     | Filter FilterTodo
     | SubmitTodo
@@ -97,7 +97,7 @@ instance (Todos :> es) => HyperView TodosView es where
         Active -> not todo.completed
         Completed -> todo.completed
 
-todosView :: FilterTodo -> [Todo] -> View TodosView ()
+todosView :: FilterTodo -> [Todo] -> View AllTodos ()
 todosView filt todos = do
   header (extClass "header") $ do
     h1 (style' "top:-80px") $ text "todos"
@@ -117,10 +117,10 @@ todosView filt todos = do
         (text "Mark all as complete")
     ul' (extClass "todo-list") $ do
       forM_ todos $ \todo -> do
-        hyper (MkTodoView todo.id) $ todoView filt todo
+        hyper (TodoView todo.id) $ todoView filt todo
   statusBar filt todos
 
-todoForm :: View TodosView ()
+todoForm :: View AllTodos ()
 todoForm = do
   let f :: TodoForm FieldName = fieldNames
   form SubmitTodo grow $ do
@@ -141,7 +141,7 @@ todoForm = do
             . name nm -- because we use a custom field, we must provide this param for the library
         )
 
-statusBar :: FilterTodo -> [Todo] -> View TodosView ()
+statusBar :: FilterTodo -> [Todo] -> View AllTodos ()
 statusBar filt todos = do
   footer (extClass "footer" . style' "padding-bottom: 30px") $ do
     let numLeft = length $ filter (\t -> not t.completed) todos
@@ -174,11 +174,11 @@ statusBar filt todos = do
 
 --- TodoView ----------------------------------------------------------------------------
 
-data TodoView = MkTodoView TodoId
+data TodoView = TodoView TodoId
   deriving (Generic, ViewId)
 
 instance (Todos :> es) => HyperView TodoView es where
-  type Require TodoView = '[TodosView]
+  type Require TodoView = '[AllTodos]
 
   data Action TodoView
     = Edit FilterTodo Todo
@@ -201,7 +201,7 @@ todoView filt todo = do
     )
     $ do
       div' (extClass "view") $ do
-        target MkTodosView $ do
+        target AllTodos $ do
           input'
             ( extClass "toggle"
                 . att "type" "checkbox"
