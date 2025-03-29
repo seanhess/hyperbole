@@ -18,7 +18,7 @@ import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout (exampleLayout)
 import Web.Hyperbole as Hyperbole
 
-page :: (Todos :> es) => Eff es (Page '[TodosView, TodoView])
+page :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
 page = do
   todos <- Todos.loadAll
   pure $ exampleLayout Route.Todos $ do
@@ -27,17 +27,17 @@ page = do
         space
         el (Style.h1 . pad 10) "Todos"
         space
-      hyper MkTodosView $ todosView FilterAll todos
+      hyper AllTodos $ todosView FilterAll todos
 
 --- TodosView ----------------------------------------------------------------------------
 
-data TodosView = MkTodosView
+data AllTodos = AllTodos
   deriving (Generic, ViewId)
 
-instance (Todos :> es) => HyperView TodosView es where
-  type Require TodosView = '[TodoView]
+instance (Todos :> es) => HyperView AllTodos es where
+  type Require AllTodos = '[TodoView]
 
-  data Action TodosView
+  data Action AllTodos
     = ClearCompleted
     | Filter FilterTodo
     | SubmitTodo
@@ -75,15 +75,15 @@ instance (Todos :> es) => HyperView TodosView es where
         Active -> not todo.completed
         Completed -> todo.completed
 
-todosView :: FilterTodo -> [Todo] -> View TodosView ()
+todosView :: FilterTodo -> [Todo] -> View AllTodos ()
 todosView filt todos = do
   todoForm filt
   col id $ do
     forM_ todos $ \todo -> do
-      hyper (MkTodoView todo.id) $ todoView filt todo
+      hyper (TodoView todo.id) $ todoView filt todo
   statusBar filt todos
 
-todoForm :: FilterTodo -> View TodosView ()
+todoForm :: FilterTodo -> View AllTodos ()
 todoForm filt = do
   let f :: TodoForm FieldName = fieldNames
   row (border 1) $ do
@@ -93,7 +93,7 @@ todoForm filt = do
       field f.task id $ do
         input TextInput (pad 12 . placeholder "What needs to be done?" . value "")
 
-statusBar :: FilterTodo -> [Todo] -> View TodosView ()
+statusBar :: FilterTodo -> [Todo] -> View AllTodos ()
 statusBar filt todos = do
   row (pad 10 . color SecondaryLight) $ do
     let numLeft = length $ filter (\t -> not t.completed) todos
@@ -115,11 +115,11 @@ statusBar filt todos = do
 
 --- TodoView ----------------------------------------------------------------------------
 
-data TodoView = MkTodoView TodoId
+data TodoView = TodoView TodoId
   deriving (Generic, ViewId)
 
 instance (Todos :> es) => HyperView TodoView es where
-  type Require TodoView = '[TodosView]
+  type Require TodoView = '[AllTodos]
 
   data Action TodoView
     = Edit FilterTodo Todo
@@ -136,7 +136,7 @@ instance (Todos :> es) => HyperView TodoView es where
 todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
   row (border (TRBL 0 0 1 0) . pad 10) $ do
-    target MkTodosView $ do
+    target AllTodos $ do
       toggleCheckbox (SetCompleted filt todo) todo.completed
     el (completed . pad (XY 18 4) . onDblClick (Edit filt todo)) $ text todo.task
  where
