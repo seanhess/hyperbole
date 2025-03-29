@@ -23,6 +23,8 @@ only need to add one manual rule to the footer, to override the CSS reset
 
 - main title
   - override its absolute positioning
+- read-only item:
+  - restore border-bottom (a visual separator)
 - footer
   - add bottom padding
 
@@ -184,6 +186,7 @@ todoView filt todo = do
   li'
     ( onDblClick (Edit filt todo)
         . bool id (extClass "completed") todo.completed
+        . style' "border-bottom: 1px solid #ededed"
     )
     $ do
       div' (extClass "view") $ do
@@ -200,10 +203,20 @@ todoView filt todo = do
 todoEditView :: FilterTodo -> Todo -> View TodoView ()
 todoEditView filt todo = do
   let f = fieldNames @TodoForm
-  div' id $ do
-    form (SubmitEdit filt todo) (pad (TRBL 0 0 0 46)) $ do
-      field f.task id $ do
-        input TextInput (pad 4 . value todo.task . autofocus)
+  li' (extClass "editing") $ do
+    form (SubmitEdit filt todo) id $ do
+      let taskField = (Input f.task)
+      -- Instead of using the `field` FormField wrapper, we add the context manually
+      -- and use a custom input field for maximum control over the generated HTML
+      let Input (FieldName fn) = taskField
+      addContext taskField $ do
+        input'
+          ( extClass "edit"
+              . value todo.task
+              . autofocus
+              . extClass "hello"
+              . name fn -- because we use a custom input, we must provide this param for the library
+          )
 
 --- Helpers ----------------------------------------------------------------------------
 
