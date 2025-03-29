@@ -64,7 +64,9 @@ executable examples
       Example.Page.Requests
       Example.Page.Sessions
       Example.Page.Simple
-      Example.Page.Todo
+      Example.Page.Todos.Todo
+      Example.Page.Todos.TodoCSS
+      Example.Page.Todos.Shared
       Example.Page.Transitions
       Example.Style
       Example.View.Icon

@@ -26,6 +26,7 @@ data AppRoute
   | DataTable
   | Examples
   | Todos
+  | TodosCSS -- A version using the CSS from TodoMVC project
   | Errors
   | Javascript
   deriving (Eq, Generic, Show)

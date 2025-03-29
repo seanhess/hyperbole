@@ -53,7 +53,8 @@ import Example.Page.Redirects qualified as Redirects
 import Example.Page.Requests qualified as Requests
 import Example.Page.Sessions qualified as Sessions
 import Example.Page.Simple qualified as Simple
-import Example.Page.Todo qualified as Todo
+import Example.Page.Todos.Todo qualified as Todo
+import Example.Page.Todos.TodoCSS qualified as TodoCSS
 import Example.Page.Transitions qualified as Transitions
 import Example.Style qualified as Style
 import Example.View.Layout as Layout (exampleLayout, examplesView)
@@ -128,6 +129,7 @@ app users count = do
   router Simple = runPage Simple.page
   router Transitions = runPage Transitions.page
   router Todos = runPage Todo.page
+  router TodosCSS = runPage TodoCSS.page
   router Javascript = runPage Javascript.page
   router Main = do
     redirect (routeUrl Simple)
