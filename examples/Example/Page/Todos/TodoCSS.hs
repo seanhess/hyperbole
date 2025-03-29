@@ -25,8 +25,10 @@ only need to add one manual rule to the footer, to override the CSS reset
   - override its absolute positioning
 - read-only item:
   - restore border-bottom (a visual separator)
-- footer
+- first footer
   - add bottom padding
+- second footer
+  - restore default user-agent p tags margin
 
 -}
 
@@ -34,12 +36,20 @@ page :: (Todos :> es) => Eff es (Page '[TodosView, TodoView])
 page = do
   todos <- Todos.loadAll
   pure $ do
-    div' (style' "_margin-top: 50px") $ do
+    div' id $ do
       stylesheet "https://cdn.jsdelivr.net/npm/todomvc-app-css@2.4.3/index.min.css"
       section (extClass "todoapp") $ do
-        header (extClass "header") $ do
-          h1 (style' "top:-80px") $ text "todos"
-          hyper MkTodosView $ todosView FilterAll todos
+        hyper MkTodosView $ todosView FilterAll todos
+      footer (extClass "info") $ do
+        let p_ = p (style' "margin: 1em auto")
+        p_ "Double-click to edit a todo"
+        p_ $ do
+          span' id "Go back to the "
+          a
+            ( att "href" "/"
+                . style' "color: #b83f45"
+            )
+            "index"
 
 --- TodosView ----------------------------------------------------------------------------
 
@@ -89,7 +99,9 @@ instance (Todos :> es) => HyperView TodosView es where
 
 todosView :: FilterTodo -> [Todo] -> View TodosView ()
 todosView filt todos = do
-  todoForm
+  header (extClass "header") $ do
+    h1 (style' "top:-80px") $ text "todos"
+    todoForm
   main' (extClass "main") $ do
     div' (extClass "toggle-all-container") $ do
       input'
@@ -103,9 +115,9 @@ todosView filt todos = do
             . onClick (ToggleAll filt)
         )
         (text "Mark all as complete")
-  ul' (extClass "todo-list") $ do
-    forM_ todos $ \todo -> do
-      hyper (MkTodoView todo.id) $ todoView filt todo
+    ul' (extClass "todo-list") $ do
+      forM_ todos $ \todo -> do
+        hyper (MkTodoView todo.id) $ todoView filt todo
   statusBar filt todos
 
 todoForm :: View TodosView ()
@@ -152,8 +164,7 @@ statusBar filt todos = do
  where
   filterLi f str =
     li' (extClass "filter" . selectedFilter f) $ do
-      tag
-        "a"
+      a
         ( onClick (Filter f)
             . att "href" "" -- harmless empty href is for the CSS
         )
@@ -238,11 +249,17 @@ main' = tag "main"
 h1 :: Mod c -> View c () -> View c ()
 h1 = tag "h1"
 
+p :: Mod c -> View c () -> View c ()
+p = tag "p"
+
 label' :: Mod c -> View c () -> View c ()
 label' = tag "label"
 
 input' :: Mod c -> View c ()
 input' m = tag "input" m ""
+
+a :: Mod c -> View c () -> View c ()
+a = tag "a"
 
 ul' :: Mod c -> View c () -> View c ()
 ul' = tag "ul"
