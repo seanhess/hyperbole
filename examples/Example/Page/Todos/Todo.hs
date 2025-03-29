@@ -11,7 +11,7 @@ import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Effects.Todos (Todo (..), TodoId, Todos)
 import Example.Effects.Todos qualified as Todos
-import Example.Page.Todos.Shared
+import Example.Page.Todos.Shared (FilterTodo (..), TodoForm (..))
 import Example.Style qualified as Style
 import Example.View.Icon qualified as Icon
 import Example.View.Inputs (toggleCheckbox)

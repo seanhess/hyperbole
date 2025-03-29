@@ -1,29 +1,43 @@
-{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Example.Page.Todos.TodoCSS (page) where
 
 import Control.Monad (forM_)
+import Data.Bool (bool)
 import Data.Text qualified as T
-import Effectful
-import Example.Colors (AppColor (..))
+
 import Example.Effects.Todos (Todo, TodoId, Todos)
 import Example.Effects.Todos qualified as Todos
-import Example.Page.Todos.Shared
-import Example.Style qualified as Style
-import Example.View.Icon qualified as Icon
-import Example.View.Inputs (toggleCheckbox)
+import Example.Page.Todos.Shared (FilterTodo (..), TodoForm (..), pluralize)
 import Web.Hyperbole as Hyperbole
+import Web.Hyperbole.View.Forms (Input (Input))
+import Web.View.Style (extClass)
+import Web.View.Types (AttValue)
+
+{-
+
+To make the CSS version work and overcome the default CSS reset, we tweaked the output slightly via a few style tags here and there:
+
+only need to add one manual rule to the footer, to override the CSS reset
+
+- main title
+  - override its absolute positioning
+- footer
+  - add bottom padding
+
+-}
 
 page :: (Todos :> es) => Eff es (Page '[TodosView, TodoView])
 page = do
   todos <- Todos.loadAll
-  pure $ tag "div" id $ do
-    tag "h1" id $ text "Todos CSS"
-    tag "p" id $
-      text ("Count:" <> T.pack (show $ length todos))
-    hyper MkTodosView $ todosView FilterAll todos
+  pure $ do
+    div' (style' "_margin-top: 50px") $ do
+      stylesheet "https://cdn.jsdelivr.net/npm/todomvc-app-css@2.4.3/index.min.css"
+      section (extClass "todoapp") $ do
+        header (extClass "header") $ do
+          h1 (style' "top:-80px") $ text "todos"
+          hyper MkTodosView $ todosView FilterAll todos
 
 --- TodosView ----------------------------------------------------------------------------
 
@@ -73,41 +87,77 @@ instance (Todos :> es) => HyperView TodosView es where
 
 todosView :: FilterTodo -> [Todo] -> View TodosView ()
 todosView filt todos = do
-  todoForm filt
-  col id $ do
+  todoForm
+  main' (extClass "main") $ do
+    div' (extClass "toggle-all-container") $ do
+      input'
+        ( extClass "toggle-all"
+            . att "id" "toggle-all"
+            . att "type" "checkbox"
+        )
+      label'
+        ( extClass "toggle-all-label"
+            . att "for" "toggle-all"
+            . onClick (ToggleAll filt)
+        )
+        (text "Mark all as complete")
+  ul' (extClass "todo-list") $ do
     forM_ todos $ \todo -> do
       hyper (MkTodoView todo.id) $ todoView filt todo
   statusBar filt todos
 
-todoForm :: FilterTodo -> View TodosView ()
-todoForm filt = do
+todoForm :: View TodosView ()
+todoForm = do
   let f :: TodoForm FieldName = fieldNames
-  tag "div" id $ do
-    tag "span" id $ do
-      button (ToggleAll filt) (width 32 . hover (color Primary)) Icon.chevronDown
-    form SubmitTodo grow $ do
-      field f.task id $ do
-        input TextInput (pad 12 . placeholder "What needs to be done?" . value "")
+  form SubmitTodo grow $ do
+    field f.task id $ do
+      Input (FieldName nm) <- context
+      input' -- we use a custom input field, because the Hyperbole one overrides autocomplete
+        ( extClass "new-todo"
+            {-
+              -- . autofocus
+              FIXME: turning off autofocus, that "steals" the focus on item click.
+              FIXME: to solve this, we could either store the "initially focused" state and track that boolean, or use buttons
+              FIXME: but since this example is meant to match as close as possible to the original CSS version
+              FIXME: and not diverge too much from the other todo example, I'm leaving as-is.
+             -}
+            . att "autocomplete" "off"
+            . placeholder "What needs to be done?"
+            . value ""
+            . name nm -- because we use a custom field, we must provide this param for the library
+        )
 
 statusBar :: FilterTodo -> [Todo] -> View TodosView ()
 statusBar filt todos = do
-  tag "div" id $ do
+  footer (extClass "footer" . style' "padding-bottom: 30px") $ do
     let numLeft = length $ filter (\t -> not t.completed) todos
-    el_ $ do
-      text $ T.pack (show numLeft)
-      text " items left!"
+    span' (extClass "todo-count") $ do
+      text $
+        mconcat
+          [ T.pack $ show numLeft
+          , " "
+          , pluralize numLeft "item" "items"
+          , " "
+          , "left!"
+          ]
     space
-    tag "div" id $ do
-      filterButton FilterAll "All"
-      filterButton Active "Active"
-      filterButton Completed "Completed"
+    ul' (extClass "filters") $ do
+      filterLi FilterAll "All"
+      filterLi Active "Active"
+      filterLi Completed "Completed"
     space
-    button ClearCompleted (hover (color Primary)) "Clear completed"
+    button ClearCompleted (extClass "clear-completed") "Clear completed"
  where
-  filterButton f =
-    button (Filter f) (selectedFilter f . pad (XY 4 0) . rounded 2)
+  filterLi f str =
+    li' (extClass "filter" . selectedFilter f) $ do
+      tag
+        "a"
+        ( onClick (Filter f)
+            . att "href" "" -- harmless empty href is for the CSS
+        )
+        (text str)
   selectedFilter f =
-    if f == filt then border 1 else id
+    if f == filt then extClass "selected" else id
 
 --- TodoView ----------------------------------------------------------------------------
 
@@ -131,17 +181,64 @@ instance (Todos :> es) => HyperView TodoView es where
 
 todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
-  tag "div" id $ do
-    target MkTodosView $ do
-      toggleCheckbox (SetCompleted filt todo) todo.completed
-    tag "span" (completed . pad (XY 18 4) . onDblClick (Edit filt todo)) $ text todo.task
- where
-  completed = if todo.completed then Style.strikethrough else id
+  li'
+    ( onDblClick (Edit filt todo)
+        . bool id (extClass "completed") todo.completed
+    )
+    $ do
+      div' (extClass "view") $ do
+        target MkTodosView $ do
+          input'
+            ( extClass "toggle"
+                . att "type" "checkbox"
+                . onClick (SetCompleted filt todo $ not todo.completed)
+                . checked todo.completed
+            )
+        label' (extClass "label") $ do
+          text todo.task
 
 todoEditView :: FilterTodo -> Todo -> View TodoView ()
 todoEditView filt todo = do
   let f = fieldNames @TodoForm
-  tag "div" id $ do
+  div' id $ do
     form (SubmitEdit filt todo) (pad (TRBL 0 0 0 46)) $ do
       field f.task id $ do
         input TextInput (pad 4 . value todo.task . autofocus)
+
+--- Helpers ----------------------------------------------------------------------------
+
+div' :: Mod c -> View c () -> View c ()
+div' = tag "div"
+
+span' :: Mod c -> View c () -> View c ()
+span' = tag "span"
+
+section :: Mod c -> View c () -> View c ()
+section = tag "section"
+
+header :: Mod c -> View c () -> View c ()
+header = tag "header"
+
+main' :: Mod c -> View c () -> View c ()
+main' = tag "main"
+
+h1 :: Mod c -> View c () -> View c ()
+h1 = tag "h1"
+
+label' :: Mod c -> View c () -> View c ()
+label' = tag "label"
+
+input' :: Mod c -> View c ()
+input' m = tag "input" m ""
+
+ul' :: Mod c -> View c () -> View c ()
+ul' = tag "ul"
+
+li' :: Mod c -> View c () -> View c ()
+li' = tag "li"
+
+footer :: Mod c -> View c () -> View c ()
+footer = tag "footer"
+
+style' :: AttValue -> Mod c
+style' = att "style"

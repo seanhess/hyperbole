@@ -1,7 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Page.Todos.Shared where
+module Example.Page.Todos.Shared
+  ( pluralize
+  , FilterTodo (..)
+  , TodoForm (..)
+  ) where
 
 import Data.Text (Text)
 import Web.Hyperbole
@@ -16,3 +20,11 @@ data TodoForm f = TodoForm
   { task :: Field f Text
   }
   deriving (Generic, FromFormF, GenFields FieldName)
+
+pluralize :: Int -> Text -> Text -> Text
+pluralize n singular plural =
+  if n == 1
+    then
+      singular
+    else
+      plural
