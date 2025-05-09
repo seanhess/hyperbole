@@ -3,7 +3,7 @@
 module Example.View.Icon where
 
 import Data.String.Interpolate (i)
-import Web.View
+import Web.Hyperbole.View
 
 hamburger :: View c ()
 hamburger =

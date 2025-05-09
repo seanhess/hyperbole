@@ -4,6 +4,7 @@ module Example.Docs.MultiPage where
 
 import Example.Docs.Interactive qualified as Message
 import Example.Docs.MultiView qualified as Counter
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 data AppRoute
@@ -20,18 +21,18 @@ main = do
 
 menu :: View c ()
 menu = do
-  route Message id "Link to /message"
-  route Counter id "Link to /counter"
+  route Message "Link to /message"
+  route Counter "Link to /counter"
 
 exampleLayout :: View c () -> View c ()
 exampleLayout content = do
-  layout id $ do
-    el (border 1) "My Website Header"
-    row id $ do
+  col ~ fillViewport $ do
+    el ~ border 1 $ "My Website Header"
+    row $ do
       menu
       content
 
 examplePage :: Eff es (Page '[])
 examplePage = do
   pure $ exampleLayout $ do
-    el_ "page contents"
+    el "page contents"

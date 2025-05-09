@@ -14,6 +14,7 @@ import Example.Page.Contact (contactForm, contactLoading, contactView', parseUse
 import Example.Page.Contact qualified as Contact
 import Example.Style qualified as Style
 import Example.View.Layout (exampleLayout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 page
@@ -23,7 +24,7 @@ page
 page = do
   us <- Users.all
   pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
-    col (pad 10 . gap 10) $ do
+    col ~ pad 10 . gap 10 $ do
       hyper Contacts $ allContactsView Nothing us
 
 -- Contacts ----------------------------------------------
@@ -63,26 +64,26 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
 -- TODO: get the form to close when submitted
 
 allContactsView :: Maybe Filter -> [User] -> View Contacts ()
-allContactsView fil us = col (gap 20) $ do
-  row (gap 10) $ do
-    el (pad 10) "Filter: "
-    dropdown Reload (== fil) id $ do
+allContactsView fil us = col ~ gap 20 $ do
+  row ~ gap 10 $ do
+    el ~ pad 10 $ "Filter: "
+    dropdown Reload (== fil) $ do
       option Nothing ""
       option (Just Active) "Active!"
       option (Just Inactive) "Inactive"
 
-  row (gap 10) $ do
+  row ~ gap 10 $ do
     let filtered = filter (filterUsers fil) us
     forM_ filtered $ \u -> do
-      el (border 1 . pad 10) $ do
+      el ~ border 1 . pad 10 $ do
         hyper (InlineContact u.id) $ contactView u
-        row id $ do
+        row $ do
           space
-          link (routeUrl $ Route.Contacts $ Route.Contact u.id) Style.link "details"
+          route (Route.Contacts $ Route.Contact u.id) "details" ~ Style.link
 
-  row (gap 10) $ do
-    button (Reload Nothing) Style.btnLight "Reload"
-    target (InlineContact 2) $ button Edit Style.btnLight "Edit Sara"
+  row ~ gap 10 $ do
+    button (Reload Nothing) ~ Style.btnLight $ "Reload"
+    target (InlineContact 2) $ button Edit ~ Style.btnLight $ "Edit Sara"
 
   hyper NewContact newContactButton
  where
@@ -114,16 +115,16 @@ instance (Users :> es) => HyperView NewContact es where
 
 newContactButton :: View NewContact ()
 newContactButton = do
-  button ShowForm Style.btn "Add Contact"
+  button ShowForm ~ Style.btn $ "Add Contact"
 
 newContactForm :: View NewContact ()
 newContactForm = do
-  row (pad 10 . gap 10 . border 1) $ do
+  row ~ pad 10 . gap 10 . border 1 $ do
     target Contacts $ do
       contactForm AddUser genFields
-    col id $ do
+    col $ do
       space
-      button CloseForm Style.btnLight "Cancel"
+      button CloseForm ~ Style.btnLight $ "Cancel"
 
 -- Reuse Contact View ----------------------------------
 -- We want to use the same view as Example.Contact, but customize the edit view to have a delete button
@@ -163,7 +164,7 @@ contactView = contactView' Edit
 -- See how we reuse the contactEdit' and contactLoading from Example.Contact
 contactEdit :: User -> View InlineContact ()
 contactEdit u = do
-  el (hide . onRequest flexCol) contactLoading
-  col (onRequest hide . gap 10) $ do
+  el ~ (hide . whenLoading flexCol) $ contactLoading
+  col ~ (whenLoading hide . gap 10) $ do
     Contact.contactEdit View Save u
-    target Contacts $ button (DeleteUser u.id) (Style.btn' Danger . pad (XY 10 0)) (text "Delete")
+    target Contacts $ button (DeleteUser u.id) ~ Style.btn' Danger . pad (XY 10 0) $ text "Delete"

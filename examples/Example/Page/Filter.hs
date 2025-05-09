@@ -11,13 +11,14 @@ import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguag
 import Example.View.Icon as Icon
 import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout (exampleLayout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
 page :: (Hyperbole :> es) => Eff es (Page '[Languages])
 page = do
   filters <- query
-  pure $ exampleLayout Route.Filter $ col (pad 20 . grow) $ do
+  pure $ exampleLayout Route.Filter $ col ~ pad 20 . grow $ do
     hyper Languages $ languagesView filters
 
 data Languages = Languages
@@ -84,23 +85,23 @@ filterLanguages filts =
 languagesView :: Filters -> View Languages ()
 languagesView filters = do
   let matched = filterLanguages filters
-  col (gap 10 . grow) $ do
+  col ~ gap 10 . grow $ do
     filtersView filters
     resultsTable Select matched
 
 filtersView :: Filters -> View Languages ()
 filtersView filters = do
-  stack grow $ do
-    layer id $ search SearchTerm 250 (placeholder "filter programming languages" . border 1 . pad 10 . value filters.term . autofocus)
+  el ~ stack . grow $ do
+    search SearchTerm 250 @ placeholder "filter programming languages" . value filters.term . autofocus ~ border 1 . pad 10
     clearButton SearchTerm filters.term
 
-  row id $ do
-    col (gap 5) $ do
-      el bold "Language Family"
+  row $ do
+    col ~ gap 5 $ do
+      el ~ bold $ "Language Family"
       familyDropdown filters
     space
-    col (gap 5) $ do
-      el bold "Type System Features"
+    col ~ gap 5 $ do
+      el ~ bold $ "Type System Features"
       feature Dynamic
       feature Typed
       feature Generics
@@ -108,23 +109,23 @@ filtersView filters = do
       feature TypeFamilies
  where
   feature f =
-    row (gap 10) $ do
+    row ~ gap 10 $ do
       toggleCheckbox (Feature f) (f `elem` filters.features)
-      el_ $ text (featureName f)
+      el $ text (featureName f)
 
   featureName f = pack $ show f
 
 familyDropdown :: Filters -> View Languages ()
 familyDropdown filters =
-  dropdown SetFamily (== filters.family) (border 1 . pad 10) $ do
+  dropdown SetFamily (== filters.family) ~ border 1 . pad 10 $ do
     option Nothing "Any"
     option (Just ObjectOriented) "Object Oriented"
     option (Just Functional) "Functional"
 
-clearButton :: (ViewAction (Action id)) => (Text -> Action id) -> Text -> Layer id ()
+clearButton :: (ViewAction (Action id)) => (Text -> Action id) -> Text -> View id ()
 clearButton clear term =
-  layer (popup (R 0) . pad 10 . showClearBtn) $ do
-    button (clear "") (width 24 . hover (color PrimaryLight)) Icon.xCircle
+  el ~ popup (R 0) . pad 10 . showClearBtn $ do
+    button (clear "") ~ width 24 . hover (color PrimaryLight) $ Icon.xCircle
  where
   showClearBtn =
     case term of
@@ -133,28 +134,28 @@ clearButton clear term =
 
 chosenView :: ProgrammingLanguage -> View c ()
 chosenView lang = do
-  row (gap 10) $ do
-    el_ "You chose:"
-    el_ $ text lang.name
-  el (if lang.name == "Haskell" then id else hide) "You are as wise as you are attractive"
+  row ~ gap 10 $ do
+    el "You chose:"
+    el $ text lang.name
+  el ~ (if lang.name == "Haskell" then id else hide) $ "You are as wise as you are attractive"
 
 resultsTable :: (ViewAction (Action id)) => (ProgrammingLanguage -> Action id) -> [ProgrammingLanguage] -> View id ()
 resultsTable onSelect langs = do
-  col (gap 15) $ do
+  col ~ gap 15 $ do
     mapM_ languageRow langs
  where
   languageRow lang = do
-    col (gap 5) $ do
-      row (gap 5) $ do
-        el bold $ text lang.name
+    col ~ gap 5 $ do
+      row ~ gap 5 $ do
+        el ~ bold $ text lang.name
         space
-        button (onSelect lang) (pad (XY 10 2) . border 1 . hover (bg GrayLight) . rows) "Select"
+        button (onSelect lang) ~ pad (XY 10 2) . border 1 . hover (bg GrayLight) . rows $ "Select"
 
-      row id $ do
-        el (bg Light . pad (XY 10 2) . fontSize 16 . textAlign AlignCenter) (family lang.family)
+      row $ do
+        el ~ bg Light . pad (XY 10 2) . fontSize 16 . textAlign AlignCenter $ (family lang.family)
 
-      row (gap 5) $ do
-        el id $ text lang.description
+      row ~ gap 5 $ do
+        el $ text lang.description
 
   family Functional = "Functional"
   family ObjectOriented = "Object Oriented"

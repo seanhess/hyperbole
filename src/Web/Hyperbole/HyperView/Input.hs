@@ -1,21 +1,24 @@
-module Web.Hyperbole.View.Element where
+module Web.Hyperbole.HyperView.Input where
 
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import Web.Hyperbole.HyperView (HyperView (..), ViewAction (..))
-import Web.Hyperbole.Route (Route (..), routeUrl)
-import Web.Hyperbole.View.Event (DelayMs, onClick, onInput)
-import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)
+import Web.Atomic.Types
+import Web.Hyperbole.HyperView.Event (DelayMs, onClick, onInput)
+import Web.Hyperbole.HyperView.Types (HyperView (..), ViewAction (..))
+import Web.Hyperbole.Route (Route (..), routeUri)
+import Web.Hyperbole.View
 
 
 {- | \<button\> HTML tag which sends the action when pressed
 
 > button SomeAction (border 1) "Click Me"
 -}
-button :: (ViewAction (Action id)) => Action id -> Mod id -> View id () -> View id ()
-button action f cd = do
-  tag "button" (onClick action . f) cd
+button :: (ViewAction (Action id)) => Action id -> View id () -> View id ()
+button action cnt = do
+  tag "button" cnt @ onClick action
 
+
+-- tag "button" @ att "whatber" "asdf" $ cnt
 
 -- {- | \<input type="checkbox"\> which toggles automatically
 --
@@ -24,7 +27,6 @@ button action f cd = do
 -- toggle :: (ViewAction (Action id)) => Bool -> (Bool -> Action id) -> Mod id -> View id ()
 -- toggle isSelected clickAction f = do
 --   tag "input" (att "type" "checkbox" . checked isSelected . onClick (clickAction (not isSelected)) . f) none
-
 
 {- | Type-safe dropdown. Sends (opt -> Action id) when selected. The selection predicate (opt -> Bool) controls which option is selected. See [Example.Page.Filter](https://docs.hyperbole.live/filter)
 
@@ -36,11 +38,10 @@ dropdown
   :: (ViewAction (Action id))
   => (opt -> Action id)
   -> (opt -> Bool) -- check if selec
-  -> Mod id
   -> View (Option opt id (Action id)) ()
   -> View id ()
-dropdown act isSel f options = do
-  tag "select" (att "data-on-change" "" . f) $ do
+dropdown act isSel options = do
+  tag "select" @ att "data-on-change" "" $ do
     addContext (Option act isSel) options
 
 
@@ -52,11 +53,11 @@ option
   -> View (Option opt id (Action id)) ()
 option opt cnt = do
   os <- context
-  tag "option" (att "value" (toAction (os.toAction opt)) . selected (os.selected opt)) cnt
+  tag "option" @ att "value" (toAction (os.toAction opt)) @ selected (os.selected opt) $ cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
-selected :: Bool -> Mod id
+selected :: (Attributable h) => Bool -> Attributes h -> Attributes h
 selected b = if b then att "selected" "true" else id
 
 
@@ -68,9 +69,18 @@ data Option opt id action = Option
 
 
 -- | A live search field
-search :: (ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> Mod id -> View id ()
-search go delay f = do
-  tag "input" (onInput go delay . f) none
+search :: (ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> View id ()
+search go delay = do
+  tag "input" none @ onInput go delay
+
+
+{- | Set checkbox = checked via the client (VDOM doesn't work)
+designed for input, which has no children
+-}
+checked :: (Attributable a) => Bool -> Attributes a -> Attributes a
+checked c =
+  att "data-checked" (cs $ show c)
+    . if c then att "checked" "" else id
 
 
 {- | A hyperlink to another route
@@ -78,11 +88,5 @@ search go delay f = do
 >>> route (User 100) id "View User"
 <a href="/user/100">View User</a>
 -}
-route :: (Route a) => a -> Mod c -> View c () -> View c ()
-route r = link (routeUrl r)
-
-
-checked :: Bool -> Mod id
-checked c =
-  att "data-checked" (cs $ show c)
-    . if c then att "checked" "" else id
+route :: (Route a) => a -> View c () -> View c ()
+route r = link (routeUri r)

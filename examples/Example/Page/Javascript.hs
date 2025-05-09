@@ -3,6 +3,7 @@ module Example.Page.Javascript where
 import Data.Text (Text)
 import Example.AppRoute qualified as Route
 import Example.View.Layout (exampleLayout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 main :: IO ()
@@ -12,7 +13,7 @@ main = do
 
 page :: (Hyperbole :> es) => Eff es (Page '[Message, Nope])
 page = do
-  pure $ exampleLayout Route.Javascript $ col (pad 20 . gap 10) $ do
+  pure $ exampleLayout Route.Javascript $ col ~ pad 20 . gap 10 $ do
     hyper Message1 $ messageView "Hello"
     hyper Message2 $ messageView "World!"
 
@@ -33,9 +34,9 @@ instance HyperView Message es where
 
 messageView :: Text -> View Message ()
 messageView m = do
-  row (gap 10) $ do
-    button (Louder m) (border 1 . pad 5) "Louder"
-    el (pad 5) $ text m
+  row ~ gap 10 $ do
+    button (Louder m) "Louder" ~ border 1 . pad 5
+    el ~ pad 5 $ text m
 
 data Nope = Nope
   deriving (Generic, ViewId)

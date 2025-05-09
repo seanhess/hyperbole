@@ -1,12 +1,15 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module Test.SessionSpec where
 
-import Data.Aeson as A (FromJSON (..), ToJSON (..), decode, encode)
+import Data.Aeson as A (encode)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Network.HTTP.Types (urlEncode)
 import Skeletest
 import Web.Hyperbole
 import Web.Hyperbole.Data.Cookie as Cookie
+import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Session (sessionCookie)
 
 
@@ -15,7 +18,7 @@ import Web.Hyperbole.Effect.Session (sessionCookie)
 data Woot = Woot Text
   deriving (Generic, Show, ToJSON, FromJSON)
 instance Session Woot where
-  cookiePath = Just ["somepage"]
+  cookiePath = Just $ Path True ["somepage"]
 
 
 spec :: Spec

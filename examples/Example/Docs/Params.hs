@@ -1,6 +1,7 @@
 module Example.Docs.Params where
 
 import Data.Text (Text)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 data Filters = Filters
@@ -47,8 +48,8 @@ page' = do
 
 messageView :: Text -> View Message ()
 messageView m = do
-  el bold $ text $ "Message: " <> m
-  button (SetMessage "Goodbye") (border 1) "Say Goodbye"
+  el ~ bold $ text $ "Message: " <> m
+  button (SetMessage "Goodbye") ~ border 1 $ "Say Goodbye"
 
 data Message = Message
   deriving (Generic, ViewId)

@@ -4,12 +4,9 @@
 module Test.QuerySpec where
 
 import Data.Function ((&))
-import Data.Map qualified as M
 import Data.Text (Text)
-import Network.HTTP.Types qualified as HTTP
 import Skeletest
 import Web.Hyperbole
-import Web.Hyperbole.Data.Param as Param
 import Web.Hyperbole.Data.QueryData as QueryData
 
 

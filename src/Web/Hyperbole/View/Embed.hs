@@ -9,7 +9,7 @@ where
 
 import Data.ByteString
 import Data.FileEmbed
-import Web.View.Reset
+import Web.Atomic.CSS.Reset
 
 
 scriptEmbed :: ByteString

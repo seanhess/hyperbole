@@ -2,6 +2,7 @@ module Example.Docs.SideEffects where
 
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Eff es (Page '[Message])
@@ -26,5 +27,5 @@ instance HyperView Message es where
 
 messageView :: Text -> View Message ()
 messageView m = do
-  button (Louder m) (border 1) "Louder"
-  el bold $ text $ "Message: " <> m
+  button (Louder m) ~ border 1 $ "Louder"
+  el ~ bold $ text $ "Message: " <> m

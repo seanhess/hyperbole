@@ -36,7 +36,7 @@ todosView :: [Todo] -> View AllTodos ()
 todosView todos = do
   forM_ todos $ \todo -> do
     hyper TodoItem $ todoView todo
-  button (AddTodo "Shopping" todos) id "Add Shopping"
+  button (AddTodo "Shopping" todos) "Add Shopping"
 
 data TodoItem = TodoItem
   deriving (Generic, ViewId)
@@ -52,5 +52,5 @@ instance HyperView TodoItem es where
 
 todoView :: Todo -> View TodoItem ()
 todoView todo = do
-  el_ (text todo.task)
-  button (Complete todo) id "Mark Completed"
+  el (text todo.task)
+  button (Complete todo) "Mark Completed"

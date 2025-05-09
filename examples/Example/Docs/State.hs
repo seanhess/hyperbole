@@ -3,12 +3,13 @@
 module Example.Docs.State where
 
 import Data.Text (Text)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 messageView :: Text -> View Message ()
 messageView m = do
-  button (Louder m) (border 1) "Louder"
-  el bold $ text m
+  button (Louder m) ~ border 1 $ "Louder"
+  el ~ bold $ text m
 
 page :: Eff es (Page '[Message])
 page = do

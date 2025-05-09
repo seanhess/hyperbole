@@ -3,9 +3,9 @@ module Web.Hyperbole.Effect.Request where
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Web.FormUrlEncoded (Form, urlDecodeForm)
+import Web.Hyperbole.Data.URI (Path)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Server
-import Web.View
 
 
 -- | Return all information about the 'Request'
@@ -18,7 +18,7 @@ request = send GetRequest
 >>> reqPath
 ["users", "100"]
 -}
-reqPath :: (Hyperbole :> es) => Eff es [Segment]
+reqPath :: (Hyperbole :> es) => Eff es Path
 reqPath = (.path) <$> request
 
 

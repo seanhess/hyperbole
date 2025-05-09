@@ -3,16 +3,14 @@
 module Web.Hyperbole.Route
   ( Route (..)
   , findRoute
-  , pathUrl
-  , routeUrl
-  , Url
-  , Segment
+  , routeUri
   , GenRoute (..)
   , genMatchRoute
   , genRoutePath
   , genRouteRead
   , matchRouteRead
   , routePathShow
+  , module Web.Hyperbole.Data.URI
   ) where
 
 import Control.Applicative ((<|>))
@@ -20,8 +18,9 @@ import Control.Monad (guard)
 import Data.Text (Text, pack, toLower, unpack)
 import Data.Text qualified as T
 import GHC.Generics
+import Network.URI
 import Text.Read (readMaybe)
-import Web.View.Types.Url (Segment, Url, pathUrl)
+import Web.Hyperbole.Data.URI
 import Prelude hiding (dropWhile)
 
 
@@ -84,8 +83,8 @@ genRoutePath = genPaths . from
 >>> routeUrl (User 100)
 /user/100
 -}
-routeUrl :: (Route a) => a -> Url
-routeUrl = pathUrl . routePath
+routeUri :: (Route a) => a -> URI
+routeUri = pathUri . Path True . routePath
 
 
 -- | Automatically derive 'Route'

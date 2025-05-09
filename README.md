@@ -188,7 +188,7 @@ ghcid --command="cabal repl test lib:hyperbole" --run=Main.main --warnings --rel
     - `nix develop .#ghc966-shell` to get a shell with all dependencies installed for GHC 9.6.6. 
 - `nix build`, `nix build .#ghc982-hyperbole` and `nix build .#ghc966-hyperbole` builds the library with the `overriddenHaskellPackages`
     - If you want to import this flake, use the overlay
-- `nix flake update web-view` will update the `web-view` input
+- `nix flake update atomic-css` will update the `atomic-css` input
 
 Note: You can always run `cachix use hyperbole` to use the GitHub CI populated cache if you didn't allow adding 'extra-substituters' when first using this flake.
 
@@ -207,7 +207,7 @@ Follow these [instructions](https://nixos.org/manual/nixpkgs/unstable/#haskell-p
 
 #### Dependencies Incorrect
 
-If you need to update `web-view` run `nix flake update web-view`, otherwise:
+If you need to update `atomic-css` run `nix flake update atomic-css`, otherwise:
 
 You will need to update the overlay, look for where it says `"${packageName}" = hfinal.callCabal2nix packageName src { };` and add a line like `Diff = hfinal.callHackage "Diff" "0.5" { };` with the package and version you need.
 

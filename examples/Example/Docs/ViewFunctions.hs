@@ -3,6 +3,7 @@
 module Example.Docs.ViewFunctions where
 
 import Data.Text (Text)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 page :: Eff es (Page '[Message])
@@ -30,8 +31,8 @@ messageView m = do
 
 messageButton :: Text -> View Message ()
 messageButton msg = do
-  button (SetMessage msg) (border 1) (text $ "Say " <> msg)
+  button (SetMessage msg) ~ border 1 $ text $ "Say " <> msg
 
 header :: Text -> View context ()
 header txt = do
-  el bold (text txt)
+  el ~ bold $ text txt

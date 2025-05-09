@@ -28,10 +28,10 @@ router Messages = runPage Messages.page
 router (User cid) = runPage $ Users.page cid
 router Main = do
   view $ do
-    el_ "click a link below to visit a page"
-    route Messages id "Messages"
-    route (User 1) id "User 1"
-    route (User 2) id "User 2"
+    el "click a link below to visit a page"
+    route Messages "Messages"
+    route (User 1) "User 1"
+    route (User 2) "User 2"
 
 type UserId = Int
 

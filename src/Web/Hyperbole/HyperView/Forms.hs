@@ -2,7 +2,7 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Web.Hyperbole.View.Forms
+module Web.Hyperbole.HyperView.Forms
   ( FromForm (..)
   , FromFormF (..)
   , GenFields (..)
@@ -18,7 +18,6 @@ module Web.Hyperbole.View.Forms
   , checkbox
   , form
   , textarea
-  , placeholder
   , submit
   , formData
   , FormOptions (..)
@@ -37,7 +36,6 @@ module Web.Hyperbole.View.Forms
   )
 where
 
-import Data.Function ((&))
 import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
 import Data.Maybe (fromMaybe)
@@ -46,17 +44,18 @@ import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
 import Text.Casing (kebab)
+import Web.Atomic.CSS
+import Web.Atomic.Types hiding (Selector)
 import Web.FormUrlEncoded (Form (..), FormOptions (..))
 import Web.FormUrlEncoded qualified as FE
 import Web.Hyperbole.Data.Param (FromParam (..), ParamValue (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
-import Web.Hyperbole.HyperView
-import Web.Hyperbole.View.Element (checked)
-import Web.Hyperbole.View.Event (onSubmit)
-import Web.View hiding (form, input, label)
-import Web.View.Style (addClass, cls, prop)
+import Web.Hyperbole.HyperView.Event (onSubmit)
+import Web.Hyperbole.HyperView.Input (checked)
+import Web.Hyperbole.HyperView.Types
+import Web.Hyperbole.View
 
 
 ------------------------------------------------------------------------------
@@ -155,22 +154,20 @@ data FormFields id = FormFields id
 #EMBED Example/Page/FormSimple.hs formView
 @
 -}
-form :: (ViewAction (Action id)) => Action id -> Mod id -> View (FormFields id) () -> View id ()
-form a md cnt = do
+form :: (ViewAction (Action id)) => Action id -> View (FormFields id) () -> View id ()
+form a cnt = do
   vid <- context
-  tag "form" (onSubmit a . md . flexCol . marginEnd0) $ do
+  tag "form" @ onSubmit a ~ flexCol . marginEnd0 $ do
     addContext (FormFields vid) cnt
  where
   -- not sure why chrome is adding margin-block-end: 16 to forms? Add to web-view?
   marginEnd0 =
-    addClass $
-      cls "mg-end-0"
-        & prop @PxRem "margin-block-end" 0
+    utility @PxRem "mg-end-0" "margin-block-end" 0
 
 
 -- | Button that submits the 'form'
-submit :: Mod (FormFields id) -> View (FormFields id) () -> View (FormFields id) ()
-submit f = tag "button" (att "type" "submit" . f)
+submit :: View (FormFields id) () -> View (FormFields id) ()
+submit = tag "button" @ att "type" "submit"
 
 
 -- | Form FieldName. This is embeded as the name attribute, and refers to the key need to parse the form when submitted. See 'fieldNames'
@@ -182,11 +179,10 @@ newtype FieldName a = FieldName Text
 field
   :: forall (id :: Type) (a :: Type)
    . FieldName a
-  -> Mod (FormFields id)
   -> View (Input id a) ()
   -> View (FormFields id) ()
-field fn f inputs = do
-  tag "label" (f . flexCol) $ do
+field fn inputs = do
+  tag "label" ~ flexCol $ do
     addContext (Input fn) inputs
 
 
@@ -221,10 +217,10 @@ label = text
 
 
 -- | input for a 'field'
-input :: InputType -> Mod (Input id a) -> View (Input id a) ()
-input ft f = do
+input :: InputType -> View (Input id a) ()
+input ft = do
   Input (FieldName nm) <- context
-  tag "input" (att "type" (inpType ft) . name nm . att "autocomplete" (auto ft) . f) none
+  tag "input" @ att "type" (inpType ft) . name nm . att "autocomplete" (auto ft) $ none
  where
   inpType NewPassword = "password"
   inpType CurrentPassword = "password"
@@ -237,21 +233,17 @@ input ft f = do
   auto = pack . kebab . show
 
 
-checkbox :: Bool -> Mod (Input id a) -> View (Input id a) ()
-checkbox isChecked f = do
+checkbox :: Bool -> View (Input id a) ()
+checkbox isChecked = do
   Input (FieldName nm) <- context
-  tag "input" (att "type" "checkbox" . name nm . checked isChecked . f) none
-
-
-placeholder :: Text -> Mod id
-placeholder = att "placeholder"
+  tag "input" @ att "type" "checkbox" . name nm $ none @ checked isChecked
 
 
 -- | textarea for a 'field'
-textarea :: Mod (Input id a) -> Maybe Text -> View (Input id a) ()
-textarea f mDefaultText = do
+textarea :: Maybe Text -> View (Input id a) ()
+textarea mDefaultText = do
   Input (FieldName nm) <- context
-  tag "textarea" (f . name nm) (text $ fromMaybe "" mDefaultText)
+  tag "textarea" @ name nm $ text $ fromMaybe "" mDefaultText
 
 
 ------------------------------------------------------------------------------

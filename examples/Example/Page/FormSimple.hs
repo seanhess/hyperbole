@@ -5,11 +5,12 @@ import Effectful
 import Example.AppRoute qualified as Route
 import Example.Style qualified as Style
 import Example.View.Layout (exampleLayout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Eff es (Page '[FormView])
 page = do
-  pure $ exampleLayout Route.FormSimple $ row (pad 20) $ do
+  pure $ exampleLayout Route.FormSimple $ row ~ (pad 20) $ do
     hyper FormView formView'
 
 data FormView = FormView
@@ -35,26 +36,24 @@ data ContactForm = ContactForm
 -- and a view that displays an input for each field
 formView :: View FormView ()
 formView = do
-  form Submit (gap 15 . pad 10) $ do
-    el Style.h1 "Add Contact"
+  form Submit ~ gap 15 . pad 10 $ do
+    el ~ Style.h1 $ "Add Contact"
 
     -- Make sure these names match the field names used by FormParse / formData
-    field "name" id $ do
+    field "name" $ do
       label "Contact Name"
-      input Username (inp . placeholder "contact name")
+      input Username @ placeholder "contact name" ~ Style.input
 
-    field "age" id $ do
+    field "age" $ do
       label "Age"
-      input Number (inp . placeholder "age" . value "0")
+      input Number @ placeholder "age" . value "0" ~ Style.input
 
-    field "isFavorite" id $ do
-      row (gap 10) $ do
-        checkbox False (width 32)
+    field "isFavorite" $ do
+      row ~ gap 10 $ do
+        checkbox False ~ width 32
         label "Favorite?"
 
-    submit Style.btn "Submit"
- where
-  inp = Style.input
+    submit "Submit" ~ Style.btn
 
 -- Alternatively, use Higher Kinded Types, and Hyperbole can guarantee the field names are the same
 --
@@ -79,41 +78,39 @@ formView' :: View FormView ()
 formView' = do
   -- generate a ContactForm' FieldName
   let f = fieldNames @ContactForm'
-  form Submit (gap 15 . pad 10) $ do
-    el Style.h1 "Add Contact"
+  form Submit ~ gap 15 . pad 10 $ do
+    el ~ Style.h1 $ "Add Contact"
 
     -- f.name :: FieldName Text
     -- f.name = FieldName "name"
-    field f.name id $ do
+    field f.name $ do
       label "Contact Name"
-      input Username (inp . placeholder "contact name")
+      input Username @ placeholder "contact name" ~ Style.input
 
     -- f.age :: FieldName Int
     -- f.age = FieldName "age"
-    field f.age id $ do
+    field f.age $ do
       label "Age"
-      input Number (inp . placeholder "age" . value "0")
+      input Number @ placeholder "age" . value "0" ~ Style.input
 
-    field f.isFavorite id $ do
-      row (gap 10) $ do
-        checkbox False (width 32)
+    field f.isFavorite $ do
+      row ~ gap 10 $ do
+        checkbox False ~ width 32
         label "Favorite?"
 
-    submit Style.btn "Submit"
- where
-  inp = Style.input
+    submit "Submit" ~ Style.btn
 
 contactView :: ContactForm -> View FormView ()
 contactView u = do
-  el (bold . Style.success) "Accepted Signup"
-  row (gap 5) $ do
-    el_ "Username:"
-    el_ $ text u.name
+  el ~ bold . Style.success $ "Accepted Signup"
+  row ~ gap 5 $ do
+    el "Username:"
+    el $ text u.name
 
-  row (gap 5) $ do
-    el_ "Age:"
-    el_ $ text $ pack (show u.age)
+  row ~ gap 5 $ do
+    el "Age:"
+    el $ text $ pack (show u.age)
 
-  row (gap 5) $ do
-    el_ "Favorite:"
-    el_ $ text $ pack (show u.isFavorite)
+  row ~ gap 5 $ do
+    el "Favorite:"
+    el $ text $ pack (show u.isFavorite)

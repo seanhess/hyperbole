@@ -9,15 +9,15 @@ import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Network.HTTP.Types (urlDecode, urlEncode)
-import Web.View.Types.Url (Segment, pathUrl, renderUrl)
+import Web.Hyperbole.Data.URI
 
 
+type Key = Text
 
-type Key  = Text
 
 data Cookie = Cookie
   { key :: Key
-  , path :: Maybe [Segment]
+  , path :: Maybe Path
   , value :: Maybe CookieValue
   }
   deriving (Show, Eq)
@@ -47,9 +47,6 @@ lookup key (Cookies m) = do
   cook.value
 
 
-
-
-
 fromList :: [Cookie] -> Cookies
 fromList cks = Cookies $ M.fromList (fmap keyValue cks)
  where
@@ -60,12 +57,10 @@ toList :: Cookies -> [Cookie]
 toList (Cookies m) = M.elems m
 
 
-
-
-render :: [Segment] -> Cookie -> ByteString
+render :: Path -> Cookie -> ByteString
 render requestPath cookie =
-  let path = fromMaybe requestPath cookie.path
-   in cs cookie.key <> "=" <> value cookie.value <> "; SameSite=None; secure; path=" <> cs (renderUrl (pathUrl path))
+  let p = fromMaybe requestPath cookie.path
+   in cs cookie.key <> "=" <> value cookie.value <> "; SameSite=None; secure; path=" <> cs (uriToText (pathUri p))
  where
   value Nothing = "; expires=Thu, 01 Jan 1970 00:00:00 GMT"
   value (Just (CookieValue val)) = urlEncode True $ cs val

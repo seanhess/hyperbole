@@ -6,11 +6,12 @@ import Effectful
 import Example.AppRoute qualified as Route
 import Example.Style qualified as Style
 import Example.View.Layout (exampleLayout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Eff es (Page '[FormView])
 page = do
-  pure $ exampleLayout Route.FormValidation $ row (pad 20) $ do
+  pure $ exampleLayout Route.FormValidation $ row ~ pad 20 $ do
     hyper FormView (formView genFields)
 
 data FormView = FormView
@@ -79,50 +80,49 @@ validatePass p1 p2 =
 formView :: UserForm Validated -> View FormView ()
 formView val = do
   let f = fieldNames @UserForm
-  form Submit (gap 10 . pad 10) $ do
-    el Style.h1 "Sign Up"
+  form Submit ~ gap 10 . pad 10 $ do
+    el ~ Style.h1 $ "Sign Up"
 
-    field f.user (valStyle val.user) $ do
+    field f.user ~ valStyle val.user $ do
       label "Username"
-      input Username (inp . placeholder "username")
+      input Username @ placeholder "username" ~ Style.input
 
       case val.user of
-        Invalid t -> el_ (text t)
-        Valid -> el_ "Username is available"
+        Invalid t -> el (text t)
+        Valid -> el "Username is available"
         _ -> none
 
-    field f.age (valStyle val.age) $ do
+    field f.age ~ valStyle val.age $ do
       label "Age"
-      input Number (inp . placeholder "age" . value "0")
-      el_ $ invalidText val.age
+      input Number @ placeholder "age" ~ Style.input
+      el $ invalidText val.age
 
-    field f.pass1 (valStyle val.pass1) $ do
+    field f.pass1 ~ valStyle val.pass1 $ do
       label "Password"
-      input NewPassword (inp . placeholder "password")
-      el_ $ invalidText val.pass1
+      input NewPassword @ placeholder "password" ~ Style.input
+      el $ invalidText val.pass1
 
-    field f.pass2 id $ do
+    field f.pass2 $ do
       label "Repeat Password"
-      input NewPassword (inp . placeholder "repeat password")
+      input NewPassword @ placeholder "repeat password" ~ Style.input
 
-    submit Style.btn "Submit"
+    submit "Submit" ~ Style.btn
  where
-  inp = Style.input
   valStyle (Invalid _) = Style.invalid
   valStyle Valid = Style.success
   valStyle _ = id
 
 userView :: UserForm Identity -> View FormView ()
 userView u = do
-  el (bold . Style.success) "Accepted Signup"
-  row (gap 5) $ do
-    el_ "Username:"
-    el_ $ text u.user.username
+  el ~ bold . Style.success $ "Accepted Signup"
+  row ~ gap 5 $ do
+    el "Username:"
+    el $ text u.user.username
 
-  row (gap 5) $ do
-    el_ "Age:"
-    el_ $ text $ pack (show u.age)
+  row ~ gap 5 $ do
+    el "Age:"
+    el $ text $ pack (show u.age)
 
-  row (gap 5) $ do
-    el_ "Password:"
-    el_ $ text u.pass1
+  row ~ gap 5 $ do
+    el "Password:"
+    el $ text u.pass1

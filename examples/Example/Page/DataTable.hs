@@ -9,12 +9,13 @@ import Example.AppRoute qualified as Route
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages)
 import Example.View.Layout (exampleLayout)
 import Example.View.SortableTable (dataTable, sortColumn)
+import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
 page :: (Hyperbole :> es) => Eff es (Page '[Languages])
 page = do
-  pure $ exampleLayout Route.DataTable $ col (pad 20 . grow) $ do
+  pure $ exampleLayout Route.DataTable $ col ~ pad 20 . grow $ do
     hyper Languages $ languagesView Nothing allLanguages
 
 data Languages = Languages
@@ -43,7 +44,7 @@ sortOnField = \case
 
 languagesView :: Maybe SortField -> [ProgrammingLanguage] -> View Languages ()
 languagesView fld langs =
-  table dataTable langs $ do
-    sortColumn "Language" (SortOn SortName) (fld == Just SortName) id (.name)
-    sortColumn "Family" (SortOn SortFamily) (fld == Just SortFamily) id $ \d -> pack $ show d.family
-    sortColumn "Description" (SortOn SortDescription) (fld == Just SortDescription) id (.description)
+  table langs ~ dataTable $ do
+    sortColumn "Language" (SortOn SortName) (fld == Just SortName) (.name)
+    sortColumn "Family" (SortOn SortFamily) (fld == Just SortFamily) $ \d -> pack $ show d.family
+    sortColumn "Description" (SortOn SortDescription) (fld == Just SortDescription) (.description)

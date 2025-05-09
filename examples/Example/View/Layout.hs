@@ -1,8 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Example.View.Layout where
 
-import Data.Function ((&))
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Version (showVersion)
@@ -12,21 +12,21 @@ import Example.Style qualified as Style
 import Example.View.Icon as Icon (hamburger)
 import Paths_examples (version)
 import Text.Casing (fromHumps, toWords)
+import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.View.Style (addClass, cls, prop)
-import Web.View.Types (ChildCombinator (..), Class (..), Selector (..), selector)
+import Web.Hyperbole.Data.URI
 
 exampleLayout :: AppRoute -> View c () -> View c ()
 exampleLayout rt pageView = do
   rootLayout rt $ do
     pageDescription rt
-    link sourceUrl Style.link "View Source"
-    row (bg White) $ do
+    link sourceUrl "View Source" ~ Style.link
+    row ~ bg White $ do
       pageView
  where
-  sourceUrl = "https://github.com/seanhess/hyperbole/blob/0.4/example/" <> routeSource rt
+  sourceUrl = [uri|https://github.com/seanhess/hyperbole/blob/0.4/example/|] ./. routeSource rt
 
-  routeSource :: AppRoute -> Url
+  routeSource :: AppRoute -> Path
   routeSource = \case
     Simple -> "Example/Page/Simple.hs"
     Contacts ContactsAll -> "Example/Page/Contacts.hs"
@@ -54,11 +54,10 @@ exampleLayout rt pageView = do
 
 rootLayout :: AppRoute -> View c () -> View c ()
 rootLayout rt content =
-  layout id $ do
-    el (grow . flexRow . onMobile flexCol) $ do
-      navigation rt
-      col (pad 20 . gap 20 . grow) $ do
-        content
+  el ~ fillViewport . grow . flexRow . onMobile flexCol $ do
+    navigation rt
+    col ~ pad 20 . gap 20 . grow $ do
+      content
 
 exampleMenu :: AppRoute -> View c ()
 exampleMenu current = do
@@ -85,7 +84,9 @@ exampleMenu current = do
   -- link "/query?key=value" lnk "Query Params"
 
   example rt =
-    route rt (menuItem . selected rt) (text $ routeTitle rt)
+    route rt ~ menuItem . selected rt $
+      text $
+        routeTitle rt
   menuItem =
     pad (XY 20 10) . color White . hover (bg DarkHighlight)
   selected rt =
@@ -104,48 +105,48 @@ routeTitle r = cs $ toWords $ fromHumps $ show r
 pageDescription :: AppRoute -> View c ()
 pageDescription = \case
   Simple -> do
-    el_ "HyperViews update independently. In this example, two Message HyperViews are embedded into the same page with different ids."
-    el_ "Try inspecting the page in the Chrome dev tools and watching both the DOM and messages"
+    el "HyperViews update independently. In this example, two Message HyperViews are embedded into the same page with different ids."
+    el "Try inspecting the page in the Chrome dev tools and watching both the DOM and messages"
   Counter -> do
-    el_ $ do
+    el $ do
       text "Pages and update functions can run side effects before rendering. Here we use a "
-      code id "Reader (TVar Int)"
+      code "Reader (TVar Int)"
       text "to track the count"
-    ol (pad (XY 15 0)) $ do
+    ol ~ pad (XY 15 0) $ do
       item $ do
         text "Uses a view function to render the state: "
-        code id "viewCount :: Int -> View Counter ()"
-    el_ "Notice how the view function expects the current count as a parameter"
+        code "viewCount :: Int -> View Counter ()"
+    el "Notice how the view function expects the current count as a parameter"
   Transitions -> do
-    el_ "We can use web-view to animate transitions"
+    el "We can use web-view to animate transitions"
   Sessions -> do
-    el_ "Reload your browser after changing these settings to see the session information preserved"
+    el "Reload your browser after changing these settings to see the session information preserved"
   Requests -> do
-    el_ "The Hyperbole Effect allows us to access the Request, and manipulate the Client"
+    el "The Hyperbole Effect allows us to access the Request, and manipulate the Client"
   Redirects -> none
   RedirectNow -> none
   LazyLoading -> do
-    el_ "We can use onLoad to lazily load content and poll for changes"
+    el "We can use onLoad to lazily load content and poll for changes"
   FormSimple -> do
-    el_ "Use a Higher Kinded Type to define form fields"
+    el "Use a Higher Kinded Type to define form fields"
   FormValidation ->
-    el_ $ do
-      code id "instance Form MyForm Validated"
+    el $ do
+      code "instance Form MyForm Validated"
       text " allows us to manage validation states for each field"
   Filter ->
-    el_ "Easily serialize a datatype to the querystring, preserving faceted search in the url"
+    el "Easily serialize a datatype to the querystring, preserving faceted search in the url"
   Autocomplete ->
-    el_ "Create a serverside autocomplete with a combination of onInput and onKeyDown"
+    el "Create a serverside autocomplete with a combination of onInput and onKeyDown"
   DataTable -> do
-    el_ "Complex reusable View Functions allow us to "
+    el "Complex reusable View Functions allow us to "
   Concurrent ->
-    el_ "Separate HyperViews can overlap updates without issues"
+    el "Separate HyperViews can overlap updates without issues"
   Todos ->
-    row (gap 5) $ do
-      el_ "Implementation of "
-      link "https://todomvc.com/" Style.link "TodoMVC"
+    row ~ (gap 5) $ do
+      el "Implementation of "
+      link [uri|https://todomvc.com/|] "TodoMVC" ~ Style.link
   Contacts _ -> do
-    el_ "This complex example combines various features"
+    el "This complex example combines various features"
   Examples -> none
   Errors -> none
   Main -> none
@@ -153,44 +154,43 @@ pageDescription = \case
   Query -> none
   Javascript -> none
  where
-  item = li (list Disc)
+  item = li ~ list Disc
 
 examplesView :: View c ()
 examplesView = rootLayout Examples $ do
-  col (bg Dark) $ do
+  col ~ bg Dark $ do
     exampleMenu Examples
 
 navigation :: AppRoute -> View c ()
 navigation rt = do
-  nav (bg Dark . color White . flexCol . hover showMenu) $ do
-    row id $ do
-      link "https://github.com/seanhess/hyperbole" (bold . pad 20 . logo . width 220) "HYPERBOLE"
+  nav ~ bg Dark . color White . flexCol . showMenuHover $ do
+    row $ do
+      link [uri|https://github.com/seanhess/hyperbole|] "HYPERBOLE" ~ bold . pad 20 . logo . width 220
       space
-      el (hide . onMobile flexCol) $ do
-        el (pad 6) $ do
-          el (color White . width 50 . height 50) Icon.hamburger
-    col (onMobile hide . menuTarget) $ do
+      el ~ hide . onMobile flexCol $ do
+        el ~ pad 6 $ do
+          el Icon.hamburger ~ color White . width 50 . height 50
+    col ~ cls "menu" . onMobile hide $ do
       exampleMenu rt
       space
-      el (pad 10 . fontSize 12) $ do
+      el ~ pad 10 . fontSize 12 $ do
         text "v"
         text $ cs $ showVersion version
  where
-  showMenu =
-    addClass $
-      Class menuSelector mempty
-        & prop @Text "display" "flex"
-
-  menuTarget = addClass $ cls "menu"
-
-  menuSelector = (selector "menu-parent"){child = Just (ChildWithName "menu")}
+  showMenuHover =
+    css
+      "show-menu"
+      ".show-menu:hover > .menu"
+      [ prop @Text "display" "flex"
+      ]
 
   -- https://www.fontspace.com/super-brigade-font-f96444
   logo =
-    addClass $
-      cls "logo"
-        & prop @Text "background" "no-repeat center/90% url(/logo-robot.png)"
-        & prop @Text "color" "transparent"
+    utility'
+      "logo"
+      [ prop @Text "background" "no-repeat center/90% url(/logo-robot.png)"
+      , prop @Text "color" "transparent"
+      ]
 
-onMobile :: Mod c -> Mod c
+onMobile :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c
 onMobile = media (MaxWidth 650)

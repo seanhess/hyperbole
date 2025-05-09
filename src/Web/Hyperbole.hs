@@ -61,7 +61,7 @@ module Web.Hyperbole
     -- ** Type-Safe Routes
   , routeRequest -- maybe belongs in an application section
   , Route (..)
-  , routeUrl
+  , routeUri
   , route
 
     -- * Hyperbole Effect
@@ -113,7 +113,7 @@ module Web.Hyperbole
   , onKeyDown
   , onKeyUp
   , onLoad
-  , onRequest
+  , whenLoading
   , Key (..)
   , DelayMs
 
@@ -140,7 +140,7 @@ module Web.Hyperbole
   , checked
   , textarea
   , submit
-  , placeholder
+  , View.placeholder
   , InputType (..)
 
     -- ** Validation
@@ -173,9 +173,9 @@ module Web.Hyperbole
 
     -- ** Web.View
 
-    -- | Hyperbole is tightly integrated with [Web.View](https://hackage.haskell.org/package/web-view/docs/Web-View.html) for HTML generation
-  , module Web.View
-  , autofocus
+    -- | Hyperbole is tightly integrated with [atomic-css](https://hackage.haskell.org/package/atomic-css) for HTML generation
+  , module Web.Atomic.Types
+  , module Web.Hyperbole.View
 
     -- ** Embeds
 
@@ -190,6 +190,8 @@ module Web.Hyperbole
   , Application
   , Generic
   , Rep
+  , URI (..)
+  , uri
   ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -198,6 +200,8 @@ import Effectful (Eff, (:>))
 import GHC.Generics (Rep)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
+import Web.Atomic.CSS
+import Web.Atomic.Types
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData)
 import Web.Hyperbole.Application
 import Web.Hyperbole.Data.Encoded ()
@@ -210,12 +214,12 @@ import Web.Hyperbole.Effect.Response (notFound, redirect, respondEarly, view)
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.Effect.Session
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.HyperView.Forms
 import Web.Hyperbole.Page (Page, runPage)
 import Web.Hyperbole.Route
-import Web.Hyperbole.View
+import Web.Hyperbole.View hiding (placeholder)
+import Web.Hyperbole.View qualified as View
 import Web.Hyperbole.View.Embed
-import Web.Hyperbole.View.Forms
-import Web.View hiding (Query, Segment, button, cssResetEmbed, form, input, label)
 
 
 -- import Web.View.Types.Url (Segment)

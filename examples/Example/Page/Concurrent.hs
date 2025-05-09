@@ -10,12 +10,13 @@ import Example.Effects.Debug
 import Example.Effects.Random
 import Example.View.Inputs (progressBar)
 import Example.View.Layout (exampleLayout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Eff es (Page '[Progress])
 page = do
   pure $ exampleLayout Concurrent $ do
-    col (pad 20 . gap 10 . grow) $ do
+    col ~ pad 20 . gap 10 . grow $ do
       hyper (Progress 1 100) $ viewProgress 0
       hyper (Progress 2 200) $ viewProgress 0
       hyper (Progress 3 300) $ viewProgress 0
@@ -49,12 +50,12 @@ viewProgress prg
 
 viewComplete :: View Progress ()
 viewComplete = do
-  row (bg Success . color White . pad 5) "Complete"
+  row ~ bg Success . color White . pad 5 $ "Complete"
 
 viewUpdating :: Int -> View Progress ()
 viewUpdating prg = do
   let pct = fromIntegral prg / 100
   Progress taskId _ <- viewId
-  col (onLoad (CheckProgress prg) 0) $ do
+  col @ onLoad (CheckProgress prg) 0 $ do
     progressBar pct $ do
-      el grow $ text $ "Task" <> pack (show taskId)
+      el ~ grow $ text $ "Task" <> pack (show taskId)

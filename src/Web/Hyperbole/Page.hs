@@ -6,7 +6,7 @@ import Web.Hyperbole.Effect.Handler (RunHandlers, runLoad)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Server (Response)
 import Web.Hyperbole.HyperView (Root)
-import Web.View (View)
+import Web.Hyperbole.View (View)
 
 
 {- | Conceptually, an application is dividied up into multiple [Pages](#g:pages). Each page module should have a function that returns a 'Page'. The 'Page' itself is a 'View' with a type-level list of 'HyperView's used on the page.

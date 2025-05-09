@@ -4,7 +4,7 @@ module Test.FormSpec where
 
 import Data.Text (Text)
 import Skeletest
-import Web.Hyperbole.View.Forms
+import Web.Hyperbole.HyperView.Forms
 
 
 data Example f = Example

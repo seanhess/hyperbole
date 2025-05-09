@@ -22,7 +22,8 @@ import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData as QueryData
-import Web.View (Segment, Url, View, renderLazyByteString, renderUrl)
+import Web.Hyperbole.Data.URI (Path, URI, path, uriToText)
+import Web.Hyperbole.View (View, renderLazyByteString)
 
 
 -- | Low level effect mapping request/response to either HTTP or WebSockets
@@ -69,7 +70,7 @@ runServerWai toDoc req respond =
       respHtml $
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
     response (Redirect u) = do
-      let url = renderUrl u
+      let url = uriToText u
       -- We have to use a 200 javascript redirect because javascript
       -- will redirect the fetch(), while we want to redirect the whole page
       -- see index.ts sendAction()
@@ -91,7 +92,7 @@ runServerWai toDoc req respond =
 
     setCookie :: Cookie -> (HeaderName, BS.ByteString)
     setCookie cookie =
-      ("Set-Cookie", Cookie.render (Wai.pathInfo req) cookie)
+      ("Set-Cookie", Cookie.render (path $ cs $ Wai.rawPathInfo req) cookie)
 
     setRequestId :: RequestId -> (HeaderName, BS.ByteString)
     setRequestId (RequestId rid) =
@@ -109,7 +110,7 @@ runServerWai toDoc req respond =
   fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
   fromWaiRequest wr = do
     body <- liftIO $ Wai.consumeRequestBodyLazy wr
-    let path = Wai.pathInfo wr
+    let pth = path $ cs $ Wai.rawPathInfo wr
         query = Wai.queryString wr
         headers = Wai.requestHeaders wr
         cookie = fromMaybe "" $ L.lookup "Cookie" headers
@@ -119,7 +120,7 @@ runServerWai toDoc req respond =
 
     cookies <- fromCookieHeader cookie
 
-    pure $ Request{body, path, query, method, cookies, host, requestId}
+    pure $ Request{body, path = pth, query, method, cookies, host, requestId}
 
 
 runServerSockets
@@ -174,9 +175,9 @@ runServerSockets conn req = reinterpret runLocal $ \_ -> \case
   renderMetadata :: Metadata -> BL.ByteString
   renderMetadata (Metadata m) = BL.intercalate "\n" $ fmap (uncurry metaLine) m
 
-  sendRedirect :: (IOE :> es) => Client -> Url -> Eff es ()
+  sendRedirect :: (IOE :> es) => Client -> URI -> Eff es ()
   sendRedirect client u = do
-    sendResponse client (metadata "REDIRECT" (renderUrl u)) ""
+    sendResponse client (metadata "REDIRECT" (uriToText u)) ""
 
   metaSession :: Cookies -> Metadata
   metaSession cookies = mconcat $ fmap metaCookie $ Cookie.toList cookies
@@ -266,7 +267,7 @@ newtype Host = Host {text :: BS.ByteString}
 
 data Request = Request
   { host :: Host
-  , path :: [Segment]
+  , path :: Path
   , query :: Query
   , body :: BL.ByteString
   , method :: Method
@@ -284,7 +285,7 @@ newtype RequestId = RequestId Text
 data Response
   = Response TargetViewId (View () ())
   | NotFound
-  | Redirect Url
+  | Redirect URI
   | Err ResponseError
   | Empty
 

@@ -1,15 +1,13 @@
 module Example.Style where
 
-import Data.Function ((&))
 import Data.Text (Text)
 import Example.Colors
-import Web.View
-import Web.View.Style (addClass, cls, prop)
+import Web.Atomic.CSS
 
-btn :: Mod id
+btn :: (Styleable h) => CSS h -> CSS h
 btn = btn' Primary
 
-btn' :: AppColor -> Mod id
+btn' :: (Styleable h) => AppColor -> CSS h -> CSS h
 btn' clr =
   bg clr
     . hover (bg (hovClr clr))
@@ -22,7 +20,7 @@ btn' clr =
   hovClr c = c
   txtClr _ = White
 
-btnLight :: Mod id
+btnLight :: (Styleable h) => CSS h -> CSS h
 btnLight =
   base
     . border 2
@@ -32,26 +30,24 @@ btnLight =
  where
   base = pad (XY 15 8)
 
-h1 :: Mod id
+h1 :: (Styleable h) => CSS h -> CSS h
 h1 = bold . fontSize 32
 
-invalid :: Mod id
+invalid :: (Styleable h) => CSS h -> CSS h
 invalid = color Danger
 
-success :: Mod id
+success :: (Styleable h) => CSS h -> CSS h
 success = color Success
 
-link :: Mod id
+link :: (Styleable h) => CSS h -> CSS h
 link = color Primary
 
-input :: Mod id
+input :: (Styleable h) => CSS h -> CSS h
 input = border 1 . pad 8
 
-code :: Mod id
+code :: (Styleable h) => CSS h -> CSS h
 code = bg Light . pad 10 . fontSize 12
 
-strikethrough :: Mod id
+strikethrough :: (Styleable h) => CSS h -> CSS h
 strikethrough =
-  addClass $
-    cls "strike"
-      & prop @Text "text-decoration" "line-through"
+  utility @Text "strike" "text-decoration" "line-through"

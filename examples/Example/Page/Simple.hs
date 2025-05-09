@@ -7,6 +7,7 @@ module Example.Page.Simple where
 import Data.Text (Text)
 import Example.AppRoute qualified as Route
 import Example.View.Layout (exampleLayout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 main :: IO ()
@@ -16,7 +17,7 @@ main = do
 
 page :: (Hyperbole :> es) => Eff es (Page '[Message])
 page = do
-  pure $ exampleLayout Route.Simple $ col (pad 20 . gap 10) $ do
+  pure $ exampleLayout Route.Simple $ col ~ pad 20 . gap 10 $ do
     hyper Message1 $ messageView "Hello"
     hyper Message2 $ messageView "World!"
 
@@ -33,6 +34,6 @@ instance HyperView Message es where
 
 messageView :: Text -> View Message ()
 messageView m = do
-  row (gap 10) $ do
-    button (Louder m) (border 1 . pad 5) "Louder"
-    el (pad 5) $ text m
+  row ~ gap 10 $ do
+    button (Louder m) ~ border 1 . pad 5 $ "Louder"
+    el ~ pad 5 $ text m

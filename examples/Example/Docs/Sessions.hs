@@ -1,5 +1,6 @@
 module Example.Docs.Sessions where
 
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 data AppColor
@@ -23,7 +24,7 @@ instance Default Preferences where
 page :: (Hyperbole :> es) => Eff es (Page '[Content])
 page = do
   prefs <- session @Preferences
-  pure $ el (bg prefs.color) "Custom Background"
+  pure $ el ~ bg prefs.color $ "Custom Background"
 
 data Content = Content
   deriving (Generic, ViewId)
@@ -36,4 +37,4 @@ instance HyperView Content es where
   update (SetColor clr) = do
     let prefs = Preferences clr
     saveSession prefs
-    pure $ el (bg prefs.color) "Custom Background"
+    pure $ el ~ bg prefs.color $ "Custom Background"

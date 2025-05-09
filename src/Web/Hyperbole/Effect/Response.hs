@@ -3,10 +3,11 @@ module Web.Hyperbole.Effect.Response where
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
+import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.Effect.Server (Response (..), ResponseError (..), TargetViewId (..))
 import Web.Hyperbole.HyperView (HyperView (..), ViewId (..), hyperUnsafe)
-import Web.View (Url, View)
+import Web.Hyperbole.View.Types
 
 
 -- | Respond with the given view, and stop execution
@@ -35,7 +36,7 @@ parseError = send . RespondEarly . Err . ErrParse
 
 
 -- | Redirect immediately to the 'Url'
-redirect :: (Hyperbole :> es) => Url -> Eff es a
+redirect :: (Hyperbole :> es) => URI -> Eff es a
 redirect = send . RespondEarly . Redirect
 
 

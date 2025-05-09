@@ -4,12 +4,13 @@ module Example.Docs.MultiView where
 
 import Data.Text (pack)
 import Example.Docs.Interactive (Message (..), messageView)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 page :: Eff es (Page [Message, Count])
 page = do
   pure $ do
-    row id $ do
+    row $ do
       hyper Message $ messageView "Hello"
       hyper Count $ countView 0
 
@@ -29,8 +30,6 @@ instance HyperView Count es where
 
 countView :: Int -> View Count ()
 countView n = do
-  el_ $ text $ pack $ show n
-  button (Increment n) btn "Increment"
-  button (Decrement n) btn "Decrement"
- where
-  btn = border 1
+  el $ text $ pack $ show n
+  button (Increment n) "Increment" ~ border 1
+  button (Decrement n) "Decrement" ~ border 1

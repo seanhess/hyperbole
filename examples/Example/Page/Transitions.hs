@@ -4,13 +4,14 @@ import Effectful
 import Example.AppRoute
 import Example.Style as Style
 import Example.View.Layout (exampleLayout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Eff es (Page '[Contents])
 page = do
   pure $ exampleLayout Transitions $ do
-    col (pad 10) $ do
-      col (border 1 . pad 20) $ do
+    col ~ pad 10 $ do
+      col ~ border 1 . pad 20 $ do
         hyper Contents viewSmall
 
 data Contents = Contents
@@ -30,12 +31,12 @@ instance HyperView Contents es where
 
 viewSmall :: View Contents ()
 viewSmall = do
-  col (gap 10 . transition 300 (Width 200)) $ do
-    el id "Small"
-    button Expand Style.btn "Expand"
+  col ~ gap 10 . transition 300 (Width 200) $ do
+    el "Small"
+    button Expand "Expand" ~ Style.btn
 
 viewBig :: View Contents ()
 viewBig =
-  col (gap 10 . transition 300 (Width 400)) $ do
-    el_ "Expanded"
-    button Collapse Style.btn "Collapse"
+  col ~ gap 10 . transition 300 (Width 400) $ do
+    el "Expanded"
+    button Collapse "Collapse" ~ Style.btn

@@ -14,6 +14,7 @@ import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
 import Example.View.Layout (exampleLayout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 -- Example adding a reader context to the page, based on an argument from the AppRoute
@@ -29,7 +30,7 @@ page = do
   uid <- ask
   u <- Users.find uid
   pure $ exampleLayout (Route.Contacts $ Route.Contact 0) $ do
-    col (pad 10 . gap 10) $ do
+    col ~ pad 10 . gap 10 $ do
       hyper (Contact uid) $ contactView u
 
 -- Contact ----------------------------------------------------
@@ -77,41 +78,41 @@ contactView = contactView' Edit
 
 contactView' :: (ViewId c, ViewAction (Action c)) => Action c -> User -> View c ()
 contactView' edit u = do
-  col (gap 10) $ do
-    row fld $ do
-      el id (text "First Name:")
+  col ~ gap 10 $ do
+    row ~ fld $ do
+      el (text "First Name:")
       text u.firstName
 
-    row fld $ do
-      el id (text "Last Name:")
+    row ~ fld $ do
+      el (text "Last Name:")
       text u.lastName
 
-    row fld $ do
-      el id (text "Age:")
+    row ~ fld $ do
+      el (text "Age:")
       text (cs $ show u.age)
 
-    row fld $ do
-      el id (text "Info:")
+    row ~ fld $ do
+      el (text "Info:")
       text u.info
 
-    row fld $ do
-      el id (text "Active:")
+    row ~ fld $ do
+      el (text "Active:")
       text (cs $ show u.isActive)
 
-    button edit Style.btn "Edit"
+    button edit "Edit" ~ Style.btn
  where
   fld = gap 10
 
 contactEditView :: User -> View Contact ()
 contactEditView u = do
-  el (hide . onRequest flexCol) contactLoading
-  el (onRequest hide) $ contactEdit View Save u
+  el contactLoading ~ hide . whenLoading flexCol
+  el (contactEdit View Save u) ~ (whenLoading hide)
 
 contactEdit :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
 contactEdit onView onSave u = do
   contactForm onSave contactFromUser
-  col (gap 10) $ do
-    button onView Style.btnLight (text "Cancel")
+  col ~ gap 10 $ do
+    button onView (text "Cancel") ~ Style.btnLight
  where
   contactFromUser :: ContactForm Maybe
   contactFromUser =
@@ -125,27 +126,28 @@ contactEdit onView onSave u = do
 contactForm :: (ViewId id, ViewAction (Action id)) => Action id -> ContactForm Maybe -> View id ()
 contactForm onSubmit c = do
   let f = fieldNames @ContactForm
-  form onSubmit (gap 10) $ do
-    field f.firstName fld $ do
+  form onSubmit ~ gap 10 $ do
+    field f.firstName ~ fld $ do
       label "First Name:"
-      input Name (inp . value (fromMaybe "" c.firstName))
+      input Name @ value (fromMaybe "" c.firstName) ~ Style.input
 
-    field f.lastName fld $ do
+    field f.lastName ~ fld $ do
       label "Last Name:"
-      input Name (inp . value (fromMaybe "" c.lastName))
+      input Name @ value (fromMaybe "" c.lastName) ~ Style.input
 
-    field f.info fld $ do
+    field f.info ~ fld $ do
       label "Info:"
-      textarea (inp . value (fromMaybe "" c.info)) c.info
+      textarea c.info @ value (fromMaybe "" c.info) ~ Style.input
 
-    field f.age fld $ do
+    field f.age ~ fld $ do
       label "Age:"
-      input Number (inp . value (fromMaybe "" $ pack . show <$> c.age))
+      input Number @ value (fromMaybe "" $ pack . show <$> c.age) ~ inp
 
-    submit Style.btn "Submit"
+    submit "Submit" ~ Style.btn
  where
+  fld :: (Styleable a) => CSS a -> CSS a
   fld = flexRow . gap 10
   inp = Style.input
 
 contactLoading :: View id ()
-contactLoading = el (bg Warning . pad 10) "Loading..."
+contactLoading = el ~ (bg Warning . pad 10) $ "Loading..."

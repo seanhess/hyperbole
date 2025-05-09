@@ -14,10 +14,10 @@ import Effectful.Dispatch.Dynamic
 import GHC.Generics
 import Web.Hyperbole.Data.Cookie as Cookie
 import Web.Hyperbole.Data.Param
+import Web.Hyperbole.Data.URI (Path)
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.Effect.Request (request)
 import Web.Hyperbole.Effect.Server (Client (..), Request (..), Response (..), ResponseError (..))
-import Web.View.Types.Url (Segment)
 
 
 {- | Configure a data type to persist in the 'session' as a cookie. These are type-indexed, so only one of each can exist in the session
@@ -36,8 +36,8 @@ class Session a where
 
 
   -- | By default Sessions are persisted only to the current page. Set this to `Just []` to make an application-wide Session
-  cookiePath :: Maybe [Segment]
-  default cookiePath :: Maybe [Segment]
+  cookiePath :: Maybe Path
+  default cookiePath :: Maybe Path
   cookiePath = Nothing
 
 

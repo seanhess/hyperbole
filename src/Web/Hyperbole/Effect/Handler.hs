@@ -13,7 +13,7 @@ import Web.Hyperbole.Effect.Request (request)
 import Web.Hyperbole.Effect.Response (respondEarly)
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
-import Web.View
+import Web.Hyperbole.View
 
 
 class RunHandlers (views :: [Type]) es where

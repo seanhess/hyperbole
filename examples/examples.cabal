@@ -88,6 +88,7 @@ executable examples
   ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
+    , atomic-css
     , base
     , bytestring
     , casing
@@ -111,6 +112,5 @@ executable examples
     , wai-middleware-static
     , wai-websockets
     , warp
-    , web-view
     , websockets
   default-language: GHC2021

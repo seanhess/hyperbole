@@ -5,6 +5,7 @@
 module Example.Docs.MultiCopies where
 
 import Data.Text (Text)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 page :: Eff es (Page '[Message])
@@ -26,6 +27,6 @@ instance HyperView Message es where
 
 messageView :: Text -> View Message ()
 messageView m = do
-  row (gap 10) $ do
-    button (Louder m) (border 1 . pad 5) "Louder"
-    el (pad 5) $ text m
+  row ~ gap 10 $ do
+    button (Louder m) ~ border 1 . pad 5 $ "Louder"
+    el ~ pad 5 $ text m

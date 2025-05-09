@@ -4,12 +4,13 @@ import Effectful
 import Example.AppRoute qualified as Route
 import Example.Style as Style
 import Example.View.Layout (exampleLayout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Eff es (Page '[Contents])
 page = do
-  pure $ exampleLayout Route.Errors $ row (pad 20) $ do
-    col (gap 10 . border 1) $ do
+  pure $ exampleLayout Route.Errors $ row ~ pad 20 $ do
+    col ~ gap 10 . border 1 $ do
       hyper Contents viewContent
 
 data Contents = Contents
@@ -26,7 +27,7 @@ instance HyperView Contents es where
 
 viewContent :: View Contents ()
 viewContent = do
-  col (gap 10 . pad 20) $ do
-    button CauseError Style.btn "Not Found Error"
+  col ~ gap 10 . pad 20 $ do
+    button CauseError ~ Style.btn $ "Not Found Error"
 
 -- Compile Errors (Uncomment)

@@ -111,7 +111,7 @@ socketApp actions pend = do
     parse :: Text -> Text -> Text -> Text -> Maybe Text -> Either SocketError Request
     parse url cook hst reqId mbody = do
       (u, q) <- parseUrl url
-      let path = paths u
+      let pth = path u
           query = HTTP.parseQuery (cs q)
           host = Host $ cs $ header hst
           method = "POST"
@@ -120,9 +120,7 @@ socketApp actions pend = do
 
       cookies <- first (InternalSocket . InvalidCookie (cs cook)) <$> Cookie.parse $ Web.Cookie.parseCookies $ cs $ header cook
 
-      pure $ Request{path, host, query, body, method, cookies, requestId}
-
-    paths p = filter (/= "") $ T.splitOn "/" p
+      pure $ Request{path = pth, host, query, body, method, cookies, requestId}
 
     -- drop up to the colon, then ': '
     header = T.drop 2 . T.dropWhile (/= ':')
@@ -170,7 +168,7 @@ basicDocument title cnt =
 -}
 routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
 routeRequest actions = do
-  path <- reqPath
-  case findRoute path of
+  pth <- reqPath
+  case findRoute pth.segments of
     Nothing -> send $ RespondEarly NotFound
     Just rt -> actions rt

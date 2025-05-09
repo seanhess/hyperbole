@@ -12,12 +12,13 @@ import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages,
 import Example.Page.Filter as Filter (chosenView, clearButton, resultsTable)
 import Example.View.Layout (exampleLayout)
 import Safe (atMay)
+import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
 page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])
 page = do
-  pure $ exampleLayout Route.Autocomplete $ col (pad 20 . grow) $ do
+  pure $ exampleLayout Route.Autocomplete $ col ~ pad 20 . grow $ do
     hyper LiveSearch $ liveSearchView allLanguages 0 ""
 
 data LiveSearch = LiveSearch
@@ -38,17 +39,16 @@ instance (IOE :> es) => HyperView LiveSearch es where
 
 selectedView :: ProgrammingLanguage -> View LiveSearch ()
 selectedView selected = do
-  col (gap 10) $ do
+  col ~ gap 10 $ do
     Filter.chosenView selected
 
 liveSearchView :: [ProgrammingLanguage] -> Int -> Text -> View LiveSearch ()
 liveSearchView langs current term = do
-  col (gap 10) $ do
-    stack (bg Danger) $ do
-      layer id $ do
-        search (SearchTerm current) 200 (searchKeys . placeholder "search programming languages" . border 1 . pad 10 . grow . value term . autofocus)
+  col ~ gap 10 $ do
+    el ~ stack $ do
+      search (SearchTerm current) 200 @ searchKeys . placeholder "search programming languages" . value term . autofocus ~ border 1 . pad 10 . grow
       Filter.clearButton (SearchTerm current) term
-      layer (popup (TRBL 50 0 0 0) . shownIfMatches) $ do
+      col ~ popup (TRBL 50 0 0 0) . shownIfMatches $ do
         searchPopup matchedLanguages currentSearchLang
     Filter.resultsTable (Select . Just) langs
  where
@@ -67,9 +67,9 @@ liveSearchView langs current term = do
 
 searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View LiveSearch ()
 searchPopup shownLangs highlighted = do
-  col (border 1 . bg White) $ do
+  col ~ border 1 . bg White $ do
     forM_ shownLangs $ \lang -> do
-      button (Select (Just lang)) (hover (bg Light) . selected lang . pad 5) $ do
+      button (Select (Just lang)) ~ hover (bg Light) . selected lang . pad 5 $ do
         text lang.name
  where
   selected l = if Just l == highlighted then bg Light else id

@@ -70,6 +70,7 @@ import Paths_examples (version)
 import Safe (readMay)
 import System.Environment qualified as SE
 import System.IO (BufferMode (LineBuffering), hSetBuffering, stdout)
+import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Application (waiApp)
 import Web.Hyperbole.Effect.Handler (RunHandlers)
@@ -117,11 +118,11 @@ app users count = do
   router Autocomplete = runPage Autocomplete.page
   router Query = do
     p <- param "key"
-    view $ el (pad 20) $ do
+    view $ el ~ pad 20 $ do
       text "key: "
       text p
   router RedirectNow = do
-    redirect (routeUrl $ Hello Redirected)
+    redirect (routeUri $ Hello Redirected)
   router Redirects = runPage Redirects.page
   router Requests = runPage Requests.page
   router Sessions = runPage Sessions.page
@@ -130,17 +131,17 @@ app users count = do
   router Todos = runPage Todo.page
   router Javascript = runPage Javascript.page
   router Main = do
-    redirect (routeUrl Simple)
+    redirect (routeUri Simple)
 
   -- Nested Router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Eff es (Page '[])
   hello (Greet who) = do
     pure $ exampleLayout (Hello $ Greet who) $ do
-      row (gap 6 . pad 10) $ do
-        el_ "Hello:"
-        el_ $ text who
+      row ~ gap 6 . pad 10 $ do
+        el "Hello:"
+        el $ text who
   hello Redirected = do
-    pure $ exampleLayout RedirectNow $ el (pad 10) "You were redirected"
+    pure $ exampleLayout RedirectNow $ el ~ pad 10 $ "You were redirected"
 
   -- Use the embedded version for real applications (see basicDocument).
   -- The link to /hyperbole.js here is just to make local development easier
