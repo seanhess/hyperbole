@@ -8,6 +8,6 @@ export type ResponseBody = string;
 export declare function parseResponse(res: ResponseBody): LiveUpdate;
 export type LiveUpdate = {
     content: HTMLElement;
-    css: HTMLStyleElement;
+    css: HTMLStyleElement | null;
 };
 export declare function fetchError(msg: string): Error;

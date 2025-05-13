@@ -25,7 +25,7 @@ export function parseResponse(res: ResponseBody): LiveUpdate {
 
 export type LiveUpdate = {
   content: HTMLElement
-  css: HTMLStyleElement
+  css: HTMLStyleElement | null
 }
 
 

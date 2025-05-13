@@ -86,7 +86,7 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
 
   let update: LiveUpdate = parseResponse(res.body)
 
-  if (!update.css || !update.content) {
+  if (!update.content) {
     // TODO: error handling
     console.error("Empty Response", res)
     return
@@ -143,7 +143,8 @@ function fixInputs(target: HTMLElement) {
   })
 }
 
-function addCSS(src: HTMLStyleElement) {
+function addCSS(src: HTMLStyleElement | null) {
+  if (!src) return;
   const rules: any = src.sheet.cssRules
   for (const rule of rules) {
     if (addedRulesIndex.has(rule.cssText) == false) {
