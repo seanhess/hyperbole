@@ -3,7 +3,6 @@ console.log("Custom JS")
 // Wait for load
 window.onload = function() {
   // lookup the hyperview
-  if (!document.getElementById("Message2")) return
   let message2 = Hyperbole.hyperView("Message2")
 
   if (message2) {

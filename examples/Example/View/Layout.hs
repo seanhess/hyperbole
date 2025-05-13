@@ -54,7 +54,7 @@ exampleLayout rt pageView = do
 
 rootLayout :: AppRoute -> View c () -> View c ()
 rootLayout rt content =
-  el ~ fillViewport . grow . flexRow . onMobile flexCol $ do
+  el ~ fillViewport . grow . onDesktop flexRow . onMobile flexCol $ do
     navigation rt
     col ~ pad 20 . gap 20 . grow $ do
       content
@@ -167,10 +167,10 @@ navigation rt = do
     row $ do
       link [uri|https://github.com/seanhess/hyperbole|] "HYPERBOLE" ~ bold . pad 20 . logo . width 220
       space
-      el ~ hide . onMobile flexCol $ do
+      el ~ onDesktop (display None) . onMobile flexCol $ do
         el ~ pad 6 $ do
           el Icon.hamburger ~ color White . width 50 . height 50
-    col ~ cls "menu" . onMobile hide $ do
+    col ~ cls "menu" . onMobile (display None) $ do
       exampleMenu rt
       space
       el ~ pad 10 . fontSize 12 $ do
@@ -194,3 +194,6 @@ navigation rt = do
 
 onMobile :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c
 onMobile = media (MaxWidth 650)
+
+onDesktop :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c
+onDesktop = media (MinWidth 650)

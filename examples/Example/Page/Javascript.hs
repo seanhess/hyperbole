@@ -16,6 +16,7 @@ page = do
   pure $ exampleLayout Route.Javascript $ col ~ pad 20 . gap 10 $ do
     hyper Message1 $ messageView "Hello"
     hyper Message2 $ messageView "World!"
+    script "custom.js"
 
 data Message = Message1 | Message2 | Message3
   deriving (Generic, ViewId)
