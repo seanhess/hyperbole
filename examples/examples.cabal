@@ -55,6 +55,7 @@ executable examples
       Example.Page.Counter
       Example.Page.DataTable
       Example.Page.Errors
+      Example.Page.ExternalCSS
       Example.Page.Filter
       Example.Page.FormSimple
       Example.Page.FormValidation

@@ -24,7 +24,8 @@ exampleLayout rt pageView = do
     row ~ bg White $ do
       pageView
  where
-  sourceUrl = [uri|https://github.com/seanhess/hyperbole/blob/0.4/example/|] ./. routeSource rt
+  sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/0.4/example/|]
+  sourceUrl = sourceUrlBase ./. routeSource rt
 
   routeSource :: AppRoute -> Path
   routeSource = \case
@@ -51,6 +52,7 @@ exampleLayout rt pageView = do
     Todos -> "Example/Page/Todo.hs"
     DataTable -> "Example/Page/DataTable.hs"
     Javascript -> "Example/Page/Javascript.hs"
+    ExternalCSS -> "Example/Page/ExternalCSS.hs"
 
 rootLayout :: AppRoute -> View c () -> View c ()
 rootLayout rt content =
@@ -78,6 +80,7 @@ exampleMenu current = do
   example Todos
   example (Contacts ContactsAll)
   example Javascript
+  example ExternalCSS
  where
   -- example Errors
 
@@ -153,6 +156,7 @@ pageDescription = \case
   Hello _ -> none
   Query -> none
   Javascript -> none
+  ExternalCSS -> none
  where
   item = li ~ list Disc
 

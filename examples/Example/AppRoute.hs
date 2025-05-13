@@ -28,6 +28,7 @@ data AppRoute
   | Todos
   | Errors
   | Javascript
+  | ExternalCSS
   deriving (Eq, Generic, Show)
 instance Route AppRoute where
   baseRoute = Just Main

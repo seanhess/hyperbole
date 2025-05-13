@@ -1,0 +1,23 @@
+.item {
+  border: 1px dashed;
+  padding: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.parent {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  padding: 10px;
+  margin: 10px;
+  background-color: white;
+}
+
+.selected {
+  font-weight: bold;
+  border-width: 2px;
+  padding: 4px;
+  padding-left: 9px;
+  padding-right: 9px;
+}

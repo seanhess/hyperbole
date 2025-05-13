@@ -55,6 +55,7 @@ import Example.Page.Sessions qualified as Sessions
 import Example.Page.Simple qualified as Simple
 import Example.Page.Todo qualified as Todo
 import Example.Page.Transitions qualified as Transitions
+import Example.Page.ExternalCSS qualified as ExternalCSS
 import Example.Style qualified as Style
 import Example.View.Layout as Layout (exampleLayout, examplesView)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
@@ -130,6 +131,7 @@ app users count = do
   router Transitions = runPage Transitions.page
   router Todos = runPage Todo.page
   router Javascript = runPage Javascript.page
+  router ExternalCSS = runPage ExternalCSS.page
   router Main = do
     redirect (routeUri Simple)
 
