@@ -17,9 +17,10 @@ main = do
 
 page :: (Hyperbole :> es) => Eff es (Page '[Message])
 page = do
-  pure $ exampleLayout Route.Simple $ col ~ pad 20 . gap 10 $ do
-    hyper Message1 $ messageView "Hello"
-    hyper Message2 $ messageView "World!"
+  pure $ exampleLayout Route.Simple $ do
+    col ~ pad 20 . gap 10 $ do
+      hyper Message1 $ messageView "Hello"
+      hyper Message2 $ messageView "World!"
 
 data Message = Message1 | Message2
   deriving (Generic, ViewId)

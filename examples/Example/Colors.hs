@@ -1,5 +1,6 @@
 module Example.Colors where
 
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 data AppColor

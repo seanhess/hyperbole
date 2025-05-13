@@ -96,9 +96,9 @@ raw t = View $ pure $ Atomic.raw t
 -- Attributes -----------------------------------------
 
 instance Attributable (View c a) where
-  setAttribute n av (View eff) = View $ do
+  modAttributes f (View eff) = View $ do
     h <- eff
-    pure $ setAttribute n av h
+    pure $ modAttributes f h
 
 
 instance Styleable (View c a) where

@@ -10,7 +10,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Eff es (Page '[FormView])
 page = do
-  pure $ exampleLayout Route.FormSimple $ row ~ (pad 20) $ do
+  pure $ exampleLayout Route.FormSimple $ row ~ pad 20 $ do
     hyper FormView formView'
 
 data FormView = FormView

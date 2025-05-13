@@ -14,9 +14,10 @@ main = do
 page :: (Hyperbole :> es) => Eff es (Page '[Message, Nope])
 page = do
   pure $ exampleLayout Route.Javascript $ col ~ pad 20 . gap 10 $ do
+    -- NOTE: include custom javascript only on this page
+    script "custom.js"
     hyper Message1 $ messageView "Hello"
     hyper Message2 $ messageView "World!"
-    script "custom.js"
 
 data Message = Message1 | Message2 | Message3
   deriving (Generic, ViewId)

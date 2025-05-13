@@ -174,7 +174,6 @@ module Web.Hyperbole
     -- ** Web.View
 
     -- | Hyperbole is tightly integrated with [atomic-css](https://hackage.haskell.org/package/atomic-css) for HTML generation
-  , module Web.Atomic.Types
   , module Web.Hyperbole.View
 
     -- ** Embeds
@@ -201,7 +200,7 @@ import GHC.Generics (Rep)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Atomic.CSS
-import Web.Atomic.Types
+import Web.Atomic.Types ()
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData)
 import Web.Hyperbole.Application
 import Web.Hyperbole.Data.Encoded ()
