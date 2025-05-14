@@ -57,13 +57,12 @@ async function fetchAction(reqId: RequestId, msg: ActionMessage): Promise<Respon
   }
 }
 
-async function runAction(target: HTMLElement, action: string, form?: FormData) {
+async function runAction(target: HyperView, action: string, form?: FormData) {
 
   if (action === undefined) {
     console.error("Undefined Action!", target, "this is a bug, please report: https://github.com/seanhess/hyperbole")
     return
   }
-
 
   let timeout = setTimeout(() => {
     // add loading after 100ms, not right away
@@ -73,6 +72,12 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
 
   let msg = actionMessage(target.id, action, form)
 
+  // Ignore any request if a requestId is active
+  if (target.dataset.requestId) {
+    console.warn("Action overlaps with active request (" + target.dataset.requestId + ")", action)
+    return
+  }
+
   // Set the requestId
   let reqId = requestId()
   target.dataset.requestId = reqId
@@ -80,9 +85,11 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   let res: Response = await fetchAction(reqId, msg)
 
   if (reqId != target.dataset.requestId) {
-    console.warn("Ignoring Stale Action (" + reqId + "):", action)
+    console.error("Stale Action! (" + reqId + "):", action)
     return
   }
+
+  delete target.dataset.requestId
 
   let update: LiveUpdate = parseResponse(res.body)
 
@@ -160,7 +167,7 @@ function addCSS(src: HTMLStyleElement | null) {
 function init() {
   rootStyles = document.querySelector('style')
 
-  listenLoadDocument(async function(target: HTMLElement, action: string) {
+  listenLoadDocument(async function(target: HyperView, action: string) {
     runAction(target, action)
   })
 
@@ -168,37 +175,37 @@ function init() {
 
   enrichHyperViews(document.body)
 
-  listenClick(async function(target: HTMLElement, action: string) {
+  listenClick(async function(target: HyperView, action: string) {
     // console.log("CLICK", target.id, action)
     runAction(target, action)
   })
 
-  listenDblClick(async function(target: HTMLElement, action: string) {
+  listenDblClick(async function(target: HyperView, action: string) {
     // console.log("DBLCLICK", target.id, action)
     runAction(target, action)
   })
 
-  listenKeydown(async function(target: HTMLElement, action: string) {
+  listenKeydown(async function(target: HyperView, action: string) {
     // console.log("KEYDOWN", target.id, action)
     runAction(target, action)
   })
 
-  listenKeyup(async function(target: HTMLElement, action: string) {
+  listenKeyup(async function(target: HyperView, action: string) {
     // console.log("KEYUP", target.id, action)
     runAction(target, action)
   })
 
-  listenFormSubmit(async function(target: HTMLElement, action: string, form: FormData) {
+  listenFormSubmit(async function(target: HyperView, action: string, form: FormData) {
     // console.log("FORM", target.id, action, form)
     runAction(target, action, form)
   })
 
-  listenChange(async function(target: HTMLElement, action: string) {
+  listenChange(async function(target: HyperView, action: string) {
     // console.log("CHANGE", target.id, action)
     runAction(target, action)
   })
 
-  listenInput(async function(target: HTMLElement, action: string) {
+  listenInput(async function(target: HyperView, action: string) {
     console.log("INPUT", target.id, action)
     runAction(target, action)
   })
@@ -206,10 +213,9 @@ function init() {
 
 function enrichHyperViews(node: HTMLElement): void {
   // enrich all the hyperviews
-  node.querySelectorAll("[id]").forEach((element: any) => {
+  node.querySelectorAll("[id]").forEach((element: HyperView) => {
     console.log("Found HyperView", element.dataset)
 
-    // Add 
     element.runAction = function(action: string) {
       runAction(this, action)
     }.bind(element)

@@ -1,15 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Web.Hyperbole.View.Embed
-  ( cssResetEmbed
-  , cssResetLink
+  ( Atomic.cssResetEmbed
+  , Atomic.cssResetLink
   , scriptEmbed
   )
 where
 
 import Data.ByteString
 import Data.FileEmbed
-import Web.Atomic.CSS.Reset
+import Web.Atomic.CSS.Reset qualified as Atomic
 
 
 scriptEmbed :: ByteString

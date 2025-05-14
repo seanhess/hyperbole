@@ -113,7 +113,6 @@ module Web.Hyperbole
   , onKeyDown
   , onKeyUp
   , onLoad
-  , whenLoading
   , Key (..)
   , DelayMs
 
@@ -199,7 +198,7 @@ import Effectful (Eff, (:>))
 import GHC.Generics (Rep)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
-import Web.Atomic.CSS
+import Web.Atomic.CSS ()
 import Web.Atomic.Types ()
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData)
 import Web.Hyperbole.Application

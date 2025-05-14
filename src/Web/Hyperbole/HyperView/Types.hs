@@ -10,8 +10,8 @@ import Effectful
 import Effectful.Reader.Dynamic
 import GHC.Generics
 import GHC.TypeLits hiding (Mod)
-import Web.Atomic.CSS (flexCol, (~))
-import Web.Atomic.Types (att, (@))
+import Web.Atomic.CSS
+import Web.Atomic.Types
 import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
 import Web.Hyperbole.TypeList

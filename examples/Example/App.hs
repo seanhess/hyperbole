@@ -44,6 +44,7 @@ import Example.Page.Contacts qualified as Contacts
 import Example.Page.Counter qualified as Counter
 import Example.Page.DataTable qualified as DataTable
 import Example.Page.Errors qualified as Errors
+import Example.Page.ExternalCSS qualified as ExternalCSS
 import Example.Page.Filter qualified as Filter
 import Example.Page.FormSimple qualified as FormSimple
 import Example.Page.FormValidation qualified as FormValidation
@@ -55,7 +56,6 @@ import Example.Page.Sessions qualified as Sessions
 import Example.Page.Simple qualified as Simple
 import Example.Page.Todo qualified as Todo
 import Example.Page.Transitions qualified as Transitions
-import Example.Page.ExternalCSS qualified as ExternalCSS
 import Example.Style qualified as Style
 import Example.View.Layout as Layout (exampleLayout, examplesView)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)

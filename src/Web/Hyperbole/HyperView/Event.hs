@@ -6,7 +6,6 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Text.Casing (kebab)
-import Web.Atomic.CSS
 import Web.Atomic.Types
 import Web.Hyperbole.HyperView.Types
 import Web.Hyperbole.View
@@ -95,17 +94,6 @@ toActionInput con =
   -- what if we wanted to input a number?
   let marker = "%HYP-INP%"
    in T.replace " \"%HYP-INP%\"" "" $ toAction $ con marker
-
-
-{- | Apply CSS only when a request is in flight. See [Example.Page.Contact](https://docs.hyperbole.live/contacts/1)
-
-@
-#EMBED Example/Page/Contact.hs contactEditView
-@
--}
-whenLoading :: (Styleable id) => (CSS id -> CSS id) -> CSS id -> CSS id
-whenLoading = do
-  descendentOf "hyp-loading"
 
 
 -- | Internal

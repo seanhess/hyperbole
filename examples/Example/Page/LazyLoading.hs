@@ -70,7 +70,7 @@ viewPaused n = do
 viewPoll :: Int -> View Polling ()
 viewPoll n = do
   -- reload every 200ms + round trip delay
-  col @ onLoad (Reload (n + 1)) 200 ~ gap 10 $ do
+  col @ onLoad (Reload (n + 1)) 250 ~ gap 10 . loading $ do
     row ~ gap 5 $ do
       button (Pause n) "Pause" ~ btn
       button Stop "Stop" ~ btn
