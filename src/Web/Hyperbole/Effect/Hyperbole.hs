@@ -62,3 +62,4 @@ data HyperState = HyperState
   { request :: Request
   , client :: Client
   }
+

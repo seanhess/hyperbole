@@ -5,18 +5,23 @@ module Example.Page.DataTable where
 import Data.List (sortOn)
 import Data.Text (pack)
 import Effectful
-import Example.AppRoute qualified as Route
+import Example.AppRoute as Route
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages)
-import Example.View.Layout (exampleLayout)
+import Example.View.Layout
 import Example.View.SortableTable (dataTable, sortColumn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
+-- DataTable -> do
+--   el "Complex reusable View Functions allow us to "
+
 page :: (Hyperbole :> es) => Eff es (Page '[Languages])
 page = do
-  pure $ exampleLayout Route.DataTable $ col ~ pad 20 . grow $ do
-    hyper Languages $ languagesView Nothing allLanguages
+  pure $ exampleLayout (Data SortableTable) $ do
+    example "Data Table" "Example/Page/DataTable.hs" $ do
+      el "We can write view Functions that work in any view, like a dataTable"
+      col ~ embed $ hyper Languages $ languagesView Nothing allLanguages
 
 data Languages = Languages
   deriving (Generic, ViewId)

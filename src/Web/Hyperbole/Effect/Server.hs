@@ -3,6 +3,7 @@
 module Web.Hyperbole.Effect.Server where
 
 import Control.Exception (Exception, throwIO)
+import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as L
@@ -13,7 +14,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Network.HTTP.Types (Header, HeaderName, Method, Query, status200, status400, status401, status404, status500)
+import Network.HTTP.Types (Header, HeaderName, Method, Query, QueryItem, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
 import Network.WebSockets (Connection)
@@ -313,3 +314,24 @@ data Event id act = Event
 
 instance (Show act, Show id) => Show (Event id act) where
   show e = "Event " <> show e.viewId <> " " <> show e.action
+
+
+lookupEvent :: Query -> Maybe (Event Text Text)
+lookupEvent q = do
+  viewId <- lookupParam "hyp-id" q
+  action <- lookupParam "hyp-action" q
+  pure $ Event{viewId, action}
+
+
+-- | Lower-level lookup straight from the request
+lookupParam :: ByteString -> Query -> Maybe Text
+lookupParam key q = do
+  mval <- L.lookup key q
+  val <- mval
+  pure $ cs val
+
+
+isSystemParam :: QueryItem -> Bool
+isSystemParam ("hyp-id", _) = True
+isSystemParam ("hyp-action", _) = True
+isSystemParam _ = False

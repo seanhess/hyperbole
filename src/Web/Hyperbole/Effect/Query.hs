@@ -1,6 +1,7 @@
 module Web.Hyperbole.Effect.Query where
 
 import Data.ByteString qualified as BS
+import Data.Default (Default (..))
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Effectful
@@ -38,7 +39,15 @@ query = do
 -}
 setQuery :: (ToQuery a, Hyperbole :> es) => a -> Eff es ()
 setQuery a = do
-  modifyQuery (const $ toQuery a)
+  modifyQueryData (const $ toQuery a)
+
+
+modifyQuery :: (ToQuery a, FromQuery a, Default a, Hyperbole :> es) => (a -> a) -> Eff es a
+modifyQuery f = do
+  s <- query
+  let updated = f s
+  setQuery updated
+  pure updated
 
 
 {- | Parse a single query parameter. Return a 400 status if missing or if parsing fails. See 'FromParam'
@@ -69,13 +78,13 @@ lookupParam p = do
 -}
 setParam :: (ToParam a, Hyperbole :> es) => Param -> a -> Eff es ()
 setParam key a = do
-  modifyQuery (QueryData.insert key a)
+  modifyQueryData (QueryData.insert key a)
 
 
 -- | Delete a single parameter from the query string
 deleteParam :: (Hyperbole :> es) => Param -> Eff es ()
 deleteParam key = do
-  modifyQuery (QueryData.delete key)
+  modifyQueryData (QueryData.delete key)
 
 
 -- | Return the query from 'Request' as a 'QueryData'
@@ -96,8 +105,8 @@ queryParams = do
     "hyp-" `BS.isPrefixOf` key
 
 
-modifyQuery :: (Hyperbole :> es) => (QueryData -> QueryData) -> Eff es ()
-modifyQuery f = do
+modifyQueryData :: (Hyperbole :> es) => (QueryData -> QueryData) -> Eff es ()
+modifyQueryData f = do
   q <- queryParams
   send $ ModClient $ \Client{session, requestId} ->
     Client{query = Just $ f q, session, requestId}

@@ -13,7 +13,7 @@ import Example.Effects.Users qualified as Users
 import Example.Page.Contact (contactForm, contactLoading, contactView', parseUser)
 import Example.Page.Contact qualified as Contact
 import Example.Style qualified as Style
-import Example.View.Layout (exampleLayout)
+import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
@@ -24,8 +24,10 @@ page
 page = do
   us <- Users.all
   pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
-    col ~ pad 10 . gap 10 $ do
-      hyper Contacts $ allContactsView Nothing us
+    example "Contacts" "Example/Page/Contacts.hs" $ do
+      el "This example combines various features"
+      col ~ embed $ do
+        hyper Contacts $ allContactsView Nothing us
 
 -- Contacts ----------------------------------------------
 

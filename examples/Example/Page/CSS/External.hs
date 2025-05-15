@@ -1,4 +1,4 @@
-module Example.Page.ExternalCSS where
+module Example.Page.CSS.External where
 
 import Data.Text (Text)
 import Web.Hyperbole
@@ -11,6 +11,8 @@ main = do
 page :: (Hyperbole :> es) => Eff es (Page '[Items])
 page = do
   pure $ do
+    -- you can choose to include a stylesheet only on the page that uses it
+    -- or load it in your document function
     stylesheet "external.css"
     hyper Items $ itemsView "one"
 
@@ -39,8 +41,5 @@ itemsView sel = do
       else id
 
   item i =
-    -- NOTE: you may want to use the `cls` utility to conditionally add more than one class attribute
-    -- instead of performing concatenation
-    --
-    -- the class_
+    -- the class_ attribute MERGES classes if you set it more than once
     button (Select i) @ class_ "item" . selected i $ text i

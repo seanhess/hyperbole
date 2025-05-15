@@ -16,77 +16,101 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI
 
+-- where
+--  routeSource :: AppRoute -> Path
+--  routeSource = \case
+--    Simple -> "Example/Page/Simple.hs"
+--    Contacts ContactsAll -> "Example/Page/Contacts.hs"
+--    Contacts (Contact _) -> "Example/Page/Contact.hs"
+--    Counter -> "Example/Page/Counter.hs"
+--    Transitions -> "Example/Page/Transitions.hs"
+--    FormSimple -> "Example/Page/FormSimple.hs"
+--    FormValidation -> "Example/Page/FormValidation.hs"
+--    Sessions -> "Example/Page/Sessions.hs"
+--    LazyLoading -> "Example/Page/LazyLoading.hs"
+--    Concurrent -> "Example/Page/Concurrent.hs"
+--    Redirects -> "Example/Page/Redirects.hs"
+--    Requests -> "Example/Page/Requests.hs"
+--    Filter -> "Example/Page/Filter.hs"
+--    Autocomplete -> "Example/Page/Autocomplete.hs"
+--    Errors -> "Example/Page/Errors.hs"
+--    RedirectNow -> "Main.hs"
+--    Query -> "Main.hs"
+--    Hello _ -> "Main.hs"
+--    Main -> "Main.hs"
+--    Examples -> "Example/View/Layout.hs"
+--    Todos -> "Example/Page/Todo.hs"
+--    DataTable -> "Example/Page/DataTable.hs"
+--    Javascript -> "Example/Page/Javascript.hs"
+--    ExternalCSS -> "Example/Page/ExternalCSS.hs"
+
 exampleLayout :: AppRoute -> View c () -> View c ()
-exampleLayout rt pageView = do
-  rootLayout rt $ do
-    pageDescription rt
-    link sourceUrl "View Source" ~ Style.link
-    row ~ bg White $ do
-      pageView
+exampleLayout rt content =
+  el ~ fillViewport . grow $ do
+    navigation rt ~ position Fixed . onDesktop leftMenu . onMobile topMenu
+    col ~ pad 25 . gap 30 . onDesktop horizontal . onMobile vertical $ do
+      content
+ where
+  leftMenu = width menuWidth . left 0 . top 0 . bottom 0
+  horizontal = margin (L menuWidth)
+  vertical = margin (T menuHeight)
+
+  topMenu = top 0 . right 0 . left 0
+
+  menuWidth = 230
+  menuHeight = 70
+
+sourceLink :: Path -> View c ()
+sourceLink p =
+  link sourceUrl "View Source" ~ Style.link
  where
   sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/0.4/example/|]
-  sourceUrl = sourceUrlBase ./. routeSource rt
+  sourceUrl = sourceUrlBase ./. p
 
-  routeSource :: AppRoute -> Path
-  routeSource = \case
-    Simple -> "Example/Page/Simple.hs"
-    Contacts ContactsAll -> "Example/Page/Contacts.hs"
-    Contacts (Contact _) -> "Example/Page/Contact.hs"
-    Counter -> "Example/Page/Counter.hs"
-    Transitions -> "Example/Page/Transitions.hs"
-    FormSimple -> "Example/Page/FormSimple.hs"
-    FormValidation -> "Example/Page/FormValidation.hs"
-    Sessions -> "Example/Page/Sessions.hs"
-    LazyLoading -> "Example/Page/LazyLoading.hs"
-    Concurrent -> "Example/Page/Concurrent.hs"
-    Redirects -> "Example/Page/Redirects.hs"
-    Requests -> "Example/Page/Requests.hs"
-    Filter -> "Example/Page/Filter.hs"
-    Autocomplete -> "Example/Page/Autocomplete.hs"
-    Errors -> "Example/Page/Errors.hs"
-    RedirectNow -> "Main.hs"
-    Query -> "Main.hs"
-    Hello _ -> "Main.hs"
-    Main -> "Main.hs"
-    Examples -> "Example/View/Layout.hs"
-    Todos -> "Example/Page/Todo.hs"
-    DataTable -> "Example/Page/DataTable.hs"
-    Javascript -> "Example/Page/Javascript.hs"
-    ExternalCSS -> "Example/Page/ExternalCSS.hs"
+embed :: (Styleable h) => CSS h -> CSS h
+embed =
+  pad 20 . gap 10 . bg White . flexCol
 
-rootLayout :: AppRoute -> View c () -> View c ()
-rootLayout rt content =
-  el ~ fillViewport . grow . onDesktop flexRow . onMobile flexCol $ do
-    navigation rt
-    col ~ pad 20 . gap 20 . grow $ do
-      content
+example :: Text -> Path -> View c () -> View c ()
+example t p cnt =
+  col ~ gap 15 $ do
+    row $ do
+      el ~ bold . fontSize 24 $ text t
+      space
+      sourceLink p
+    cnt
 
 exampleMenu :: AppRoute -> View c ()
 exampleMenu current = do
-  example Simple
-  example Counter
-  example Transitions
-  example Requests
-  example Redirects
-  example RedirectNow
-  example LazyLoading
-  example Concurrent
-  example FormSimple
-  example FormValidation
-  example DataTable
-  example Sessions
-  example Filter
-  example Autocomplete
-  example Todos
-  example (Contacts ContactsAll)
-  example Javascript
-  example ExternalCSS
+  exampleLink Intro
+  exampleLink Requests
+  exampleLink Concurrency
+  exampleLink AtomicCSS
+  exampleLink (State StateRoot)
+  case current of
+    State _ -> do
+      exampleLink (State Effects) ~ sub
+      exampleLink (State Query) ~ sub
+      exampleLink (State Sessions) ~ sub
+    _ -> none
+  exampleLink (Data DataLists)
+  case current of
+    Data _ -> do
+      exampleLink (Data SortableTable) ~ sub
+      exampleLink (Data Autocomplete) ~ sub
+      exampleLink (Data Filter) ~ sub
+    _ -> none
+  exampleLink Forms
+  exampleLink Todos
+  exampleLink (Contacts ContactsAll)
+  exampleLink Javascript
  where
   -- example Errors
 
   -- link "/query?key=value" lnk "Query Params"
+  sub = pad (TRBL 10 10 10 40)
 
-  example rt =
+  exampleLink rt =
     route rt ~ menuItem . selected rt $
       text $
         routeTitle rt
@@ -98,72 +122,29 @@ exampleMenu current = do
 routeTitle :: AppRoute -> Text
 routeTitle (Hello _) = "Hello World"
 routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
-routeTitle Filter = "Search - Filters"
-routeTitle Autocomplete = "Search - Autocomplete"
+routeTitle (State Effects) = "Effects"
+routeTitle (State StateRoot) = "State"
+routeTitle (State Query) = "Query"
+routeTitle (State Sessions) = "Sessions"
+routeTitle (Data DataLists) = "Data Lists"
+routeTitle (Data SortableTable) = "Sortable Table"
+routeTitle (Data Filter) = "Filters"
+routeTitle (Data Autocomplete) = "Autocomplete"
 routeTitle Todos = "TodoMVC"
-routeTitle FormSimple = "Forms - Simple"
-routeTitle FormValidation = "Forms - Validation"
 routeTitle r = cs $ toWords $ fromHumps $ show r
 
 pageDescription :: AppRoute -> View c ()
 pageDescription = \case
-  Simple -> do
-    el "HyperViews update independently. In this example, two Message HyperViews are embedded into the same page with different ids."
-    el "Try inspecting the page in the Chrome dev tools and watching both the DOM and messages"
-  Counter -> do
-    el $ do
-      text "Pages and update functions can run side effects before rendering. Here we use a "
-      code "Reader (TVar Int)"
-      text "to track the count"
-    ol ~ pad (XY 15 0) $ do
-      item $ do
-        text "Uses a view function to render the state: "
-        code "viewCount :: Int -> View Counter ()"
-    el "Notice how the view function expects the current count as a parameter"
-  Transitions -> do
-    el "We can use web-view to animate transitions"
-  Sessions -> do
-    el "Reload your browser after changing these settings to see the session information preserved"
-  Requests -> do
-    el "The Hyperbole Effect allows us to access the Request, and manipulate the Client"
-  Redirects -> none
-  RedirectNow -> none
-  LazyLoading -> do
-    el "We can use onLoad to lazily load content and poll for changes"
-  FormSimple -> do
-    el "Use a Higher Kinded Type to define form fields"
-  FormValidation ->
-    el $ do
-      code "instance Form MyForm Validated"
-      text " allows us to manage validation states for each field"
-  Filter ->
-    el "Easily serialize a datatype to the querystring, preserving faceted search in the url"
-  Autocomplete ->
-    el "Create a serverside autocomplete with a combination of onInput and onKeyDown"
-  DataTable -> do
-    el "Complex reusable View Functions allow us to "
-  Concurrent ->
-    el "Separate HyperViews can overlap updates without issues"
+  -- Simple -> do
+  --   el "HyperViews update independently. In this example, two Message HyperViews are embedded into the same page with different ids."
+  --   el "Try inspecting the page in the Chrome dev tools and watching both the DOM and messages"
   Todos ->
     row ~ (gap 5) $ do
       el "Implementation of "
       link [uri|https://todomvc.com/|] "TodoMVC" ~ Style.link
   Contacts _ -> do
     el "This complex example combines various features"
-  Examples -> none
-  Errors -> none
-  Main -> none
-  Hello _ -> none
-  Query -> none
-  Javascript -> none
-  ExternalCSS -> none
- where
-  item = li ~ list Disc
-
-examplesView :: View c ()
-examplesView = rootLayout Examples $ do
-  col ~ bg Dark $ do
-    exampleMenu Examples
+  _ -> none
 
 navigation :: AppRoute -> View c ()
 navigation rt = do
@@ -171,9 +152,7 @@ navigation rt = do
     row $ do
       link [uri|https://github.com/seanhess/hyperbole|] "HYPERBOLE" ~ bold . pad 20 . logo . width 220
       space
-      el ~ onDesktop (display None) . onMobile flexCol $ do
-        el ~ pad 6 $ do
-          el Icon.hamburger ~ color White . width 50 . height 50
+      menuButton
     col ~ cls "menu" . onMobile (display None) $ do
       exampleMenu rt
       space
@@ -181,6 +160,11 @@ navigation rt = do
         text "v"
         text $ cs $ showVersion version
  where
+  menuButton =
+    el ~ onDesktop (display None) . onMobile flexCol $ do
+      el ~ pad 6 $ do
+        el Icon.hamburger ~ color White . width 50 . height 50
+
   showMenuHover =
     css
       "show-menu"

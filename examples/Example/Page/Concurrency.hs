@@ -1,32 +1,49 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Page.LazyLoading where
+module Example.Page.Concurrency where
 
 import Control.Monad (forM_)
 import Data.Text (Text, pack)
 import Effectful
-import Example.AppRoute as Route
+import Example.AppRoute
 import Example.Colors
 import Example.Effects.Debug
 import Example.Effects.Random
 import Example.Style as Style
-import Example.View.Layout (exampleLayout)
+import Example.View.Inputs (progressBar)
+import Example.View.Layout (embed, example, exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Polling, LazyData])
+page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Polling, LazyData, Progress])
 page = do
-  pure $ exampleLayout LazyLoading $ do
-    col ~ gap 20 . pad 20 $ do
-      el ~ bold . fontSize 24 $ "Polling"
-      col ~ pad 15 . border 1 $ do
-        hyper Polling viewInit
+  pure $ exampleLayout Concurrency $ do
+    example "Concurrency" source $ do
+      el "While individual HyperViews can only have one update in progress at a time, multiple HyperViews can overlap updates without issue"
+      el ~ embed $ do
+        hyper (Progress 1 100) $ viewProgress 0
+        hyper (Progress 2 200) $ viewProgress 0
+        hyper (Progress 3 300) $ viewProgress 0
+        hyper (Progress 4 400) $ viewProgress 0
+        hyper (Progress 5 500) $ viewProgress 0
 
-      el ~ bold . fontSize 24 $ "Lazy Loading Items"
-      row ~ gap 10 . flexWrap Wrap $ do
+    example "Lazy Loading" source $ do
+      row ~ gap 5 $ do
+        text "Instead of preloading everything in our Page, a HyperView can load itself using "
+        code "onLoad"
+      el ~ flexRow . embed . flexWrap Wrap $ do
         forM_ pretendTasks $ \taskId -> do
           el ~ border 1 . width 120 . pad 5 $ do
             hyper (LazyData taskId) viewTaskLoad
+
+    example "Polling" source $ do
+      row ~ gap 5 $ do
+        text "By including an "
+        code "onLoad"
+        text "in every view update, we can poll the server after a given delay"
+      col ~ embed $ hyper Polling viewInit
+ where
+  source = "Example/Page/Concurrency.hs"
 
 -----------------------------------------------------------
 -- Simple Polling
@@ -112,7 +129,7 @@ viewTaskDetails task = do
 
 -- Fake Tasks Effect ----------------------------------------
 
-type TaskId = Text
+type TaskId = Int
 
 data Task = Task
   { taskId :: TaskId
@@ -121,11 +138,47 @@ data Task = Task
 
 pretendLoadTask :: (Debug :> es, GenRandom :> es) => TaskId -> Eff es Task
 pretendLoadTask taskId = do
-  -- pretend it takes a little time to load
   randomDelay <- genRandom (100, 1000)
   delay randomDelay
 
-  pure $ Task taskId $ "Details for " <> taskId
+  pure $ Task taskId $ "Details for " <> pack (show taskId)
 
 pretendTasks :: [TaskId]
-pretendTasks = fmap (pack . show @Int) [1 .. 100]
+pretendTasks = [1 .. 30]
+
+-----------------------------------------------------------
+
+data Progress = Progress TaskId Milliseconds
+  deriving (Generic, ViewId)
+
+instance (Debug :> es, GenRandom :> es) => HyperView Progress es where
+  data Action Progress
+    = CheckProgress Int
+    deriving (Generic, ViewAction)
+  update (CheckProgress prg) = do
+    Progress _ dly <- viewId
+
+    -- this will not block other hyperviews from updating
+    delay dly
+
+    -- pretend check update of a task
+    nextProgress <- genRandom (0, 5)
+
+    pure $ viewProgress (prg + nextProgress)
+
+viewProgress :: Int -> View Progress ()
+viewProgress prg
+  | prg >= 100 = viewComplete
+  | otherwise = viewUpdating prg
+
+viewComplete :: View Progress ()
+viewComplete = do
+  row ~ bg Success . color White . pad 5 $ "Complete"
+
+viewUpdating :: Int -> View Progress ()
+viewUpdating prg = do
+  let pct = fromIntegral prg / 100
+  Progress taskId _ <- viewId
+  col @ onLoad (CheckProgress prg) 0 $ do
+    progressBar pct $ do
+      el ~ grow $ text $ "Task" <> pack (show taskId)

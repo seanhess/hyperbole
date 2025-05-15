@@ -5,21 +5,25 @@ module Example.Page.Filter where
 
 import Data.Text (Text, pack)
 import Effectful hiding (Dynamic)
-import Example.AppRoute qualified as Route
+import Example.AppRoute as Route
 import Example.Colors
 import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguage (..), TypeFeature (..), allLanguages, isMatchLanguage)
 import Example.View.Icon as Icon
 import Example.View.Inputs (toggleCheckbox)
-import Example.View.Layout (exampleLayout)
+import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
+-- Filter ->
+--   el "Easily serialize a datatype to the querystring, preserving faceted search in the url"
 page :: (Hyperbole :> es) => Eff es (Page '[Languages])
 page = do
   filters <- query
-  pure $ exampleLayout Route.Filter $ col ~ pad 20 . grow $ do
-    hyper Languages $ languagesView filters
+  pure $ exampleLayout (Data Filter) $ do
+    example "Filters" "Example/Page/Filter.hs" $ do
+      el "Incrementally search a list of data, storing parameters in the query string"
+      el ~ embed $ hyper Languages $ languagesView filters
 
 data Languages = Languages
   deriving (Generic, ViewId)

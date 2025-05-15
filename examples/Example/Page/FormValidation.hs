@@ -2,23 +2,15 @@ module Example.Page.FormValidation where
 
 import Data.Text (Text, pack)
 import Data.Text qualified as T
-import Effectful
-import Example.AppRoute qualified as Route
 import Example.Style qualified as Style
-import Example.View.Layout (exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: (Hyperbole :> es) => Eff es (Page '[FormView])
-page = do
-  pure $ exampleLayout Route.FormValidation $ row ~ pad 20 $ do
-    hyper FormView (formView genFields)
-
-data FormView = FormView
+data Signup = Signup
   deriving (Generic, ViewId)
 
-instance HyperView FormView es where
-  data Action FormView
+instance HyperView Signup es where
+  data Action Signup
     = Submit
     deriving (Generic, ViewAction)
 
@@ -77,7 +69,7 @@ validatePass p1 p2 =
     , validate (T.length p1 < 8) "Password must be at least 8 chars"
     ]
 
-formView :: UserForm Validated -> View FormView ()
+formView :: UserForm Validated -> View Signup ()
 formView val = do
   let f = fieldNames @UserForm
   form Submit ~ gap 10 . pad 10 $ do
@@ -94,7 +86,7 @@ formView val = do
 
     field f.age ~ valStyle val.age $ do
       label "Age"
-      input Number @ placeholder "age" ~ Style.input
+      input Number @ placeholder "age" . value "0" ~ Style.input
       el $ invalidText val.age
 
     field f.pass1 ~ valStyle val.pass1 $ do
@@ -112,7 +104,7 @@ formView val = do
   valStyle Valid = Style.success
   valStyle _ = id
 
-userView :: UserForm Identity -> View FormView ()
+userView :: UserForm Identity -> View Signup ()
 userView u = do
   el ~ bold . Style.success $ "Accepted Signup"
   row ~ gap 5 $ do

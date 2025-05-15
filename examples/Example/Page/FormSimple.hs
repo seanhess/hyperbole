@@ -1,23 +1,15 @@
 module Example.Page.FormSimple where
 
 import Data.Text (Text, pack)
-import Effectful
-import Example.AppRoute qualified as Route
 import Example.Style qualified as Style
-import Example.View.Layout (exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: (Hyperbole :> es) => Eff es (Page '[FormView])
-page = do
-  pure $ exampleLayout Route.FormSimple $ row ~ pad 20 $ do
-    hyper FormView formView'
-
-data FormView = FormView
+data AddContact = AddContact
   deriving (Generic, ViewId)
 
-instance HyperView FormView es where
-  data Action FormView
+instance HyperView AddContact es where
+  data Action AddContact
     = Submit
     deriving (Generic, ViewAction)
 
@@ -34,7 +26,7 @@ data ContactForm = ContactForm
   deriving (Generic, FromForm)
 
 -- and a view that displays an input for each field
-formView :: View FormView ()
+formView :: View AddContact ()
 formView = do
   form Submit ~ gap 15 . pad 10 $ do
     el ~ Style.h1 $ "Add Contact"
@@ -74,7 +66,7 @@ data ContactForm' f = ContactForm'
   }
   deriving (Generic, FromFormF, GenFields FieldName)
 
-formView' :: View FormView ()
+formView' :: View AddContact ()
 formView' = do
   -- generate a ContactForm' FieldName
   let f = fieldNames @ContactForm'
@@ -100,7 +92,7 @@ formView' = do
 
     submit "Submit" ~ Style.btn
 
-contactView :: ContactForm -> View FormView ()
+contactView :: ContactForm -> View AddContact ()
 contactView u = do
   el ~ bold . Style.success $ "Accepted Signup"
   row ~ gap 5 $ do

@@ -49,24 +49,28 @@ executable examples
       Example.Effects.Todos
       Example.Effects.Users
       Example.Page.Autocomplete
-      Example.Page.Concurrent
+      Example.Page.Concurrency
       Example.Page.Contact
       Example.Page.Contacts
       Example.Page.Counter
+      Example.Page.CSS
+      Example.Page.CSS.External
+      Example.Page.CSS.Tooltips
+      Example.Page.CSS.Transitions
       Example.Page.DataTable
       Example.Page.Errors
-      Example.Page.ExternalCSS
       Example.Page.Filter
+      Example.Page.Forms
       Example.Page.FormSimple
       Example.Page.FormValidation
+      Example.Page.Intro
       Example.Page.Javascript
-      Example.Page.LazyLoading
-      Example.Page.Redirects
       Example.Page.Requests
-      Example.Page.Sessions
       Example.Page.Simple
+      Example.Page.State.Effects
+      Example.Page.State.Query
+      Example.Page.State.Sessions
       Example.Page.Todo
-      Example.Page.Transitions
       Example.Style
       Example.View.Icon
       Example.View.Inputs

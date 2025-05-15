@@ -40,13 +40,13 @@ success :: (Styleable h) => CSS h -> CSS h
 success = color Success
 
 link :: (Styleable h) => CSS h -> CSS h
-link = color Primary
+link = color Primary . underline
 
 input :: (Styleable h) => CSS h -> CSS h
 input = border 1 . pad 8
 
-code :: (Styleable h) => CSS h -> CSS h
-code = bg Light . pad 10 . fontSize 12
+-- code :: (Styleable h) => CSS h -> CSS h
+-- code = bg Light . pad 10 . fontSize 12
 
 strikethrough :: (Styleable h) => CSS h -> CSS h
 strikethrough =

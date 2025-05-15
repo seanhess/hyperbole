@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Web.Hyperbole.Effect.Request where
 
 import Effectful
@@ -10,7 +12,12 @@ import Web.Hyperbole.Effect.Server
 
 -- | Return all information about the 'Request'
 request :: (Hyperbole :> es) => Eff es Request
-request = send GetRequest
+request = reqRemoveSystem <$> send GetRequest
+
+
+reqRemoveSystem :: Request -> Request
+reqRemoveSystem Request{..} =
+  Request{query = filter (not . isSystemParam) query, ..}
 
 
 {- | Return the request path

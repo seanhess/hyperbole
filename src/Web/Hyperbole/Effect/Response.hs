@@ -11,7 +11,7 @@ import Web.Hyperbole.View.Types
 
 
 -- | Respond with the given view, and stop execution
-respondEarly :: (Hyperbole :> es, HyperView id es) => id -> View id () -> Eff es ()
+respondEarly :: (Hyperbole :> es, HyperView id es) => id -> View id () -> Eff es a
 respondEarly i vw = do
   let vid = TargetViewId (toViewId i)
   let res = Response vid $ hyperUnsafe i vw

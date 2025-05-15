@@ -13,7 +13,7 @@ import Example.Effects.Debug
 import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
-import Example.View.Layout (exampleLayout)
+import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
@@ -30,8 +30,9 @@ page = do
   uid <- ask
   u <- Users.find uid
   pure $ exampleLayout (Route.Contacts $ Route.Contact 0) $ do
-    col ~ pad 10 . gap 10 $ do
-      hyper (Contact uid) $ contactView u
+    example "Contact" "Example/Page/Contact.hs" $ do
+      col ~ embed $ do
+        hyper (Contact uid) $ contactView u
 
 -- Contact ----------------------------------------------------
 
@@ -110,8 +111,8 @@ contactEditView u = do
 
 contactEdit :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
 contactEdit onView onSave u = do
-  contactForm onSave contactFromUser
   col ~ gap 10 $ do
+    contactForm onSave contactFromUser
     button onView (text "Cancel") ~ Style.btnLight
  where
   contactFromUser :: ContactForm Maybe

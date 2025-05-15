@@ -14,7 +14,7 @@ import Example.Effects.Todos qualified as Todos
 import Example.Style qualified as Style
 import Example.View.Icon qualified as Icon
 import Example.View.Inputs (toggleCheckbox)
-import Example.View.Layout (exampleLayout)
+import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
 
@@ -22,12 +22,8 @@ page :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
 page = do
   todos <- Todos.loadAll
   pure $ exampleLayout Route.Todos $ do
-    col ~ gap 10 . grow $ do
-      row $ do
-        space
-        el ~ Style.h1 . pad 10 $ "Todos"
-        space
-      hyper AllTodos $ todosView FilterAll todos
+    example "Todos" "Example/Page/Todo.hs" $ do
+      col ~ embed $ hyper AllTodos $ todosView FilterAll todos
 
 simplePage :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
 simplePage = do

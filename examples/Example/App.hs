@@ -38,26 +38,24 @@ import Example.Effects.Random (GenRandom, runRandom)
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
 import Example.Page.Autocomplete qualified as Autocomplete
-import Example.Page.Concurrent qualified as Concurrent
+import Example.Page.CSS qualified as CSS
+import Example.Page.Concurrency qualified as Concurrency
 import Example.Page.Contact qualified as Contact
 import Example.Page.Contacts qualified as Contacts
 import Example.Page.Counter qualified as Counter
 import Example.Page.DataTable qualified as DataTable
 import Example.Page.Errors qualified as Errors
-import Example.Page.ExternalCSS qualified as ExternalCSS
 import Example.Page.Filter qualified as Filter
-import Example.Page.FormSimple qualified as FormSimple
-import Example.Page.FormValidation qualified as FormValidation
+import Example.Page.Forms qualified as Forms
+import Example.Page.Intro qualified as Intro
 import Example.Page.Javascript qualified as Javascript
-import Example.Page.LazyLoading qualified as LazyLoading
-import Example.Page.Redirects qualified as Redirects
 import Example.Page.Requests qualified as Requests
-import Example.Page.Sessions qualified as Sessions
-import Example.Page.Simple qualified as Simple
+import Example.Page.State.Effects qualified as Effects
+import Example.Page.State.Query qualified as Query
+import Example.Page.State.Sessions qualified as Sessions
 import Example.Page.Todo qualified as Todo
-import Example.Page.Transitions qualified as Transitions
 import Example.Style qualified as Style
-import Example.View.Layout as Layout (exampleLayout, examplesView)
+import Example.View.Layout as Layout (example, exampleLayout, sourceLink)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
 import GHC.Generics (Generic)
 import GHC.Word (Word32)
@@ -87,7 +85,7 @@ run = do
   putStrLn $ "Starting Examples on http://localhost:" <> show port
 
   users <- Users.initUsers
-  count <- runEff $ runConcurrent Counter.initCounter
+  count <- runEff $ runConcurrent Effects.initCounter
   cache <- clientCache
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
@@ -107,33 +105,32 @@ app users count = do
   router (Hello h) = runPage $ hello h
   router (Contacts (Contact uid)) = Contact.response uid
   router (Contacts ContactsAll) = runPage Contacts.page
-  router Concurrent = runPage Concurrent.page
-  router Counter = runReader count $ runPage Counter.page
-  router DataTable = runPage DataTable.page
+  router Concurrency = runPage Concurrency.page
+  router (Data r) =
+    case r of
+      DataLists -> redirect $ routeUri (Data SortableTable)
+      SortableTable -> runPage DataTable.page
+      Autocomplete -> runPage Autocomplete.page
+      Filter -> runPage Filter.page
   router Errors = runPage Errors.page
-  router Examples = view Layout.examplesView
-  router Filter = runPage Filter.page
-  router FormSimple = runPage FormSimple.page
-  router FormValidation = runPage FormValidation.page
-  router LazyLoading = runPage LazyLoading.page
-  router Autocomplete = runPage Autocomplete.page
-  router Query = do
-    p <- param "key"
-    view $ el ~ pad 20 $ do
-      text "key: "
-      text p
-  router RedirectNow = do
-    redirect (routeUri $ Hello Redirected)
-  router Redirects = runPage Redirects.page
+  router Forms = runPage Forms.page
+  -- router RedirectNow = do
+  --   redirect (routeUri $ Hello Redirected)
   router Requests = runPage Requests.page
-  router Sessions = runPage Sessions.page
-  router Simple = runPage Simple.page
-  router Transitions = runPage Transitions.page
+  router (State r) =
+    case r of
+      StateRoot -> redirect $ routeUri (State Effects)
+      Effects -> runReader count $ runPage Effects.page
+      Sessions -> runPage Sessions.page
+      Query -> runPage Query.page
+  router Intro = runPage Intro.page
+  router AtomicCSS = runPage CSS.page
   router Todos = runPage Todo.page
   router Javascript = runPage Javascript.page
-  router ExternalCSS = runPage ExternalCSS.page
+  router Simple = redirect (routeUri Intro)
+  router Counter = redirect (routeUri Intro)
   router Main = do
-    redirect (routeUri Simple)
+    redirect (routeUri Intro)
 
   -- Nested Router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Eff es (Page '[])
@@ -143,7 +140,7 @@ app users count = do
         el "Hello:"
         el $ text who
   hello Redirected = do
-    pure $ exampleLayout RedirectNow $ el ~ pad 10 $ "You were redirected"
+    pure $ exampleLayout Requests $ el ~ pad 10 $ "You were redirected"
 
   -- Use the embedded version for real applications (see basicDocument).
   -- The link to /hyperbole.js here is just to make local development easier

@@ -6,11 +6,11 @@ import Control.Monad (forM_)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Effectful
-import Example.AppRoute qualified as Route
+import Example.AppRoute as Route
 import Example.Colors
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages, isMatchLanguage)
 import Example.Page.Filter as Filter (chosenView, clearButton, resultsTable)
-import Example.View.Layout (exampleLayout)
+import Example.View.Layout
 import Safe (atMay)
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -18,8 +18,10 @@ import Prelude hiding (even, odd)
 
 page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])
 page = do
-  pure $ exampleLayout Route.Autocomplete $ col ~ pad 20 . grow $ do
-    hyper LiveSearch $ liveSearchView allLanguages 0 ""
+  pure $ exampleLayout (Data Autocomplete) $ do
+    example "Autocomplete" "Example/Page/Autocomplete.hs" $ do
+      el "Create a serverside autocomplete with a combination of onInput and onKeyDown"
+      col ~ embed $ hyper LiveSearch $ liveSearchView allLanguages 0 ""
 
 data LiveSearch = LiveSearch
   deriving (Generic, ViewId)

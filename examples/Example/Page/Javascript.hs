@@ -2,9 +2,12 @@ module Example.Page.Javascript where
 
 import Data.Text (Text)
 import Example.AppRoute qualified as Route
-import Example.View.Layout (exampleLayout)
+import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
+
+-- TODO: show how to do tooltips with only CSS
+-- TODO: a mouseover example that calls the server via runAction
 
 main :: IO ()
 main = do
@@ -13,11 +16,13 @@ main = do
 
 page :: (Hyperbole :> es) => Eff es (Page '[Message, Nope])
 page = do
-  pure $ exampleLayout Route.Javascript $ col ~ pad 20 . gap 10 $ do
-    -- NOTE: include custom javascript only on this page
-    script "custom.js"
-    hyper Message1 $ messageView "Hello"
-    hyper Message2 $ messageView "World!"
+  pure $ exampleLayout Route.Javascript $ do
+    example "Javascript" "Example/Page/Javascript.hs" $ do
+      -- NOTE: include custom javascript only on this page
+      script "custom.js"
+      col ~ embed $ do
+        hyper Message1 $ messageView "Hello"
+        hyper Message2 $ messageView "World!"
 
 data Message = Message1 | Message2 | Message3
   deriving (Generic, ViewId)
