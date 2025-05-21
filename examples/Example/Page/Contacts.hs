@@ -166,7 +166,7 @@ contactView = contactView' Edit
 -- See how we reuse the contactEdit' and contactLoading from Example.Contact
 contactEdit :: User -> View InlineContact ()
 contactEdit u = do
-  el ~ (hide . whenLoading flexCol) $ contactLoading
-  col ~ (whenLoading hide . gap 10) $ do
+  el ~ (display None . whenLoading flexCol) $ contactLoading
+  col ~ (whenLoading (display None) . gap 10) $ do
     Contact.contactEdit View Save u
     target Contacts $ button (DeleteUser u.id) ~ Style.btn' Danger . pad (XY 10 0) $ text "Delete"

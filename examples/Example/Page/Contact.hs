@@ -106,8 +106,8 @@ contactView' edit u = do
 
 contactEditView :: User -> View Contact ()
 contactEditView u = do
-  el contactLoading ~ hide . whenLoading flexCol
-  el (contactEdit View Save u) ~ (whenLoading hide)
+  el contactLoading ~ display None . whenLoading flexCol
+  el (contactEdit View Save u) ~ (whenLoading (display None))
 
 contactEdit :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
 contactEdit onView onSave u = do

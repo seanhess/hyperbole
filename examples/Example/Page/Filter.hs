@@ -133,7 +133,7 @@ clearButton clear term =
  where
   showClearBtn =
     case term of
-      "" -> hide
+      "" -> display None
       _ -> id
 
 chosenView :: ProgrammingLanguage -> View c ()
@@ -141,7 +141,7 @@ chosenView lang = do
   row ~ gap 10 $ do
     el "You chose:"
     el $ text lang.name
-  el ~ (if lang.name == "Haskell" then id else hide) $ "You are as wise as you are attractive"
+  el ~ (if lang.name == "Haskell" then id else display None) $ "You are as wise as you are attractive"
 
 resultsTable :: (ViewAction (Action id)) => (ProgrammingLanguage -> Action id) -> [ProgrammingLanguage] -> View id ()
 resultsTable onSelect langs = do

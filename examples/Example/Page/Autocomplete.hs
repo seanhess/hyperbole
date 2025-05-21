@@ -60,7 +60,7 @@ liveSearchView langs current term = do
 
   -- Only show the search popup if there is a search term and matchedLanguages
   shownIfMatches =
-    if T.null term || null matchedLanguages then hide else flexCol
+    if T.null term || null matchedLanguages then display None else flexCol
 
   searchKeys =
     onKeyDown Enter (Select currentSearchLang)

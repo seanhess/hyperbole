@@ -16,10 +16,10 @@ whenLoading = do
 
 disabled :: (Styleable h) => CSS h -> CSS h
 disabled =
-  utility'
+  utility
     "disabled"
-    [ Declaration "opacity" "0.7"
-    , Declaration "pointer-events" "none"
+    [ "opacity" :. "0.7"
+    , "pointer-events" :. "none"
     ]
 
 

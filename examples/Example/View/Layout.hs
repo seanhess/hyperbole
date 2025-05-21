@@ -46,7 +46,7 @@ import Web.Hyperbole.Data.URI
 
 exampleLayout :: AppRoute -> View c () -> View c ()
 exampleLayout rt content =
-  el ~ fillViewport . grow $ do
+  el ~ grow $ do
     navigation rt ~ position Fixed . onDesktop leftMenu . onMobile topMenu
     col ~ pad 25 . gap 30 . onDesktop horizontal . onMobile vertical $ do
       content
@@ -169,15 +169,15 @@ navigation rt = do
     css
       "show-menu"
       ".show-menu:hover > .menu"
-      [ prop @Text "display" "flex"
+      [ "display" :. "flex"
       ]
 
   -- https://www.fontspace.com/super-brigade-font-f96444
   logo =
-    utility'
+    utility
       "logo"
-      [ prop @Text "background" "no-repeat center/90% url(/logo-robot.png)"
-      , prop @Text "color" "transparent"
+      [ "background" :. "no-repeat center/90% url(/logo-robot.png)"
+      , "color" :. "transparent"
       ]
 
 onMobile :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c

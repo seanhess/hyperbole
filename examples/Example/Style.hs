@@ -1,6 +1,5 @@
 module Example.Style where
 
-import Data.Text (Text)
 import Example.Colors
 import Web.Atomic.CSS
 
@@ -50,4 +49,4 @@ input = border 1 . pad 8
 
 strikethrough :: (Styleable h) => CSS h -> CSS h
 strikethrough =
-  utility @Text "strike" "text-decoration" "line-through"
+  utility "strike" ["text-decoration" :. "line-through"]

@@ -79,7 +79,7 @@ library
   ghc-options: -Wall -fdefer-typed-holes
   build-depends:
       aeson
-    , atomic-css >=0.8 && <=1.0
+    , atomic-css ==0.1.*
     , attoparsec
     , attoparsec-aeson
     , base >=4.16 && <5
@@ -133,7 +133,7 @@ test-suite test
   ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N -F -pgmF=skeletest-preprocessor
   build-depends:
       aeson
-    , atomic-css >=0.8 && <=1.0
+    , atomic-css ==0.1.*
     , attoparsec
     , attoparsec-aeson
     , base >=4.16 && <5

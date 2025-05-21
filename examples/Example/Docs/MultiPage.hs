@@ -26,7 +26,7 @@ menu = do
 
 exampleLayout :: View c () -> View c ()
 exampleLayout content = do
-  col ~ fillViewport $ do
+  col ~ grow $ do
     el ~ border 1 $ "My Website Header"
     row $ do
       menu

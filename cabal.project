@@ -5,12 +5,12 @@ packages:
   .
   ./examples/
   ./docs/
-  -- ../atomic-css/
+  ../atomic-css/
   -- temporary until https://github.com/seanhess/hyperbole/issues/76 is resolved
   -- https://hackage.haskell.org/package/web-view-0.7.0/candidate/web-view-0.7.0.tar.gz
 
 
-source-repository-package
- type: git
- location: https://github.com/seanhess/atomic-css.git
- tag: c4152e5d32ae7c109876c25a3f8563a3983bdf1a
+-- source-repository-package
+--  type: git
+--  location: https://github.com/seanhess/atomic-css.git
+--  tag: c4152e5d32ae7c109876c25a3f8563a3983bdf1a

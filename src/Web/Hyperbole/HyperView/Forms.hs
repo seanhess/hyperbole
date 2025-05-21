@@ -157,12 +157,8 @@ data FormFields id = FormFields id
 form :: (ViewAction (Action id)) => Action id -> View (FormFields id) () -> View id ()
 form a cnt = do
   vid <- context
-  tag "form" @ onSubmit a ~ flexCol . marginEnd0 $ do
+  tag "form" @ onSubmit a ~ flexCol $ do
     addContext (FormFields vid) cnt
- where
-  -- not sure why chrome is adding margin-block-end: 16 to forms? Add to web-view?
-  marginEnd0 =
-    utility @PxRem "mg-end-0" "margin-block-end" 0
 
 
 -- | Button that submits the 'form'

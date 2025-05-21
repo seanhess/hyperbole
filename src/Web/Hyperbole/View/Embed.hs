@@ -2,7 +2,6 @@
 
 module Web.Hyperbole.View.Embed
   ( Atomic.cssResetEmbed
-  , Atomic.cssResetLink
   , scriptEmbed
   )
 where

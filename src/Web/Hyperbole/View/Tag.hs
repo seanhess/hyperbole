@@ -3,9 +3,9 @@
 module Web.Hyperbole.View.Tag where
 
 import Control.Monad (forM_)
-import Data.Text
+import Data.Text (Text, pack)
 import Effectful
-import Effectful.Writer.Static.Local
+import Effectful.State.Static.Local
 import Web.Atomic.CSS
 import Web.Atomic.Types
 import Web.Hyperbole.Data.URI
@@ -124,10 +124,10 @@ nav = tag "nav"
 >   cell :: (Styleable h) => CSS h -> CSS h
 >   cell = pad 4 . border 1
 -}
-table :: [dt] -> Eff '[Writer [TableColumn c dt]] () -> View c ()
-table dts wcs = do
-  let cols = runPureEff . execWriter $ wcs
-  tag "table" ~ borderCollapse $ do
+table :: [dt] -> TableColumns c dt () -> View c ()
+table dts (TableColumns wcs) = do
+  let cols = runPureEff . execState [] $ wcs
+  tag "table" $ do
     tag "thead" $ do
       tag "tr" $ do
         forM_ cols $ \tc -> do
@@ -138,13 +138,27 @@ table dts wcs = do
         tag "tr" $ do
           forM_ cols $ \tc -> do
             tc.dataCell dt
+
+
+usersTable :: View c ()
+usersTable = do
+  table items $ do
+    tcol (th "Index" ~ bold) $ \u -> td ~ cell $ text $ pack $ show $ fst u
+    tcol (th "Item" ~ bold) $ \u -> td ~ cell $ text $ snd u
  where
-  borderCollapse = utility @Text "brd-cl" "border-collapse" "collapse"
+  items :: [(Int, Text)]
+  items = zip [0 ..] ["one", "two", "three"]
+  cell :: (Styleable h) => CSS h -> CSS h
+  cell = pad 4 . border 1
 
 
-tcol :: forall dt c. TableHead c () -> (dt -> View c ()) -> Eff '[Writer [TableColumn c dt]] ()
-tcol hd cell = do
-  tell ([TableColumn hd cell] :: [TableColumn c dt])
+newtype Table c a = Table (View c a)
+  deriving newtype (Functor, Applicative, Monad, Styleable)
+
+
+tcol :: forall dt c. TableHead c () -> (dt -> View c ()) -> TableColumns c dt ()
+tcol hd cell = TableColumns $ do
+  modify @[TableColumn c dt] $ \cols -> cols <> [TableColumn hd cell]
 
 
 th :: View c () -> TableHead c ()
@@ -156,12 +170,16 @@ td :: View c () -> View c ()
 td = tag "td"
 
 
-instance {-# OVERLAPS #-} Styleable (Eff '[Writer [TableColumn c dt]] () -> View c ()) where
+instance {-# OVERLAPS #-} Styleable (TableColumns c dt () -> View c ()) where
   modCSS frr parent eff = modCSS frr (parent eff)
 
 
-newtype TableHead c a = TableHead (View c a)
+newtype TableHead id a = TableHead (View id a)
   deriving newtype (Functor, Applicative, Monad, Styleable)
+
+
+newtype TableColumns c dt a = TableColumns (Eff '[State [TableColumn c dt]] a)
+  deriving newtype (Functor, Applicative, Monad)
 
 
 data TableColumn c dt = TableColumn
