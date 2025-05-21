@@ -1,7 +1,6 @@
 module Example.View.SortableTable where
 
 import Data.Text (Text)
-import Effectful.Writer.Static.Local
 import Example.Colors
 import Example.Style qualified as Style
 import Example.View.Icon qualified as Icon
@@ -15,9 +14,6 @@ dataRow = gap 10 . pad (All $ PxRem dataRowPadding)
 dataRowPadding :: PxRem
 dataRowPadding = 5
 
-alternatingRows :: (Styleable a) => CSS a -> CSS a
-alternatingRows = odd (bg White) . even (bg Light)
-
 bord :: (Styleable a) => CSS a -> CSS a
 bord = border 1 . borderColor Light
 
@@ -28,17 +24,24 @@ cell :: (Styleable a) => CSS a -> CSS a
 cell = pad 4 . bord
 
 dataTable :: (Styleable a) => CSS a -> CSS a
-dataTable = alternatingRows
+dataTable =
+  css
+    "data-table"
+    ".data-table tr:nth-child(even)"
+    (declarations (bg Light))
 
-sortColumn :: (ViewAction (Action id)) => Text -> Action id -> Bool -> (dt -> Text) -> Eff '[Writer [TableColumn id dt]] ()
-sortColumn lbl click isSelected cellText =
-  tcol (hd sortBtn) $ \item -> td ~ cell $ text $ cellText item
- where
-  sortBtn = button click ~ Style.link . flexRow . gap 0 $ do
-    el ~ selectedColumn $ text lbl
+sortBtn :: (ViewAction (Action id)) => Text -> Action id -> Bool -> View id ()
+sortBtn lbl click isSelected = do
+  button click ~ Style.link . flexRow . gap 0 $ do
+    el ~ selectedColumn $ (text lbl)
     el ~ width 20 $ Icon.chevronDown
-
+ where
   selectedColumn =
     if isSelected
       then underline
       else id
+
+sortColumn :: (ViewAction (Action id)) => View id () -> (dt -> Text) -> TableColumns id dt ()
+sortColumn header cellText = do
+  tcol (hd header) $ \item ->
+    td ~ cell $ text $ cellText item

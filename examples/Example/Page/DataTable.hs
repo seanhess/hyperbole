@@ -8,7 +8,7 @@ import Effectful
 import Example.AppRoute as Route
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages)
 import Example.View.Layout
-import Example.View.SortableTable (dataTable, sortColumn)
+import Example.View.SortableTable (dataTable, sortBtn, sortColumn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
@@ -50,6 +50,6 @@ sortOnField = \case
 languagesView :: Maybe SortField -> [ProgrammingLanguage] -> View Languages ()
 languagesView fld langs =
   table langs ~ dataTable $ do
-    sortColumn "Language" (SortOn SortName) (fld == Just SortName) (.name)
-    sortColumn "Family" (SortOn SortFamily) (fld == Just SortFamily) $ \d -> pack $ show d.family
-    sortColumn "Description" (SortOn SortDescription) (fld == Just SortDescription) (.description)
+    sortColumn (sortBtn "Language" (SortOn SortName) (fld == Just SortName)) (.name)
+    sortColumn (sortBtn "Family" (SortOn SortFamily) (fld == Just SortFamily)) $ \d -> pack $ show d.family
+    sortColumn (sortBtn "Description" (SortOn SortDescription) (fld == Just SortDescription)) (.description)
