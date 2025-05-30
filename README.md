@@ -1,6 +1,6 @@
 ![Hyperbole](https://github.com/seanhess/hyperbole/raw/main/examples/static/logo-robot.png)
 
-[![Hackage](https://img.shields.io/hackage/v/hyperbole.svg?color=success)](https://hackage.haskell.org/package/hyperbole)
+[![Hackage Version](https://img.shields.io/hackage/v/hyperbole?color=success)](https://hackage.haskell.org/package/hyperbole)
 
 Create interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/), [Elm](https://elm-lang.org/), and [Phoenix LiveView](https://www.phoenixframework.org/)
 
@@ -82,7 +82,7 @@ Examples
 The example directory contains an app demonstrating various features. See it in action at https://docs.hyperbole.live
 
 <a href="https://docs.hyperbole.live">
-  <img alt="Hyperbole Examples" src="examples/static/examples.png"/>
+  <img alt="Hyperbole Examples" src="https://github.com/seanhess/hyperbole/raw/main/examples/static/examples.png"/>
 </a>
 
 ### Try Example Project Locally
