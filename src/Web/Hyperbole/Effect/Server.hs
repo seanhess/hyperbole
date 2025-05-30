@@ -65,6 +65,7 @@ runServerWai toDoc req respond =
     response (Err (ErrQuery e)) = respError status400 $ "ErrQuery: " <> cs e
     response (Err (ErrSession param e)) = respError status400 $ "ErrSession: " <> cs (show param) <> " " <> cs e
     response (Err (ErrOther e)) = respError status500 $ "Server Error: " <> cs e
+    response (Err (ErrBadEvent ev e)) = respError status500 $ "Bad Event: " <> cs (show ev) <> " " <> cs e
     response (Err ErrAuth) = respError status401 "Unauthorized"
     response (Err (ErrNotHandled e)) = respError status400 $ cs $ errNotHandled e
     response (Response _ vw) =
@@ -293,6 +294,7 @@ data Response
 
 data ResponseError
   = ErrParse Text
+  | ErrBadEvent (Event Text Text) Text
   | ErrQuery Text
   | ErrSession Text Text
   | ErrOther Text

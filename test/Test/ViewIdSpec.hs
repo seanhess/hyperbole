@@ -41,45 +41,45 @@ newtype Id a = Id {fromId :: Text}
 
 
 instance ViewId Custom where
-  toViewId Custom = "something"
-  parseViewId "something" = Just Custom
-  parseViewId _ = Nothing
+  toViewId Custom = Encoded "something" []
+  parseViewId (Encoded "something" []) = pure Custom
+  parseViewId _ = Left "NOPE"
 
 
 spec :: Spec
 spec = do
-  describe "ViewId" $ do
+  describe "ViewId Encoded" $ do
     describe "toViewId" $ do
-      it "basic" $ toViewId Thing `shouldBe` "Thing"
-      it "custom" $ toViewId Custom `shouldBe` "something"
+      it "basic" $ encodeViewId Thing `shouldBe` "Thing"
+      it "custom" $ encodeViewId Custom `shouldBe` "something"
 
     describe "parseViewId" $ do
-      it "basic lowercase" $ parseViewId @Thing "thing" `shouldBe` Nothing
-      it "basic" $ parseViewId @Thing "Thing" `shouldBe` Just Thing
-      it "custom" $ parseViewId "something" `shouldBe` Just Custom
-      it "custom other" $ parseViewId @Thing "custom" `shouldBe` Nothing
+      it "basic lowercase" $ decodeViewId @Thing "thing" `shouldBe` Nothing
+      it "basic" $ decodeViewId @Thing "Thing" `shouldBe` pure Thing
+      it "custom" $ decodeViewId @Custom "something" `shouldBe` pure Custom
+      it "custom other" $ decodeViewId @Thing "custom" `shouldBe` Nothing
 
     describe "has-string" $ do
       it "should not contain single quotes" $ do
-        toViewId (HasString "woot") `shouldBe` "HasString \"woot\""
-        containsSingleQuotes (toViewId (HasString "woot")) `shouldBe` False
+        encodeViewId (HasString "woot") `shouldBe` "HasString \"woot\""
+        containsSingleQuotes (encodeViewId (HasString "woot")) `shouldBe` False
 
       it "should roundtrip" $ do
         let inp = HasString "woot"
-        parseViewId (toViewId inp) `shouldBe` Just inp
+        decodeViewId (encodeViewId inp) `shouldBe` pure inp
 
     describe "compound" $ do
-      it "double roundtrip" $ parseViewId (toViewId (Two Thing)) `shouldBe` Just (Two Thing)
+      it "double roundtrip" $ decodeViewId (encodeViewId (Two Thing)) `shouldBe` pure (Two Thing)
 
     describe "nested" $ do
       let nest = Compound "one" $ Compound "two" (Two Thing)
-      it "should roundtrip" $ parseViewId (toViewId nest) `shouldBe` Just nest
+      it "should roundtrip" $ decodeViewId (encodeViewId nest) `shouldBe` pure nest
 
     describe "big product" $ do
       let p = Product4 "one" "two" "three" "four"
       it "should roundtrip" $ do
-        let vid = toViewId p
-        parseViewId vid `shouldBe` Just p
+        let vid = encodeViewId p
+        decodeViewId vid `shouldBe` pure p
 
 
 -- describe "Param Attributes" $ do

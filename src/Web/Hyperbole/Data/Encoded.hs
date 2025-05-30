@@ -92,10 +92,6 @@ genericDecode t = either (const Nothing) Just $ do
   genericParseEncoded enc
 
 
-genericEncode :: (Generic a, GToEncoded (Rep a)) => a -> Text
-genericEncode = encodedToText . genericToEncoded
-
-
 class ToEncoded a where
   toEncoded :: a -> Encoded
   default toEncoded :: (Generic a, GToEncoded (Rep a)) => a -> Encoded
@@ -199,19 +195,18 @@ instance (ToJSON a) => GToEncoded (K1 R a) where
 -- -- GFromEncoded: Generic ViewAction Decoding -----------------------------------------
 
 class GFromEncoded f where
-  -- wait, it doesn't make sense to consume parameters when there AREN'T any
   gParseEncoded :: Encoded -> Either Text (f p, [Value])
 
 
 instance (GFromEncoded f, GFromEncoded g) => GFromEncoded (f :+: g) where
-  gParseEncoded (Encoded con vals) = do
-    let el = gParseEncoded @f (Encoded con vals)
-    let er = gParseEncoded @g (Encoded con vals)
+  gParseEncoded enc@(Encoded con vals) = do
+    let el = gParseEncoded @f enc
+    let er = gParseEncoded @g enc
     case (el, er) of
       (Right (l, lvals), _) -> pure (L1 l, lvals)
       (_, Right (r, rvals)) -> pure (R1 r, rvals)
       (Left _, Left _) ->
-        Left $ "No matching constructor: " <> con.text <> " " <> cs (show vals)
+        Left $ "No matching sum constructor: " <> con.text <> " " <> cs (show vals)
 
 
 instance (GFromEncoded f, GFromEncoded g) => GFromEncoded (f :*: g) where

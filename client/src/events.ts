@@ -156,7 +156,7 @@ export function listenInput(cb: (target: HTMLElement, action: string) => void): 
 
     let delay = parseInt(source.dataset.delay) || 250
     if (delay < 250) {
-      console.warn("Input delay < 100 can result in poor performance.")
+      console.warn("Input delay < 250 can result in poor performance.")
     }
 
     if (!source?.dataset.oninput) {

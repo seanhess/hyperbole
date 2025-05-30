@@ -1,6 +1,5 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Web.Hyperbole.HyperView.Types where
 
@@ -170,35 +169,35 @@ hyper = hyperUnsafe
 
 hyperUnsafe :: (ViewId id) => id -> View id () -> View ctx ()
 hyperUnsafe vid vw = do
-  tag "div" @ att "id" (toViewId vid) ~ flexCol $
+  tag "div" @ att "id" (encodedToText $ toViewId vid) ~ flexCol $
     addContext vid vw
 
 
 class ViewAction a where
-  toAction :: a -> Text
-  default toAction :: (Generic a, GToEncoded (Rep a)) => a -> Text
-  toAction = genericEncode
+  toAction :: a -> Encoded
+  default toAction :: (Generic a, GToEncoded (Rep a)) => a -> Encoded
+  toAction = genericToEncoded
 
 
-  parseAction :: Text -> Maybe a
-  default parseAction :: (Generic a, GFromEncoded (Rep a)) => Text -> Maybe a
-  parseAction = genericDecode
+  parseAction :: Encoded -> Either Text a
+  default parseAction :: (Generic a, GFromEncoded (Rep a)) => Encoded -> Either Text a
+  parseAction = genericParseEncoded
 
 
 instance ViewAction () where
-  toAction _ = ""
-  parseAction _ = Just ()
+  toAction _ = mempty
+  parseAction _ = pure ()
 
 
 class ViewId a where
-  toViewId :: a -> Text
-  default toViewId :: (Generic a, GToEncoded (Rep a)) => a -> Text
-  toViewId = genericEncode
+  toViewId :: a -> Encoded
+  default toViewId :: (Generic a, GToEncoded (Rep a)) => a -> Encoded
+  toViewId = genericToEncoded
 
 
-  parseViewId :: Text -> Maybe a
-  default parseViewId :: (Generic a, GFromEncoded (Rep a)) => Text -> Maybe a
-  parseViewId = genericDecode
+  parseViewId :: Encoded -> Either Text a
+  default parseViewId :: (Generic a, GFromEncoded (Rep a)) => Encoded -> Either Text a
+  parseViewId = genericParseEncoded
 
 
 {- | Access the 'viewId' in a 'View' or 'update'
@@ -217,3 +216,25 @@ instance HasViewId (View ctx) ctx where
   viewId = context
 instance HasViewId (Eff (Reader view : es)) view where
   viewId = ask
+
+
+encodeViewId :: (ViewId id) => id -> Text
+encodeViewId = encodedToText . toViewId
+
+
+decodeViewId :: (ViewId id) => Text -> Maybe id
+decodeViewId t = do
+  case parseViewId =<< encodedParseText t of
+    Left _ -> Nothing
+    Right a -> pure a
+
+
+encodeAction :: (ViewAction act) => act -> Text
+encodeAction = encodedToText . toAction
+
+
+decodeAction :: (ViewAction act) => Text -> Maybe act
+decodeAction t = do
+  case parseAction =<< encodedParseText t of
+    Left _ -> Nothing
+    Right a -> pure a

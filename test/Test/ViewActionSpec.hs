@@ -1,13 +1,12 @@
 module Test.ViewActionSpec where
 
 import Data.Aeson qualified as A
-import Data.String.Conversions (cs)
 import Data.Text (Text)
 import GHC.Generics
 import Skeletest
 import Skeletest.Predicate qualified as P
 import Web.Hyperbole (FromJSON, ToJSON)
-import Web.Hyperbole.Data.Encoded (FromEncoded, ToEncoded)
+import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.HyperView (ViewAction (..))
 import Web.Hyperbole.HyperView.Event (toActionInput)
 
@@ -49,49 +48,49 @@ spec :: Spec
 spec = do
   describe "ViewAction" $ do
     describe "toAction" $ do
-      it "simple" $ toAction Simple `shouldBe` "Simple"
-      it "has text" $ toAction (HasText "hello world") `shouldBe` "HasText \"hello world\""
-      it "product" $ toAction (Product "hello world" 123) `shouldBe` "Product \"hello world\" 123"
-      it "sum" $ toAction (SumB 123) `shouldBe` "SumB 123"
+      it "simple" $ toAction Simple `shouldBe` Encoded "Simple" []
+      it "has text" $ toAction (HasText "hello world") `shouldBe` Encoded "HasText" ["hello world"]
+      it "product" $ toAction (Product "hello world" 123) `shouldBe` Encoded "Product" ["hello world", A.Number 123]
+      it "sum" $ toAction (SumB 123) `shouldBe` Encoded "SumB" [A.Number 123]
       it "compound" $ do
         let p = Product "hello world" 123
-        toAction (Compound p) `shouldBe` ("Compound " <> cs (A.encode p))
+        toAction (Compound p) `shouldBe` Encoded "Compound" [A.toJSON p]
 
     describe "toActionInput" $ do
       it "Constructor Text" $ do
-        toActionInput SubC `shouldBe` "SubC"
+        toActionInput SubC `shouldBe` Encoded "SubC" []
 
       it "Constructor (Maybe Text)" $ do
-        toActionInput (SubD . Just) `shouldBe` "SubD"
+        toActionInput (SubD . Just) `shouldBe` Encoded "SubD" []
 
       -- erm.... I guess it's a newtype so this works?
       it "Constructor newtype Term" $ do
-        toActionInput (SubE . Term) `shouldBe` "SubE"
+        toActionInput (SubE . Term) `shouldBe` Encoded "SubE" []
 
     describe "parseAction" $ do
-      it "simple" $ parseAction "Simple" `shouldBe` Just Simple
+      it "simple" $ parseAction (Encoded "Simple" []) `shouldBe` pure Simple
 
       it "parse product" $ do
-        parseAction @Product "Product \"woot\" 1234" `shouldSatisfy` P.just P.anything
+        parseAction @Product (Encoded "Product" ["woot", A.Number 1234]) `shouldSatisfy` P.right P.anything
 
       it "parse product with spaces" $ do
-        parseAction @Product "Product \"hello world\" 1234" `shouldSatisfy` P.just P.anything
+        parseAction @Product (Encoded "Product" ["hello world", A.Number 1234]) `shouldSatisfy` P.right P.anything
 
     describe "roundTrip" $ do
       it "simple" $ do
-        parseAction "Simple" `shouldBe` Just Simple
+        parseAction (toAction Simple) `shouldBe` pure Simple
       it "has text multiple words" $ do
         let a = HasText "hello world"
-        parseAction (toAction a) `shouldBe` Just a
+        parseAction (toAction a) `shouldBe` pure a
       it "product" $ do
         let a = Product "hello world" 123
-        parseAction @Product (toAction a) `shouldBe` Just a
+        parseAction @Product (toAction a) `shouldBe` pure a
       it "product'" $ do
         let a = Product' (HasText "hello world") 123
-        parseAction (toAction a) `shouldBe` Just a
+        parseAction (toAction a) `shouldBe` pure a
       it "compound" $ do
         let a = Compound (Product "hello world" 123)
-        parseAction (toAction a) `shouldBe` Just a
+        parseAction (toAction a) `shouldBe` pure a
       it "sum" $ do
         let a = SumB 123
-        parseAction (toAction a) `shouldBe` Just a
+        parseAction (toAction a) `shouldBe` pure a

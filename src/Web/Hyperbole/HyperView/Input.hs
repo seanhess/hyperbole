@@ -3,6 +3,7 @@ module Web.Hyperbole.HyperView.Input where
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Web.Atomic.Types
+import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.HyperView.Event (DelayMs, onClick, onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..), ViewAction (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
@@ -53,7 +54,7 @@ option
   -> View (Option opt id (Action id)) ()
 option opt cnt = do
   os <- context
-  tag "option" @ att "value" (toAction (os.toAction opt)) @ selected (os.selected opt) $ cnt
+  tag "option" @ att "value" (encodedToText $ toAction (os.toAction opt)) @ selected (os.selected opt) $ cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True

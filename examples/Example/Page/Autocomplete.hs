@@ -48,7 +48,7 @@ liveSearchView :: [ProgrammingLanguage] -> Int -> Text -> View LiveSearch ()
 liveSearchView langs current term = do
   col ~ gap 10 $ do
     el ~ stack $ do
-      search (SearchTerm current) 200 @ searchKeys . placeholder "search programming languages" . value term . autofocus ~ border 1 . pad 10 . grow
+      search (SearchTerm current) 250 @ searchKeys . placeholder "search programming languages" . value term . autofocus ~ border 1 . pad 10 . grow
       Filter.clearButton (SearchTerm current) term
       col ~ popup (TRBL 50 0 0 0) . shownIfMatches $ do
         searchPopup matchedLanguages currentSearchLang

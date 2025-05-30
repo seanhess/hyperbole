@@ -156,7 +156,7 @@ resultsTable onSelect langs = do
         button (onSelect lang) ~ pad (XY 10 2) . border 1 . hover (bg GrayLight) . rows $ "Select"
 
       row $ do
-        el ~ bg Light . pad (XY 10 2) . fontSize 16 . textAlign AlignCenter $ (family lang.family)
+        el ~ bg Light . pad (XY 10 2) . fontSize 16 . textAlign AlignCenter $ family lang.family
 
       row ~ gap 5 $ do
         el $ text lang.description

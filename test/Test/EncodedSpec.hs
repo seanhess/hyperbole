@@ -86,7 +86,7 @@ spec = withMarkers ["focus"] $ do
       genericParseEncoded (Encoded "Product4" (fmap String ["one", "two", "three", "four"])) `shouldBe` Right (Product4 "one" "two" "three" "four")
 
     it "sum" $ do
-      genericParseEncoded @Sum (Encoded "Sumthing" []) `shouldBe` Right (Sumthing)
+      genericParseEncoded @Sum (Encoded "Sumthing" []) `shouldBe` Right Sumthing
       genericParseEncoded @Sum (Encoded "Num" [Number 2]) `shouldBe` Right (Num 2)
       genericParseEncoded @Sum (Encoded "Str" [String "OK"]) `shouldBe` Right (Str "OK")
 
@@ -107,9 +107,9 @@ spec = withMarkers ["focus"] $ do
 
     it "should encode records`" $ do
       -- no field names for ourselves
-      encode (Record 1 "two") `shouldBe` ("Record 1 \"two\"")
+      encode (Record 1 "two") `shouldBe` "Record 1 \"two\""
       -- but if it is nested it uses the JSON instance, obviously
-      encode (RecordN $ Record 1 "two") `shouldBe` "RecordN " <> (cs $ A.encode $ Record 1 "two")
+      encode (RecordN $ Record 1 "two") `shouldBe` "RecordN " <> cs (A.encode $ Record 1 "two")
 
     it "no special case for nested constructors`" $ do
       encode A `shouldBe` "A"

@@ -7,6 +7,7 @@ import Data.Kind (Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
+import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Effect.Event (getEvent)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (request)
@@ -39,9 +40,9 @@ runHandler run = do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
   mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
   case mev of
-    Just event -> do
-      vw <- runReader event.viewId $ run event.action
-      respondEarly event.viewId vw
+    Just evt -> do
+      vw <- runReader evt.viewId $ run evt.action
+      respondEarly evt.viewId vw
     _ -> do
       pure ()
 
@@ -69,6 +70,6 @@ guardNoEvent = do
 loadToResponse :: Eff es (View (Root total) ()) -> Eff es Response
 loadToResponse run = do
   vw <- run
-  let vid = TargetViewId (toViewId Root)
+  let vid = TargetViewId (encodedToText $ toViewId Root)
   let res = Response vid $ addContext Root vw
   pure res
