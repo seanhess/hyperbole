@@ -109,6 +109,8 @@ module Web.Hyperbole
     -- * Events
   , onClick
   , onDblClick
+  , onMouseEnter
+  , onMouseLeave
   , onInput
   , onKeyDown
   , onKeyUp

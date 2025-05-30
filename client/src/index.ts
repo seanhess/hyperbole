@@ -1,6 +1,6 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
-import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenLoadDocument, listenInput, listenKeydown, listenKeyup } from './events'
+import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
 import { actionMessage, ActionMessage, requestId, RequestId } from './action'
 import { sendActionHttp } from './http'
 import { setQuery } from "./browser"
@@ -111,13 +111,13 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 
   // Emit relevant events
   let newTarget = document.getElementById(target.id)
-  // let event = new Event("content", {bubbles:true})
-  // newTarget.dispatchEvent(event)
-  //
+  dispatchContent(newTarget)
 
   if (newTarget) {
     // now way for these to bubble)
     listenLoad(newTarget)
+    listenMouseEnter(newTarget)
+    listenMouseLeave(newTarget)
     fixInputs(newTarget)
     enrichHyperViews(newTarget)
   }
@@ -167,13 +167,15 @@ function addCSS(src: HTMLStyleElement | null) {
 function init() {
   rootStyles = document.querySelector('style')
 
-  listenLoadDocument(async function(target: HyperView, action: string) {
+  listenTopLevel(async function(target: HyperView, action: string) {
     runAction(target, action)
   })
 
   listenLoad(document.body)
-
+  listenMouseEnter(document.body)
+  listenMouseLeave(document.body)
   enrichHyperViews(document.body)
+
 
   listenClick(async function(target: HyperView, action: string) {
     // console.log("CLICK", target.id, action)
@@ -219,9 +221,15 @@ function enrichHyperViews(node: HTMLElement): void {
     element.runAction = function(action: string) {
       runAction(this, action)
     }.bind(element)
+
+    dispatchContent(node)
   })
 }
 
+function dispatchContent(node: HTMLElement): void {
+  let event = new Event("hyp-content", { bubbles: true })
+  node.dispatchEvent(event)
+}
 
 document.addEventListener("DOMContentLoaded", init)
 

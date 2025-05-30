@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Web.Hyperbole.HyperView.Event where
 
 import Data.String.Conversions (cs)
@@ -23,17 +21,27 @@ type DelayMs = Int
 -}
 onLoad :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Action id -> DelayMs -> Attributes a -> Attributes a
 onLoad a delay = do
-  att "data-on-load" (toAction a) . att "data-delay" (cs $ show delay)
+  att "data-onload" (toAction a) . att "data-delay" (cs $ show delay)
 
 
 onClick :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Action id -> Attributes a -> Attributes a
 onClick a = do
-  att "data-on-click" (toAction a)
+  att "data-onclick" (toAction a)
 
 
 onDblClick :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Action id -> Attributes a -> Attributes a
 onDblClick a = do
-  att "data-on-dblclick" (toAction a)
+  att "data-ondblclick" (toAction a)
+
+
+onMouseEnter :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Action id -> Attributes a -> Attributes a
+onMouseEnter a = do
+  att "data-onmouseenter" (toAction a)
+
+
+onMouseLeave :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Action id -> Attributes a -> Attributes a
+onMouseLeave a = do
+  att "data-onmouseleave" (toAction a)
 
 
 {- | Run an action when the user types into an 'input' or 'textarea'.
@@ -44,12 +52,19 @@ WARNING: a short delay can result in poor performance. It is not recommended to 
 -}
 onInput :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => (Text -> Action id) -> DelayMs -> Attributes a -> Attributes a
 onInput a delay = do
-  att "data-on-input" (toActionInput a) . att "data-delay" (cs $ show delay)
+  att "data-oninput" (toActionInput a) . att "data-delay" (cs $ show delay)
 
+
+-- WARNING: no way to do this generically right now, because toActionInput is specialized to Text
+--   the change event DOES assume that the target has a string value
+--   but, that doesn't let us implement dropdown
+-- onChange :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => (Text -> Action id) -> Attributes a -> Attributes a
+-- onChange a = do
+--   att "data-onchange" (toActionInput a)
 
 onSubmit :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Action id -> Attributes a -> Attributes a
 onSubmit act = do
-  att "data-on-submit" (toAction act)
+  att "data-onsubmit" (toAction act)
 
 
 onKeyDown :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Key -> Action id -> Attributes a -> Attributes a
@@ -107,13 +122,3 @@ target newId view = do
   -- TEST: Target
   addContext newId $ do
     view @ dataTarget newId
-
--- viewModContents (fmap addDataTarget)
--- where
---  addDataTarget :: Content -> Content
---  addDataTarget = \case
---    Node elm ->
---      Node $
---        let atts = elm.attributes
---         in elm{attributes = dataTarget newId atts}
---    cnt -> cnt

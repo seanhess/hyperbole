@@ -41,7 +41,7 @@ dropdown
   -> View (Option opt id (Action id)) ()
   -> View id ()
 dropdown act isSel options = do
-  tag "select" @ att "data-on-change" "" $ do
+  tag "select" @ att "data-onchange" "" $ do
     addContext (Option act isSel) options
 
 
