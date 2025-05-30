@@ -1,5 +1,4 @@
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLists #-}
 
 module Web.Hyperbole.Data.Encoded where
@@ -9,7 +8,7 @@ import Data.Aeson qualified as A
 import Data.Aeson.Parser (json)
 import Data.Attoparsec.ByteString qualified as Atto
 import Data.Attoparsec.ByteString.Char8 (char, isSpace, sepBy, skipSpace, takeTill)
-import Data.Bifunctor (bimap, first)
+import Data.Bifunctor (first)
 import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
@@ -67,13 +66,13 @@ encodedToText (Encoded con values) =
 
 encodedParseText :: Text -> Either Text Encoded
 encodedParseText inp =
-  bimap cs id $ Atto.parseOnly encodedParser (cs inp)
+  first cs $ Atto.parseOnly encodedParser (cs inp)
  where
   encodedParser :: Atto.Parser Encoded
   encodedParser = do
     con <- takeTill isSpace
     skipSpace
-    params <- json `sepBy` (char ' ')
+    params <- json `sepBy` char ' '
     pure $ Encoded (ConName (cs con)) params
 
 
@@ -103,7 +102,7 @@ class ToEncoded a where
   toEncoded = genericToEncoded
 
 
-instance ToEncoded (Encoded) where
+instance ToEncoded Encoded where
   toEncoded = id
 
 
@@ -114,7 +113,7 @@ class FromEncoded a where
 
 
 instance FromEncoded Encoded where
-  parseEncoded enc = pure enc
+  parseEncoded = pure
 
 
 fromResult :: A.Result a -> Either Text a
@@ -209,8 +208,8 @@ instance (GFromEncoded f, GFromEncoded g) => GFromEncoded (f :+: g) where
     let el = gParseEncoded @f (Encoded con vals)
     let er = gParseEncoded @g (Encoded con vals)
     case (el, er) of
-      (Right (l, lvals), _) -> pure $ (L1 l, lvals)
-      (_, Right (r, rvals)) -> pure $ (R1 r, rvals)
+      (Right (l, lvals), _) -> pure (L1 l, lvals)
+      (_, Right (r, rvals)) -> pure (R1 r, rvals)
       (Left _, Left _) ->
         Left $ "No matching constructor: " <> con.text <> " " <> cs (show vals)
 
@@ -219,7 +218,7 @@ instance (GFromEncoded f, GFromEncoded g) => GFromEncoded (f :*: g) where
   gParseEncoded (Encoded con vals) = do
     (a, rest) <- gParseEncoded @f (Encoded con vals)
     (b, gone) <- gParseEncoded @g (Encoded con rest)
-    pure $ (a :*: b, gone)
+    pure (a :*: b, gone)
 
 
 instance GFromEncoded U1 where
@@ -233,7 +232,7 @@ instance (GFromEncoded f) => GFromEncoded (M1 D d f) where
 
 instance (Constructor c, GFromEncoded f) => GFromEncoded (M1 C c f) where
   gParseEncoded enc@(Encoded cname _) = do
-    if (cname.text == con)
+    if cname.text == con
       then first M1 <$> gParseEncoded @f enc
       else Left $ "Mismatched Constructor " <> cname.text <> " /= " <> con
    where
@@ -243,7 +242,7 @@ instance (Constructor c, GFromEncoded f) => GFromEncoded (M1 C c f) where
 instance (GFromEncoded f) => GFromEncoded (M1 S s f) where
   gParseEncoded enc = do
     (a, rest) <- gParseEncoded enc
-    pure $ (M1 a, rest)
+    pure (M1 a, rest)
 
 
 instance (FromJSON a) => GFromEncoded (K1 R a) where
@@ -252,6 +251,6 @@ instance (FromJSON a) => GFromEncoded (K1 R a) where
       (param : rest) -> do
         case A.fromJSON param of
           -- consume one param
-          A.Success a -> pure $ (K1 a, rest)
+          A.Success a -> pure (K1 a, rest)
           A.Error e -> Left (cs e)
       [] -> Left $ "Missing parameters for Encoded Constructor:" <> con.text

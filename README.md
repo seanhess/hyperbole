@@ -6,7 +6,6 @@ Create interactive HTML applications with type-safe serverside Haskell. Inspired
 
 [Learn more about Hyperbole on Hackage](https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html)
 
-
 ```haskell
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
