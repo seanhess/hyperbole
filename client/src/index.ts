@@ -208,7 +208,6 @@ function init() {
   })
 
   listenInput(async function(target: HyperView, action: string) {
-    console.log("INPUT", target.id, action)
     runAction(target, action)
   })
 }

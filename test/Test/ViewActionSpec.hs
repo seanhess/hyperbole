@@ -12,7 +12,7 @@ import Web.Hyperbole.HyperView.Event (toActionInput)
 
 
 data Simple = Simple
-  deriving (Generic, Eq, Show, Read, ViewAction)
+  deriving (Generic, Eq, Show, Read, ViewAction, ToJSON, FromJSON)
 
 
 data Product = Product String Int
@@ -29,6 +29,7 @@ data Sum
   | SubC Text
   | SubD (Maybe Text)
   | SubE Term
+  | SubF Simple
   deriving (Generic, Show, Read, Eq, ViewAction)
 
 
@@ -63,9 +64,11 @@ spec = do
       it "Constructor (Maybe Text)" $ do
         toActionInput (SubD . Just) `shouldBe` Encoded "SubD" []
 
-      -- erm.... I guess it's a newtype so this works?
       it "Constructor newtype Term" $ do
         toActionInput (SubE . Term) `shouldBe` Encoded "SubE" []
+
+      it "renders data constructors" $ do
+        toActionInput SubF `shouldBe` Encoded "SubF" []
 
     describe "parseAction" $ do
       it "simple" $ parseAction (Encoded "Simple" []) `shouldBe` pure Simple

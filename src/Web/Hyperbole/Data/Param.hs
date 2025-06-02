@@ -124,8 +124,7 @@ instance (ToParam a) => ToParam [a] where
 instance (FromParam a) => FromParam [a] where
   parseParam (ParamValue t) = do
     let parts = T.splitOn "+" $ cs t
-    vals <- mapM (parseParam . ParamValue . cs . urlDecode True . cs) parts
-    pure vals
+    mapM (parseParam . ParamValue . cs . urlDecode True . cs) parts
 
 
 instance (ToParam a) => ToParam (Maybe a) where
@@ -177,7 +176,7 @@ jsonParse (ParamValue t) = do
   parseValue :: Value
   parseValue = do
     case A.eitherDecode @Value (cs t) of
-      Left _ -> (String t)
+      Left _ -> String t
       Right val -> val
 
   fromResult :: Result a -> Either Text a

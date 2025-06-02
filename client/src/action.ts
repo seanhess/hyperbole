@@ -31,9 +31,14 @@ export type ActionMessage = {
 export type ViewId = string
 
 
-export function inputToAction(action: string, value: string): string {
+export function encodedTextInput(action: string, value: string): string {
   return action + ' "' + sanitizeInput(value) + '"'
 }
+
+export function encodedJSONInput(action: string, value: string): string {
+  return action + " " + value
+}
+
 
 // WARNING: security flaw, unescaped output. no closing quotes allowed?
 function sanitizeInput(input: string): string {

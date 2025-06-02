@@ -1,6 +1,6 @@
 
 import * as debounce from 'debounce'
-import { inputToAction } from './action'
+import { encodedTextInput, encodedJSONInput } from './action'
 
 export type UrlFragment = string
 
@@ -126,20 +126,19 @@ export function listenChange(cb: (target: HTMLElement, action: string) => void):
   document.addEventListener("change", function(e) {
     let el = e.target as HTMLElement
 
-    // clicks can fire on internal elements. Find the parent with a click handler
     let source = el.closest("[data-onchange]") as HTMLInputElement
 
     if (!source) return
     e.preventDefault()
 
-    // they should all have an action and target
     if (!source.value) {
       console.error("Missing input value:", source)
       return
     }
 
     let target = nearestTarget(source)
-    cb(target, source.value)
+    let action = encodedJSONInput(source.dataset.onchange, source.value)
+    cb(target, action)
   })
 }
 
@@ -170,7 +169,7 @@ export function listenInput(cb: (target: HTMLElement, action: string) => void): 
 
     if (!source.debouncedCallback) {
       source.debouncedCallback = debounce(() => {
-        let action = inputToAction(source.dataset.oninput, source.value)
+        let action = encodedTextInput(source.dataset.oninput, source.value)
         cb(target, action)
       }, delay)
     }

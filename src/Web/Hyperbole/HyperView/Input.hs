@@ -1,10 +1,11 @@
 module Web.Hyperbole.HyperView.Input where
 
+import Data.Aeson (ToJSON)
+import Data.Aeson qualified as A
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Web.Atomic.Types
-import Web.Hyperbole.Data.Encoded
-import Web.Hyperbole.HyperView.Event (DelayMs, onClick, onInput)
+import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..), ViewAction (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
 import Web.Hyperbole.View
@@ -39,22 +40,22 @@ dropdown
   :: (ViewAction (Action id))
   => (opt -> Action id)
   -> (opt -> Bool) -- check if selec
-  -> View (Option opt id (Action id)) ()
+  -> View (Option opt id) ()
   -> View id ()
 dropdown act isSel options = do
-  tag "select" @ att "data-onchange" "" $ do
-    addContext (Option act isSel) options
+  tag "select" @ onChange act $ do
+    addContext (Option isSel) options
 
 
 -- | An option for a 'dropdown'. First argument is passed to (opt -> Action id) in the 'dropdown', and to the selected predicate
 option
-  :: (ViewAction (Action id), Eq opt)
+  :: (ViewAction (Action id), Eq opt, ToJSON opt)
   => opt
-  -> View (Option opt id (Action id)) ()
-  -> View (Option opt id (Action id)) ()
+  -> View (Option opt id) ()
+  -> View (Option opt id) ()
 option opt cnt = do
   os <- context
-  tag "option" @ att "value" (encodedToText $ toAction (os.toAction opt)) @ selected (os.selected opt) $ cnt
+  tag "option" @ att "value" (cs $ A.encode opt) @ selected (os.selected opt) $ cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
@@ -63,9 +64,8 @@ selected b = if b then att "selected" "true" else id
 
 
 -- | The view context for an 'option'
-data Option opt id action = Option
-  { toAction :: opt -> action
-  , selected :: opt -> Bool
+data Option opt id = Option
+  { selected :: opt -> Bool
   }
 
 

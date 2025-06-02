@@ -192,7 +192,7 @@ instance (ToJSON a) => GToEncoded (K1 R a) where
   gToEncoded (K1 a) = Encoded mempty [toJSON a]
 
 
--- -- GFromEncoded: Generic ViewAction Decoding -----------------------------------------
+-- GFromEncoded: Generic ViewAction Decoding -----------------------------------------
 
 class GFromEncoded f where
   gParseEncoded :: Encoded -> Either Text (f p, [Value])

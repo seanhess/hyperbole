@@ -7,6 +7,7 @@ export type ActionMessage = {
     form: URLSearchParams | undefined;
 };
 export type ViewId = string;
-export declare function inputToAction(action: string, value: string): string;
+export declare function encodedTextInput(action: string, value: string): string;
+export declare function encodedJSONInput(action: string, value: string): string;
 export type RequestId = string;
 export declare function requestId(): RequestId;
