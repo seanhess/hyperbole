@@ -18,7 +18,6 @@ module Web.Hyperbole.View.Forms
   , checkbox
   , form
   , textarea
-  , placeholder
   , submit
   , formData
   , FormOptions (..)
@@ -242,9 +241,6 @@ checkbox isChecked f = do
   Input (FieldName nm) <- context
   tag "input" (att "type" "checkbox" . name nm . checked isChecked . f) none
 
-
-placeholder :: Text -> Mod id
-placeholder = att "placeholder"
 
 
 -- | textarea for a 'field'

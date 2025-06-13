@@ -8,3 +8,8 @@ packages:
   -- ../web-view/
   -- temporary until https://github.com/seanhess/hyperbole/issues/76 is resolved
   -- https://hackage.haskell.org/package/web-view-0.7.0/candidate/web-view-0.7.0.tar.gz
+
+source-repository-package
+ type: git
+ location: https://github.com/seanhess/web-view.git
+ tag: 59c19e98dd6ef4679f118988acfdc54f2ba92459

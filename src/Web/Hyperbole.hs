@@ -140,7 +140,6 @@ module Web.Hyperbole
   , checked
   , textarea
   , submit
-  , placeholder
   , InputType (..)
 
     -- ** Validation
@@ -175,7 +174,6 @@ module Web.Hyperbole
 
     -- | Hyperbole is tightly integrated with [Web.View](https://hackage.haskell.org/package/web-view/docs/Web-View.html) for HTML generation
   , module Web.View
-  , autofocus
 
     -- ** Embeds
 
