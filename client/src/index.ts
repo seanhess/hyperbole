@@ -108,14 +108,15 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   // newTarget.dispatchEvent(event)
   //
 
-  // load doesn't bubble
   if (newTarget) {
+    // now way for these to bubble)
     listenLoad(newTarget)
+    fixInputs(newTarget)
+    enrichHyperViews(newTarget)
   }
   else {
     console.warn("Target Missing: ", target.id)
   }
-  // setCheckboxes(newTarget)
 
   // Remove loading and clear add timeout
 
@@ -123,6 +124,24 @@ async function runAction(target: HTMLElement, action: string, form?: FormData) {
   target.classList.remove("hyp-loading")
 }
 
+function fixInputs(target: HTMLElement) {
+  let focused = target.querySelector("[autofocus]") as HTMLInputElement
+  if (focused?.focus) {
+    focused.focus()
+  }
+
+  target.querySelectorAll("input[value]").forEach((input: HTMLInputElement) => {
+    let val = input.getAttribute("value")
+    if (val !== undefined) {
+      input.value = val
+    }
+  })
+
+  target.querySelectorAll("input[type=checkbox]").forEach((checkbox: HTMLInputElement) => {
+    let checked = checkbox.dataset.checked == "True"
+    checkbox.checked = checked
+  })
+}
 
 function addCSS(src: HTMLStyleElement) {
   const rules: any = src.sheet.cssRules
@@ -134,11 +153,6 @@ function addCSS(src: HTMLStyleElement) {
   }
 }
 
-// function setCheckboxes(target: HTMLElement) {
-//   target.querySelectorAll("input[type=checkbox]").forEach(input => {
-//     console.log(input.attributes)
-//   })
-// }
 
 
 
@@ -150,6 +164,8 @@ function init() {
   })
 
   listenLoad(document.body)
+
+  enrichHyperViews(document.body)
 
   listenClick(async function(target: HTMLElement, action: string) {
     // console.log("CLICK", target.id, action)
@@ -184,6 +200,18 @@ function init() {
   listenInput(async function(target: HTMLElement, action: string) {
     console.log("INPUT", target.id, action)
     runAction(target, action)
+  })
+}
+
+function enrichHyperViews(node: HTMLElement): void {
+  // enrich all the hyperviews
+  node.querySelectorAll("[id]").forEach((element: any) => {
+    console.log("Found HyperView", element.dataset)
+
+    // Add 
+    element.runAction = function(action: string) {
+      runAction(this, action)
+    }.bind(element)
   })
 }
 
@@ -239,4 +267,44 @@ function errorHTML(error: Error): string {
   let details = `<div class='hyp-details'>${error.message}</div>`
 
   return ["<style>" + style.join("\n") + "</style>", content, details].join("\n")
+}
+
+
+declare global {
+  interface Window {
+    Hyperbole?: HyperboleAPI;
+  }
+}
+
+export interface HyperboleAPI {
+  runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
+  action(con: string, ...params: any[]): string
+  hyperView(viewId: ViewId): HyperView | undefined
+}
+
+
+
+
+export interface HyperView extends HTMLElement {
+  runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
+}
+
+export type ViewId = string
+
+
+window.Hyperbole =
+{
+  runAction: runAction,
+  action: function(con, ...params: any[]) {
+    let ps = params.reduce((str, param) => str + " " + JSON.stringify(param), "")
+    return con + ps
+  },
+  hyperView: function(viewId) {
+    let element = document.getElementById(viewId) as any
+    if (!element?.runAction) {
+      console.error("Element id=" + viewId + " was not a HyperView")
+      return undefined
+    }
+    return element
+  }
 }

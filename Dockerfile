@@ -2,7 +2,7 @@ FROM haskell:9.8.2 AS base
 WORKDIR /opt/build
 
 RUN cabal update
-RUN cabal install bytestring containers casing effectful text wai warp wai-websockets cookie string-conversions hpack
+RUN cabal install bytestring containers casing effectful text time string-interpolate file-embed http-api-data http-types wai warp wai-websockets network cookie string-conversions hpack websockets
 
 
 FROM haskell:9.8.2 AS dependencies
@@ -13,7 +13,9 @@ COPY --from=base /root/.config /root/.config
 
 # RUN apt-get update && apt-get install -y libpcre3 libpcre3-dev libcurl4-openssl-dev cron vim rsyslog
 ADD ./package.yaml .
-ADD ./cabal.project .
+# ADD ./cabal.project .
+# ADD ./docs/docgen.cabal .
+# ADD ./examples/examples.cabal .
 RUN hpack
 RUN cabal update
 RUN cabal build --only-dependencies
@@ -28,21 +30,24 @@ ADD ./cabal.project .
 ADD ./client ./client
 ADD ./test ./test
 ADD ./src ./src
-ADD ./example ./example
+ADD ./examples ./examples
+ADD ./docs ./docs
 ADD *.md .
 ADD LICENSE .
 RUN hpack
-RUN cd example && hpack && cabal build all
+RUN hpack examples
+RUN hpack docs
+RUN cabal build examples
 RUN mkdir bin
-RUN cd example && export EXEC=$(cabal list-bin examples); cp $EXEC /opt/build/bin/examples
+RUN cd examples && export EXEC=$(cabal list-bin examples); cp $EXEC /opt/build/bin/examples
 
 
 FROM debian:10 AS app
 WORKDIR /opt/app
 
-COPY --from=build /opt/build/bin/examples ./examples
+COPY --from=build /opt/build/bin/examples ./bin/examples
 ADD ./client ./client
-ADD ./example/static ./static
+ADD ./examples/static ./examples/static
 
 # ENV DYNAMO_LOCAL=False
-ENTRYPOINT ["/opt/app/examples"]
+ENTRYPOINT ["/opt/app/bin/examples"]

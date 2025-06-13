@@ -1,4 +1,4 @@
-![Hyperbole](https://github.com/seanhess/hyperbole/raw/main/example/static/logo-robot.png)
+![Hyperbole](https://github.com/seanhess/hyperbole/raw/main/examples/static/logo-robot.png)
 
 [![Hackage](https://img.shields.io/hackage/v/hyperbole.svg?color=success)](https://hackage.haskell.org/package/hyperbole)
 
@@ -82,7 +82,7 @@ Examples
 The example directory contains an app demonstrating various features. See it in action at https://docs.hyperbole.live
 
 <a href="https://docs.hyperbole.live">
-  <img alt="Hyperbole Examples" src="example/static/examples.png"/>
+  <img alt="Hyperbole Examples" src="examples/static/examples.png"/>
 </a>
 
 ### Try Example Project Locally
@@ -107,14 +107,22 @@ View on Github
 * https://github.com/seanhess/hyperbole
 
 
-Full Production Example
------------------------
+Projects Using Hyperbole
+--------------------
+
+### Production
 
 <a href="https://nso.edu">
   <img alt="National Solar Observatory" src="https://nso1.b-cdn.net/wp-content/uploads/2020/03/NSO-logo-orange-text.png" width="400"/>
 </a>
 
 The NSO uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). This production application contains complex interfaces, workers, databases, and more.
+
+
+### Other Examples
+
+[HaskRead](https://github.com/tusharad/Reddit-Clone-Haskell) - A Reddit Clone
+
 
 How to Import Flake
 ------------
@@ -161,7 +169,7 @@ Local Development
 If you want to work on both the hyperbole library and example code, this `ghcid` command will run (and hot reload) the examples server as you change any non-testing code.
 
 ```
-ghcid --setup=Main.update --command="cabal repl exe:examples lib:hyperbole" --run=Main.update --warnings --reload=./client/dist/hyperbole.js
+ghcid --setup=Example.App.update --command="cabal repl exe:examples lib:hyperbole" --run=Example.App.update --warnings --reload=./client/dist/hyperbole.js
 ```
 
 If you want to work on the test suite, this will run the tests each time any library code is changed.
@@ -270,3 +278,4 @@ Contributors
 * [Christian Georgii](https://github.com/cgeorgii)
 * [Pfalzgraf Martin](https://github.com/Skyfold)
 * [Tushar Adhatrao](https://github.com/tusharad)
+* [Benjamin Thomas](https://github.com/benjamin-thomas)
