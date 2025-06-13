@@ -36,7 +36,7 @@ instance HyperView Contents es where
   data Action Contents
     = SaveColor AppColor
     | SaveMessage Text
-    | ClearSession
+    | Clear
     deriving (Generic, ViewAction)
   update (SaveColor clr) = do
     prefs <- modifyQuery $ \p -> p{color = clr}
@@ -44,7 +44,7 @@ instance HyperView Contents es where
   update (SaveMessage msg) = do
     prefs <- modifyQuery $ \p -> p{message = msg}
     pure $ viewContent prefs
-  update ClearSession = do
+  update Clear = do
     setQuery @Preferences def
     pure $ viewContent def
 
@@ -53,12 +53,12 @@ viewContent prefs = do
   col ~ gap 20 $ do
     viewColorPicker prefs.color
     viewMessage prefs.message
-    button ClearSession ~ Style.btnLight $ "Clear"
+    button Clear ~ Style.btnLight $ "Clear"
 
 viewColorPicker :: AppColor -> View Contents ()
 viewColorPicker clr = do
   col ~ gap 10 . pad 20 . bg clr . border 1 $ do
-    el ~ fontSize 18 . bold $ "Session Background"
+    el ~ fontSize 18 . bold $ "Query Background"
     row ~ gap 10 $ do
       button (SaveColor Success) ~ (Style.btn' Success . border 1) $ "Successs"
       button (SaveColor Warning) ~ (Style.btn' Warning . border 1) $ "Warning"
@@ -67,7 +67,7 @@ viewColorPicker clr = do
 viewMessage :: Text -> View Contents ()
 viewMessage msg = do
   col ~ gap 10 . pad 20 . border 1 $ do
-    el ~ fontSize 18 . bold $ "Session Message"
+    el ~ fontSize 18 . bold $ "Query Message"
     el $ text msg
     row ~ (gap 10) $ do
       button (SaveMessage "Hello") ~ Style.btnLight $ "Msg: Hello"

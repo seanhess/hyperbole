@@ -5,7 +5,7 @@ packages:
   .
   ./examples/
   ./docs/
-  ../atomic-css/
+  -- ../atomic-css/
   -- temporary until https://github.com/seanhess/hyperbole/issues/76 is resolved
   -- https://hackage.haskell.org/package/web-view-0.7.0/candidate/web-view-0.7.0.tar.gz
 
