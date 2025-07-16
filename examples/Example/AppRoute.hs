@@ -21,6 +21,7 @@ data AppRoute
   | Todos
   | Errors
   | Javascript
+  | OAuth2
   | Test
   deriving (Eq, Generic, Show)
 instance Route AppRoute where

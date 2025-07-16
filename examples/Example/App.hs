@@ -49,6 +49,7 @@ import Example.Page.Filter qualified as Filter
 import Example.Page.Forms qualified as Forms
 import Example.Page.Intro qualified as Intro
 import Example.Page.Javascript qualified as Javascript
+import Example.Page.OAuth2 qualified as OAuth2
 import Example.Page.Requests qualified as Requests
 import Example.Page.State.Actions qualified as Actions
 import Example.Page.State.Effects qualified as Effects
@@ -130,6 +131,7 @@ app users count = do
   router AtomicCSS = runPage CSS.page
   router Todos = runPage Todo.page
   router Javascript = runPage Javascript.page
+  router OAuth2 = runPage $ OAuth2.page
   router Simple = redirect (routeUri Intro)
   router Counter = redirect (routeUri Intro)
   router Test = runPage Test.page

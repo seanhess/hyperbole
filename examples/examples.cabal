@@ -65,6 +65,7 @@ executable examples
       Example.Page.FormValidation
       Example.Page.Intro
       Example.Page.Javascript
+      Example.Page.OAuth2
       Example.Page.Requests
       Example.Page.Simple
       Example.Page.State.Actions
