@@ -106,6 +106,7 @@ executable examples
     , effectful
     , file-embed
     , foreign-store
+    , hoauth2
     , http-api-data
     , http-types
     , hyperbole

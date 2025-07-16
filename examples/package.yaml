@@ -49,6 +49,7 @@ dependencies:
   - websockets
   - cookie
   - hyperbole
+  - hoauth2
 
 executables:
   examples:
