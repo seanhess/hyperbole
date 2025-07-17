@@ -111,12 +111,14 @@ executable examples
     , http-types
     , hyperbole
     , network
+    , network-uri
     , random
     , safe
     , string-conversions
     , string-interpolate
     , text
     , time
+    , uri-bytestring
     , wai
     , wai-middleware-static
     , wai-websockets

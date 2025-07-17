@@ -50,6 +50,8 @@ dependencies:
   - cookie
   - hyperbole
   - hoauth2
+  - uri-bytestring
+  - network-uri
 
 executables:
   examples:

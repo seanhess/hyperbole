@@ -89,14 +89,15 @@ run = do
 
   users <- Users.initUsers
   count <- runEff $ runConcurrent Effects.initCounter
+  oauth2 <- OAuth2.getOAuth2
   cache <- clientCache
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
       Static.staticPolicy (addBase "examples/static") $
-        app users count
+        app users count oauth2
 
-app :: UserStore -> TVar Int -> Application
-app users count = do
+app :: UserStore -> TVar Int -> OAuth2.OAuth2 -> Application
+app users count oauth2 = do
   liveApp
     toDocument
     (runApp . routeRequest $ router)
@@ -131,7 +132,7 @@ app users count = do
   router AtomicCSS = runPage CSS.page
   router Todos = runPage Todo.page
   router Javascript = runPage Javascript.page
-  router OAuth2 = runPage $ OAuth2.page
+  router OAuth2 = runReader oauth2 $ runPage $ OAuth2.page
   router Simple = redirect (routeUri Intro)
   router Counter = redirect (routeUri Intro)
   router Test = runPage Test.page
