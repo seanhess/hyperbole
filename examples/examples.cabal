@@ -108,8 +108,11 @@ executable examples
     , foreign-store
     , hoauth2
     , http-api-data
+    , http-client
+    , http-client-tls
     , http-types
     , hyperbole
+    , mtl
     , network
     , network-uri
     , random
