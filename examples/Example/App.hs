@@ -62,6 +62,7 @@ import Example.View.Layout as Layout (example, exampleLayout, sourceLink)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
 import GHC.Generics (Generic)
 import GHC.Word (Word32)
+import Network.HTTP.Client.TLS qualified as TLS
 import Network.HTTP.Types (Header, Method, QueryItem, hCacheControl, methodPost, status200, status404)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
@@ -89,15 +90,15 @@ run = do
 
   users <- Users.initUsers
   count <- runEff $ runConcurrent Effects.initCounter
-  oauth2 <- OAuth2.getOAuth2
+  ope <- OAuth2.getOAuth2PageEnv =<< TLS.newTlsManager
   cache <- clientCache
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
       Static.staticPolicy (addBase "examples/static") $
-        app users count oauth2
+        app users count ope
 
-app :: UserStore -> TVar Int -> OAuth2.OAuth2 -> Application
-app users count oauth2 = do
+app :: UserStore -> TVar Int -> OAuth2.OAuth2PageEnv -> Application
+app users count ope = do
   liveApp
     toDocument
     (runApp . routeRequest $ router)
@@ -132,7 +133,7 @@ app users count oauth2 = do
   router AtomicCSS = runPage CSS.page
   router Todos = runPage Todo.page
   router Javascript = runPage Javascript.page
-  router OAuth2 = runReader oauth2 $ runPage $ OAuth2.page
+  router OAuth2 = runReader ope $ runPage $ OAuth2.page
   router Simple = redirect (routeUri Intro)
   router Counter = redirect (routeUri Intro)
   router Test = runPage Test.page

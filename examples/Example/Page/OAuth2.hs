@@ -2,10 +2,8 @@
 
 module Example.Page.OAuth2
   ( page
-  , OAuth2.OAuth2
-  , getOAuth2
-  , DummyUser
-  , getDummyUser
+  , OAuth2PageEnv
+  , getOAuth2PageEnv
   ) where
 
 --------------------------------------------------------------------------------
@@ -45,6 +43,12 @@ data DummyUser = DummyUser
   , duPassword :: Text
   }
 
+data OAuth2PageEnv = OAuth2PageEnv
+  { opeOAuth2Config :: OAuth2.OAuth2
+  , opeDummyUser :: DummyUser
+  , opeHTTPManager :: HTTP.Manager
+  }
+
 -- TODO: Add expiry to this state
 data RandomState = RandomState Text
   deriving (Generic, Show, ToJSON, FromJSON, Session)
@@ -59,8 +63,8 @@ data Token = Token OAuth2.OAuth2Token
 getEnvText :: String -> IO Text
 getEnvText = fmap T.pack . getEnv
 
-getOAuth2 :: IO OAuth2.OAuth2
-getOAuth2 =
+getOAuth2Config :: IO OAuth2.OAuth2
+getOAuth2Config =
   OAuth2.OAuth2
     <$> getEnvText "OAUTH2_CLIENT_ID"
     <*> getEnvText "OAUTH2_CLIENT_SECRET"
@@ -80,6 +84,10 @@ getDummyUser = do
     <$> getEnvText "OAUTH2_DUMMY_USERNAME"
     <*> getEnvText "OAUTH2_DUMMY_PASSWORD"
 
+getOAuth2PageEnv :: HTTP.Manager -> IO OAuth2PageEnv
+getOAuth2PageEnv httpManager =
+  OAuth2PageEnv <$> getOAuth2Config <*> getDummyUser <*> pure httpManager
+
 --------------------------------------------------------------------------------
 -- Authentication
 --------------------------------------------------------------------------------
@@ -98,17 +106,17 @@ toURI uriRef =
     $ URI.serializeURIRef uriRef
 
 redirectToAuthServer ::
-  (Reader (OAuth2.OAuth2) :> es, Hyperbole :> es, IOE :> es) => Eff es a
+  (Reader OAuth2PageEnv :> es, Hyperbole :> es, IOE :> es) => Eff es a
 redirectToAuthServer = do
   randomState <- replicateM 15 (randomRIO ('a', 'z'))
-  oauth2Obj <- ask
+  conf <- ask @OAuth2PageEnv
   saveSession (RandomState (T.pack randomState))
   redirect $ toURI $
     OAuth2.authorizationUrlWithParams
       [ ("scope", "email")
       , ("state", BS.pack randomState)
       ]
-      oauth2Obj
+      conf.opeOAuth2Config
 
 -- NOTE:
 --
@@ -139,7 +147,7 @@ lookupExchangeToken = do
 data Contents = Contents
   deriving (Generic, ViewId)
 
-instance (Reader (OAuth2.OAuth2) :> es, IOE :> es) => HyperView Contents es where
+instance (Reader OAuth2PageEnv :> es, IOE :> es) => HyperView Contents es where
   data Action Contents
     = Login
     | Logout
@@ -149,8 +157,8 @@ instance (Reader (OAuth2.OAuth2) :> es, IOE :> es) => HyperView Contents es wher
     deleteParam "code"
     deleteParam "state"
     deleteSession @Token
-    du <- liftIO getDummyUser
-    pure $ viewContent $ Unauthorized du
+    conf <- ask @OAuth2PageEnv
+    pure $ viewContent $ Unauthorized conf.opeDummyUser
 
 --------------------------------------------------------------------------------
 -- View Utils
@@ -218,25 +226,23 @@ authorizedContent tok = do
 --------------------------------------------------------------------------------
 
 setup ::
-  (Hyperbole :> es, Reader (OAuth2.OAuth2) :> es, IOE :> es) =>
-  Eff es ViewState
+  (Hyperbole :> es, Reader OAuth2PageEnv :> es, IOE :> es) => Eff es ViewState
 setup = do
   mtoken <- lookupSession @Token
   case mtoken of
     Just (Token tok) -> pure $ Authorized tok
     Nothing -> do
       mExchangeTok <- lookupExchangeToken
+      conf <- ask @OAuth2PageEnv
       case mExchangeTok of
-        Nothing -> setupUnauthorizedState
-        Just exchangeTok -> setupAuthorizedState exchangeTok
+        Nothing -> setupUnauthorizedState conf.opeDummyUser
+        Just etok -> setupAuthorizedState etok conf
   where
-  setupUnauthorizedState = do
-    du <- liftIO getDummyUser
-    pure $ Unauthorized du
-  setupAuthorizedState exchangeTok = do
-    manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
-    oauth2Obj <- ask
-    res <- runExceptT $ OAuth2.fetchAccessToken manager oauth2Obj exchangeTok
+  setupUnauthorizedState du = pure $ Unauthorized du
+  setupAuthorizedState etok conf = do
+    res <-
+      runExceptT $
+        OAuth2.fetchAccessToken conf.opeHTTPManager conf.opeOAuth2Config etok
     case res of
       Left err -> error $ show err
       Right oauthTok -> do
@@ -244,7 +250,7 @@ setup = do
         pure $ Authorized oauthTok
 
 page ::
-  (Hyperbole :> es, Reader (OAuth2.OAuth2) :> es, IOE :> es) =>
+  (Hyperbole :> es, Reader OAuth2PageEnv :> es, IOE :> es) =>
   Eff es (Page '[Contents])
 page = do
   vs <- setup
