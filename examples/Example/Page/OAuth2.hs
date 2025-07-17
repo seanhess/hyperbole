@@ -38,14 +38,8 @@ import Web.Hyperbole
 -- Types
 --------------------------------------------------------------------------------
 
-data DummyUser = DummyUser
-  { duUsername :: Text
-  , duPassword :: Text
-  }
-
 data OAuth2PageEnv = OAuth2PageEnv
   { opeOAuth2Config :: OAuth2.OAuth2
-  , opeDummyUser :: DummyUser
   , opeHTTPManager :: HTTP.Manager
   }
 
@@ -78,15 +72,9 @@ getOAuth2Config =
       Left err -> error $ "getEnvURIRef: " ++ show err
       Right val -> pure val
 
-getDummyUser :: IO DummyUser
-getDummyUser = do
-  DummyUser
-    <$> getEnvText "OAUTH2_DUMMY_USERNAME"
-    <*> getEnvText "OAUTH2_DUMMY_PASSWORD"
-
 getOAuth2PageEnv :: HTTP.Manager -> IO OAuth2PageEnv
 getOAuth2PageEnv httpManager =
-  OAuth2PageEnv <$> getOAuth2Config <*> getDummyUser <*> pure httpManager
+  OAuth2PageEnv <$> getOAuth2Config <*> pure httpManager
 
 --------------------------------------------------------------------------------
 -- Authentication
@@ -157,15 +145,14 @@ instance (Reader OAuth2PageEnv :> es, IOE :> es) => HyperView Contents es where
     deleteParam "code"
     deleteParam "state"
     deleteSession @Token
-    conf <- ask @OAuth2PageEnv
-    pure $ viewContent $ Unauthorized conf.opeDummyUser
+    pure $ viewContent Unauthorized
 
 --------------------------------------------------------------------------------
 -- View Utils
 --------------------------------------------------------------------------------
 
 data ViewState
-  = Unauthorized DummyUser
+  = Unauthorized
   | Authorized OAuth2.OAuth2Token
 
 message :: View c () -> View c ()
@@ -200,17 +187,12 @@ renderTokenTable tok = table (formatToken tok) $ do
 -- view creation.
 --
 viewContent :: ViewState -> View Contents ()
-viewContent (Unauthorized du) = col ~ gap 15 $ unauthorizedContent du
+viewContent Unauthorized = col ~ gap 15 $ unauthorizedContent
 viewContent (Authorized tok) = col ~ gap 15 $ authorizedContent tok
 
-unauthorizedContent :: DummyUser -> View Contents ()
-unauthorizedContent du = do
+unauthorizedContent :: View Contents ()
+unauthorizedContent = do
   message "Logged Out!"
-  col ~ gap 5 $ do
-    tag "fieldset" ~ pad 10 . border 1 $ do
-      tag "legend" $ text "Dummy User Information"
-      row ~ gap 5 $ el "Username:" >> el (text du.duUsername) ~ bold
-      row ~ gap 5 $ el "Password:" >> el (text du.duPassword) ~ bold
   col ~ gap 5 $ do
     el "Please click on the button below to Login:"
     button Login "Login" ~ Style.btn
@@ -235,10 +217,9 @@ setup = do
       mExchangeTok <- lookupExchangeToken
       conf <- ask @OAuth2PageEnv
       case mExchangeTok of
-        Nothing -> setupUnauthorizedState conf.opeDummyUser
+        Nothing -> pure Unauthorized
         Just etok -> setupAuthorizedState etok conf
   where
-  setupUnauthorizedState du = pure $ Unauthorized du
   setupAuthorizedState etok conf = do
     res <-
       runExceptT $
