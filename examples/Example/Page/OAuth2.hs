@@ -137,11 +137,22 @@ data Contents = Contents
 
 instance (Reader OAuth2PageEnv :> es, IOE :> es) => HyperView Contents es where
   data Action Contents
-    = Login
-    | Logout
+    = FetchExchangeToken
+    | FetchAccessToken OAuth2.ExchangeToken
+    | ClearAccessToken
     deriving (Generic, ViewAction)
-  update Login = redirectToAuthServer
-  update Logout = do
+  update FetchExchangeToken = redirectToAuthServer
+  update (FetchAccessToken etok) = do
+    conf <- ask @OAuth2PageEnv
+    res <-
+      runExceptT $
+        OAuth2.fetchAccessToken conf.opeHTTPManager conf.opeOAuth2Config etok
+    case res of
+      Left err -> error $ show err
+      Right oauthTok -> do
+        saveSession (Token oauthTok)
+        pure $ viewContent $ Authorized oauthTok
+  update ClearAccessToken = do
     deleteParam "code"
     deleteParam "state"
     deleteSession @Token
@@ -153,6 +164,7 @@ instance (Reader OAuth2PageEnv :> es, IOE :> es) => HyperView Contents es where
 
 data ViewState
   = Unauthorized
+  | PreAuthorized OAuth2.ExchangeToken
   | Authorized OAuth2.OAuth2Token
 
 message :: View c () -> View c ()
@@ -188,6 +200,8 @@ renderTokenTable tok = table (formatToken tok) $ do
 --
 viewContent :: ViewState -> View Contents ()
 viewContent Unauthorized = col ~ gap 15 $ unauthorizedContent
+viewContent (PreAuthorized etok) =
+  el @ onLoad (FetchAccessToken etok) 500 $ message "Loading..."
 viewContent (Authorized tok) = col ~ gap 15 $ authorizedContent tok
 
 unauthorizedContent :: View Contents ()
@@ -195,13 +209,13 @@ unauthorizedContent = do
   message "Logged Out!"
   col ~ gap 5 $ do
     el "Please click on the button below to Login:"
-    button Login "Login" ~ Style.btn
+    button FetchExchangeToken "Login" ~ Style.btn
 
 authorizedContent :: OAuth2.OAuth2Token -> View Contents ()
 authorizedContent tok = do
   message "Successfully Logged In!"
   renderTokenTable tok
-  button Logout "Logout" ~ Style.btn
+  button ClearAccessToken "Logout" ~ Style.btn
 
 --------------------------------------------------------------------------------
 -- Page
@@ -215,20 +229,9 @@ setup = do
     Just (Token tok) -> pure $ Authorized tok
     Nothing -> do
       mExchangeTok <- lookupExchangeToken
-      conf <- ask @OAuth2PageEnv
       case mExchangeTok of
         Nothing -> pure Unauthorized
-        Just etok -> setupAuthorizedState etok conf
-  where
-  setupAuthorizedState etok conf = do
-    res <-
-      runExceptT $
-        OAuth2.fetchAccessToken conf.opeHTTPManager conf.opeOAuth2Config etok
-    case res of
-      Left err -> error $ show err
-      Right oauthTok -> do
-        saveSession (Token oauthTok)
-        pure $ Authorized oauthTok
+        Just etok -> pure (PreAuthorized etok)
 
 page ::
   (Hyperbole :> es, Reader OAuth2PageEnv :> es, IOE :> es) =>
