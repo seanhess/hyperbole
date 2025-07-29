@@ -1,8 +1,9 @@
 # Revision history for hyperbole
 
-## 0.4.4 -- 2025-03-09
+## 0.5.0 -- _____
 
 * fixed source links in examples
+* error handling, custom errors
 
 ## 0.4.3 -- 2024-01-31
 
