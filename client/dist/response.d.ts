@@ -1,3 +1,4 @@
+import { ViewId } from './action';
 export type Response = {
     requestId: string;
     location?: string;
@@ -10,4 +11,8 @@ export type LiveUpdate = {
     content: HTMLElement;
     css: HTMLStyleElement | null;
 };
-export declare function fetchError(msg: string): Error;
+export declare class FetchError extends Error {
+    viewId: ViewId;
+    body: string;
+    constructor(viewId: ViewId, msg: string, body: string);
+}

@@ -1,6 +1,6 @@
 import { ActionMessage, ViewId, RequestId } from './action'
 import { takeWhileMap, dropWhile } from "./lib"
-import { Response, ResponseBody, fetchError } from "./response"
+import { Response, ResponseBody, FetchError } from "./response"
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
@@ -97,9 +97,6 @@ export class SocketConnection {
           return
         }
 
-        if (metadata.error) {
-          throw fetchError(metadata.error)
-        }
 
         // We have found our message. Remove the listener
         this.socket.removeEventListener('message', onMessage)
@@ -108,6 +105,11 @@ export class SocketConnection {
         metadata.cookies.forEach(cookie => {
           document.cookie = cookie
         })
+
+        if (metadata.error) {
+          reject(new FetchError(id, metadata.error, body))
+          return
+        }
 
         resolve({ metadata, body })
       }
@@ -121,13 +123,6 @@ export class SocketConnection {
     this.socket.close()
   }
 }
-
-// function socketError(inp: string): Error {
-//   let error = new Error()
-//   error.name = inp.substring(0, inp.indexOf(' '));
-//   error.message = inp.substring(inp.indexOf(' ') + 1);
-//   return error
-// }
 
 
 

@@ -1,10 +1,10 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
-import { actionMessage, ActionMessage, requestId, RequestId } from './action'
+import { actionMessage, ActionMessage, requestId, RequestId, ViewId } from './action'
 import { sendActionHttp } from './http'
 import { setQuery } from "./browser"
-import { parseResponse, Response, LiveUpdate } from './response'
+import { parseResponse, Response, LiveUpdate, FetchError } from './response'
 
 let PACKAGE = require('../package.json');
 
@@ -35,29 +35,22 @@ async function sendAction(reqId: RequestId, msg: ActionMessage): Promise<Respons
 
 
 async function fetchAction(reqId: RequestId, msg: ActionMessage): Promise<Response> {
-  try {
-    let res = await sendAction(reqId, msg)
+  let res = await sendAction(reqId, msg)
 
-    if (res.location) {
-      window.location.href = res.location
-      return // not reachable
-    }
-
-    if (res.query != null) {
-      setQuery(res.query)
-    }
-
-    return res
+  if (res.location) {
+    window.location.href = res.location
+    return // not reachable
   }
-  catch (err) {
-    // handle error here
-    document.body.innerHTML = errorHTML(err)
-    throw err
 
+  if (res.query != null) {
+    setQuery(res.query)
   }
+
+  return res
 }
 
 async function runAction(target: HyperView, action: string, form?: FormData) {
+
 
   if (action === undefined) {
     console.error("Undefined Action!", target, "this is a bug, please report: https://github.com/seanhess/hyperbole")
@@ -82,51 +75,59 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   let reqId = requestId()
   target.dataset.requestId = reqId
 
-  let res: Response = await fetchAction(reqId, msg)
+  try {
+    let res: Response = await fetchAction(reqId, msg)
+
+    let update: LiveUpdate = parseResponse(res.body)
+
+    if (!update.content) {
+      // TODO: error handling
+      console.error("Empty Response", res)
+      return
+    }
+
+    // First, update the stylesheet
+    addCSS(update.css)
+
+    // Patch the node
+    const next: VNode = create(update.content)
+    const old: VNode = create(target)
+    patch(next, old)
+
+    // console.log("NEXT", next)
+
+    // Emit relevant events
+    let newTarget = document.getElementById(target.id)
+    dispatchContent(newTarget)
+
+    if (newTarget) {
+      // now way for these to bubble)
+      listenLoad(newTarget)
+      listenMouseEnter(newTarget)
+      listenMouseLeave(newTarget)
+      fixInputs(newTarget)
+      enrichHyperViews(newTarget)
+    }
+    else {
+      console.warn("Target Missing: ", target.id)
+    }
+
+
+  }
+  catch (err) {
+    console.error("Caught Error in HyperView (" + target.id + "):\n", err)
+    target.innerHTML = err.body
+  }
 
   if (reqId != target.dataset.requestId) {
     console.error("Stale Action! (" + reqId + "):", action)
     return
   }
-
-  delete target.dataset.requestId
-
-  let update: LiveUpdate = parseResponse(res.body)
-
-  if (!update.content) {
-    // TODO: error handling
-    console.error("Empty Response", res)
-    return
-  }
-
-  // First, update the stylesheet
-  addCSS(update.css)
-
-  // Patch the node
-  const next: VNode = create(update.content)
-  const old: VNode = create(target)
-  patch(next, old)
-
-  // console.log("NEXT", next)
-
-  // Emit relevant events
-  let newTarget = document.getElementById(target.id)
-  dispatchContent(newTarget)
-
-  if (newTarget) {
-    // now way for these to bubble)
-    listenLoad(newTarget)
-    listenMouseEnter(newTarget)
-    listenMouseLeave(newTarget)
-    fixInputs(newTarget)
-    enrichHyperViews(newTarget)
-  }
   else {
-    console.warn("Target Missing: ", target.id)
+    delete target.dataset.requestId
   }
 
   // Remove loading and clear add timeout
-
   clearTimeout(timeout)
   target.classList.remove("hyp-loading")
 }
@@ -233,6 +234,8 @@ function dispatchContent(node: HTMLElement): void {
 document.addEventListener("DOMContentLoaded", init)
 
 
+
+
 // Should we connect to the socket or not?
 const sock = new SocketConnection()
 sock.connect()
@@ -269,19 +272,6 @@ type VNode = {
 
 
 
-// no it should take over the whole page...
-function errorHTML(error: Error): string {
-
-  // TODO: match on error.name and handle it differently
-  let style = [
-    ".hyp-error {background-color:#DB3524; color:white; padding: 10px}",
-    ".hyp-details {padding: 10px}"
-  ]
-  let content = `<div class='hyp-error'>${error.name}</div>`
-  let details = `<div class='hyp-details'>${error.message}</div>`
-
-  return ["<style>" + style.join("\n") + "</style>", content, details].join("\n")
-}
 
 
 declare global {
@@ -303,7 +293,6 @@ export interface HyperView extends HTMLElement {
   runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
 }
 
-export type ViewId = string
 
 
 window.Hyperbole =
@@ -320,5 +309,5 @@ window.Hyperbole =
       return undefined
     }
     return element
-  }
+  },
 }

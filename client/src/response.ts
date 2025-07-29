@@ -1,4 +1,5 @@
 
+import { ViewId } from './action'
 
 
 
@@ -29,9 +30,13 @@ export type LiveUpdate = {
 }
 
 
-export function fetchError(msg: string): Error {
-  let err = new Error()
-  err.name = "Fetch Error"
-  err.message = msg
-  return err
+export class FetchError extends Error {
+  viewId: ViewId
+  body: string
+  constructor(viewId: ViewId, msg: string, body: string) {
+    super(msg)
+    this.viewId = viewId
+    this.name = "Fetch Error"
+    this.body = body
+  }
 }

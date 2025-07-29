@@ -11,7 +11,7 @@ import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Effect.Event (getEvent)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (request)
-import Web.Hyperbole.Effect.Response (respondEarly)
+import Web.Hyperbole.Effect.Response (respondNow)
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.View
@@ -42,7 +42,7 @@ runHandler run = do
   case mev of
     Just evt -> do
       vw <- runReader evt.viewId $ run evt.action
-      respondEarly evt.viewId vw
+      respondNow evt.viewId vw
     _ -> do
       pure ()
 
@@ -63,7 +63,7 @@ guardNoEvent = do
   q <- (.query) <$> request
   case lookupEvent q of
     -- Are id and action set to something?
-    Just e -> send $ RespondEarly $ Err $ ErrNotHandled e
+    Just e -> send $ RespondNow $ Err $ ErrNotHandled e
     Nothing -> pure ()
 
 

@@ -27,7 +27,7 @@ query :: (FromQuery a, Hyperbole :> es) => Eff es a
 query = do
   q <- queryParams
   case parseQuery q of
-    Left e -> send $ RespondEarly $ Err $ ErrQuery $ "Query Parse " <> e <> " from " <> cs (show q)
+    Left e -> send $ RespondNow $ Err $ ErrQuery $ "Query Parse " <> e <> " from " <> cs (show q)
     Right a -> pure a
 
 
@@ -60,7 +60,7 @@ param :: (FromParam a, Hyperbole :> es) => Param -> Eff es a
 param p = do
   q <- queryParams
   case QueryData.require p q of
-    Left e -> send $ RespondEarly $ Err $ ErrQuery e
+    Left e -> send $ RespondNow $ Err $ ErrQuery (cs e)
     Right a -> pure a
 
 

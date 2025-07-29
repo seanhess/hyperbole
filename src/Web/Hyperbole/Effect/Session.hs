@@ -119,7 +119,7 @@ deleteSession = do
 parseSession :: (Session a, Hyperbole :> es) => Key -> CookieValue -> Eff es a
 parseSession prm cook = do
   case parseCookie cook of
-    Left e -> send $ RespondEarly $ Err $ ErrSession prm e
+    Left e -> send $ RespondNow $ Err $ ErrSession prm e
     Right a -> pure a
 
 

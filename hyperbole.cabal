@@ -46,6 +46,10 @@ library
       Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Server
+      Web.Hyperbole.Effect.Server.Response
+      Web.Hyperbole.Effect.Server.Socket
+      Web.Hyperbole.Effect.Server.Types
+      Web.Hyperbole.Effect.Server.Wai
       Web.Hyperbole.Effect.Session
       Web.Hyperbole.HyperView
       Web.Hyperbole.HyperView.Event

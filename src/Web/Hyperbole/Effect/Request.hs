@@ -2,6 +2,7 @@
 
 module Web.Hyperbole.Effect.Request where
 
+import Data.String.Conversions (cs)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Web.FormUrlEncoded (Form, urlDecodeForm)
@@ -37,4 +38,4 @@ formBody :: (Hyperbole :> es) => Eff es Form
 formBody = do
   b <- (.body) <$> request
   let ef = urlDecodeForm b
-  either (send . RespondEarly . Err . ErrParse) pure ef
+  either (send . RespondNow . Err . ErrParse . cs) pure ef

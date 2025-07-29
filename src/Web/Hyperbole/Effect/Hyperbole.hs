@@ -10,10 +10,10 @@ import Effectful.State.Static.Local
 import Web.Hyperbole.Effect.Server
 
 
--- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', manually 'respondEarly', and manipulate the Client 'session' and 'query'.
+-- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', manually 'respondNow', and manipulate the Client 'session' and 'query'.
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
-  RespondEarly :: Response -> Hyperbole m a
+  RespondNow :: Response -> Hyperbole m a
   ModClient :: (Client -> Client) -> Hyperbole m ()
   GetClient :: Hyperbole m Client
 
@@ -29,7 +29,7 @@ runHyperbole
 runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
   GetRequest -> do
     gets @HyperState (.request)
-  RespondEarly r -> do
+  RespondNow r -> do
     s <- gets @HyperState (.client)
     send $ SendResponse s r
     throwError_ r
@@ -51,7 +51,7 @@ runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
     er <- eff
     case er of
       Left res ->
-        -- responded early, don't need to respond again
+        -- responded via RespondNow, don't need to respond again
         pure res
       Right (res, st) -> do
         send $ SendResponse st.client res
@@ -62,4 +62,3 @@ data HyperState = HyperState
   { request :: Request
   , client :: Client
   }
-

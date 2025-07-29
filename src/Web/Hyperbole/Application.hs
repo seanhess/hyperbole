@@ -23,7 +23,7 @@ import Effectful
 import Effectful.Concurrent.Async
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
-import Effectful.Exception (SomeException, throwIO, trySync)
+import Effectful.Exception (SomeException, trySync)
 import Network.HTTP.Types as HTTP (parseQuery)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
@@ -33,7 +33,8 @@ import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (reqPath)
-import Web.Hyperbole.Effect.Server (Host (..), InternalServerError (..), Request (..), RequestId (..), Response (..), Server, SocketError (..), runServerSockets, runServerWai)
+import Web.Hyperbole.Effect.Server (Host (..), InternalServerError (..), Request (..), RequestId (..), Response (..), Server, SocketError (..), runServerSockets, runServerWai, serverError)
+import Web.Hyperbole.Effect.Server.Socket qualified as Socket
 import Web.Hyperbole.Route
 import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed)
 
@@ -66,23 +67,25 @@ socketApp actions pend = do
   forever $ do
     ereq <- runErrorNoCallStack @SocketError $ receiveRequest conn
     case ereq of
-      Left e -> liftIO $ putStrLn $ "SOCKET ERROR " <> show e
+      -- this is a Hyperbole developer error
+      Left e -> liftIO $ putStrLn $ "INTERNAL SOCKET ERROR " <> show e
       Right r -> do
-        a <- async $ do
-          -- TODO: if we get an error, respond with an error?
-          -- still need better error handling
-          res <- trySync $ runServerSockets conn r $ runHyperbole actions
-          case res of
-            Left (ex :: SomeException) -> do
-              -- print the exception
-              liftIO $ print ex
-              -- swallows the exception for some reason, but maybe that behavior is ok?
-              -- keep responding to different messages
-              throwIO ex
-            Right _ -> pure ()
-        -- this doesn't seem to do anything! Exceptions are swallowed, so we print them above
-        link a
+        withAsync (runRequest conn r) $ \as -> do
+          _ <- wait as
+          pure ()
  where
+  -- pure ()
+
+  runRequest conn req = do
+    res <- trySync $ runServerSockets conn req $ runHyperbole actions
+    case res of
+      Left (ex :: SomeException) -> do
+        -- It's not safe to send any exception over the wire
+        -- log it to the console and send the error to the client
+        liftIO $ print ex
+        Socket.sendError req conn (serverError "Internal Server Error")
+      Right _ -> pure ()
+
   receiveRequest :: (IOE :> es, Error SocketError :> es) => Connection -> Eff es Request
   receiveRequest conn = do
     t <- receiveText conn
@@ -170,5 +173,5 @@ routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> 
 routeRequest actions = do
   pth <- reqPath
   case findRoute pth.segments of
-    Nothing -> send $ RespondEarly NotFound
+    Nothing -> send $ RespondNow NotFound
     Just rt -> actions rt

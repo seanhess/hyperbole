@@ -68,7 +68,7 @@ module Web.Hyperbole
   , Hyperbole
 
     -- ** Response
-  , respondEarly
+  , respondNow
   , notFound
   , redirect
 
@@ -210,7 +210,7 @@ import Web.Hyperbole.Data.QueryData
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
 import Web.Hyperbole.Effect.Request
-import Web.Hyperbole.Effect.Response (notFound, redirect, respondEarly, view)
+import Web.Hyperbole.Effect.Response (notFound, redirect, respondNow, view)
 import Web.Hyperbole.Effect.Server hiding (lookupParam)
 import Web.Hyperbole.Effect.Session
 import Web.Hyperbole.HyperView
