@@ -42,6 +42,7 @@ import Example.Page.CSS qualified as CSS
 import Example.Page.Concurrency qualified as Concurrency
 import Example.Page.Contact qualified as Contact
 import Example.Page.Contacts qualified as Contacts
+import Example.Page.Test qualified as Test
 import Example.Page.Counter qualified as Counter
 import Example.Page.DataTable qualified as DataTable
 import Example.Page.Errors qualified as Errors
@@ -129,6 +130,7 @@ app users count = do
   router Javascript = runPage Javascript.page
   router Simple = redirect (routeUri Intro)
   router Counter = redirect (routeUri Intro)
+  router Test = runPage Test.page
   router Main = do
     redirect (routeUri Intro)
 

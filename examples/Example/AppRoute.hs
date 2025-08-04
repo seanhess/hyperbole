@@ -21,6 +21,7 @@ data AppRoute
   | Todos
   | Errors
   | Javascript
+  | Test
   deriving (Eq, Generic, Show)
 instance Route AppRoute where
   baseRoute = Just Main
