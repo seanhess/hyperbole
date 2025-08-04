@@ -58,7 +58,7 @@ data Product4 = Product4 Text Text Text Text deriving (Generic, Show, Eq, Read, 
 
 
 spec :: Spec
-spec = withMarkers ["focus"] $ do
+spec = do
   describe "genericToEncoded" $ do
     it "should encode single tags" $ do
       genericToEncoded One `shouldBe` Encoded "One" []
