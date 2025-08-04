@@ -18,7 +18,6 @@ import Control.Monad (guard)
 import Data.Text (Text, pack, toLower, unpack)
 import Data.Text qualified as T
 import GHC.Generics
-import Network.URI
 import Text.Read (readMaybe)
 import Web.Hyperbole.Data.URI
 import Prelude hiding (dropWhile)

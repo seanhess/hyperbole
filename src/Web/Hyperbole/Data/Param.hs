@@ -13,6 +13,7 @@ import Data.Word
 import Network.HTTP.Types (urlDecode, urlEncode)
 import Text.Read (readMaybe)
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData, parseQueryParam, toQueryParam)
+import Web.Hyperbole.Data.URI (URI (..), parseURIReference, uriToText)
 
 
 newtype Param = Param {text :: Text}
@@ -69,6 +70,8 @@ instance ToParam Char where
   toParam = ParamValue . toQueryParam
 instance ToParam UTCTime where
   toParam = ParamValue . toQueryParam
+instance ToParam URI where
+  toParam = toParam . uriToText
 
 
 {- | Decode data from a 'query', 'session', or 'form' parameter value
@@ -116,6 +119,13 @@ instance FromParam Char where
   parseParam (ParamValue t) = parseQueryParam t
 instance FromParam UTCTime where
   parseParam (ParamValue t) = parseQueryParam t
+
+
+instance FromParam URI where
+  parseParam (ParamValue t) = do
+    case parseURIReference (cs t) of
+      Nothing -> Left $ "Invalid URI: " <> t
+      Just u -> pure u
 
 
 -- these are NOT escaped yet

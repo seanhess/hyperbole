@@ -1,26 +1,74 @@
 module Web.Hyperbole.Data.URI
-  ( URI (..)
-  , Segment
-  , Path (..)
-  , path
+  ( -- * URI
+    URI (..)
+  , URIAuth (..)
   , uri
+
+    -- ** Path
+  , Path (..)
+  , Segment
+  , path
+  , parseURIReference
   , pathUri
   , uriToText
   , pathToText
-  , cleanSegment
+
+    -- ** Query String
+  , queryString
+  , parseQuery
+  , queryInsert
+  , Query
+  , QueryItem
   , (./.)
+  , (.?.)
+  , cleanSegment
   )
 where
 
+import Data.ByteString (ByteString)
 import Data.String (IsString (..))
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import GHC.Exts (IsList (..))
-import Network.URI (URI (..), uriToString)
+import Network.HTTP.Types (Query, QueryItem, parseQuery, renderQuery)
+import Network.URI (URI (..), URIAuth (..), parseURIReference, uriToString)
+import Network.URI qualified as Network
 import Network.URI.Static (uri)
 import System.FilePath ((</>))
 
+
+-- Constructors ------------------------------------------
+-- see `uri` for static URIs
+
+-- Operators -----------------------------------------------
+
+(./.) :: URI -> Path -> URI
+u ./. p =
+  let newPath = cs $ pathToText p
+   in u{Network.uriPath = if p.isRoot then newPath else u.uriPath </> newPath}
+infixl 5 ./.
+
+
+(.?.) :: URI -> QueryItem -> URI
+u .?. (k, mv) = u{uriQuery = queryInsert k mv u.uriQuery}
+
+
+-- Query ---------------------------------------------------
+
+type QueryString = String
+
+
+queryInsert :: ByteString -> Maybe ByteString -> QueryString -> QueryString
+queryInsert k mv s =
+  queryString $ parseQuery (cs s) <> [(k, mv)]
+
+
+queryString :: [(ByteString, Maybe ByteString)] -> QueryString
+queryString = cs . renderQuery True
+
+
+-- Path -----------------------------------------------------
 
 data Path = Path
   { isRoot :: Bool
@@ -29,7 +77,7 @@ data Path = Path
   deriving (Show, Eq)
 instance IsList Path where
   type Item Path = Segment
-  fromList ss = Path True ss
+  fromList = Path True
   toList p = p.segments
 instance IsString Path where
   fromString = path . cs
@@ -53,10 +101,10 @@ pathUri :: Path -> URI
 pathUri p =
   URI
     { uriPath = cs $ pathToText p
-    , uriScheme = ""
+    , uriScheme = mempty
     , uriAuthority = Nothing
-    , uriQuery = ""
-    , uriFragment = ""
+    , uriQuery = mempty
+    , uriFragment = mempty
     }
 
 
@@ -64,81 +112,10 @@ uriToText :: URI -> Text
 uriToText u = cs $ uriToString id u ""
 
 
-pathPrefix :: Path -> Text
-pathPrefix p =
-  if p.isRoot then "/" else ""
-
-
 pathToText :: Path -> Text
 pathToText p =
   pathPrefix p <> T.intercalate "/" (fmap cleanSegment p.segments)
-
-
-(./.) :: URI -> Path -> URI
-u ./. p =
-  let newPath = cs $ pathToText p
-   in u{uriPath = if p.isRoot then newPath else u.uriPath </> newPath}
-infixl 5 ./.
-
--- -- you can't create an isstring instance though....
--- -- hmmm....
--- -- I mean, they're doing that on purpose
---
--- relativeUri :: Text -> URI
--- relativeUri t =
---   s <- scheme
---   d <- domain s
---   ps <- paths
---   q <- query
---   pure $ Url{scheme = s, domain = d, path = ps, query = q}
---  where
---   parse :: (State Text :> es) => (Char -> Bool) -> Eff es Text
---   parse b = do
---     inp <- get
---     let match = T.takeWhile b inp
---         rest = T.dropWhile b inp
---     put rest
---     pure match
---
---   string :: (State Text :> es) => Text -> Eff es (Maybe Text)
---   string pre = do
---     inp <- get
---     case T.stripPrefix pre inp of
---       Nothing -> pure Nothing
---       Just rest -> do
---         put rest
---         pure (Just pre)
---
---   -- it's either scheme AND domain, or relative path
---   scheme = do
---     http <- string "http://"
---     https <- string "https://"
---     pure $ fromMaybe "" $ http <|> https
---
---   domain "" = pure ""
---   domain _ = parse (not . isDomainSep)
---
---   pathText :: (State Text :> es) => Eff es Text
---   pathText = parse (not . isQuerySep)
---
---   paths :: (State Text :> es) => Eff es [Segment]
---   paths = do
---     p <- pathText
---     pure $ pathSegments p
---
---   query :: (State Text :> es) => Eff es Query
---   query = do
---     q <- parse (/= '\n')
---     pure $ parseQuery $ encodeUtf8 q
---
---   isDomainSep '/' = True
---   isDomainSep _ = False
---
---   isQuerySep '?' = True
---   isQuerySep _ = False
---
---
--- renderUrl :: Url -> Text
--- renderUrl u = u.scheme <> u.domain <> renderPath u.path <> decodeUtf8 (renderQuery True u.query)
---
--- j
+ where
+  pathPrefix :: Path -> Text
+  pathPrefix p' =
+    if p'.isRoot then "/" else ""

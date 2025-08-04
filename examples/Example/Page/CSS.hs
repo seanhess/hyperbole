@@ -43,7 +43,7 @@ example = do
 
     col ~ embed $ do
       el ~ h3 $ "My Page"
-      el ~ border 1 . pad 10 . clickable $ "Click Me"
+      el ~ border 1 . pad 10 . clickable $ "Hover Me"
 
     example "CSS Transitions" "Example/Page/CSS/Transitions.hs" $ do
       el "Animate changes with CSS Transitions"
