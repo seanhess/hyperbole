@@ -19,6 +19,7 @@ import Data.String.Conversions (cs)
 import Data.String.Interpolate (i)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Debug.Trace
 import Effectful
 import Effectful.Concurrent.Async
 import Effectful.Dispatch.Dynamic
@@ -70,12 +71,9 @@ socketApp actions pend = do
       -- this is a Hyperbole developer error
       Left e -> liftIO $ putStrLn $ "INTERNAL SOCKET ERROR " <> show e
       Right r -> do
-        withAsync (runRequest conn r) $ \as -> do
-          _ <- wait as
-          pure ()
+        as <- async (runRequest conn r)
+        link as
  where
-  -- pure ()
-
   runRequest conn req = do
     res <- trySync $ runServerSockets conn req $ runHyperbole actions
     case res of

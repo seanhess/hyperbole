@@ -70,6 +70,7 @@ executable examples
       Example.Page.State.Effects
       Example.Page.State.Query
       Example.Page.State.Sessions
+      Example.Page.Test
       Example.Page.Todo
       Example.Style
       Example.View.Icon
