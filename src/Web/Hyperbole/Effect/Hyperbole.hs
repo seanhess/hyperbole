@@ -10,7 +10,7 @@ import Effectful.State.Static.Local
 import Web.Hyperbole.Effect.Server
 
 
--- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', manually 'respondNow', and manipulate the Client 'session' and 'query'.
+-- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', manually respond, and manipulate the Client 'session' and 'query'.
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondNow :: Response -> Hyperbole m a

@@ -98,7 +98,7 @@ instance HyperView ControlResponse es where
     _ <- notFound
     pure $ "This will not be rendered"
   update RespondEarlyView = do
-    _ <- respondNow ControlResponse $ "Responded early!"
+    _ <- respondView ControlResponse $ "Responded early!"
     pure $ "This will not be rendered"
 
 responseView :: View ControlResponse ()

@@ -11,7 +11,7 @@ import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Effect.Event (getEvent)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (request)
-import Web.Hyperbole.Effect.Response (respondNow)
+import Web.Hyperbole.Effect.Response (respondView)
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.View
@@ -42,7 +42,7 @@ runHandler run = do
   case mev of
     Just evt -> do
       vw <- runReader evt.viewId $ run evt.action
-      respondNow evt.viewId vw
+      respondView evt.viewId vw
     _ -> do
       pure ()
 

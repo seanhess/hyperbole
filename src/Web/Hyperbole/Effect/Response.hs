@@ -12,8 +12,8 @@ import Web.Hyperbole.View.Types
 
 
 -- | Respond with the given view, and stop execution
-respondNow :: (Hyperbole :> es, HyperView id es) => id -> View id () -> Eff es a
-respondNow i vw = do
+respondView :: (Hyperbole :> es, HyperView id es) => id -> View id () -> Eff es a
+respondView i vw = do
   let vid = TargetViewId (encodedToText $ toViewId i)
   let res = Response vid $ hyperUnsafe i vw
   send $ RespondNow res
