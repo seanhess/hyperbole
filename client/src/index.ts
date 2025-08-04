@@ -78,6 +78,16 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   try {
     let res: Response = await fetchAction(reqId, msg)
 
+    if (reqId != target.dataset.requestId) {
+      let err = new Error()
+      err.name = "Concurrency Error"
+      err.message = "Stale Action (" + reqId + "):" + action
+      throw err
+    }
+    else {
+      delete target.dataset.requestId
+    }
+
     let update: LiveUpdate = parseResponse(res.body)
 
     if (!update.content) {
@@ -89,12 +99,12 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     // First, update the stylesheet
     addCSS(update.css)
 
+
     // Patch the node
     const next: VNode = create(update.content)
     const old: VNode = create(target)
     patch(next, old)
 
-    // console.log("NEXT", next)
 
     // Emit relevant events
     let newTarget = document.getElementById(target.id)
@@ -119,13 +129,6 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     target.innerHTML = err.body
   }
 
-  if (reqId != target.dataset.requestId) {
-    console.error("Stale Action! (" + reqId + "):", action)
-    return
-  }
-  else {
-    delete target.dataset.requestId
-  }
 
   // Remove loading and clear add timeout
   clearTimeout(timeout)
@@ -216,8 +219,6 @@ function init() {
 function enrichHyperViews(node: HTMLElement): void {
   // enrich all the hyperviews
   node.querySelectorAll("[id]").forEach((element: HyperView) => {
-    console.log("Found HyperView", element.dataset)
-
     element.runAction = function(action: string) {
       runAction(this, action)
     }.bind(element)

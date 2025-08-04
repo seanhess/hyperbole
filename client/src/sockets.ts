@@ -29,8 +29,8 @@ export class SocketConnection {
 
     sock.addEventListener('error', onConnectError)
 
-    sock.addEventListener('open', (event) => {
-      console.log("Opened", event)
+    sock.addEventListener('open', (_event) => {
+      console.log("Websocket Connected")
       this.isConnected = true
       this.hasEverConnected = true
       this.reconnectDelay = 0
