@@ -26,12 +26,10 @@ instance HyperView Message es where
   data Action Message = Louder Text
     deriving (Generic, ViewAction)
 
-  update (Louder m) = do
-    let new = m <> "!"
+  update (Louder msg) = do
+    let new = msg <> "!"
     pure $ messageView new
 
 messageView :: Text -> View Message ()
-messageView m = do
-  row ~ gap 10 $ do
-    button (Louder m) ~ border 1 . pad 5 $ "Louder"
-    el ~ pad 5 $ text m
+messageView msg = do
+  button (Louder msg) ~ border 1 $ text msg
