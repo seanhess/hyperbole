@@ -71,8 +71,8 @@ socketApp actions pend = do
       -- this is a Hyperbole developer error
       Left e -> liftIO $ putStrLn $ "INTERNAL SOCKET ERROR " <> show e
       Right r -> do
-        as <- async (runRequest conn r)
-        link as
+        _ <- async (runRequest conn r)
+        pure ()
  where
   runRequest conn req = do
     res <- trySync $ runServerSockets conn req $ runHyperbole actions
@@ -81,7 +81,10 @@ socketApp actions pend = do
         -- It's not safe to send any exception over the wire
         -- log it to the console and send the error to the client
         liftIO $ print ex
-        Socket.sendError req conn (serverError "Internal Server Error")
+        res2 <- trySync $ Socket.sendError req conn (serverError "Internal Server Error")
+        case res2 of
+          Left e -> liftIO $ putStrLn $ "Socket Error while sending previous error to client: " <> show e
+          Right _ -> pure ()
       Right _ -> pure ()
 
   receiveRequest :: (IOE :> es, Error SocketError :> es) => Connection -> Eff es Request
