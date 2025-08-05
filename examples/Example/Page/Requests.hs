@@ -96,10 +96,10 @@ instance HyperView ControlResponse es where
     redirect $ pathUri "/hello/redirected"
   update RespondNotFound = do
     _ <- notFound
-    pure $ "This will not be rendered"
+    pure "This will not be rendered"
   update RespondEarlyView = do
-    _ <- respondView ControlResponse $ "Responded early!"
-    pure $ "This will not be rendered"
+    _ <- respondView ControlResponse "Responded early!"
+    pure "This will not be rendered"
 
 responseView :: View ControlResponse ()
 responseView = do

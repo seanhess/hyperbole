@@ -11,7 +11,7 @@ import Web.Hyperbole.HyperView (HyperView (..), ViewId (..), hyperUnsafe)
 import Web.Hyperbole.View.Types
 
 
--- | Respond with the given view, and stop execution
+-- | Respond with the given view immediately, stopping execution
 respondView :: (Hyperbole :> es, HyperView id es) => id -> View id () -> Eff es a
 respondView i vw = do
   let vid = TargetViewId (encodedToText $ toViewId i)
@@ -22,6 +22,11 @@ respondView i vw = do
 respondError :: (Hyperbole :> es) => ResponseError -> Eff es a
 respondError err = do
   send $ RespondNow $ Err err
+
+
+respondErrorView :: (Hyperbole :> es) => Text -> View () () -> Eff es a
+respondErrorView msg vw = do
+  send $ RespondNow $ Err $ ErrCustom msg vw
 
 
 {- | Respond immediately with 404 Not Found
@@ -46,7 +51,7 @@ redirect :: (Hyperbole :> es) => URI -> Eff es a
 redirect = send . RespondNow . Redirect
 
 
--- | Manually set the response to the given view. Normally you would return a 'View' from 'runPage' instead
-view :: (Hyperbole :> es) => View () () -> Eff es Response
-view vw = do
-  pure $ Response (TargetViewId "") vw
+-- | Create a response from a given view. This is rarely used. Normally you will return a view from a handler instead
+viewResponse :: View () () -> Response
+viewResponse =
+  Response (TargetViewId "")

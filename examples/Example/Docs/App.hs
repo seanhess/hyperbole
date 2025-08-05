@@ -27,7 +27,7 @@ router :: (Hyperbole :> es) => AppRoute -> Eff es Response
 router Messages = runPage Messages.page
 router (User cid) = runPage $ Users.page cid
 router Main = do
-  view $ do
+  pure $ viewResponse $ do
     el "click a link below to visit a page"
     route Messages "Messages"
     route (User 1) "User 1"
