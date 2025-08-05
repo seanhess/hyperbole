@@ -37,6 +37,7 @@ instance Route DataRoute where
 
 data StateRoute
   = StateRoot
+  | Actions
   | Effects
   | Query
   | Sessions

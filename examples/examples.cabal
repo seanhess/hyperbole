@@ -67,6 +67,7 @@ executable examples
       Example.Page.Javascript
       Example.Page.Requests
       Example.Page.Simple
+      Example.Page.State.Actions
       Example.Page.State.Effects
       Example.Page.State.Query
       Example.Page.State.Sessions

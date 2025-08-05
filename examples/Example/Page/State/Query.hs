@@ -26,7 +26,7 @@ page = do
   prefs <- query @Preferences
   pure $ exampleLayout (State Query) $ do
     example "Query" "Example/Page/Query.hs" $ do
-      el "Persist state in the query string"
+      el "We can persist state in the query string. This is useful for faceted search, or any time when a user might want to share the url include local state changes"
       col ~ embed $ hyper Contents $ viewContent prefs
 
 data Contents = Contents
@@ -69,6 +69,6 @@ viewMessage msg = do
   col ~ gap 10 . pad 20 . border 1 $ do
     el ~ fontSize 18 . bold $ "Query Message"
     el $ text msg
-    row ~ (gap 10) $ do
+    row ~ gap 10 $ do
       button (SaveMessage "Hello") ~ Style.btnLight $ "Msg: Hello"
       button (SaveMessage "Goodbye") ~ Style.btnLight $ "Msg: Goodbye"

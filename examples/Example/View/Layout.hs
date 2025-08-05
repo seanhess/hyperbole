@@ -89,6 +89,7 @@ exampleMenu current = do
   exampleLink (State StateRoot)
   case current of
     State _ -> do
+      exampleLink (State Actions) ~ sub
       exampleLink (State Effects) ~ sub
       exampleLink (State Query) ~ sub
       exampleLink (State Sessions) ~ sub
@@ -124,6 +125,7 @@ routeTitle (Hello _) = "Hello World"
 routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
 routeTitle (State Effects) = "Effects"
 routeTitle (State StateRoot) = "State"
+routeTitle (State Actions) = "Action Context"
 routeTitle (State Query) = "Query"
 routeTitle (State Sessions) = "Sessions"
 routeTitle (Data DataLists) = "Data Lists"

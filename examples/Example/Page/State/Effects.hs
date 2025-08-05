@@ -18,11 +18,13 @@ page = do
   pure $ do
     exampleLayout (State Effects) $ do
       example "Counter" "Example/Page/State/Effects.hs" $ do
+        el "For all but the simplest cases, we will want to use some sort of Effect to manage our state"
         el $ do
           text "Pages and update functions can run side effects before rendering. Here we add a "
           code "Reader (TVar Int)"
-          text "to track the count"
-        el "Notice that the current count now persists after a browser refresh"
+          text "to track the count. "
+          text "Notice that the current count now persists after a browser refresh"
+        el "Instead of a TVar, you might use a database, or some other external effect"
         col ~ embed $ hyper Counter (viewCount n)
 
 data Counter = Counter

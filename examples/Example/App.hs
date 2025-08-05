@@ -42,7 +42,6 @@ import Example.Page.CSS qualified as CSS
 import Example.Page.Concurrency qualified as Concurrency
 import Example.Page.Contact qualified as Contact
 import Example.Page.Contacts qualified as Contacts
-import Example.Page.Test qualified as Test
 import Example.Page.Counter qualified as Counter
 import Example.Page.DataTable qualified as DataTable
 import Example.Page.Errors qualified as Errors
@@ -51,9 +50,11 @@ import Example.Page.Forms qualified as Forms
 import Example.Page.Intro qualified as Intro
 import Example.Page.Javascript qualified as Javascript
 import Example.Page.Requests qualified as Requests
+import Example.Page.State.Actions qualified as Actions
 import Example.Page.State.Effects qualified as Effects
 import Example.Page.State.Query qualified as Query
 import Example.Page.State.Sessions qualified as Sessions
+import Example.Page.Test qualified as Test
 import Example.Page.Todo qualified as Todo
 import Example.Style qualified as Style
 import Example.View.Layout as Layout (example, exampleLayout, sourceLink)
@@ -120,7 +121,8 @@ app users count = do
   router Requests = runPage Requests.page
   router (State r) =
     case r of
-      StateRoot -> redirect $ routeUri (State Effects)
+      StateRoot -> redirect $ routeUri (State Actions)
+      Actions -> runPage Actions.page
       Effects -> runReader count $ runPage Effects.page
       Sessions -> runPage Sessions.page
       Query -> runPage Query.page

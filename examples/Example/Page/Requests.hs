@@ -91,6 +91,7 @@ instance HyperView ControlResponse es where
     = RedirectAsAction
     | RespondNotFound
     | RespondEarlyView
+    | RespondWithError
     deriving (Generic, ViewAction)
   update RedirectAsAction = do
     redirect $ pathUri "/hello/redirected"
@@ -100,6 +101,10 @@ instance HyperView ControlResponse es where
   update RespondEarlyView = do
     _ <- respondView ControlResponse "Responded early!"
     pure "This will not be rendered"
+  update RespondWithError = do
+    _ <- respondErrorView "Some Custom Error" $ do
+      el ~ color Danger $ "We could not process your request"
+    pure "This will not be rendered"
 
 responseView :: View ControlResponse ()
 responseView = do
@@ -107,3 +112,4 @@ responseView = do
     button RedirectAsAction ~ Style.btn $ "Redirect Me"
     button RespondEarlyView ~ Style.btn $ "Respond Early"
     button RespondNotFound ~ Style.btn' Danger $ "Respond Not Found"
+    button RespondWithError ~ Style.btn' Danger $ "Respond Custom Error"
