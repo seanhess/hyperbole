@@ -56,7 +56,8 @@ runServerWai toDoc req respond =
     response (Err (ErrServer msg)) = do
       respError status500 $ "Server Error: " <> cs msg
     response (Err (ErrCustom _ body)) = do
-      respError status500 (renderLazyByteString body)
+      let out = addDocument (Wai.requestMethod req) (renderLazyByteString body)
+      Wai.responseLBS status500 [contentType ContentHtml] out
     response (Err ErrInternal) = respError status500 "Internal Server Error"
     response (Err ErrAuth) = respError status401 "Unauthorized"
     response (Err (ErrNotHandled e)) = respError status400 $ cs $ errNotHandled e
