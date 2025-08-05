@@ -4,7 +4,7 @@ import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad
 import { actionMessage, ActionMessage, requestId, RequestId, ViewId } from './action'
 import { sendActionHttp } from './http'
 import { setQuery } from "./browser"
-import { parseResponse, Response, LiveUpdate, FetchError } from './response'
+import { parseResponse, Response, LiveUpdate } from './response'
 
 let PACKAGE = require('../package.json');
 
@@ -34,23 +34,8 @@ async function sendAction(reqId: RequestId, msg: ActionMessage): Promise<Respons
 }
 
 
-async function fetchAction(reqId: RequestId, msg: ActionMessage): Promise<Response> {
-  let res = await sendAction(reqId, msg)
-
-  if (res.location) {
-    window.location.href = res.location
-    return // not reachable
-  }
-
-  if (res.query != null) {
-    setQuery(res.query)
-  }
-
-  return res
-}
 
 async function runAction(target: HyperView, action: string, form?: FormData) {
-
 
   if (action === undefined) {
     console.error("Undefined Action!", target, "this is a bug, please report: https://github.com/seanhess/hyperbole")
@@ -76,7 +61,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   target.dataset.requestId = reqId
 
   try {
-    let res: Response = await fetchAction(reqId, msg)
+    let res: Response = await sendAction(reqId, msg)
 
     if (reqId != target.dataset.requestId) {
       let err = new Error()
@@ -87,6 +72,16 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     else {
       delete target.dataset.requestId
     }
+
+    if (res.location) {
+      window.location.href = res.location
+      return // skip the rest of the steps. Do not patch, etc
+    }
+
+    if (res.query != null) {
+      setQuery(res.query)
+    }
+
 
     let update: LiveUpdate = parseResponse(res.body)
 
@@ -126,7 +121,10 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   }
   catch (err) {
     console.error("Caught Error in HyperView (" + target.id + "):\n", err)
-    target.innerHTML = err.body
+
+    // Hyperbole catches handler errors, and the server controls what to display to the user on an error
+    //  but if you manage to crash your parent server process somehow, the response may be empty
+    target.innerHTML = err.body || "<div style='background:red;color:white;padding:10px'>Hyperbole server crashed</div>"
   }
 
 
