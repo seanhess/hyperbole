@@ -102,8 +102,7 @@ instance HyperView ControlResponse es where
     _ <- respondView ControlResponse "Responded early!"
     pure "This will not be rendered"
   update RespondWithError = do
-    _ <- respondErrorView "Some Custom Error" $ do
-      el ~ color Danger $ "We could not process your request"
+    _ <- respondError "Some custom error"
     pure "This will not be rendered"
 
 responseView :: View ControlResponse ()
@@ -112,4 +111,4 @@ responseView = do
     button RedirectAsAction ~ Style.btn $ "Redirect Me"
     button RespondEarlyView ~ Style.btn $ "Respond Early"
     button RespondNotFound ~ Style.btn' Danger $ "Respond Not Found"
-    button RespondWithError ~ Style.btn' Danger $ "Respond Custom Error"
+    button RespondWithError ~ Style.btn' Danger $ "Respond Error"

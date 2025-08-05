@@ -105,6 +105,7 @@ exampleMenu current = do
   exampleLink Todos
   exampleLink (Contacts ContactsAll)
   exampleLink Javascript
+  exampleLink Errors
  where
   -- example Errors
 
@@ -132,6 +133,7 @@ routeTitle (Data DataLists) = "Data Lists"
 routeTitle (Data SortableTable) = "Sortable Table"
 routeTitle (Data Filter) = "Filters"
 routeTitle (Data Autocomplete) = "Autocomplete"
+routeTitle Errors = "Error Handling"
 routeTitle Todos = "TodoMVC"
 routeTitle r = cs $ toWords $ fromHumps $ show r
 
@@ -141,7 +143,7 @@ pageDescription = \case
   --   el "HyperViews update independently. In this example, two Message HyperViews are embedded into the same page with different ids."
   --   el "Try inspecting the page in the Chrome dev tools and watching both the DOM and messages"
   Todos ->
-    row ~ (gap 5) $ do
+    row ~ gap 5 $ do
       el "Implementation of "
       link [uri|https://todomvc.com/|] "TodoMVC" ~ Style.link
   Contacts _ -> do
