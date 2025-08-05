@@ -86,7 +86,7 @@ formView val = do
 
     field f.age ~ valStyle val.age $ do
       label "Age"
-      input Number @ placeholder "age" . value "0" ~ Style.input
+      input Number @ placeholder "age" ~ Style.input
       el $ invalidText val.age
 
     field f.pass1 ~ valStyle val.pass1 $ do

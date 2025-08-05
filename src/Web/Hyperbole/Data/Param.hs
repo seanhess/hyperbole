@@ -94,14 +94,18 @@ class FromParam a where
 
 -- What is the default instance?
 instance FromParam Int where
+  parseParam (ParamValue "") = pure 0
   parseParam (ParamValue t) = parseQueryParam t
 instance FromParam Integer where
+  parseParam (ParamValue "") = pure 0
   parseParam (ParamValue t) = parseQueryParam t
 instance FromParam Float where
+  parseParam (ParamValue "") = pure 0
   parseParam (ParamValue t) = parseQueryParam t
 instance FromParam Text where
   parseParam (ParamValue t) = parseQueryParam t
 instance FromParam Double where
+  parseParam (ParamValue "") = pure 0
   parseParam (ParamValue t) = parseQueryParam t
 instance FromParam Word where
   parseParam (ParamValue t) = parseQueryParam t
@@ -114,6 +118,7 @@ instance FromParam Word32 where
 instance FromParam Word64 where
   parseParam (ParamValue t) = parseQueryParam t
 instance FromParam Bool where
+  parseParam (ParamValue "") = pure False
   parseParam (ParamValue t) = parseQueryParam t
 instance FromParam Char where
   parseParam (ParamValue t) = parseQueryParam t
