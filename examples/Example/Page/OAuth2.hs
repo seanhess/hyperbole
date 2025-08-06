@@ -197,17 +197,6 @@ renderTokenTable tok = table (formatToken tok) $ do
   tcol (th "Field" ~ textAlign AlignLeft) (td . text . fst)
   tcol (th "Value" ~ textAlign AlignLeft) (td . text . snd)
 
--- NOTE: Moving "col ~ gap 15" right after "hyper Contents" like so:
--- @
--- hyper Contents $ col ~ gap 15 $ viewContent ...
--- @
--- has unintended behaviour. "col ~ gap 15" for some reason does not have an
--- effect once the user logs in and then logs out.
---
--- It looks like everything after "hyper Contents" is replaced on a change. So
--- the behaviour described above makes sense in that case and I have misused the
--- view creation.
---
 viewContent :: ViewState -> View Contents ()
 viewContent Unauthorized = col ~ gap 15 $ unauthorizedContent
 viewContent (PreAuthorized etok) =
