@@ -49,6 +49,12 @@ dependencies:
   - websockets
   - cookie
   - hyperbole
+  - hoauth2
+  - uri-bytestring
+  - network-uri
+  - http-client
+  - http-client-tls
+  - mtl
 
 executables:
   examples:

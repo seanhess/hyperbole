@@ -106,6 +106,7 @@ exampleMenu current = do
   exampleLink (Contacts ContactsAll)
   exampleLink Javascript
   exampleLink Errors
+  exampleLink OAuth2
  where
   -- example Errors
 
@@ -135,6 +136,7 @@ routeTitle (Data Filter) = "Filters"
 routeTitle (Data Autocomplete) = "Autocomplete"
 routeTitle Errors = "Error Handling"
 routeTitle Todos = "TodoMVC"
+routeTitle OAuth2 = "OAuth2"
 routeTitle r = cs $ toWords $ fromHumps $ show r
 
 pageDescription :: AppRoute -> View c ()
