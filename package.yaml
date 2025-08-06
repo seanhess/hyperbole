@@ -49,6 +49,7 @@ dependencies:
   - effectful >= 2.4 && <3
   - text >= 1.2 && <3
   - time >= 1.12 && <2
+  - random
   - string-interpolate >= 0.3 && <0.4
   - file-embed >= 0.0.10 && <0.1
   - http-api-data >= 0.6 && <0.7
@@ -63,6 +64,8 @@ dependencies:
   - websockets >= 0.12 && <0.14
   - cookie >=0.4 && <0.6
   - filepath
+  - http-client
+  - http-client-tls
 
 library:
   source-dirs: src

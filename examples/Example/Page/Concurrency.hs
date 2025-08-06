@@ -8,12 +8,12 @@ import Effectful
 import Example.AppRoute
 import Example.Colors
 import Example.Effects.Debug
-import Example.Effects.Random
 import Example.Style as Style
 import Example.View.Inputs (progressBar)
 import Example.View.Layout (embed, example, exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Web.Hyperbole.Effect.GenRandom
 
 page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Polling, LazyData, Progress])
 page = do

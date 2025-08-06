@@ -45,7 +45,6 @@ executable examples
       Example.Docs.State
       Example.Docs.ViewFunctions
       Example.Effects.Debug
-      Example.Effects.Random
       Example.Effects.Todos
       Example.Effects.Users
       Example.Page.Autocomplete

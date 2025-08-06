@@ -6,7 +6,7 @@ import Data.String.Conversions (cs)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Web.FormUrlEncoded (Form, urlDecodeForm)
-import Web.Hyperbole.Data.URI (Path)
+import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Server
 

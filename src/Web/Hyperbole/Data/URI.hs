@@ -17,6 +17,7 @@ module Web.Hyperbole.Data.URI
   , queryString
   , parseQuery
   , queryInsert
+  , renderQuery
   , Query
   , QueryItem
   , (./.)
