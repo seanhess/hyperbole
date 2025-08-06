@@ -10,9 +10,9 @@ module Example.Page.OAuth2
 -- Imports
 --------------------------------------------------------------------------------
 
+import Control.Exception (Exception, throwIO)
 import Control.Monad (replicateM, when)
 import Control.Monad.Except (runExceptT)
-import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Network.URI (parseURI)
 import System.Environment (getEnv)
@@ -50,6 +50,16 @@ data RandomState = RandomState Text
 data Token = Token OAuth2.OAuth2Token
   deriving (Generic, Show, ToJSON, FromJSON, Session)
 
+data URIParseError = URIParseError String
+  deriving (Show)
+
+instance Exception URIParseError
+
+data TokenResponseError = TokenResponseError OAuth2.TokenResponseErrorCode
+  deriving (Show)
+
+instance Exception TokenResponseError
+
 --------------------------------------------------------------------------------
 -- Environment
 --------------------------------------------------------------------------------
@@ -69,7 +79,7 @@ getOAuth2Config =
   getEnvURIRef var = do
     res <- BS.pack <$> getEnv var
     case URI.parseURI URI.strictURIParserOptions res of
-      Left err -> error $ "getEnvURIRef: " ++ show err
+      Left _ -> throwIO (URIParseError "getOAuth2Config")
       Right val -> pure val
 
 getOAuth2PageEnv :: HTTP.Manager -> IO OAuth2PageEnv
@@ -84,9 +94,9 @@ getOAuth2PageEnv httpManager =
 --
 -- NOTE: It is more efficient to construct the URI record but for the time being
 -- we'll do things in a simple and stupid way.
-toURI :: URI.URIRef URI.Absolute -> URI
+toURI :: URI.URIRef URI.Absolute -> IO URI
 toURI uriRef =
-  fromMaybe (error "toURI: Unable to parse URI")
+  maybe (throwIO (URIParseError "toURI")) pure
     $ parseURI
     $ BS.unpack
     $ BSL.toStrict
@@ -99,12 +109,13 @@ redirectToAuthServer = do
   randomState <- replicateM 15 (randomRIO ('a', 'z'))
   conf <- ask @OAuth2PageEnv
   saveSession (RandomState (T.pack randomState))
-  redirect $ toURI $
+  redirectURI <- liftIO $ toURI $
     OAuth2.authorizationUrlWithParams
       [ ("scope", "email")
       , ("state", BS.pack randomState)
       ]
       conf.opeOAuth2Config
+  redirect redirectURI
 
 -- NOTE:
 --
@@ -123,8 +134,7 @@ lookupExchangeToken = do
   pure $ do
     respState <- mRespState
     (RandomState savedState) <- mSavedState
-    when (respState /= savedState)
-      $ error "parseExchangeToken: The state does not match"
+    when (respState /= savedState) $ Nothing
     code_ <- mCode
     pure $ OAuth2.ExchangeToken code_
 
@@ -148,7 +158,7 @@ instance (Reader OAuth2PageEnv :> es, IOE :> es) => HyperView Contents es where
       runExceptT $
         OAuth2.fetchAccessToken conf.opeHTTPManager conf.opeOAuth2Config etok
     case res of
-      Left err -> error $ show err
+      Left err -> liftIO $ throwIO $ TokenResponseError err.tokenResponseError
       Right oauthTok -> do
         saveSession (Token oauthTok)
         pure $ viewContent $ Authorized oauthTok
