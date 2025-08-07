@@ -23,6 +23,7 @@ module Web.Hyperbole.Data.URI
   , (./.)
   , (.?.)
   , cleanSegment
+  , Endpoint (..)
   )
 where
 
@@ -120,3 +121,7 @@ pathToText p =
   pathPrefix :: Path -> Text
   pathPrefix p' =
     if p'.isRoot then "/" else ""
+
+
+-- | A URI with a phantom type to distinguish different endpoints
+newtype Endpoint a = Endpoint {uri :: URI}

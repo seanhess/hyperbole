@@ -27,6 +27,7 @@ executable examples
       Example.AppRoute
       Example.Cache
       Example.Colors
+      Example.Config
       Example.Data.ProgrammingLanguage
       Example.Docs.App
       Example.Docs.BasicPage

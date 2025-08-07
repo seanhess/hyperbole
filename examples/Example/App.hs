@@ -34,6 +34,7 @@ import Effectful.State.Static.Local
 import Example.AppRoute
 import Example.Cache (clientCache)
 import Example.Colors
+import Example.Config
 import Example.Effects.Debug as Debug
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
@@ -63,6 +64,7 @@ import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore
 import GHC.Generics (Generic)
 import GHC.Word (Word32)
 import Network.HTTP.Client qualified as HTTP
+import Network.HTTP.Client.TLS qualified as HTTPS
 import Network.HTTP.Types (Header, Method, QueryItem, hCacheControl, methodPost, status200, status404)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
@@ -91,28 +93,27 @@ run = do
   putStrLn $ "Starting Examples on http://localhost:" <> show port
 
   users <- Users.initUsers
-  (count, mgr, oauth) <- runEff $ runEnvironment $ do
+  (count, config) <- runEff $ runEnvironment $ do
     c <- runConcurrent Effects.initCounter
-    m <- OAuth2.initManager
-    o <- OAuth2.initConfigEnv
-    pure (c, m, o)
+    a <- getAppConfigEnv
+    pure (c, a)
 
   cache <- clientCache
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
       Static.staticPolicy (addBase "examples/static") $
-        app users count mgr oauth
+        app config users count
 
-app :: UserStore -> TVar Int -> HTTP.Manager -> OAuth2.Config -> Application
-app users count mgr oauth = do
+app :: AppConfig -> UserStore -> TVar Int -> Application
+app config users count = do
   liveApp
     toDocument
     (runApp . routeRequest $ router)
  where
-  runApp :: (Hyperbole :> es, IOE :> es) => Eff (OAuth2 : GenRandom : Concurrent : Debug : Users : Todos : es) a -> Eff es a
-  runApp = runTodosSession . runUsersIO users . runDebugIO . runConcurrent . runRandom . runOAuth2 oauth mgr
+  runApp :: (Hyperbole :> es, IOE :> es) => Eff (OAuth2 : GenRandom : Concurrent : Debug : Users : Todos : Reader AppConfig : es) a -> Eff es a
+  runApp = runReader config . runTodosSession . runUsersIO users . runDebugIO . runConcurrent . runRandom . runOAuth2 config.oauth config.manager
 
-  router :: forall es. (Hyperbole :> es, OAuth2 :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es, GenRandom :> es) => AppRoute -> Eff es Response
+  router :: forall es. (Hyperbole :> es, OAuth2 :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es, GenRandom :> es, Reader AppConfig :> es) => AppRoute -> Eff es Response
   router (Hello h) = runPage $ hello h
   router (Contacts (Contact uid)) = Contact.response uid
   router (Contacts ContactsAll) = runPage Contacts.page
@@ -140,7 +141,7 @@ app users count mgr oauth = do
   router Todos = runPage Todo.page
   router Javascript = runPage Javascript.page
   router OAuth2 = runPage OAuth2.page
-  router OAuth2Authenticate = OAuth2.checkAuth
+  router OAuth2Authenticate = OAuth2.handleRedirect
   router Simple = redirect (routeUri Intro)
   router Counter = redirect (routeUri Intro)
   router Test = runPage Test.page
