@@ -5,6 +5,11 @@
   padding-right: 10px;
 }
 
+.item:hover {
+  border-color: blue;
+  color: blue;
+}
+
 .parent {
   display: flex;
   flex-direction: row;

@@ -11,11 +11,11 @@ page = do
   pure $ exampleLayout Interactivity $ do
     example "Events" "Example/Page/Interactivity/Events.hs" $ do
       el $ do
-        text "Hyperbole provides various events that can be tied to specific actions. Up to this point, we've only used "
-        code "onClick"
-        text " via "
+        text "Hyperbole provides various events that can be tied to specific actions. Up to this point, we've only used them via the higher-level views like "
         code "button"
-        text ". There are several others. In this example we use "
+        text " and "
+        code "search"
+        text ". They can also be used directly. In this example we use "
         code "onMouseEnter"
         text " and "
         code "onMouseLeave"
