@@ -36,9 +36,6 @@ runServerWai toDoc req respond =
   reinterpret runLocal $ \_ -> \case
     LoadRequest -> do
       fromWaiRequest req
-    RemoteAdd n -> do
-      -- BUG:  impelment
-      error "NOT IMPLEMENTED"
     SendResponse client r -> do
       rr <- liftIO $ sendResponse client r
       put (Just rr)

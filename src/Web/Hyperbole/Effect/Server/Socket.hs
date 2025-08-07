@@ -39,17 +39,6 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
   -- load the request
   LoadRequest -> do
     loadRequest
-  RemoteAdd n -> do
-    -- TODO: send an out-of-band message to the client block, and wait for a response
-    --  we can certainly send a message here...
-    --  but how do we wait for the response?
-    --  1. create a new empty mvar
-    --  A. if the server gets a message that's tagged as the other thing, throw it into the MVar
-    --  2. send message to client
-    --  3. wait for the mvar
-    --
-    --  I'm worried about leaks, but I guess those can happen regardless
-    pure () -- receiveRequest conn
   SendResponse client res -> do
     req <- loadRequest
     -- cannot be called before loading the request!
