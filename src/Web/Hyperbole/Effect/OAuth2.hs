@@ -18,7 +18,6 @@ import Effectful.Exception
 import GHC.Generics (Generic)
 import Network.HTTP.Client (HttpException, Request (..), RequestBody (..))
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Client.TLS (newTlsManager)
 import Network.HTTP.Types (hContentType)
 import Network.URI (parseURI)
 import Text.Casing (quietSnake)
@@ -29,7 +28,7 @@ import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
 import Web.Hyperbole.Effect.Response (respondError)
 import Web.Hyperbole.Effect.Server
-import Web.Hyperbole.Effect.Session (Session (..), deleteSession, lookupSession, saveSession, session)
+import Web.Hyperbole.Effect.Session (Session (..), deleteSession, saveSession, session)
 
 
 -- TODO: could all hyperbole applications have an oauth2 redirect endpoint?

@@ -106,13 +106,11 @@ executable examples
     , effectful
     , file-embed
     , foreign-store
-    , hoauth2
     , http-api-data
     , http-client
     , http-client-tls
     , http-types
     , hyperbole
-    , mtl
     , network
     , network-uri
     , random
@@ -121,7 +119,6 @@ executable examples
     , string-interpolate
     , text
     , time
-    , uri-bytestring
     , wai
     , wai-middleware-static
     , wai-websockets
