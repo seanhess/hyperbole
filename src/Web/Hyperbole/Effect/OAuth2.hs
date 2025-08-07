@@ -21,7 +21,6 @@ import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types (hContentType)
 import Network.URI (parseURI)
 import Text.Casing (quietSnake)
-import Web.Hyperbole.Data.Param (FromParam)
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Hyperbole
@@ -66,7 +65,7 @@ runOAuth2
   -> Eff es a
 runOAuth2 cfg mgr = interpret $ \_ -> \case
   AuthUrl red scopes -> do
-    state <- Token <$> genRandomToken 6
+    state <- genRandomToken 6
     let url = authorizationUrl cfg.authorize cfg.clientId red scopes state
     saveSession $ AuthFlow red state
     pure url
@@ -99,10 +98,6 @@ getConfigEnv = do
 
 
 -- Types -------------------------------------------------
-
-newtype Token a = Token {value :: Text}
-  deriving newtype (FromJSON, ToJSON, FromParam, Eq, Show)
-
 
 newtype Scopes = Scopes [Text]
   deriving (Show)
