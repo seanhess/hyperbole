@@ -42,7 +42,7 @@ instance HyperView CheckRequest es where
 
 viewRequest :: Request -> View CheckRequest ()
 viewRequest r = do
-  col ~ gap 10 $ do
+  col ~ gap 10 @ onLoad Refresh 1000 $ do
     el $ do
       text "Host: "
       text $ cs $ show r.host
@@ -55,8 +55,6 @@ viewRequest r = do
     el $ do
       text "Cookies: "
       text $ cs $ show r.cookies
-
-    button Refresh ~ Style.btnLight $ "Refresh"
 
 -- CLIENT -------------------------------------------------
 
@@ -79,7 +77,7 @@ instance HyperView ControlClient es where
 
 viewClient :: View ControlClient ()
 viewClient = do
-  button SetQuery ~ Style.btn $ "Set Query String"
+  button SetQuery ~ Style.btn $ "Set Query String from another HyperView"
 
 -- RESPONSE -------------------------------------------------
 

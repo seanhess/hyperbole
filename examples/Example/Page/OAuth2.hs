@@ -26,7 +26,7 @@ import Web.Hyperbole.Effect.Server.Response (ResponseError (ErrAuth))
 --------------------------------------------------------------------------------
 
 -- This code belongs in an application-wide module
--- Using a mock oauth server: https://app.beeceptor.com/mock-server/oauth-mock
+-- This example uses a mock OAuth2 server: https://app.beeceptor.com/mock-server/oauth-mock
 
 data UserSession = UserSession
   { auth :: OAuth2.Authenticated
@@ -86,7 +86,7 @@ page = do
   pure $ exampleLayout Route.OAuth2 $ do
     example "OAuth2" "Example/Page/OAuth2.hs" $ do
       el "Hyperbole provides some helpers to make OAuth2 easier. This is done in 2 steps:"
-      el "1. Initiate the login via the OAuth given a redirect url"
+      el "1. Initiate the login via the OAuth provider given a redirect url"
       el "2. After the redirect, the library validates the response and fetches an access token from the oauth provider."
       el "The developer can then make authenticated requests, and store a user session"
       col ~ embed $ hyper Contents $ viewContents muser
