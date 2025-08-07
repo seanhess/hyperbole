@@ -2,8 +2,11 @@
 
 ## 0.5.0 -- _____
 
-* fixed source links in examples
+* Major improvements to examples
 * error handling, custom errors
+* Web.Hyperbole.Effect.OAuth2
+* Web.Hyperbole.Effect.GenRandom
+* OAuth2 example
 
 ## 0.4.3 -- 2024-01-31
 

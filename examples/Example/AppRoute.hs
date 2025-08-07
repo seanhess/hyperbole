@@ -22,6 +22,7 @@ data AppRoute
   | Errors
   | Javascript
   | OAuth2
+  | OAuth2Authenticate
   | Test
   deriving (Eq, Generic, Show)
 instance Route AppRoute where

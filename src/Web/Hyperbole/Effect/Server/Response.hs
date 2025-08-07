@@ -30,7 +30,7 @@ data ResponseError
   | ErrCustom Text (View () ())
   | ErrInternal
   | ErrNotHandled (Event TargetViewId Text)
-  | ErrAuth
+  | ErrAuth Text
 instance Show ResponseError where
   show = \case
     ErrParse m -> "ErrParse " <> cs m
@@ -40,7 +40,7 @@ instance Show ResponseError where
     ErrCustom m _view -> "ErrCustom " <> cs m
     ErrInternal -> "ErrInternal"
     ErrNotHandled ev -> "ErrNotHandled " <> show ev
-    ErrAuth -> "ErrAuth"
+    ErrAuth m -> "ErrAuth " <> cs m
 instance IsString ResponseError where
   fromString s = ErrServer (cs s)
 
@@ -70,14 +70,14 @@ instance (Show act, Show id) => Show (Event id act) where
 
 lookupEvent :: Query -> Maybe (Event TargetViewId Text)
 lookupEvent q = do
-  viewId <- TargetViewId <$> lookupParam "hyp-id" q
-  action <- lookupParam "hyp-action" q
+  viewId <- TargetViewId <$> lookupParamQueryString "hyp-id" q
+  action <- lookupParamQueryString "hyp-action" q
   pure $ Event{viewId, action}
 
 
 -- | Lower-level lookup straight from the request
-lookupParam :: ByteString -> Query -> Maybe Text
-lookupParam key q = do
+lookupParamQueryString :: ByteString -> Query -> Maybe Text
+lookupParamQueryString key q = do
   mval <- L.lookup key q
   val <- mval
   pure $ cs val

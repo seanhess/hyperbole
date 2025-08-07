@@ -28,13 +28,14 @@ import Data.Version (showVersion)
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Dispatch.Dynamic
+import Effectful.Environment (runEnvironment)
 import Effectful.Reader.Dynamic
 import Effectful.State.Static.Local
 import Example.AppRoute
 import Example.Cache (clientCache)
 import Example.Colors
+import Example.Config
 import Example.Effects.Debug as Debug
-import Example.Effects.Random (GenRandom, runRandom)
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
 import Example.Page.Autocomplete qualified as Autocomplete
@@ -62,7 +63,8 @@ import Example.View.Layout as Layout (example, exampleLayout, sourceLink)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
 import GHC.Generics (Generic)
 import GHC.Word (Word32)
-import Network.HTTP.Client.TLS qualified as TLS
+import Network.HTTP.Client qualified as HTTP
+import Network.HTTP.Client.TLS qualified as HTTPS
 import Network.HTTP.Types (Header, Method, QueryItem, hCacheControl, methodPost, status200, status404)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
@@ -75,8 +77,10 @@ import System.Environment qualified as SE
 import System.IO (BufferMode (LineBuffering), hSetBuffering, stdout)
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.Application (waiApp)
+import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Handler (RunHandlers)
+import Web.Hyperbole.Effect.OAuth2 (OAuth2, runOAuth2)
+import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
 import Web.Hyperbole.Effect.Server (Request (..))
 
 run :: IO ()
@@ -89,24 +93,27 @@ run = do
   putStrLn $ "Starting Examples on http://localhost:" <> show port
 
   users <- Users.initUsers
-  count <- runEff $ runConcurrent Effects.initCounter
-  ope <- OAuth2.getOAuth2PageEnv =<< TLS.newTlsManager
+  (count, config) <- runEff $ runEnvironment $ do
+    c <- runConcurrent Effects.initCounter
+    a <- getAppConfigEnv
+    pure (c, a)
+
   cache <- clientCache
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
       Static.staticPolicy (addBase "examples/static") $
-        app users count ope
+        app config users count
 
-app :: UserStore -> TVar Int -> OAuth2.OAuth2PageEnv -> Application
-app users count ope = do
+app :: AppConfig -> UserStore -> TVar Int -> Application
+app config users count = do
   liveApp
     toDocument
     (runApp . routeRequest $ router)
  where
-  runApp :: (Hyperbole :> es, IOE :> es) => Eff (GenRandom : Concurrent : Debug : Users : Todos : es) a -> Eff es a
-  runApp = runTodosSession . runUsersIO users . runDebugIO . runConcurrent . runRandom
+  runApp :: (Hyperbole :> es, IOE :> es) => Eff (OAuth2 : GenRandom : Concurrent : Debug : Users : Todos : Reader AppConfig : es) a -> Eff es a
+  runApp = runReader config . runTodosSession . runUsersIO users . runDebugIO . runConcurrent . runRandom . runOAuth2 config.oauth config.manager
 
-  router :: forall es. (Hyperbole :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es, GenRandom :> es) => AppRoute -> Eff es Response
+  router :: forall es. (Hyperbole :> es, OAuth2 :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es, GenRandom :> es, Reader AppConfig :> es) => AppRoute -> Eff es Response
   router (Hello h) = runPage $ hello h
   router (Contacts (Contact uid)) = Contact.response uid
   router (Contacts ContactsAll) = runPage Contacts.page
@@ -133,7 +140,8 @@ app users count ope = do
   router AtomicCSS = runPage CSS.page
   router Todos = runPage Todo.page
   router Javascript = runPage Javascript.page
-  router OAuth2 = runReader ope $ runPage $ OAuth2.page
+  router OAuth2 = runPage OAuth2.page
+  router OAuth2Authenticate = OAuth2.handleRedirect
   router Simple = redirect (routeUri Intro)
   router Counter = redirect (routeUri Intro)
   router Test = runPage Test.page

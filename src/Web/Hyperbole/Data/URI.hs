@@ -17,11 +17,13 @@ module Web.Hyperbole.Data.URI
   , queryString
   , parseQuery
   , queryInsert
+  , renderQuery
   , Query
   , QueryItem
   , (./.)
   , (.?.)
   , cleanSegment
+  , Endpoint (..)
   )
 where
 
@@ -119,3 +121,7 @@ pathToText p =
   pathPrefix :: Path -> Text
   pathPrefix p' =
     if p'.isRoot then "/" else ""
+
+
+-- | A URI with a phantom type to distinguish different endpoints
+newtype Endpoint a = Endpoint {uri :: URI}

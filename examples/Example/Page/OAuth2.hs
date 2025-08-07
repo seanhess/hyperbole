@@ -1,242 +1,149 @@
+{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Page.OAuth2
-  ( page
-  , OAuth2PageEnv
-  , getOAuth2PageEnv
-  ) where
+module Example.Page.OAuth2 where
 
---------------------------------------------------------------------------------
--- Imports
---------------------------------------------------------------------------------
-
-import Control.Exception (Exception, throwIO)
-import Control.Monad (replicateM, when)
-import Control.Monad.Except (runExceptT)
-import Data.Text (Text)
-import Network.URI (parseURI)
-import System.Environment (getEnv)
-import System.Random (randomRIO)
-
-import Data.ByteString.Builder qualified as BB
-import Data.ByteString.Char8 qualified as BS
-import Data.ByteString.Lazy qualified as BSL
-import Data.Text qualified as T
-import Example.AppRoute qualified as Route
-import Example.Style qualified as Style
-import Network.HTTP.Client qualified as HTTP
-import Network.OAuth.OAuth2 qualified as OAuth2
-import URI.ByteString qualified as URI
-
+import Data.Aeson (eitherDecode)
+import Data.String.Conversions (cs)
+import Data.Text (Text, pack, unpack)
 import Effectful
 import Effectful.Reader.Dynamic
+import Example.AppRoute qualified as Route
+import Example.Config (AppConfig (..))
+import Example.Style qualified as Style
 import Example.View.Layout
+import Network.HTTP.Client qualified as HTTP
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Web.Hyperbole.Data.URI (Endpoint (..), Path (..), pathToText)
+import Web.Hyperbole.Effect.OAuth2 (Code, OAuth2, Token (..))
+import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
+import Web.Hyperbole.Effect.Server.Response (ResponseError (ErrAuth))
 
 --------------------------------------------------------------------------------
--- Types
+-- App Specific Login
 --------------------------------------------------------------------------------
 
-data OAuth2PageEnv = OAuth2PageEnv
-  { opeOAuth2Config :: OAuth2.OAuth2
-  , opeHTTPManager :: HTTP.Manager
+-- This code belongs in an application-wide module
+-- Using a mock oauth server: https://app.beeceptor.com/mock-server/oauth-mock
+
+data UserSession = UserSession
+  { auth :: OAuth2.Authenticated
+  , email :: Text
   }
+  deriving (Generic, ToJSON, FromJSON)
+instance Session UserSession where
+  -- we want it to work on any page, not just this one
+  cookiePath = Just []
 
--- TODO: Add expiry to this state
-data RandomState = RandomState Text
-  deriving (Generic, Show, ToJSON, FromJSON, Session)
+openLogin :: (Hyperbole :> es, OAuth2 :> es, Reader AppConfig :> es) => Eff es a
+openLogin = do
+  Endpoint appRoot <- (.endpoint) <$> ask @AppConfig
+  let redirectUrl = appRoot{uriPath = unpack $ pathToText $ Path True $ routePath Route.OAuth2Authenticate}
+  u <- OAuth2.authUrl redirectUrl "email"
+  redirect u
 
-data Token = Token OAuth2.OAuth2Token
-  deriving (Generic, Show, ToJSON, FromJSON, Session)
+logout :: (Hyperbole :> es) => Eff es ()
+logout = deleteSession @UserSession
 
-data URIParseError = URIParseError String
-  deriving (Show)
+-- | Target of the redirect after the user logs in via OAuth2
+handleRedirect :: (Hyperbole :> es, OAuth2 :> es, Reader AppConfig :> es, IOE :> es) => Eff es Response
+handleRedirect = do
+  authCode <- OAuth2.validateCode
+  auth <- OAuth2.exchangeAuth authCode
+  info <- fetchUserInfo authCode
+  saveSession @UserSession $ UserSession auth info.email
+  redirect $ routeUri Route.OAuth2
 
-instance Exception URIParseError
+data GithubUserInfo = GithubUserInfo
+  { email :: Text
+  }
+  deriving (Generic, FromJSON, Show)
 
-data TokenResponseError = TokenResponseError OAuth2.TokenResponseErrorCode
-  deriving (Show)
-
-instance Exception TokenResponseError
-
---------------------------------------------------------------------------------
--- Environment
---------------------------------------------------------------------------------
-
-getEnvText :: String -> IO Text
-getEnvText = fmap T.pack . getEnv
-
-getOAuth2Config :: IO OAuth2.OAuth2
-getOAuth2Config =
-  OAuth2.OAuth2
-    <$> getEnvText "OAUTH2_CLIENT_ID"
-    <*> getEnvText "OAUTH2_CLIENT_SECRET"
-    <*> getEnvURIRef "OAUTH2_AUTHORIZE_ENDPOINT"
-    <*> getEnvURIRef "OAUTH2_TOKEN_ENDPOINT"
-    <*> getEnvURIRef "OAUTH2_REDIRECT_URI"
-  where
-  getEnvURIRef var = do
-    res <- BS.pack <$> getEnv var
-    case URI.parseURI URI.strictURIParserOptions res of
-      Left _ -> throwIO (URIParseError "getOAuth2Config")
-      Right val -> pure val
-
-getOAuth2PageEnv :: HTTP.Manager -> IO OAuth2PageEnv
-getOAuth2PageEnv httpManager =
-  OAuth2PageEnv <$> getOAuth2Config <*> pure httpManager
+-- | Example authenticated request using an oauth access token. in a real app, this should be in an external effect, not IOE
+fetchUserInfo :: (IOE :> es, Reader AppConfig :> es, Hyperbole :> es) => Token Code -> Eff es GithubUserInfo
+fetchUserInfo (Token authCode) = do
+  app <- ask @AppConfig
+  req <- HTTP.parseRequest "https://oauth-mock.mock.beeceptor.com/userinfo/github"
+  res <- liftIO (HTTP.httpLbs (HTTP.applyBearerAuth (cs authCode) req) app.manager)
+  case eitherDecode @GithubUserInfo (HTTP.responseBody res) of
+    Left e -> respondError $ ErrAuth $ "Could not parse user info: " <> pack (show e)
+    Right info -> do
+      liftIO $ putStrLn "GOT"
+      liftIO $ print info
+      pure info
 
 --------------------------------------------------------------------------------
--- Authentication
+-- Page / Views
 --------------------------------------------------------------------------------
 
--- Convert URIRef Absolute (uri-bytestring) to URI (network-uri)
---
--- NOTE: It is more efficient to construct the URI record but for the time being
--- we'll do things in a simple and stupid way.
-toURI :: URI.URIRef URI.Absolute -> IO URI
-toURI uriRef =
-  maybe (throwIO (URIParseError "toURI")) pure
-    $ parseURI
-    $ BS.unpack
-    $ BSL.toStrict
-    $ BB.toLazyByteString
-    $ URI.serializeURIRef uriRef
-
-redirectToAuthServer ::
-  (Reader OAuth2PageEnv :> es, Hyperbole :> es, IOE :> es) => Eff es a
-redirectToAuthServer = do
-  randomState <- replicateM 15 (randomRIO ('a', 'z'))
-  conf <- ask @OAuth2PageEnv
-  saveSession (RandomState (T.pack randomState))
-  redirectURI <- liftIO $ toURI $
-    OAuth2.authorizationUrlWithParams
-      [ ("scope", "email")
-      , ("state", BS.pack randomState)
-      ]
-      conf.opeOAuth2Config
-  redirect redirectURI
-
--- NOTE:
---
--- 1. @lookupParam @String "state"@ does not work. This is because of how
--- `FromParam` is implemented on a "[Char]" type. Although the behaviour seems
--- reasonable, it was confusing.
---
--- 2. Using "deleteParam" in "setup" does not work, but adding "deleteParam" in
--- the "update" works.
---
-lookupExchangeToken :: (Hyperbole :> es) => Eff es (Maybe OAuth2.ExchangeToken)
-lookupExchangeToken = do
-  mSavedState <- lookupSession @RandomState
-  mRespState <- lookupParam "state"
-  mCode <- lookupParam "code"
-  pure $ do
-    respState <- mRespState
-    (RandomState savedState) <- mSavedState
-    when (respState /= savedState) $ Nothing
-    code_ <- mCode
-    pure $ OAuth2.ExchangeToken code_
-
---------------------------------------------------------------------------------
--- Views
---------------------------------------------------------------------------------
+page
+  :: (Hyperbole :> es, OAuth2 :> es, Reader AppConfig :> es)
+  => Eff es (Page '[Contents])
+page = do
+  muser <- lookupSession @UserSession
+  pure $ exampleLayout Route.OAuth2 $ do
+    example "OAuth2" "Example/Page/OAuth2.hs" $ do
+      el "Hyperbole provides some helpers to make OAuth2 easier. This is done in 2 steps:"
+      el "1. Initiate the login via the OAuth given a redirect url"
+      el "2. After the redirect, the library validates the response and fetches an access token from the oauth provider."
+      el "The developer can then make authenticated requests, and store a user session"
+      col ~ embed $ hyper Contents $ viewContents muser
 
 data Contents = Contents
   deriving (Generic, ViewId)
 
-instance (Reader OAuth2PageEnv :> es, IOE :> es) => HyperView Contents es where
+instance (OAuth2 :> es, Reader AppConfig :> es) => HyperView Contents es where
   data Action Contents
-    = FetchExchangeToken
-    | FetchAccessToken OAuth2.ExchangeToken
-    | ClearAccessToken
+    = Logout
+    | Login
     deriving (Generic, ViewAction)
-  update FetchExchangeToken = redirectToAuthServer
-  update (FetchAccessToken etok) = do
-    conf <- ask @OAuth2PageEnv
-    res <-
-      runExceptT $
-        OAuth2.fetchAccessToken conf.opeHTTPManager conf.opeOAuth2Config etok
-    case res of
-      Left err -> liftIO $ throwIO $ TokenResponseError err.tokenResponseError
-      Right oauthTok -> do
-        saveSession (Token oauthTok)
-        pure $ viewContent $ Authorized oauthTok
-  update ClearAccessToken = do
-    deleteParam "code"
-    deleteParam "state"
-    deleteSession @Token
-    pure $ viewContent Unauthorized
 
---------------------------------------------------------------------------------
--- View Utils
---------------------------------------------------------------------------------
+  update Login = do
+    openLogin
+  update Logout = do
+    logout
+    pure $ viewContents Nothing
 
-data ViewState
-  = Unauthorized
-  | PreAuthorized OAuth2.ExchangeToken
-  | Authorized OAuth2.OAuth2Token
+viewContents :: Maybe UserSession -> View Contents ()
+viewContents mt = do
+  col ~ gap 10 $ do
+    maybe viewUnauthorized viewAuthorized mt
+
+viewUnauthorized :: View Contents ()
+viewUnauthorized = do
+  message "Logged Out!"
+  col ~ gap 5 $ do
+    button Login "Login" ~ Style.btn
+
+viewAuthorized :: UserSession -> View Contents ()
+viewAuthorized user = do
+  let auth = user.auth
+  message "Successfully Logged In!"
+  el ~ pad 5 . grid . gap 10 $ do
+    dataItem "Email" user.email
+    dataItem "Token Type" $ pack $ show auth.tokenType
+    dataItem "Access Token" auth.accessToken.value
+    dataItem "Expires In" $ pack $ show auth.expiresIn
+    dataItem "Refresh Token" $ pack $ show auth.refreshToken
+    dataItem "Scope" $ pack $ show auth.scope
+  button Logout "Logout" ~ Style.btn
+ where
+  dataItem :: Text -> Text -> View c ()
+  dataItem lbl cnt = do
+    el ~ bold $ do
+      text lbl
+    el ~ overflow Hidden $ text cnt
+
+  grid :: (Styleable h) => CSS h -> CSS h
+  grid =
+    utility
+      "grid"
+      [ "display" :. "grid"
+      , "grid-template-columns" :. "max-content auto"
+      , "align-items" :. "center"
+      ]
 
 message :: View c () -> View c ()
 message x = el x ~ pad 10 . border 1
-
-formatToken :: OAuth2.OAuth2Token -> [(Text, Text)]
-formatToken tok =
-  [ ("Access Token", shorten $ OAuth2.atoken $ OAuth2.accessToken tok)
-  , ("Token Type", maybe "None" id $ OAuth2.tokenType tok)
-  , ("Expires In", maybe "None" ((<> " seconds") . T.pack . show) $ OAuth2.expiresIn tok)
-  , ("Refresh Token", maybe "None" OAuth2.rtoken $ OAuth2.refreshToken tok)
-  , ("Scope", maybe "None" id $ OAuth2.scope tok)
-  ]
-  where
-  shorten t = if T.length t > 40 then T.take 40 t <> "..." else t
-
--- | Render a table for a single token
-renderTokenTable :: OAuth2.OAuth2Token -> View c ()
-renderTokenTable tok = table (formatToken tok) $ do
-  tcol (th "Field" ~ textAlign AlignLeft) (td . text . fst)
-  tcol (th "Value" ~ textAlign AlignLeft) (td . text . snd)
-
-viewContent :: ViewState -> View Contents ()
-viewContent Unauthorized = col ~ gap 15 $ unauthorizedContent
-viewContent (PreAuthorized etok) =
-  el @ onLoad (FetchAccessToken etok) 500 $ message "Loading..."
-viewContent (Authorized tok) = col ~ gap 15 $ authorizedContent tok
-
-unauthorizedContent :: View Contents ()
-unauthorizedContent = do
-  message "Logged Out!"
-  col ~ gap 5 $ do
-    el "Please click on the button below to Login:"
-    button FetchExchangeToken "Login" ~ Style.btn
-
-authorizedContent :: OAuth2.OAuth2Token -> View Contents ()
-authorizedContent tok = do
-  message "Successfully Logged In!"
-  renderTokenTable tok
-  button ClearAccessToken "Logout" ~ Style.btn
-
---------------------------------------------------------------------------------
--- Page
---------------------------------------------------------------------------------
-
-setup ::
-  (Hyperbole :> es, Reader OAuth2PageEnv :> es, IOE :> es) => Eff es ViewState
-setup = do
-  mtoken <- lookupSession @Token
-  case mtoken of
-    Just (Token tok) -> pure $ Authorized tok
-    Nothing -> do
-      mExchangeTok <- lookupExchangeToken
-      case mExchangeTok of
-        Nothing -> pure Unauthorized
-        Just etok -> pure (PreAuthorized etok)
-
-page ::
-  (Hyperbole :> es, Reader OAuth2PageEnv :> es, IOE :> es) =>
-  Eff es (Page '[Contents])
-page = do
-  vs <- setup
-  pure $ exampleLayout Route.OAuth2 $ do
-    example "OAuth2" "Example/Page/OAuth2.hs" $ do
-      col ~ embed $ hyper Contents $ viewContent vs
