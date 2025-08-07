@@ -1,6 +1,26 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Web.Hyperbole.Effect.OAuth2 where
+module Web.Hyperbole.Effect.OAuth2
+  ( OAuth2 (..)
+  , authUrl
+  , validateCode
+  , exchangeAuth
+  , runOAuth2
+  , getConfigEnv
+  , Scopes (..)
+  , AuthFlow (..)
+  , Config (..)
+  , TokenType (..)
+  , Authenticated (..)
+  , Token (..)
+  , ClientId
+  , ClientSecret
+  , Code
+  , Access
+  , State
+  , Auth
+  , OAuth2Error (..)
+  ) where
 
 import Control.Monad (unless, when)
 import Data.Aeson (FromJSON (..), Options (..), ToJSON (..), Value (..), defaultOptions, eitherDecode, genericParseJSON, genericToJSON)
