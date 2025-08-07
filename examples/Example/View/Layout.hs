@@ -73,7 +73,7 @@ embed =
 
 example :: Text -> Path -> View c () -> View c ()
 example t p cnt =
-  col ~ gap 15 $ do
+  col ~ gap 10 $ do
     row $ do
       el ~ bold . fontSize 24 $ text t
       space
@@ -83,9 +83,8 @@ example t p cnt =
 exampleMenu :: AppRoute -> View c ()
 exampleMenu current = do
   exampleLink Intro
-  exampleLink Requests
+  exampleLink CSS
   exampleLink Concurrency
-  exampleLink AtomicCSS
   exampleLink (State StateRoot)
   case current of
     State _ -> do
@@ -94,6 +93,7 @@ exampleMenu current = do
       exampleLink (State Query) ~ sub
       exampleLink (State Sessions) ~ sub
     _ -> none
+  exampleLink Requests
   exampleLink (Data DataLists)
   case current of
     Data _ -> do
@@ -102,13 +102,21 @@ exampleMenu current = do
       exampleLink (Data Filter) ~ sub
     _ -> none
   exampleLink Forms
-  exampleLink Todos
-  exampleLink (Contacts ContactsAll)
+  exampleLink Interactivity
   exampleLink Javascript
   exampleLink Errors
   exampleLink OAuth2
+  exampleLink (Examples BigExamples)
+  case current of
+    Examples _ ->
+      completeExamples
+    (Contacts _) ->
+      completeExamples
+    _ -> none
  where
-  -- example Errors
+  completeExamples = do
+    exampleLink (Examples Todos) ~ sub
+    exampleLink (Contacts ContactsAll) ~ sub
 
   -- link "/query?key=value" lnk "Query Params"
   sub = pad (TRBL 10 10 10 40)
@@ -135,22 +143,10 @@ routeTitle (Data SortableTable) = "Sortable Table"
 routeTitle (Data Filter) = "Filters"
 routeTitle (Data Autocomplete) = "Autocomplete"
 routeTitle Errors = "Error Handling"
-routeTitle Todos = "TodoMVC"
+routeTitle (Examples Todos) = "TodoMVC"
+routeTitle (Examples BigExamples) = "Large Examples"
 routeTitle OAuth2 = "OAuth2"
 routeTitle r = cs $ toWords $ fromHumps $ show r
-
-pageDescription :: AppRoute -> View c ()
-pageDescription = \case
-  -- Simple -> do
-  --   el "HyperViews update independently. In this example, two Message HyperViews are embedded into the same page with different ids."
-  --   el "Try inspecting the page in the Chrome dev tools and watching both the DOM and messages"
-  Todos ->
-    row ~ gap 5 $ do
-      el "Implementation of "
-      link [uri|https://todomvc.com/|] "TodoMVC" ~ Style.link
-  Contacts _ -> do
-    el "This complex example combines various features"
-  _ -> none
 
 navigation :: AppRoute -> View c ()
 navigation rt = do

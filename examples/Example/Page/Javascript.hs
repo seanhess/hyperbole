@@ -1,25 +1,24 @@
 module Example.Page.Javascript where
 
-import Control.Monad (forM_)
 import Data.Text (pack)
 import Example.AppRoute qualified as Route
-import Example.Colors
+import Example.Page.Interactivity.Events (box, viewBoxes')
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
--- TODO: show how to do tooltips with only CSS
--- TODO: a mouseover example that calls the server via runAction
-
 page :: (Hyperbole :> es) => Eff es (Page '[Boxes])
 page = do
   pure $ exampleLayout Route.Javascript $ do
-    example "JS Mouse Overs" "Example/Page/Javascript.hs" $ do
-      el "You can implement your own mouseovers in javascript and call the server via the JS API. You should debounce to avoid overloading the server!"
-      -- NOTE: include custom javascript only on this page
-      script "custom.js"
+    -- NOTE: include custom javascript only on this page
+    script "custom.js"
+
+    example "JS Events" "Example/Page/Javascript.hs" $ do
+      el "Include custom js on a page with the 'script' tag only on the page where it is needed"
+      el "You can call the server from Javascript via an API attached to window. Here we re-implement mouseover boxes from the Interactivity example using Javascript"
+
       col ~ embed $ do
-        hyper Boxes $ boxesView Nothing
+        hyper Boxes $ viewBoxes Nothing
 
 data Boxes = Boxes
   deriving (Generic, ViewId)
@@ -31,30 +30,11 @@ instance HyperView Boxes es where
     deriving (Generic, ViewAction)
 
   update (Selected n) = do
-    pure $ boxesView (Just n)
+    pure $ viewBoxes (Just n)
   update Clear = do
-    pure $ boxesView Nothing
+    pure $ viewBoxes Nothing
 
-boxesView :: Maybe Int -> View Boxes ()
-boxesView mn = do
-  let ns = [0 .. 50] :: [Int]
-  el ~ grid . gap 10 . pad 10 $ do
-    el ~ double . border 2 . bold . fontSize 24 . pad 15 $ text $ pack $ maybe "" show mn
-    forM_ ns $ \n -> do
-      el @ onMouseEnter (Selected n) . onMouseLeave Clear ~ border 1 . pad 10 . pointer . hover (bg PrimaryLight) . textAlign AlignCenter $ text $ pack $ show n
- where
-  grid :: (Styleable h) => CSS h -> CSS h
-  grid =
-    utility
-      "grid"
-      [ "display" :. "grid"
-      , "grid-template-columns" :. "repeat(auto-fit, minmax(50px, 1fr))"
-      ]
-
-  double :: (Styleable h) => CSS h -> CSS h
-  double =
-    utility
-      "double"
-      [ "grid-column" :. "1 / span 2"
-      , "grid-row" :. "1 / span 2"
-      ]
+viewBoxes :: Maybe Int -> View Boxes ()
+viewBoxes mn = do
+  viewBoxes' mn $ \n -> do
+    el ~ box . cls "box" $ text $ pack $ show n

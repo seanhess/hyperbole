@@ -16,7 +16,7 @@ page = do
   r <- request
   pure $ exampleLayout Route.Requests $ do
     example "Requests" source $ do
-      el "The Hyperbole Effect allows us to access the Request, and manipulate the Client"
+      el "The Hyperbole Effect allows us to skip the normal update cycle to directly access the Request or manipulate the Client"
       col ~ embed $ hyper CheckRequest $ viewRequest r
       col ~ embed $ hyper ControlClient viewClient
 

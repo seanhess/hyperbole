@@ -19,7 +19,7 @@ page :: (Hyperbole :> es) => Eff es (Page '[Defaults, Users])
 page = do
   pure $ exampleLayout Route.Errors $ do
     example "Exceptions" "Example/Page/Errors.hs" $ do
-      el "Any uncaught exceptions thrown from a handler will be displayed in a bright red box in the HyperView"
+      el "Any uncaught exceptions thrown from a handler will be displayed in a bright red box inline in the corresponding HyperView"
       col ~ embed $ do
         hyper Exceptions viewExceptions
 

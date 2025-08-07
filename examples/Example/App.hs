@@ -48,6 +48,7 @@ import Example.Page.DataTable qualified as DataTable
 import Example.Page.Errors qualified as Errors
 import Example.Page.Filter qualified as Filter
 import Example.Page.Forms qualified as Forms
+import Example.Page.Interactivity qualified as Interactivity
 import Example.Page.Intro qualified as Intro
 import Example.Page.Javascript qualified as Javascript
 import Example.Page.OAuth2 qualified as OAuth2
@@ -137,8 +138,10 @@ app config users count = do
       Sessions -> runPage Sessions.page
       Query -> runPage Query.page
   router Intro = runPage Intro.page
-  router AtomicCSS = runPage CSS.page
-  router Todos = runPage Todo.page
+  router CSS = runPage CSS.page
+  router Interactivity = runPage Interactivity.page
+  router (Examples BigExamples) = redirect $ routeUri (Examples Todos)
+  router (Examples Todos) = runPage Todo.page
   router Javascript = runPage Javascript.page
   router OAuth2 = runPage OAuth2.page
   router OAuth2Authenticate = OAuth2.handleRedirect
