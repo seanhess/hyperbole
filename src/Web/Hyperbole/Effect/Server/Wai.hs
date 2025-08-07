@@ -36,6 +36,9 @@ runServerWai toDoc req respond =
   reinterpret runLocal $ \_ -> \case
     LoadRequest -> do
       fromWaiRequest req
+    RemoteAdd n -> do
+      -- BUG:  impelment
+      error "NOT IMPLEMENTED"
     SendResponse client r -> do
       rr <- liftIO $ sendResponse client r
       put (Just rr)
@@ -102,20 +105,21 @@ runServerWai toDoc req respond =
   addDocument "GET" bd = toDoc bd
   addDocument _ bd = bd
 
-  fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
-  fromWaiRequest wr = do
-    body <- liftIO $ Wai.consumeRequestBodyLazy wr
-    let pth = path $ cs $ Wai.rawPathInfo wr
-        query = Wai.queryString wr
-        headers = Wai.requestHeaders wr
-        cookie = fromMaybe "" $ L.lookup "Cookie" headers
-        host = Host $ fromMaybe "" $ L.lookup "Host" headers
-        requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Request-Id" headers
-        method = Wai.requestMethod wr
 
-    cookies <- fromCookieHeader cookie
+fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
+fromWaiRequest wr = do
+  body <- liftIO $ Wai.consumeRequestBodyLazy wr
+  let pth = path $ cs $ Wai.rawPathInfo wr
+      query = Wai.queryString wr
+      headers = Wai.requestHeaders wr
+      cookie = fromMaybe "" $ L.lookup "Cookie" headers
+      host = Host $ fromMaybe "" $ L.lookup "Host" headers
+      requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Request-Id" headers
+      method = Wai.requestMethod wr
 
-    pure $ Request{body, path = pth, query, method, cookies, host, requestId}
+  cookies <- fromCookieHeader cookie
+
+  pure $ Request{body, path = pth, query, method, cookies, host, requestId}
 
 
 -- Client only returns ONE Cookie header, with everything concatenated

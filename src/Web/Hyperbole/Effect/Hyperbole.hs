@@ -24,41 +24,33 @@ type instance DispatchOf Hyperbole = 'Dynamic
 -- | Run the 'Hyperbole' effect to 'Server'
 runHyperbole
   :: (Server :> es)
-  => Eff (Hyperbole : es) Response
+  => Request
+  -> Eff (Hyperbole : es) Response
   -> Eff es Response
-runHyperbole = fmap combine $ reinterpret runLocal $ \_ -> \case
+runHyperbole req = fmap combine $ reinterpret runLocal $ \_ -> \case
   GetRequest -> do
-    gets @HyperState (.request)
+    pure req
   RespondNow r -> do
-    s <- gets @HyperState (.client)
+    s <- get @Client
     send $ SendResponse s r
     throwError_ r
   GetClient -> do
-    gets @HyperState (.client)
+    get @Client
   ModClient f -> do
-    modify @HyperState $ \st -> st{client = f st.client}
+    modify @Client f
  where
-  runLocal :: (Server :> es) => Eff (State HyperState : Error Response : es) a -> Eff es (Either Response (a, HyperState))
+  runLocal :: (Server :> es) => Eff (State Client : Error Response : es) a -> Eff es (Either Response (a, Client))
   runLocal eff = do
-    -- Load the request ONCE right when we start
-    r <- send LoadRequest
-    let client = Client r.requestId mempty mempty
-    let st = HyperState r client
-    runErrorNoCallStack @Response . runState st $ eff
+    let client = Client req.requestId mempty mempty
+    runErrorNoCallStack @Response . runState client $ eff
 
-  combine :: (Server :> es) => Eff es (Either Response (Response, HyperState)) -> Eff es Response
+  combine :: (Server :> es) => Eff es (Either Response (Response, Client)) -> Eff es Response
   combine eff = do
     er <- eff
     case er of
       Left res ->
         -- responded via RespondNow, don't need to respond again
         pure res
-      Right (res, st) -> do
-        send $ SendResponse st.client res
+      Right (res, client) -> do
+        send $ SendResponse client res
         pure res
-
-
-data HyperState = HyperState
-  { request :: Request
-  , client :: Client
-  }

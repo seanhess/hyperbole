@@ -2,6 +2,7 @@ module Web.Hyperbole.Effect.Server
   ( Server (..)
   , runServerWai
   , runServerSockets
+  , fromWaiRequest
   , module Web.Hyperbole.Effect.Server.Types
   , module Web.Hyperbole.Effect.Server.Response
   ) where

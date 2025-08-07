@@ -16,6 +16,7 @@ import Web.Hyperbole.Effect.Server.Response
 data Server :: Effect where
   LoadRequest :: Server m Request
   SendResponse :: Client -> Response -> Server m ()
+  RemoteAdd :: Int -> Server m ()
 
 
 type instance DispatchOf Server = 'Dynamic
@@ -36,7 +37,7 @@ data InternalServerError
 data SocketError
   = InvalidMessage Text
   | InternalSocket InternalServerError
-  deriving (Show)
+  deriving (Show, Exception)
 
 
 data ContentType
