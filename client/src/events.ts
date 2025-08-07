@@ -101,7 +101,6 @@ export function listenMouseEnter(node: HTMLElement): void {
     let target = nearestTarget(node)
 
     node.onmouseenter = () => {
-      console.log("mouseenter")
       const event = new CustomEvent("hyp-mouseenter", { bubbles: true, detail: { target, onMouseEnter } })
       node.dispatchEvent(event)
     }

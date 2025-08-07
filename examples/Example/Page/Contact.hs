@@ -29,7 +29,7 @@ page
 page = do
   uid <- ask
   u <- Users.find uid
-  pure $ exampleLayout (Route.Contacts $ Route.Contact 0) $ do
+  pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
     example "Contact" "Example/Page/Contact.hs" $ do
       col ~ embed $ do
         hyper (Contact uid) $ contactView u

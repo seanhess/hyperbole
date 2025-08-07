@@ -21,7 +21,7 @@ import Web.Hyperbole as Hyperbole
 page :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
 page = do
   todos <- Todos.loadAll
-  pure $ exampleLayout Route.Todos $ do
+  pure $ exampleLayout (Route.Examples Route.Todos) $ do
     example "Todos" "Example/Page/Todo.hs" $ do
       col ~ embed $ hyper AllTodos $ todosView FilterAll todos
 

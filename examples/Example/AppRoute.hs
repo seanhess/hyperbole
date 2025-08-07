@@ -11,18 +11,19 @@ data AppRoute
   | Simple
   | Hello Hello
   | Contacts ContactRoute
-  | AtomicCSS
+  | CSS
+  | Interactivity
   | State StateRoute
   | Counter
   | Forms
   | Requests
   | Concurrency
   | Data DataRoute
-  | Todos
+  | Examples ExamplesRoute
   | Errors
   | Javascript
-  | OAuth2
   | OAuth2Authenticate
+  | OAuth2
   | Test
   deriving (Eq, Generic, Show)
 instance Route AppRoute where
@@ -63,6 +64,13 @@ instance Route ContactRoute where
 
   routePath (Contact uid) = routePath uid
   routePath ContactsAll = []
+
+data ExamplesRoute
+  = BigExamples
+  | Todos
+  deriving (Eq, Generic, Show)
+instance Route ExamplesRoute where
+  baseRoute = Just BigExamples
 
 data Hello
   = Greet Text
