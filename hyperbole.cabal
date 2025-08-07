@@ -84,7 +84,7 @@ library
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes
   build-depends:
-      aeson
+      aeson >=2.2.0.0
     , atomic-css ==0.1.*
     , attoparsec
     , attoparsec-aeson
@@ -102,7 +102,7 @@ library
     , http-client-tls
     , http-types ==0.12.*
     , network >=3.1 && <4
-    , network-uri
+    , network-uri >=2.6.4.1 && <2.7
     , random
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
@@ -141,7 +141,7 @@ test-suite test
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N -F -pgmF=skeletest-preprocessor
   build-depends:
-      aeson
+      aeson >=2.2.0.0
     , atomic-css ==0.1.*
     , attoparsec
     , attoparsec-aeson
@@ -160,7 +160,7 @@ test-suite test
     , http-types ==0.12.*
     , hyperbole
     , network >=3.1 && <4
-    , network-uri
+    , network-uri >=2.6.4.1 && <2.7
     , random
     , skeletest
     , string-conversions ==0.4.*
