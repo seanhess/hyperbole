@@ -5,6 +5,7 @@ module Web.Hyperbole.Effect.OAuth2
   , authUrl
   , validateCode
   , exchangeAuth
+  , exchangeRefresh
   , runOAuth2
   , getConfigEnv
   , Scopes (..)
@@ -17,6 +18,7 @@ module Web.Hyperbole.Effect.OAuth2
   , ClientSecret
   , Code
   , Access
+  , Refresh
   , State
   , Auth
   , OAuth2Error (..)
@@ -68,10 +70,15 @@ exchangeAuth :: (OAuth2 :> es) => Token Code -> Eff es Authenticated
 exchangeAuth authCode = send $ ExchangeAuth authCode
 
 
+exchangeRefresh :: (OAuth2 :> es) => Token Refresh -> Eff es Authenticated
+exchangeRefresh refToken = send $ ExchangeRefresh refToken
+
+
 data OAuth2 :: Effect where
   AuthUrl :: URI -> Scopes -> OAuth2 m URI
   ValidateCode :: OAuth2 m (Token Code)
   ExchangeAuth :: Token Code -> OAuth2 m Authenticated
+  ExchangeRefresh :: Token Refresh -> OAuth2 m Authenticated
 
 
 type instance DispatchOf OAuth2 = 'Dynamic
@@ -94,9 +101,14 @@ runOAuth2 cfg mgr = interpret $ \_ -> \case
     validateRedirectParams flow
   ExchangeAuth authCode -> do
     flow <- session @AuthFlow
-    auth <- sendTokenRequest cfg mgr flow.redirect authCode
+    let params = tokenParams cfg.clientId cfg.clientSecret flow.redirect authCode
+    auth <- sendTokenRequest cfg mgr params
     deleteSession @AuthFlow
     pure auth
+  ExchangeRefresh refToken -> do
+    let params = refreshParams cfg.clientId cfg.clientSecret refToken
+    sendTokenRequest cfg mgr params
+
 
 
 {- | read oauth config from env. This is not required, you can obtain these secrets another way
@@ -134,6 +146,7 @@ instance IsString Scopes where
 data ClientId
 data ClientSecret
 data Code
+data Refresh
 data Access
 data State
 data Auth
@@ -174,7 +187,7 @@ data Authenticated = Authenticated
   , expiresIn :: Maybe Int
   , scope :: Maybe Scopes
   , accessToken :: Token Access
-  , refreshToken :: Maybe Text
+  , refreshToken :: Maybe (Token Refresh)
   }
   deriving (Generic, Show)
 instance FromJSON Authenticated where
@@ -218,6 +231,15 @@ tokenParams (Token cid) (Token sec) redUrl (Token ac) =
   ]
 
 
+refreshParams :: Token ClientId -> Token ClientSecret -> Token Refresh -> Query
+refreshParams (Token cid) (Token sec) (Token ref) =
+  [ ("grant_type", Just "refresh_token")
+  , ("client_id", Just $ cs cid)
+  , ("client_secret", Just $ cs sec)
+  , ("refresh_token", Just $ cs ref)
+  ]
+
+
 validateRedirectParams :: (Hyperbole :> es) => AuthFlow -> Eff es (Token Code)
 validateRedirectParams flow = do
   err <- lookupParam @Text "error"
@@ -235,11 +257,9 @@ validateRedirectParams flow = do
   pure authCode
 
 
-sendTokenRequest :: (IOE :> es) => Config -> HTTP.Manager -> URI -> Token Code -> Eff es Authenticated
-sendTokenRequest cfg mgr redUrl authCode = do
+sendTokenRequest :: (IOE :> es) => Config -> HTTP.Manager -> Query -> Eff es Authenticated
+sendTokenRequest cfg mgr params = do
   baseReq <- HTTP.requestFromURI cfg.token.uri
-
-  let params = tokenParams cfg.clientId cfg.clientSecret redUrl authCode
 
   let req =
         baseReq
