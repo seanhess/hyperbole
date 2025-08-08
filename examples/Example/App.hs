@@ -171,6 +171,7 @@ app config users count = do
         <meta httpEquiv="Content-Type" content="text/html" charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript" src="/hyperbole.js"></script>
+        <script type="text/javascript">#{scriptLiveReload}</script>
         <style type="text/css">#{cssResetEmbed}</style>
         <style type="text/css">body { background-color: \#d3dceb }</style>
       </head>

@@ -29,6 +29,6 @@ page = do
       el $ do
         text "Use a view function to render the state: "
         code "viewCount :: Int -> View Counter ()."
-        text "Notice how it expects the current count as a parameter"
+        text "Notice how it expects the current count as a parameter."
       col ~ embed $ do
         addContext Root counter

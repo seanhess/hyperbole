@@ -8,15 +8,14 @@ const defaultAddress = `${protocol}//${window.location.host}${window.location.pa
 
 
 export class SocketConnection {
-
-
   socket: WebSocket
 
   hasEverConnected: Boolean
   isConnected: Boolean
   reconnectDelay: number = 0
 
-  constructor() { }
+  constructor() {
+  }
 
   // we need to faithfully transmit the 
   connect(addr = defaultAddress) {
@@ -31,16 +30,24 @@ export class SocketConnection {
 
     sock.addEventListener('open', (_event) => {
       console.log("Websocket Connected")
+
+      if (this.hasEverConnected) {
+        document.dispatchEvent(new Event("hyp-socket-reconnect"))
+      }
+
       this.isConnected = true
       this.hasEverConnected = true
       this.reconnectDelay = 0
       this.socket.removeEventListener('error', onConnectError)
+      document.dispatchEvent(new Event("hyp-socket-connect"))
     })
 
-    // TODO: Don't reconnet if the socket server is OFF, only if we've successfully connected once
     sock.addEventListener('close', _ => {
+      if (this.isConnected) {
+        document.dispatchEvent(new Event("hyp-socket-disconnect"))
+      }
+
       this.isConnected = false
-      console.log("Closed")
 
       // attempt to reconnect in 1s
       if (this.hasEverConnected) {
@@ -48,6 +55,7 @@ export class SocketConnection {
         console.log("Reconnecting in " + (this.reconnectDelay / 1000) + "s")
         setTimeout(() => this.connect(addr), this.reconnectDelay)
       }
+
     })
   }
 
