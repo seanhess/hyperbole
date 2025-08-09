@@ -58,7 +58,8 @@ import Example.Page.State.Effects qualified as Effects
 import Example.Page.State.Query qualified as Query
 import Example.Page.State.Sessions qualified as Sessions
 import Example.Page.Test qualified as Test
-import Example.Page.Todo qualified as Todo
+import Example.Page.Todos.Todo qualified as Todo
+import Example.Page.Todos.TodoCSS qualified as TodoCSS
 import Example.Style qualified as Style
 import Example.View.Layout as Layout (example, exampleLayout, sourceLink)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
@@ -142,6 +143,7 @@ app config users count = do
   router Interactivity = runPage Interactivity.page
   router (Examples BigExamples) = redirect $ routeUri (Examples Todos)
   router (Examples Todos) = runPage Todo.page
+  router (Examples TodosCSS) = runPage TodoCSS.page
   router Javascript = runPage Javascript.page
   router OAuth2 = runPage OAuth2.page
   router OAuth2Authenticate = OAuth2.handleRedirect

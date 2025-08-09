@@ -2,18 +2,24 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Page.Todo where
+module Example.Page.Todos.Todo where
+
+import Example.Effects.Todos (Todo (..), TodoId, Todos, runTodosSession)
+import Example.Effects.Todos qualified as Todos
 
 import Control.Monad (forM_)
 import Data.Text (Text, pack)
-import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
-import Example.Effects.Todos (Todo (..), TodoId, Todos, runTodosSession)
-import Example.Effects.Todos qualified as Todos
+
+import Example.Page.Todos.Shared
+
 import Example.Style qualified as Style
+
 import Example.View.Icon qualified as Icon
+
 import Example.View.Inputs (toggleCheckbox)
+
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
@@ -25,13 +31,7 @@ page = do
     example "Todos" "Example/Page/Todo.hs" $ do
       col ~ embed $ hyper AllTodos $ todosView FilterAll todos
 
-simplePage :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
-simplePage = do
-  todos <- Todos.loadAll
-  pure $ do
-    hyper AllTodos $ todosView FilterAll todos
-
---- AllTodos ----------------------------------------------------------------------------
+--- TodosView ----------------------------------------------------------------------------
 
 data AllTodos = AllTodos
   deriving (Generic, ViewId)
@@ -77,12 +77,6 @@ instance (Todos :> es) => HyperView AllTodos es where
         Active -> not todo.completed
         Completed -> todo.completed
 
-data FilterTodo
-  = FilterAll
-  | Active
-  | Completed
-  deriving (Eq, Generic, ToJSON, FromJSON)
-
 todosView :: FilterTodo -> [Todo] -> View AllTodos ()
 todosView filt todos = do
   todoForm filt
@@ -100,11 +94,6 @@ todoForm filt = do
     form SubmitTodo ~ grow $ do
       field f.task $ do
         input TextInput ~ pad 12 @ placeholder "What needs to be done?" . value ""
-
-data TodoForm f = TodoForm
-  { task :: Field f Text
-  }
-  deriving (Generic, FromFormF, GenFields FieldName)
 
 statusBar :: FilterTodo -> [Todo] -> View AllTodos ()
 statusBar filt todos = do
@@ -162,8 +151,3 @@ todoEditView filt todo = do
     form (SubmitEdit filt todo) ~ pad (TRBL 0 0 0 46) $ do
       field f.task $ do
         input TextInput @ value todo.task . autofocus ~ pad 4
-
-main :: IO ()
-main = do
-  run 3000 $ do
-    liveApp (basicDocument "Example") (runTodosSession $ runPage page)
