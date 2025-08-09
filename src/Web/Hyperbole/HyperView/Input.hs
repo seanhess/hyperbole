@@ -6,8 +6,10 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Web.Atomic.Types
 import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
-import Web.Hyperbole.HyperView.Types (HyperView (..), ViewAction (..))
+import Web.Hyperbole.HyperView.Types (HyperView (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
+import Web.Hyperbole.Types.ViewAction
+import Web.Hyperbole.Types.ViewId
 import Web.Hyperbole.View
 
 

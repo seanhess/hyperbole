@@ -8,7 +8,6 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
 import Web.Hyperbole.Data.Encoded
-import Web.Hyperbole.Effect.Event (getEvent)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (request)
 import Web.Hyperbole.Effect.Response (respondView)

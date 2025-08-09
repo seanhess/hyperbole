@@ -1,4 +1,3 @@
-{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.HyperView.Types where
@@ -14,6 +13,8 @@ import Web.Atomic.Types
 import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
 import Web.Hyperbole.TypeList
+import Web.Hyperbole.Types.ViewAction
+import Web.Hyperbole.Types.ViewId
 import Web.Hyperbole.View (View, addContext, context, none, tag)
 
 
@@ -171,51 +172,6 @@ hyperUnsafe :: (ViewId id) => id -> View id () -> View ctx ()
 hyperUnsafe vid vw = do
   tag "div" @ att "id" (encodedToText $ toViewId vid) ~ flexCol $
     addContext vid vw
-
-
-class ViewAction a where
-  toAction :: a -> Encoded
-  default toAction :: (Generic a, GToEncoded (Rep a)) => a -> Encoded
-  toAction = genericToEncoded
-
-
-  parseAction :: Encoded -> Either Text a
-  default parseAction :: (Generic a, GFromEncoded (Rep a)) => Encoded -> Either Text a
-  parseAction = genericParseEncoded
-
-
-instance ViewAction () where
-  toAction _ = mempty
-  parseAction _ = pure ()
-
-
-class ViewId a where
-  toViewId :: a -> Encoded
-  default toViewId :: (Generic a, GToEncoded (Rep a)) => a -> Encoded
-  toViewId = genericToEncoded
-
-
-  parseViewId :: Encoded -> Either Text a
-  default parseViewId :: (Generic a, GFromEncoded (Rep a)) => Encoded -> Either Text a
-  parseViewId = genericParseEncoded
-
-
-{- | Access the 'viewId' in a 'View' or 'update'
-
-@
-#EMBED Example/Page/LazyLoading.hs data LazyData
-
-#EMBED Example/Page/LazyLoading.hs instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
-@
--}
-class HasViewId m view where
-  viewId :: m view
-
-
-instance HasViewId (View ctx) ctx where
-  viewId = context
-instance HasViewId (Eff (Reader view : es)) view where
-  viewId = ask
 
 
 encodeViewId :: (ViewId id) => id -> Text

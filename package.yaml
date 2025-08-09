@@ -36,6 +36,7 @@ default-extensions:
   - DataKinds
   - DerivingStrategies
   - DeriveAnyClass
+  - DefaultSignatures
 
 dependencies:
   - base >=4.16 && <5

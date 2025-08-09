@@ -38,7 +38,7 @@ library
       Web.Hyperbole.Data.Param
       Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Data.URI
-      Web.Hyperbole.Effect.Event
+      Web.Hyperbole.Effect.Browser
       Web.Hyperbole.Effect.GenRandom
       Web.Hyperbole.Effect.Handler
       Web.Hyperbole.Effect.Hyperbole
@@ -61,6 +61,9 @@ library
       Web.Hyperbole.Page
       Web.Hyperbole.Route
       Web.Hyperbole.TypeList
+      Web.Hyperbole.Types.Event
+      Web.Hyperbole.Types.ViewAction
+      Web.Hyperbole.Types.ViewId
       Web.Hyperbole.View
       Web.Hyperbole.View.CSS
       Web.Hyperbole.View.Embed
@@ -82,6 +85,7 @@ library
       DataKinds
       DerivingStrategies
       DeriveAnyClass
+      DefaultSignatures
   ghc-options: -Wall -fdefer-typed-holes
   build-depends:
       aeson >=2.2.0.0
@@ -139,6 +143,7 @@ test-suite test
       DataKinds
       DerivingStrategies
       DeriveAnyClass
+      DefaultSignatures
   ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N -F -pgmF=skeletest-preprocessor
   build-tool-depends:
       skeletest:skeletest-preprocessor

@@ -44,6 +44,7 @@ import Network.HTTP.Types (hContentType)
 import Network.URI (parseURI)
 import Text.Casing (quietSnake)
 import Web.Hyperbole.Data.URI
+import Web.Hyperbole.Effect.Browser
 import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
@@ -85,7 +86,7 @@ type instance DispatchOf OAuth2 = 'Dynamic
 
 
 runOAuth2
-  :: (GenRandom :> es, IOE :> es, Hyperbole :> es)
+  :: (GenRandom :> es, IOE :> es, Browser :> es)
   => Config
   -> HTTP.Manager
   -> Eff (OAuth2 : es) a
@@ -108,7 +109,6 @@ runOAuth2 cfg mgr = interpret $ \_ -> \case
   ExchangeRefresh refToken -> do
     let params = refreshParams cfg.clientId cfg.clientSecret refToken
     sendTokenRequest cfg mgr params
-
 
 
 {- | read oauth config from env. This is not required, you can obtain these secrets another way
@@ -240,7 +240,7 @@ refreshParams (Token cid) (Token sec) (Token ref) =
   ]
 
 
-validateRedirectParams :: (Hyperbole :> es) => AuthFlow -> Eff es (Token Code)
+validateRedirectParams :: (Browser :> es) => AuthFlow -> Eff es (Token Code)
 validateRedirectParams flow = do
   err <- lookupParam @Text "error"
 

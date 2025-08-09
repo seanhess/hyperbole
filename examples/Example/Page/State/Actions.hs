@@ -4,11 +4,11 @@
 
 module Example.Page.State.Actions where
 
+import Data.String.Interpolate (i)
+import Data.Text (Text)
 import Example.AppRoute
 import Example.Page.Counter (Counter)
-import Data.String.Interpolate (i)
 import Example.Page.Counter qualified as Counter
-import Data.Text (Text)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -27,7 +27,7 @@ page = do
         addContext Root counter
 
 countExample :: Text
-countExample = 
+countExample =
   [i|data Action Counter
   = Increment Int
   ...

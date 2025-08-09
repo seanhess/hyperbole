@@ -15,17 +15,13 @@ import Web.Hyperbole.Effect.Server.Response
 -- | Low level effect mapping request/response to either HTTP or WebSockets
 data Server :: Effect where
   LoadRequest :: Server m Request
-  SendResponse :: Client -> Response -> Server m ()
+  SendResponse :: Client' -> Response -> Server m ()
 
 
 type instance DispatchOf Server = 'Dynamic
 
 
-data Client = Client
-  { requestId :: RequestId
-  , session :: Cookies
-  , query :: Maybe QueryData
-  }
+data Client' = Client'
 
 
 data InternalServerError

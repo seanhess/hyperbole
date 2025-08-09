@@ -9,9 +9,9 @@ import Effectful.Dispatch.Dynamic (send)
 import Web.Hyperbole.Data.Param (FromParam (..), Param, ToParam (..))
 import Web.Hyperbole.Data.QueryData (FromQuery (..), QueryData (..), ToQuery (..), queryData)
 import Web.Hyperbole.Data.QueryData qualified as QueryData
-import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
+import Web.Hyperbole.Effect.Browser (Browser (..), Client (..), Interrupt (..), client, interrupt, modClient)
 import Web.Hyperbole.Effect.Request (request)
-import Web.Hyperbole.Effect.Server (Client (..), Request (..), Response (..), ResponseError (..))
+import Web.Hyperbole.Effect.Server (Request (..), ResponseError (..))
 import Prelude
 
 
@@ -23,11 +23,11 @@ import Prelude
 #EMBED Example/Docs/Params.hs page
 @
 -}
-query :: (FromQuery a, Hyperbole :> es) => Eff es a
+query :: (FromQuery a, Browser :> es) => Eff es a
 query = do
   q <- queryParams
   case parseQuery q of
-    Left e -> send $ RespondNow $ Err $ ErrQuery $ "Query Parse " <> e <> " from " <> cs (show q)
+    Left e -> interrupt $ Err $ ErrQuery $ "Query Parse " <> e <> " from " <> cs (show q)
     Right a -> pure a
 
 
@@ -37,13 +37,13 @@ query = do
 #EMBED Example/Docs/Params.hs instance HyperView Todos
 @
 -}
-setQuery :: (ToQuery a, Hyperbole :> es) => a -> Eff es ()
+setQuery :: (ToQuery a, Browser :> es) => a -> Eff es ()
 setQuery a = do
-  modifyQueryData (const $ toQuery a)
+  modQueryData (const $ toQuery a)
 
 
-modifyQuery :: (ToQuery a, FromQuery a, Default a, Hyperbole :> es) => (a -> a) -> Eff es a
-modifyQuery f = do
+modQuery :: (ToQuery a, FromQuery a, Default a, Browser :> es) => (a -> a) -> Eff es a
+modQuery f = do
   s <- query
   let updated = f s
   setQuery updated
@@ -56,16 +56,16 @@ modifyQuery f = do
 #EMBED Example/Docs/Params.hs page'
 @
 -}
-param :: (FromParam a, Hyperbole :> es) => Param -> Eff es a
+param :: (FromParam a, Browser :> es) => Param -> Eff es a
 param p = do
   q <- queryParams
   case QueryData.require p q of
-    Left e -> send $ RespondNow $ Err $ ErrQuery (cs e)
+    Left e -> interrupt $ Err $ ErrQuery (cs e)
     Right a -> pure a
 
 
 -- | Parse a single parameter from the query string if available
-lookupParam :: (FromParam a, Hyperbole :> es) => Param -> Eff es (Maybe a)
+lookupParam :: (FromParam a, Browser :> es) => Param -> Eff es (Maybe a)
 lookupParam p = do
   QueryData.lookup p <$> queryParams
 
@@ -76,37 +76,34 @@ lookupParam p = do
 #EMBED Example/Docs/Params.hs instance HyperView Message
 @
 -}
-setParam :: (ToParam a, Hyperbole :> es) => Param -> a -> Eff es ()
+setParam :: (ToParam a, Browser :> es) => Param -> a -> Eff es ()
 setParam key a = do
-  modifyQueryData (QueryData.insert key a)
+  modQueryData (QueryData.insert key a)
 
 
 -- | Delete a single parameter from the query string
-deleteParam :: (Hyperbole :> es) => Param -> Eff es ()
+deleteParam :: (Browser :> es) => Param -> Eff es ()
 deleteParam key = do
-  modifyQueryData (QueryData.delete key)
+  modQueryData (QueryData.delete key)
 
 
 -- | Return the query from 'Request' as a 'QueryData'
-queryParams :: (Hyperbole :> es) => Eff es QueryData
+queryParams :: (Browser :> es) => Eff es QueryData
 queryParams = do
-  cq <- clientQuery
-  rq <- requestQuery
-  pure $ fromMaybe rq cq
- where
-  clientQuery = (.query) <$> send GetClient
-
-  requestQuery :: (Hyperbole :> es) => Eff es QueryData
-  requestQuery = do
-    r <- request
-    pure $ queryData $ filter (not . isSystemParam) r.query
-
-  isSystemParam (key, _) =
-    "hyp-" `BS.isPrefixOf` key
+  (.query) <$> client
 
 
-modifyQueryData :: (Hyperbole :> es) => (QueryData -> QueryData) -> Eff es ()
-modifyQueryData f = do
+-- -- eh.....
+-- requestQuery :: (Browser :> es) => Eff es QueryData
+-- requestQuery = do
+--   r <- request
+--   pure $ queryData $ filter (not . isSystemParam) r.query
+
+-- isSystemParam (key, _) =
+--   "hyp-" `BS.isPrefixOf` key
+
+modQueryData :: (Browser :> es) => (QueryData -> QueryData) -> Eff es ()
+modQueryData f = do
   q <- queryParams
-  send $ ModClient $ \Client{session, requestId} ->
-    Client{query = Just $ f q, session, requestId}
+  modClient $ \Client{session} ->
+    Client{query = f q, session}

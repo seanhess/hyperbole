@@ -6,6 +6,8 @@ import Text.Casing (kebab)
 import Web.Atomic.Types
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.HyperView.Types
+import Web.Hyperbole.Types.ViewAction
+import Web.Hyperbole.Types.ViewId
 import Web.Hyperbole.View
 import Web.Hyperbole.View.Types (ViewContext)
 
