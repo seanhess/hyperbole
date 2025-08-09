@@ -1,6 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE UndecidableInstances #-}
-
 module Example.Page.Todos.Shared
   ( pluralize
   , FilterTodo (..)
