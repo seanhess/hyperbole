@@ -45,6 +45,7 @@ data TodosAction
   | SubmitTodo
   | ToggleAll FilterTodo
   | SetCompleted FilterTodo Todo Bool
+  | Destroy FilterTodo Todo
   deriving (Generic, ViewAction)
 
 updateTodos :: (Todos :> es, Hyperbole :> es) => TodosAction -> Eff es [Todo]
@@ -62,6 +63,9 @@ updateTodos = \case
     filteredTodos filt
   SetCompleted filt todo completed -> do
     _ <- Todos.setCompleted completed todo
+    filteredTodos filt
+  Destroy filt todo -> do
+    Todos.clear todo
     filteredTodos filt
  where
   filteredTodos filt =

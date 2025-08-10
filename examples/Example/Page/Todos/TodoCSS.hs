@@ -70,6 +70,8 @@ instance (Todos :> es) => HyperView AllTodos es where
         todosView f <$> Shared.updateTodos (Shared.ToggleAll f)
       Shared.SetCompleted f t b ->
         todosView f <$> Shared.updateTodos (Shared.SetCompleted f t b)
+      Shared.Destroy f t ->
+        todosView f <$> Shared.updateTodos (Shared.Destroy f t)
 
 todosView :: FilterTodo -> [Todo] -> View AllTodos ()
 todosView filt todos = do
@@ -181,8 +183,7 @@ todoView filt todo = do
           label' @ class_ "label" $ do
             text todo.task
 
-          -- FIXME: create a Destroy action variant (I think it's missing from the original impl)
-          button (MkAction $ Shared.SetCompleted filt todo $ not todo.completed) @ class_ "destroy" $ ""
+          button (MkAction $ Shared.Destroy filt todo) @ class_ "destroy" $ ""
 
 todoEditView :: FilterTodo -> Todo -> View TodoView ()
 todoEditView filt todo = do

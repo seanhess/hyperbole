@@ -56,6 +56,8 @@ instance (Todos :> es) => HyperView AllTodos es where
         todosView f <$> Shared.updateTodos (Shared.ToggleAll f)
       Shared.SetCompleted f t b ->
         todosView f <$> Shared.updateTodos (Shared.SetCompleted f t b)
+      Shared.Destroy f t ->
+        todosView f <$> Shared.updateTodos (Shared.Destroy f t)
 
 todosView :: FilterTodo -> [Todo] -> View AllTodos ()
 todosView filt todos = do
@@ -115,12 +117,19 @@ instance (Todos :> es) => HyperView TodoView es where
 
 todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
-  row ~ border (TRBL 0 0 1 0) . pad 10 $ do
+  row ~ border (TRBL 0 0 1 0) . pad 10 . showDestroyOnHover $ do
     target AllTodos $ do
       toggleCheckbox (MkAction . Shared.SetCompleted filt todo) todo.completed
-    el (text todo.task) @ onDblClick (Edit filt todo) ~ completed . pad (XY 18 4)
+    el (text todo.task) @ onDblClick (Edit filt todo) ~ completed . pad (XY 18 4) . grow
+    target AllTodos $ do
+      button (MkAction $ Shared.Destroy filt todo) "✕" ~ cls "destroy-btn" . opacity 0 . hover (color Primary) . pad 4
  where
   completed = if todo.completed then Style.strikethrough else id
+  showDestroyOnHover =
+    css
+      "todo-row"
+      ".todo-row:hover > .destroy-btn"
+      (declarations (opacity 100))
 
 todoEditView :: FilterTodo -> Todo -> View TodoView ()
 todoEditView filt todo = do
