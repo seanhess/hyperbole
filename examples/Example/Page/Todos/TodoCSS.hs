@@ -35,10 +35,9 @@ page = do
   todos <- Todos.loadAll
   pure $ do
     div' $ do
-      -- stylesheet "https://cdn.jsdelivr.net/npm/todomvc-app-css@2.4.3/index.min.css"
-      -- Original implementation at:
-      -- https://todomvc.com/examples/javascript-es6/dist/
-      stylesheet "https://todomvc.com/examples/javascript-es6/dist/app.css"
+      -- Alternative stylesheet at: https://todomvc.com/examples/javascript-es6/dist/app.css
+      -- Reference implementation at: https://todomvc.com/examples/javascript-es6/dist/
+      stylesheet "https://cdn.jsdelivr.net/npm/todomvc-app-css@2.4.3/index.min.css"
       section @ class_ "todoapp" $ do
         hyper AllTodos $ todosView FilterAll todos
       footer @ class_ "info" $ do
