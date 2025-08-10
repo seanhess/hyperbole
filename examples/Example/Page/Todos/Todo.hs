@@ -4,22 +4,17 @@
 
 module Example.Page.Todos.Todo where
 
-import Example.Effects.Todos (Todo (..), TodoId, Todos, runTodosSession)
-import Example.Effects.Todos qualified as Todos
-
 import Control.Monad (forM_)
 import Data.Text (Text, pack)
+import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
-
+import Example.Effects.Todos (Todo (..), TodoId, Todos, runTodosSession)
+import Example.Effects.Todos qualified as Todos
 import Example.Page.Todos.Shared
-
 import Example.Style qualified as Style
-
 import Example.View.Icon qualified as Icon
-
 import Example.View.Inputs (toggleCheckbox)
-
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
@@ -38,7 +33,7 @@ simplePage = do
   pure $ do
     hyper AllTodos $ todosView FilterAll todos
 
---- TodosView ----------------------------------------------------------------------------
+--- AllTodos ----------------------------------------------------------------------------
 
 data AllTodos = AllTodos
   deriving (Generic, ViewId)
@@ -167,5 +162,5 @@ ghci> Todo.main
 -}
 main :: IO ()
 main = do
-  run 3008 $ do
+  run 3000 $ do
     liveApp (basicDocument "Todo (simple)") (runTodosSession $ runPage simplePage)
