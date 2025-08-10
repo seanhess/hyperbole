@@ -140,7 +140,6 @@ test-suite test
       DerivingStrategies
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N -F -pgmF=skeletest-preprocessor
-  build-tool-depends: skeletest:skeletest-preprocessor
   build-depends:
       aeson >=2.2.0.0
     , atomic-css ==0.1.*
