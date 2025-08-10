@@ -31,6 +31,13 @@ page = do
     example "Todos" "Example/Page/Todo.hs" $ do
       col ~ embed $ hyper AllTodos $ todosView FilterAll todos
 
+-- Keep this, it's used for documentation (+ usable via the REPL, see main below)
+simplePage :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
+simplePage = do
+  todos <- Todos.loadAll
+  pure $ do
+    hyper AllTodos $ todosView FilterAll todos
+
 --- TodosView ----------------------------------------------------------------------------
 
 data AllTodos = AllTodos
@@ -151,3 +158,14 @@ todoEditView filt todo = do
     form (SubmitEdit filt todo) ~ pad (TRBL 0 0 0 46) $ do
       field f.task $ do
         input TextInput @ value todo.task . autofocus ~ pad 4
+
+{-
+You may try this in the REPL for simple tests:
+
+bash> cabal repl exe:examples lib:hyperbole
+ghci> Todo.main
+-}
+main :: IO ()
+main = do
+  run 3008 $ do
+    liveApp (basicDocument "Todo (simple)") (runTodosSession $ runPage simplePage)

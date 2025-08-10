@@ -626,7 +626,7 @@ From [Example.Page.Todo](https://docs.hyperbole.live/todos):
 @
 {\-# LANGUAGE UndecidableInstances #-\}
 
-#EMBED Example/Page/Todo.hs simplePage
+#EMBED Example/Page/Todos/Todo.hs simplePage
 @
 
 We run a custom effect in our Application just like any other. Here we implementing our custom effect using 'Hyperbole' 'sessions', but you could write a different runner that connects to a database instead.
