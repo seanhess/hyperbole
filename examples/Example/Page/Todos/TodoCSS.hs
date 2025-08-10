@@ -168,8 +168,7 @@ instance (Todos :> es) => HyperView TodoView es where
 todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
   li'
-    @ onDblClick (Edit filt todo)
-    . bool id (class_ "completed") todo.completed
+    @ bool id (class_ "completed") todo.completed
     . style' "border-bottom: 1px solid #ededed"
     $ do
       div' @ class_ "view" $ do
@@ -180,9 +179,10 @@ todoView filt todo = do
             . onClick (MkAction $ Shared.SetCompleted filt todo $ not todo.completed)
             . checked todo.completed
 
-          label' @ class_ "label" $ do
-            text todo.task
+        label' @ class_ "label" . onDblClick (Edit filt todo) $ do
+          text todo.task
 
+        target AllTodos $ do
           button (MkAction $ Shared.Destroy filt todo) @ class_ "destroy" $ ""
 
 todoEditView :: FilterTodo -> Todo -> View TodoView ()
