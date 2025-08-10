@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Example.Page.Todos.TodoCSS (page) where
@@ -10,6 +9,7 @@ import Data.Bool (bool)
 import Data.Text qualified as T
 import Example.Effects.Todos qualified as Todos
 import Example.Page.Todos.Shared (FilterTodo (..), TodoForm (..), pluralize)
+import Example.Page.Todos.Shared qualified as Shared
 import Web.Hyperbole as Hyperbole
 import Web.Hyperbole.HyperView.Forms (Input (Input))
 
@@ -55,43 +55,21 @@ data AllTodos = AllTodos
 instance (Todos :> es) => HyperView AllTodos es where
   type Require AllTodos = '[TodoView]
 
-  data Action AllTodos
-    = ClearCompleted
-    | Filter FilterTodo
-    | SubmitTodo
-    | ToggleAll FilterTodo
-    | SetCompleted FilterTodo Todo Bool
-    deriving (Generic, ViewAction)
+  newtype Action AllTodos = MkAction Shared.TodosAction
+    deriving newtype (Generic, ViewAction)
 
-  update = \case
-    SubmitTodo -> do
-      TodoForm task <- formData @(TodoForm Identity)
-      _ <- Todos.create task
-      todos <- Todos.loadAll
-      pure $ todosView FilterAll todos
-    ToggleAll filt -> do
-      todos <- filteredTodos filt
-      updated <- Todos.toggleAll todos
-      pure $ todosView filt updated
-    ClearCompleted -> do
-      todos <- Todos.clearCompleted
-      pure $ todosView FilterAll todos
-    Filter filt -> do
-      todos <- filteredTodos filt
-      pure $ todosView filt todos
-    SetCompleted filt todo completed -> do
-      _ <- Todos.setCompleted completed todo
-      todos <- filteredTodos filt
-      pure $ todosView filt todos
-   where
-    filteredTodos filt =
-      filter (isFilter filt) <$> Todos.loadAll
-
-    isFilter filt todo =
-      case filt of
-        FilterAll -> True
-        Active -> not todo.completed
-        Completed -> todo.completed
+  update (MkAction action) = do
+    case action of
+      Shared.ClearCompleted ->
+        todosView FilterAll <$> Shared.updateTodos Shared.ClearCompleted
+      Shared.SubmitTodo ->
+        todosView FilterAll <$> Shared.updateTodos Shared.SubmitTodo
+      Shared.Filter f ->
+        todosView f <$> Shared.updateTodos (Shared.Filter f)
+      Shared.ToggleAll f ->
+        todosView f <$> Shared.updateTodos (Shared.ToggleAll f)
+      Shared.SetCompleted f t b ->
+        todosView f <$> Shared.updateTodos (Shared.SetCompleted f t b)
 
 todosView :: FilterTodo -> [Todo] -> View AllTodos ()
 todosView filt todos = do
@@ -108,7 +86,7 @@ todosView filt todos = do
       label'
         @ class_ "toggle-all-label"
         . att "for" "toggle-all"
-        . onClick (ToggleAll filt)
+        . onClick (MkAction $ Shared.ToggleAll filt)
         $ text "Mark all as complete"
 
       ul' @ class_ "todo-list" $ do
@@ -120,7 +98,7 @@ todosView filt todos = do
 todoForm :: View AllTodos ()
 todoForm = do
   let f :: TodoForm FieldName = fieldNames
-  form SubmitTodo $ do
+  form (MkAction Shared.SubmitTodo) $ do
     field f.task $ do
       Input (FieldName nm) <- context
       input' -- we use a custom input field, because the Hyperbole one overrides autocomplete
@@ -156,12 +134,12 @@ statusBar filt todos = do
       filterLi Active "Active"
       filterLi Completed "Completed"
     space
-    button ClearCompleted @ class_ "clear-completed" $ "Clear completed"
+    button (MkAction Shared.ClearCompleted) @ class_ "clear-completed" $ "Clear completed"
  where
   filterLi f str =
     li' @ class_ "filter" . selectedFilter f $ do
       a
-        @ onClick (Filter f)
+        @ onClick (MkAction $ Shared.Filter f)
         . att "href" "" -- harmless empty href is for the CSS
         $ text str
   selectedFilter f =
@@ -177,15 +155,13 @@ instance (Todos :> es) => HyperView TodoView es where
 
   data Action TodoView
     = Edit FilterTodo Todo
-    | SubmitEdit FilterTodo Todo
+    | MkTodoViewAction FilterTodo Shared.TodoAction
     deriving (Generic, ViewAction)
 
   update (Edit filt todo) = do
     pure $ todoEditView filt todo
-  update (SubmitEdit filt todo) = do
-    TodoForm task <- formData @(TodoForm Identity)
-    updated <- Todos.setTask task todo
-    pure $ todoView filt updated
+  update (MkTodoViewAction filt action) = do
+    todoView filt <$> Shared.updateTodo action
 
 todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
@@ -199,20 +175,20 @@ todoView filt todo = do
           input'
             @ class_ "toggle"
             . att "type" "checkbox"
-            . onClick (SetCompleted filt todo $ not todo.completed)
+            . onClick (MkAction $ Shared.SetCompleted filt todo $ not todo.completed)
             . checked todo.completed
 
           label' @ class_ "label" $ do
             text todo.task
 
           -- FIXME: create a Destroy action variant (I think it's missing from the original impl)
-          button (SetCompleted filt todo $ not todo.completed) @ class_ "destroy" $ ""
+          button (MkAction $ Shared.SetCompleted filt todo $ not todo.completed) @ class_ "destroy" $ ""
 
 todoEditView :: FilterTodo -> Todo -> View TodoView ()
 todoEditView filt todo = do
   let f = fieldNames @TodoForm
   li' @ class_ "editing" $ do
-    form (SubmitEdit filt todo) $ do
+    form (MkTodoViewAction filt $ Shared.SubmitEdit todo) $ do
       let taskField = Input f.task
       -- Instead of using the `field` FormField wrapper, we add the context manually
       -- and use a custom input field for maximum control over the generated HTML
