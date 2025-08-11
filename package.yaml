@@ -74,6 +74,7 @@ tests:
   test:
     main:        Spec.hs
     source-dirs: test
+    build-tools: skeletest:skeletest-preprocessor
     ghc-options:
     - -threaded
     - -rtsopts
