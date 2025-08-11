@@ -17,7 +17,7 @@ import Network.HTTP.Client qualified as HTTP
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI (Endpoint (..), Path (..), pathToText)
-import Web.Hyperbole.Effect.OAuth2 (Code, OAuth2, Token (..))
+import Web.Hyperbole.Effect.OAuth2 (Access, OAuth2, Token (..))
 import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
 import Web.Hyperbole.Effect.Server.Response (ResponseError (ErrAuth))
 
@@ -52,7 +52,7 @@ handleRedirect :: (Hyperbole :> es, OAuth2 :> es, Reader AppConfig :> es, IOE :>
 handleRedirect = do
   authCode <- OAuth2.validateCode
   auth <- OAuth2.exchangeAuth authCode
-  info <- fetchUserInfo authCode
+  info <- fetchUserInfo auth.accessToken
   saveSession @UserSession $ UserSession auth info.email
   redirect $ routeUri Route.OAuth2
 
@@ -62,11 +62,11 @@ data GithubUserInfo = GithubUserInfo
   deriving (Generic, FromJSON, Show)
 
 -- | Example authenticated request using an oauth access token. in a real app, this should be in an external effect, not IOE
-fetchUserInfo :: (IOE :> es, Reader AppConfig :> es, Hyperbole :> es) => Token Code -> Eff es GithubUserInfo
-fetchUserInfo (Token authCode) = do
+fetchUserInfo :: (IOE :> es, Reader AppConfig :> es, Hyperbole :> es) => Token Access -> Eff es GithubUserInfo
+fetchUserInfo (Token accessTok) = do
   app <- ask @AppConfig
   req <- HTTP.parseRequest "https://oauth-mock.mock.beeceptor.com/userinfo/github"
-  res <- liftIO (HTTP.httpLbs (HTTP.applyBearerAuth (cs authCode) req) app.manager)
+  res <- liftIO (HTTP.httpLbs (HTTP.applyBearerAuth (cs accessTok) req) app.manager)
   case eitherDecode @GithubUserInfo (HTTP.responseBody res) of
     Left e -> respondError $ ErrAuth $ "Could not parse user info: " <> pack (show e)
     Right info -> do
