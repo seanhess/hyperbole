@@ -1,16 +1,17 @@
 {-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Page.Todo where
+module Example.Page.Todos.Todo where
 
 import Control.Monad (forM_)
-import Data.Text (Text, pack)
+import Data.Text (pack)
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Effects.Todos (Todo (..), TodoId, Todos, runTodosSession)
 import Example.Effects.Todos qualified as Todos
+import Example.Page.Todos.Shared (FilterTodo (Active, Completed, FilterAll), TodoForm (..))
+import Example.Page.Todos.Shared qualified as Shared
 import Example.Style qualified as Style
 import Example.View.Icon qualified as Icon
 import Example.View.Inputs (toggleCheckbox)
@@ -25,6 +26,7 @@ page = do
     example "Todos" "Example/Page/Todo.hs" $ do
       col ~ embed $ hyper AllTodos $ todosView FilterAll todos
 
+-- Keep this, it's used for documentation (+ usable via the REPL, see main below)
 simplePage :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
 simplePage = do
   todos <- Todos.loadAll
@@ -39,49 +41,23 @@ data AllTodos = AllTodos
 instance (Todos :> es) => HyperView AllTodos es where
   type Require AllTodos = '[TodoView]
 
-  data Action AllTodos
-    = ClearCompleted
-    | Filter FilterTodo
-    | SubmitTodo
-    | ToggleAll FilterTodo
-    | SetCompleted FilterTodo Todo Bool
-    deriving (Generic, ViewAction)
+  newtype Action AllTodos = MkTodosAction Shared.TodosAction
+    deriving newtype (Generic, ViewAction)
 
-  update = \case
-    SubmitTodo -> do
-      TodoForm task <- formData @(TodoForm Identity)
-      _ <- Todos.create task
-      todos <- Todos.loadAll
-      pure $ todosView FilterAll todos
-    ToggleAll filt -> do
-      todos <- filteredTodos filt
-      updated <- Todos.toggleAll todos
-      pure $ todosView filt updated
-    ClearCompleted -> do
-      todos <- Todos.clearCompleted
-      pure $ todosView FilterAll todos
-    Filter filt -> do
-      todos <- filteredTodos filt
-      pure $ todosView filt todos
-    SetCompleted filt todo completed -> do
-      _ <- Todos.setCompleted completed todo
-      todos <- filteredTodos filt
-      pure $ todosView filt todos
-   where
-    filteredTodos filt =
-      filter (isFilter filt) <$> Todos.loadAll
-
-    isFilter filt todo =
-      case filt of
-        FilterAll -> True
-        Active -> not todo.completed
-        Completed -> todo.completed
-
-data FilterTodo
-  = FilterAll
-  | Active
-  | Completed
-  deriving (Eq, Generic, ToJSON, FromJSON)
+  update (MkTodosAction action) = do
+    case action of
+      Shared.ClearCompleted ->
+        todosView FilterAll <$> Shared.updateTodos Shared.ClearCompleted
+      Shared.SubmitTodo ->
+        todosView FilterAll <$> Shared.updateTodos Shared.SubmitTodo
+      Shared.Filter f ->
+        todosView f <$> Shared.updateTodos (Shared.Filter f)
+      Shared.ToggleAll f ->
+        todosView f <$> Shared.updateTodos (Shared.ToggleAll f)
+      Shared.SetCompleted f t b ->
+        todosView f <$> Shared.updateTodos (Shared.SetCompleted f t b)
+      Shared.Destroy f t ->
+        todosView f <$> Shared.updateTodos (Shared.Destroy f t)
 
 todosView :: FilterTodo -> [Todo] -> View AllTodos ()
 todosView filt todos = do
@@ -96,15 +72,10 @@ todoForm filt = do
   let f :: TodoForm FieldName = fieldNames
   row ~ border 1 $ do
     el ~ pad 8 $ do
-      button (ToggleAll filt) Icon.chevronDown ~ width 32 . hover (color Primary)
-    form SubmitTodo ~ grow $ do
+      button (MkTodosAction $ Shared.ToggleAll filt) Icon.chevronDown ~ width 32 . hover (color Primary)
+    form (MkTodosAction Shared.SubmitTodo) ~ grow $ do
       field f.task $ do
         input TextInput ~ pad 12 @ placeholder "What needs to be done?" . value ""
-
-data TodoForm f = TodoForm
-  { task :: Field f Text
-  }
-  deriving (Generic, FromFormF, GenFields FieldName)
 
 statusBar :: FilterTodo -> [Todo] -> View AllTodos ()
 statusBar filt todos = do
@@ -119,10 +90,10 @@ statusBar filt todos = do
       filterButton Active "Active"
       filterButton Completed "Completed"
     space
-    button ClearCompleted ~ hover (color Primary) $ "Clear completed"
+    button (MkTodosAction Shared.ClearCompleted) ~ hover (color Primary) $ "Clear completed"
  where
   filterButton f =
-    button (Filter f) ~ selectedFilter f . pad (XY 4 0) . rounded 2
+    button (MkTodosAction $ Shared.Filter f) ~ selectedFilter f . pad (XY 4 0) . rounded 2
   selectedFilter f =
     if f == filt then border 1 else id
 
@@ -136,34 +107,45 @@ instance (Todos :> es) => HyperView TodoView es where
 
   data Action TodoView
     = Edit FilterTodo Todo
-    | SubmitEdit FilterTodo Todo
+    | MkTodoAction FilterTodo Shared.TodoAction
     deriving (Generic, ViewAction)
 
   update (Edit filt todo) = do
     pure $ todoEditView filt todo
-  update (SubmitEdit filt todo) = do
-    TodoForm task <- formData @(TodoForm Identity)
-    updated <- Todos.setTask task todo
-    pure $ todoView filt updated
+  update (MkTodoAction filt action) =
+    todoView filt <$> Shared.updateTodo action
 
 todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
-  row ~ border (TRBL 0 0 1 0) . pad 10 $ do
+  row ~ border (TRBL 0 0 1 0) . pad 10 . showDestroyOnHover $ do
     target AllTodos $ do
-      toggleCheckbox (SetCompleted filt todo) todo.completed
-    el (text todo.task) @ onDblClick (Edit filt todo) ~ completed . pad (XY 18 4)
+      toggleCheckbox (MkTodosAction . Shared.SetCompleted filt todo) todo.completed
+    el (text todo.task) @ onDblClick (Edit filt todo) ~ completed . pad (XY 18 4) . grow
+    target AllTodos $ do
+      button (MkTodosAction $ Shared.Destroy filt todo) "✕" ~ cls "destroy-btn" . opacity 0 . hover (color Primary) . pad 4
  where
   completed = if todo.completed then Style.strikethrough else id
+  showDestroyOnHover =
+    css
+      "todo-row"
+      ".todo-row:hover > .destroy-btn"
+      (declarations (opacity 100))
 
 todoEditView :: FilterTodo -> Todo -> View TodoView ()
 todoEditView filt todo = do
   let f = fieldNames @TodoForm
   row ~ border (TRBL 0 0 1 0) . pad 10 $ do
-    form (SubmitEdit filt todo) ~ pad (TRBL 0 0 0 46) $ do
+    form (MkTodoAction filt $ Shared.SubmitEdit todo) ~ pad (TRBL 0 0 0 46) $ do
       field f.task $ do
         input TextInput @ value todo.task . autofocus ~ pad 4
 
+{-
+You may try this in the REPL for simple tests:
+
+bash> cabal repl exe:examples lib:hyperbole
+ghci> Todo.main
+-}
 main :: IO ()
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Example") (runTodosSession $ runPage page)
+    liveApp (basicDocument "Todo (simple)") (runTodosSession $ runPage simplePage)

@@ -68,6 +68,7 @@ instance Route ContactRoute where
 data ExamplesRoute
   = BigExamples
   | Todos
+  | TodosCSS -- A version using the CSS from TodoMVC project
   deriving (Eq, Generic, Show)
 instance Route ExamplesRoute where
   baseRoute = Just BigExamples

@@ -116,6 +116,7 @@ exampleMenu current = do
  where
   completeExamples = do
     exampleLink (Examples Todos) ~ sub
+    exampleLink (Examples TodosCSS) ~ sub
     exampleLink (Contacts ContactsAll) ~ sub
 
   -- link "/query?key=value" lnk "Query Params"
@@ -144,6 +145,7 @@ routeTitle (Data Filter) = "Filters"
 routeTitle (Data Autocomplete) = "Autocomplete"
 routeTitle Errors = "Error Handling"
 routeTitle (Examples Todos) = "TodoMVC"
+routeTitle (Examples TodosCSS) = "TodoMVC (CSS version)"
 routeTitle (Examples BigExamples) = "Large Examples"
 routeTitle OAuth2 = "OAuth2"
 routeTitle r = cs $ toWords $ fromHumps $ show r

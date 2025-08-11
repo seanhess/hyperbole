@@ -17,6 +17,7 @@ newtype AllTodos = AllTodos (Map TodoId Todo)
 
 instance Session AllTodos where
   sessionKey = "todos"
+  cookiePath = Just "/examples" -- share data between both pages
 instance Default AllTodos where
   def = AllTodos mempty
 
