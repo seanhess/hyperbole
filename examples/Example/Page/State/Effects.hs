@@ -66,4 +66,4 @@ initCounter = newTVarIO 0
 
 app :: TVar Int -> Application
 app var = do
-  liveApp (basicDocument "Example") (runReader var . runConcurrent $ runPage page)
+  liveApp quickStartDocument (runReader var . runConcurrent $ runPage page)

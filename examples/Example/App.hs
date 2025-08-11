@@ -163,7 +163,7 @@ app config users count = do
   hello Redirected = do
     pure $ exampleLayout Requests $ el ~ pad 10 $ "You were redirected"
 
-  -- Use the embedded version for real applications (see basicDocument).
+  -- Use the embedded version for real applications (see quickStartDocument).
   -- The link to /hyperbole.js here is just to make local development easier
   toDocument :: BL.ByteString -> BL.ByteString
   toDocument cnt =

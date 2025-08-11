@@ -14,7 +14,7 @@ data AppRoute
 
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Multiple Pages") (routeRequest router)
+    liveApp quickStartDocument (routeRequest router)
  where
   router Message = runPage Message.page
   router Counter = runPage Counter.page

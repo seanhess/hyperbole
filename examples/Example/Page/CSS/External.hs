@@ -6,7 +6,7 @@ import Web.Hyperbole
 main :: IO ()
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Example") (runPage page)
+    liveApp quickStartDocument (runPage page)
 
 page :: (Hyperbole :> es) => Eff es (Page '[Items])
 page = do

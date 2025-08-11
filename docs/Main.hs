@@ -9,11 +9,13 @@ import Data.Text.IO qualified as T
 import System.Directory
 import System.FilePath
 
+
 main :: IO ()
 main = do
   let tmpDir = "/tmp/hyperbole"
   copyExtraFilesTo tmpDir
   expandSourcesTo tmpDir
+
 
 test :: IO ()
 test = do
@@ -21,11 +23,13 @@ test = do
   SourceCode lns <- expandFile src
   mapM_ print lns
 
+
 expandSourcesTo :: FilePath -> IO ()
 expandSourcesTo tmpDir = do
   allFiles <- relativeSourceFiles "../src"
   print allFiles
   mapM_ (expandAndCopyFileTo tmpDir) allFiles
+
 
 copyExtraFilesTo :: FilePath -> IO ()
 copyExtraFilesTo tmpDir = do
@@ -37,16 +41,19 @@ copyExtraFilesTo tmpDir = do
   createDirectoryIfMissing True (tmpDir </> "client/dist")
   copyFile "../client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
 
+
 expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
 expandAndCopyFileTo tmpDir path = do
   src <- readSource path
   expanded <- expandFile src
   writeSource tmpDir path expanded
 
+
 readSource :: FilePath -> IO SourceCode
 readSource path = do
   inp <- T.readFile path
   pure $ SourceCode $ T.lines inp
+
 
 writeSource :: FilePath -> FilePath -> SourceCode -> IO ()
 writeSource tmpDir relPath src = do
@@ -57,6 +64,7 @@ writeSource tmpDir relPath src = do
  where
   cleanRelativeDir =
     dropWhile (== '/') . dropWhile (== '.')
+
 
 relativeSourceFiles :: FilePath -> IO [FilePath]
 relativeSourceFiles dir = do
@@ -80,6 +88,7 @@ relativeSourceFiles dir = do
         pure []
       Right files -> pure files
 
+
 data Embed = Embed
   { definition :: TopLevelDefinition
   , prefix :: Text
@@ -90,12 +99,15 @@ newtype SourceCode = SourceCode {lines :: [Text]}
 instance Show Embed where
   show e = "Embed " <> e.sourceFile <> " " <> show e.prefix <> " " <> show e.definition
 
+
 newtype TopLevelDefinition = TopLevelDefinition Text
   deriving newtype (Show, Eq)
+
 
 expandFile :: SourceCode -> IO SourceCode
 expandFile (SourceCode lns) =
   SourceCode . mconcat <$> mapM expandLine lns
+
 
 expandLine :: Text -> IO [Text]
 expandLine line = do
@@ -118,6 +130,7 @@ expandLine line = do
   splitSrcDef inp =
     let (src, def) = T.breakOn " " inp
      in pure (cs src, TopLevelDefinition $ T.drop 1 def)
+
 
 expandEmbed :: Embed -> IO [Text]
 expandEmbed embed = do
@@ -165,7 +178,7 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
     , "hyper"
     , "Page"
     , "liveApp"
-    , "basicDocument"
+    , "quickStartDocument"
     , "runPage"
     , "run"
     , "ViewId"
@@ -191,6 +204,7 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
     , "DefaultParam"
     ]
 
+
 -- returns lines of a top-level definition
 findTopLevel :: TopLevelDefinition -> SourceCode -> [Text]
 findTopLevel (TopLevelDefinition definition) source =
@@ -204,6 +218,7 @@ findTopLevel (TopLevelDefinition definition) source =
     isTopLevel line || not (isFullyOutdented line)
   dropWhileEnd p as =
     reverse $ dropWhile p $ reverse as
+
 
 isFullyOutdented :: Text -> Bool
 isFullyOutdented line =

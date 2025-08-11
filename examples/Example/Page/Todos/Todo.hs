@@ -185,4 +185,4 @@ ghci> Todo.main
 main :: IO ()
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Todo (simple)") (runTodosSession $ runPage simplePage)
+    liveApp quickStartDocument (runTodosSession $ runPage simplePage)

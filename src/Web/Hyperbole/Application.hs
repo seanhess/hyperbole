@@ -7,14 +7,13 @@ module Web.Hyperbole.Application
   , defaultConnectionOptions
   , liveApp
   , socketApp
-  , basicDocument
+  , quickStartDocument
   , routeRequest
   ) where
 
 import Control.Monad (forever, void)
 import Data.ByteString.Lazy qualified as BL
 import Data.String.Interpolate (i)
-import Data.Text (Text)
 import Effectful
 import Effectful.Concurrent.Async
 import Effectful.Dispatch.Dynamic
@@ -31,7 +30,7 @@ import Web.Hyperbole.Effect.Server.Socket qualified as Socket
 import Web.Hyperbole.Effect.Server.Types
 import Web.Hyperbole.Effect.Server.Wai (runServerWai)
 import Web.Hyperbole.Route
-import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed)
+import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed, scriptLiveReload)
 
 
 {- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
@@ -85,22 +84,25 @@ socketApp actions pend = do
 {- | wrap HTML fragments in a simple document with a custom title and include required embeds
 
 @
-'liveApp' (basicDocument "App Title") ('routeRequest' router)
+'liveApp' quickStartDocument ('routeRequest' router)
 @
 
-You may want to specify a custom document function to import custom javascript, css, or add other information to the \<head\>
+You must pass a function to Application that renders the entire document document function to import custom javascript, css, or add other information to the \<head\>
 
 > import Data.String.Interpolate (i)
 > import Web.Hyperbole (scriptEmbed, cssResetEmbed)
 >
 > #EMBED Example/Docs/App.hs customDocument
 -}
-basicDocument :: Text -> BL.ByteString -> BL.ByteString
-basicDocument title cnt =
+quickStartDocument :: BL.ByteString -> BL.ByteString
+quickStartDocument cnt =
   [i|<html>
       <head>
-        <title>#{title}</title>
+        <title>Hyperbole</title>
+        <meta httpEquiv="Content-Type" content="text/html" charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript">#{scriptEmbed}</script>
+        <script type="text/javascript">#{scriptLiveReload}</script>
         <style type="text/css">#{cssResetEmbed}</style>
       </head>
       <body>#{cnt}</body>

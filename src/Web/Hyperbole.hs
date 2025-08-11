@@ -54,9 +54,9 @@ module Web.Hyperbole
     -- * Application
     liveApp
   , Warp.run
-  , basicDocument
   , Page
   , runPage
+  , quickStartDocument
 
     -- ** Type-Safe Routes
   , routeRequest -- maybe belongs in an application section
@@ -182,7 +182,7 @@ module Web.Hyperbole
 
     -- ** Embeds
 
-    -- | Embedded CSS and Javascript to include in your document function. See 'basicDocument'
+    -- | Embedded CSS and Javascript to include in your document function. See 'quickStartDocument'
   , module Web.Hyperbole.View.Embed
 
     -- ** Effectful

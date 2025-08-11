@@ -9,7 +9,7 @@ import Web.Hyperbole
 main :: IO ()
 main = do
   run 3000 $ do
-    liveApp (basicDocument "Example") (runPage page)
+    liveApp quickStartDocument (runPage page)
 
 page :: Eff es (Page '[])
 page = do
@@ -19,7 +19,7 @@ page = do
 
 messageView :: Text -> View context ()
 messageView msg =
-  el ~ bold $ (text msg)
+  el ~ bold $ text msg
 
 helloWorld :: View context ()
 helloWorld =
