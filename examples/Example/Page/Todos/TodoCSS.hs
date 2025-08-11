@@ -2,14 +2,12 @@
 
 module Example.Page.Todos.TodoCSS (page) where
 
-import Example.Effects.Todos (Todo, TodoId, Todos)
-
 import Control.Monad (forM_)
 import Data.Bool (bool)
 import Data.Text qualified as T
+import Example.Effects.Todos (FilterTodo (..), Todo, TodoId, Todos)
 import Example.Effects.Todos qualified as Todos
-import Example.Page.Todos.Shared (FilterTodo (..), TodoForm (..), pluralize)
-import Example.Page.Todos.Shared qualified as Shared
+import Example.Page.Todos.Todo (Action (..), AllTodos (..), TodoForm (..), TodoView (..), pluralize)
 import Web.Hyperbole as Hyperbole
 import Web.Hyperbole.HyperView.Forms (Input (Input))
 
@@ -30,7 +28,7 @@ only need to add one manual rule to the footer, to override the CSS reset
 
 -}
 
-page :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
+page :: (Todos :> es) => Eff es (Page '[CSSTodos, CSSTodo])
 page = do
   todos <- Todos.loadAll
   pure $ do
@@ -38,45 +36,64 @@ page = do
       -- Alternative stylesheet at: https://todomvc.com/examples/javascript-es6/dist/app.css
       -- Reference implementation at: https://todomvc.com/examples/javascript-es6/dist/
       stylesheet "https://cdn.jsdelivr.net/npm/todomvc-app-css@2.4.3/index.min.css"
+
+      -- Tweaks required to the stylesheet, mostly to undo the global reset we used for the
+      -- rest of the examples, but also to accomodate a slightly different DOM
+      stylesheet "/todomvc.css"
+
       section @ class_ "todoapp" $ do
-        hyper AllTodos $ todosView FilterAll todos
+        hyper CSSTodos $ todosView FilterAll todos
+
       footer @ class_ "info" $ do
-        let p_ = p @ style' "margin: 1em auto"
-        p_ "Double-click to edit a todo"
-        p_ $ do
+        p "Double-click to edit a todo"
+        p $ do
           span' "Go back to the "
-          a @ att "href" "/examples" . style' "color: #b83f45" $ "examples"
+          a @ att "href" "/examples" $ "examples"
 
 --- TodosView ----------------------------------------------------------------------------
 
-data AllTodos = AllTodos
+data CSSTodos = CSSTodos
   deriving (Generic, ViewId)
 
-instance (Todos :> es) => HyperView AllTodos es where
-  type Require AllTodos = '[TodoView]
+instance (Todos :> es) => HyperView CSSTodos es where
+  type Require CSSTodos = '[CSSTodo]
 
-  newtype Action AllTodos = MkTodosAction Shared.TodosAction
-    deriving newtype (Generic, ViewAction)
+  -- reuse as the actions from the main TodoMVC example. This isn't a good
+  -- example of how to factor well, it's optimized to make the main example
+  -- readable. Focus on the views
+  newtype Action CSSTodos = MkTodosAction (Action AllTodos)
+    deriving newtype (ViewAction)
 
+  -- Repeated logic from the main Todos example. Do not follow this as an example
+  -- of how to reuse views
   update (MkTodosAction action) = do
     case action of
-      Shared.ClearCompleted ->
-        todosView FilterAll <$> Shared.updateTodos Shared.ClearCompleted
-      Shared.SubmitTodo ->
-        todosView FilterAll <$> Shared.updateTodos Shared.SubmitTodo
-      Shared.Filter f ->
-        todosView f <$> Shared.updateTodos (Shared.Filter f)
-      Shared.ToggleAll f ->
-        todosView f <$> Shared.updateTodos (Shared.ToggleAll f)
-      Shared.SetCompleted f t b ->
-        todosView f <$> Shared.updateTodos (Shared.SetCompleted f t b)
-      Shared.Destroy f t ->
-        todosView f <$> Shared.updateTodos (Shared.Destroy f t)
+      ClearCompleted -> do
+        todosView FilterAll <$> Todos.clearCompleted
+      SubmitTodo -> do
+        TodoForm task <- formData @(TodoForm Identity)
+        _ <- Todos.create task
+        todos <- Todos.filteredTodos FilterAll
+        pure $ todosView FilterAll todos
+      Filter filt -> do
+        todos <- Todos.filteredTodos filt
+        pure $ todosView filt todos
+      ToggleAll filt -> do
+        todos <- Todos.filteredTodos filt >>= Todos.toggleAll
+        pure $ todosView filt todos
+      SetCompleted filt todo completed -> do
+        _ <- Todos.setCompleted completed todo
+        todos <- Todos.filteredTodos filt
+        pure $ todosView filt todos
+      Destroy filt todo -> do
+        Todos.clear todo
+        todos <- Todos.filteredTodos filt
+        pure $ todosView filt todos
 
-todosView :: FilterTodo -> [Todo] -> View AllTodos ()
+todosView :: FilterTodo -> [Todo] -> View CSSTodos ()
 todosView filt todos = do
   header @ class_ "header" $ do
-    h1 @ style' "top:-80px" $ text "todos"
+    h1 $ text "todos"
     todoForm
   main' @ class_ "main" $ do
     div' @ class_ "toggle-all-container" $ do
@@ -88,19 +105,19 @@ todosView filt todos = do
       label'
         @ class_ "toggle-all-label"
         . att "for" "toggle-all"
-        . onClick (MkTodosAction $ Shared.ToggleAll filt)
+        . onClick (MkTodosAction $ ToggleAll filt)
         $ text "Mark all as complete"
 
       ul' @ class_ "todo-list" $ do
         forM_ todos $ \todo -> do
-          hyper (TodoView todo.id) $ todoView filt todo
+          hyper (CSSTodo todo.id) $ todoView filt todo
 
     statusBar filt todos
 
-todoForm :: View AllTodos ()
+todoForm :: View CSSTodos ()
 todoForm = do
   let f :: TodoForm FieldName = fieldNames
-  form (MkTodosAction Shared.SubmitTodo) $ do
+  form (MkTodosAction SubmitTodo) $ do
     field f.task $ do
       Input (FieldName nm) <- context
       input' -- we use a custom input field, because the Hyperbole one overrides autocomplete
@@ -117,9 +134,9 @@ todoForm = do
         . value ""
         . name nm -- because we use a custom field, we must provide this param for the library
 
-statusBar :: FilterTodo -> [Todo] -> View AllTodos ()
+statusBar :: FilterTodo -> [Todo] -> View CSSTodos ()
 statusBar filt todos = do
-  footer @ class_ "footer" . style' "padding-bottom: 30px" $ do
+  footer @ class_ "footer" $ do
     let numLeft = length $ filter (\t -> not t.completed) todos
     span' @ class_ "todo-count" $ do
       text $
@@ -136,12 +153,12 @@ statusBar filt todos = do
       filterLi Active "Active"
       filterLi Completed "Completed"
     space
-    button (MkTodosAction Shared.ClearCompleted) @ class_ "clear-completed" $ "Clear completed"
+    button (MkTodosAction ClearCompleted) @ class_ "clear-completed" $ "Clear completed"
  where
   filterLi f str =
     li' @ class_ "filter" . selectedFilter f $ do
       a
-        @ onClick (MkTodosAction $ Shared.Filter f)
+        @ onClick (MkTodosAction $ Filter f)
         . att "href" "" -- harmless empty href is for the CSS
         $ text str
   selectedFilter f =
@@ -149,59 +166,57 @@ statusBar filt todos = do
 
 --- TodoView ----------------------------------------------------------------------------
 
-data TodoView = TodoView TodoId
+data CSSTodo = CSSTodo TodoId
   deriving (Generic, ViewId)
 
-instance (Todos :> es) => HyperView TodoView es where
-  type Require TodoView = '[AllTodos]
+instance (Todos :> es) => HyperView CSSTodo es where
+  type Require CSSTodo = '[CSSTodos]
 
-  data Action TodoView
-    = Edit FilterTodo Todo
-    | MkTodoAction FilterTodo Shared.TodoAction
-    deriving (Generic, ViewAction)
+  newtype Action CSSTodo
+    = MkTodoAction (Action TodoView)
+    deriving newtype (ViewAction)
 
-  update (Edit filt todo) = do
-    pure $ todoEditView filt todo
-  update (MkTodoAction filt action) = do
-    todoView filt <$> Shared.updateTodo action
+  update (MkTodoAction action) =
+    case action of
+      Edit filt todo -> do
+        pure $ todoEditView filt todo
+      SubmitEdit filt todo -> do
+        TodoForm task <- formData @(TodoForm Identity)
+        t <- Todos.setTask task todo
+        pure $ todoView filt t
 
-todoView :: FilterTodo -> Todo -> View TodoView ()
+todoView :: FilterTodo -> Todo -> View CSSTodo ()
 todoView filt todo = do
   li'
     @ bool id (class_ "completed") todo.completed
-    . style' "border-bottom: 1px solid #ededed"
     $ do
       div' @ class_ "view" $ do
-        target AllTodos $ do
+        target CSSTodos $ do
           input'
             @ class_ "toggle"
             . att "type" "checkbox"
-            . onClick (MkTodosAction $ Shared.SetCompleted filt todo $ not todo.completed)
+            . onClick (MkTodosAction $ SetCompleted filt todo $ not todo.completed)
             . checked todo.completed
 
-        label' @ class_ "label" . onDblClick (Edit filt todo) $ do
+        label' @ class_ "label" . onDblClick (MkTodoAction $ Edit filt todo) $ do
           text todo.task
 
-        target AllTodos $ do
-          button (MkTodosAction $ Shared.Destroy filt todo) @ class_ "destroy" $ ""
+        target CSSTodos $ do
+          button (MkTodosAction $ Destroy filt todo) @ class_ "destroy" $ ""
 
-todoEditView :: FilterTodo -> Todo -> View TodoView ()
+todoEditView :: FilterTodo -> Todo -> View CSSTodo ()
 todoEditView filt todo = do
-  let f = fieldNames @TodoForm
   li' @ class_ "editing" $ do
-    form (MkTodoAction filt $ Shared.SubmitEdit todo) $ do
-      let taskField = Input f.task
-      -- Instead of using the `field` FormField wrapper, we add the context manually
-      -- and use a custom input field for maximum control over the generated HTML
-      let Input (FieldName fn) = taskField
-      addContext taskField $ do
-        input'
+    form (MkTodoAction $ SubmitEdit filt todo) $ do
+      field "task" $ do
+        input TextInput
           @ class_ "edit"
           . value todo.task
           . autofocus
-          . name fn -- because we use a custom input, we must provide this param for the library
 
---- Helpers ----------------------------------------------------------------------------
+--- Semantic HTML Helpers ----------------------------------------------------------------------------
+--
+-- you can use semantic HTML with atomic-css too! But it is required here for the stylesheet to work
 
 div' :: View c () -> View c ()
 div' = tag "div"
@@ -241,6 +256,3 @@ li' = tag "li"
 
 footer :: View c () -> View c ()
 footer = tag "footer"
-
-style' :: (Attributable h) => AttValue -> Attributes h -> Attributes h
-style' = att "style"

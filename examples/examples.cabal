@@ -75,7 +75,6 @@ executable examples
       Example.Page.State.Query
       Example.Page.State.Sessions
       Example.Page.Test
-      Example.Page.Todos.Shared
       Example.Page.Todos.Todo
       Example.Page.Todos.TodoCSS
       Example.Style

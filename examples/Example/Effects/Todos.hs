@@ -99,3 +99,19 @@ clearCompleted = do
 clear :: (Todos :> es) => Todo -> Eff es ()
 clear todo = do
   send $ Remove todo.id
+
+filteredTodos :: (Todos :> es) => FilterTodo -> Eff es [Todo]
+filteredTodos filt =
+  filter (isFilter filt) <$> loadAll
+ where
+  isFilter f todo =
+    case f of
+      FilterAll -> True
+      Active -> not todo.completed
+      Completed -> todo.completed
+
+data FilterTodo
+  = FilterAll
+  | Active
+  | Completed
+  deriving (Eq, Generic, ToJSON, FromJSON)
