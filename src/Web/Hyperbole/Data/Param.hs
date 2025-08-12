@@ -3,7 +3,7 @@
 
 module Web.Hyperbole.Data.Param where
 
-import Data.Aeson as A (FromJSON (..), Result (..), ToJSON (..), Value (..), eitherDecode, encode, fromJSON)
+import Data.Aeson as A (FromJSON (..), Result (..), ToJSON (..), ToJSONKey, Value (..), eitherDecode, encode, fromJSON)
 import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
@@ -17,11 +17,11 @@ import Web.Hyperbole.Data.URI (URI (..), parseURIReference, uriToText)
 
 
 newtype Param = Param {text :: Text}
-  deriving newtype (Show, Eq, Ord, IsString)
+  deriving newtype (Show, Eq, Ord, IsString, ToJSONKey)
 
 
 newtype ParamValue = ParamValue {text :: Text}
-  deriving newtype (Show, Eq, IsString)
+  deriving newtype (Show, Eq, IsString, ToJSON)
 
 
 {- | 'session's, 'form's, and 'query's all encode data as query strings. ToParam and FromParam control how a datatype is encoded to a parameter.

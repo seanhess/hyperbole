@@ -47,7 +47,7 @@ runPageWai req = reinterpret runLocal $ \_ -> \case
   cookies :: (Error Interrupt :> es) => Wai.Request -> Eff es Cookies
   cookies wr = do
     let header = fromMaybe "" $ L.lookup "Cookie" $ Wai.requestHeaders wr
-    fromCookieHeader header
+    fromCookieHeader req header
 
   initClient :: (Error Interrupt :> es) => Wai.Request -> Eff es Client
   initClient wr = do
@@ -155,9 +155,10 @@ runPageWai req = reinterpret runLocal $ \_ -> \case
 --   pure $ Request{body, path = pth, query, method, cookies, host, requestId}
 
 -- Client only returns ONE Cookie header, with everything concatenated
-fromCookieHeader :: (Error Interrupt :> es) => BS.ByteString -> Eff es Cookies
-fromCookieHeader h =
-  case Cookie.parse (Web.Cookie.parseCookies h) of
+fromCookieHeader :: (Error Interrupt :> es) => Wai.Request -> BS.ByteString -> Eff es Cookies
+fromCookieHeader req h = do
+  let pth = path $ cs $ Wai.rawPathInfo req
+  case Cookie.parse pth (Web.Cookie.parseCookies h) of
     -- TODO: send an invalid client response, this is bad!
     Left err -> throwError $ Err $ InvalidCookies (cs err) h
     Right a -> pure a

@@ -9,7 +9,7 @@ import Effectful.Dispatch.Dynamic (send)
 import Web.Hyperbole.Data.Param (FromParam (..), Param, ToParam (..))
 import Web.Hyperbole.Data.QueryData (FromQuery (..), QueryData (..), ToQuery (..), queryData)
 import Web.Hyperbole.Data.QueryData qualified as QueryData
-import Web.Hyperbole.Effect.Page (Client (..), Interrupt (..), Page (..), client, interrupt, modClient, PageError(..), pageError)
+import Web.Hyperbole.Effect.Page
 
 
 {- | Parse querystring from the 'Request' into a datatype. See 'FromQuery'

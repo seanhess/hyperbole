@@ -90,7 +90,8 @@ lookupSession = do
 -}
 saveSession :: forall a es. (Session a, Page :> es) => a -> Eff es ()
 saveSession a = do
-  modifyCookies $ Cookie.insert $ sessionCookie a
+  cook <- sessionCookie a
+  modifyCookies $ Cookie.insert cook
 
 
 modifySession :: (Session a, Default a, Page :> es) => (a -> a) -> Eff es a
@@ -110,7 +111,8 @@ modifySession_ f = do
 -- | Remove a single 'Session' from the browser cookies
 deleteSession :: forall a es. (Session a, Page :> es) => Eff es ()
 deleteSession = do
-  let cookie = Cookie (sessionKey @a) (cookiePath @a) Nothing
+  pth <- sessionCookiePath @a
+  let cookie = Cookie (sessionKey @a) pth Nothing
   modifyCookies $ Cookie.insert cookie
 
 
@@ -130,8 +132,8 @@ setCookie ck = do
 -- | Modify the client cookies
 modifyCookies :: (Page :> es) => (Cookies -> Cookies) -> Eff es ()
 modifyCookies f =
-  modClient $ \client ->
-    Client{session = f client.session, query = client.query}
+  modClient $ \cl ->
+    Client{session = f cl.session, query = cl.query}
 
 
 -- | Return all the cookies, both those sent in the request and others added by the page
@@ -153,10 +155,17 @@ clientSessionCookies = do
 -- requestSessionCookies = do
 --   (.cookies) <$> client
 
+-- we need to be able to convert this INTO a cookie
+sessionCookie :: forall a es. (Page :> es, Session a) => a -> Eff es Cookie
+sessionCookie a = do
+  pth <- sessionCookiePath @a
+  pure $ Cookie (sessionKey @a) pth (Just $ toCookie a)
 
-sessionCookie :: forall a. (Session a) => a -> Cookie
-sessionCookie a =
-  Cookie (sessionKey @a) (cookiePath @a) (Just $ toCookie a)
+
+sessionCookiePath :: forall a es. (Page :> es, Session a) => Eff es Path
+sessionCookiePath = do
+  pth <- (.path) <$> pageInfo
+  pure $ fromMaybe pth $ cookiePath @a
 
 
 -- | generic datatype name

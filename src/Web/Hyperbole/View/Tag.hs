@@ -3,6 +3,8 @@
 module Web.Hyperbole.View.Tag where
 
 import Control.Monad (forM_)
+import Data.ByteString (ByteString)
+import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Effectful
 import Effectful.State.Static.Local
@@ -43,6 +45,29 @@ link u = tag "a" @ att "href" (uriToText u)
 
 img :: Text -> View c ()
 img sc = tag "img" @ src sc $ none
+
+
+-- * Header
+
+
+title :: Text -> View c ()
+title = tag "title" . text
+
+
+meta :: View c ()
+meta = tag "meta" none
+
+
+httpEquiv :: (Attributable c) => Text -> Attributes c -> Attributes c
+httpEquiv = att "httpEquiv"
+
+
+content :: (Attributable c) => Text -> Attributes c -> Attributes c
+content = att "content"
+
+
+charset :: (Attributable c) => Text -> Attributes c -> Attributes c
+charset = att "charset"
 
 
 -- * Inputs
@@ -89,11 +114,15 @@ src = att "src"
 
 
 script :: Text -> View c ()
-script s = tag "script" none @ type_ "text/javascript" @ src s
+script s = tag "script" @ type_ "text/javascript" . src s $ none
 
 
-style :: Text -> View c ()
-style cnt = tag "style" (text $ "\n" <> cnt <> "\n") @ type_ "text/css"
+script' :: ByteString -> View c ()
+script' cdata = tag "script" @ type_ "text/javascript" $ raw $ cs cdata
+
+
+style :: ByteString -> View c ()
+style cnt = tag "style" (raw $ "\n" <> cs cnt <> "\n") @ type_ "text/css"
 
 
 stylesheet :: Text -> View c ()

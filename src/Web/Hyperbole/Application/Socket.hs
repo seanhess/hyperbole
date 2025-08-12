@@ -43,12 +43,12 @@ data SocketError
   deriving (Show, Exception)
 
 
-receiveRequest :: (IOE :> es, Error SocketError :> es, Error PageError :> es) => Connection -> Eff es SocketRequest
-receiveRequest conn = do
+receiveRequest :: (IOE :> es, Error SocketError :> es, Error PageError :> es) => Path -> Connection -> Eff es SocketRequest
+receiveRequest pth conn = do
   -- TODO: catch and lift errors here
   input <- liftIO $ WS.receiveData @Text conn
   msg <- runParseMessage input
-  fromMessage msg
+  fromMessage pth msg
 
 
 runParseMessage :: (Error SocketError :> es) => Text -> Eff es Message
@@ -95,8 +95,8 @@ data SocketRequest
   = RunAction Client (Event TargetViewId Text)
 
 
-fromMessage :: (Error SocketError :> es, Error PageError :> es) => Message -> Eff es SocketRequest
-fromMessage (Message typ _ meta _) =
+fromMessage :: (Error SocketError :> es, Error PageError :> es) => Path -> Message -> Eff es SocketRequest
+fromMessage pth (Message typ _ meta _) =
   case typ of
     "UPDATE" -> do
       ev <- eventMeta
@@ -120,7 +120,7 @@ fromMessage (Message typ _ meta _) =
   cookies :: (Error SocketError :> es, Error PageError :> es) => Text -> Eff es Cookies
   cookies val = do
     let cooks = cs val
-    case Cookie.parse $ Web.Cookie.parseCookies cooks of
+    case Cookie.parse pth $ Web.Cookie.parseCookies cooks of
       Left e -> throwError $ InvalidCookies (cs e) cooks
       Right a -> pure a
 

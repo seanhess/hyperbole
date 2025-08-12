@@ -3,6 +3,7 @@
 
 module Web.Hyperbole.Data.QueryData where
 
+import Data.Aeson (ToJSON)
 import Data.ByteString (ByteString)
 import Data.Default (Default (..))
 import Data.Map.Strict (Map)
@@ -20,7 +21,7 @@ import Prelude hiding (lookup)
 -- | Key-value store for query params and sessions
 newtype QueryData = QueryData (Map Param ParamValue)
   deriving (Show)
-  deriving newtype (Monoid, Semigroup)
+  deriving newtype (Monoid, Semigroup, ToJSON)
 
 
 singleton :: (ToParam a) => Param -> a -> QueryData

@@ -17,7 +17,7 @@ type Key = Text
 
 data Cookie = Cookie
   { key :: Key
-  , path :: Maybe Path
+  , path :: Path
   , value :: Maybe CookieValue
   }
   deriving (Show, Eq)
@@ -57,22 +57,21 @@ toList :: Cookies -> [Cookie]
 toList (Cookies m) = M.elems m
 
 
-render :: Path -> Cookie -> ByteString
-render requestPath cookie =
-  let p = fromMaybe requestPath cookie.path
-   in cs cookie.key <> "=" <> value cookie.value <> "; SameSite=None; secure; path=" <> cs (uriToText (pathUri p))
+render :: Cookie -> ByteString
+render cookie =
+  cs cookie.key <> "=" <> value cookie.value <> "; SameSite=None; secure; path=" <> cs (uriToText (pathUri cookie.path))
  where
   value Nothing = "; expires=Thu, 01 Jan 1970 00:00:00 GMT"
   value (Just (CookieValue val)) = urlEncode True $ cs val
 
 
-parse :: [(ByteString, ByteString)] -> Either Text Cookies
-parse kvs = do
-  cks <- mapM (uncurry parseValue) kvs
+parse :: Path -> [(ByteString, ByteString)] -> Either Text Cookies
+parse pth kvs = do
+  cks <- mapM (uncurry (parseValue pth)) kvs
   pure $ fromList cks
 
 
-parseValue :: ByteString -> ByteString -> Either Text Cookie
-parseValue k val = do
+parseValue :: Path -> ByteString -> ByteString -> Either Text Cookie
+parseValue pth k val = do
   let cval = CookieValue $ cs $ urlDecode True val
-  pure $ Cookie (cs k) Nothing (Just $ cval)
+  pure $ Cookie (cs k) pth (Just cval)

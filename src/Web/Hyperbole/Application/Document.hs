@@ -4,6 +4,8 @@ module Web.Hyperbole.Application.Document where
 
 import Data.ByteString.Lazy qualified as BL
 import Data.String.Interpolate (i)
+import Data.Text (Text)
+import Web.Hyperbole.View (View, renderLazyByteString, renderText, tag)
 import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed, scriptLiveReload)
 
 
@@ -33,3 +35,35 @@ quickStartDocument cnt =
       </head>
       <body>#{cnt}</body>
   </html>|]
+
+
+newtype DocumentHead = DocumentHead {html :: BL.ByteString}
+
+
+documentHead :: View () () -> DocumentHead
+documentHead vh = do
+  DocumentHead $ renderLazyByteString vh
+
+
+data Document = Document
+  { head :: DocumentHead
+  , body :: View () ()
+  }
+
+
+renderDocument :: Document -> BL.ByteString
+renderDocument doc =
+  let hd = doc.head.html
+      bd = renderLazyByteString doc.body
+   in [i|<html>
+      <head>
+        #{hd}
+      </head>
+      <body>
+        #{bd}
+      </body>
+  </html>|]
+
+
+mapHead :: (DocumentHead -> DocumentHead) -> Document -> Document
+mapHead f doc = Document{head = f doc.head, body = doc.body}
