@@ -9,24 +9,24 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Effect.Page (Page)
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.Types.Event
 import Web.Hyperbole.View
 
 
--- class RunHandlers (views :: [Type]) es where
---   runHandlers :: (Hyperbole :> es) => Eff es ()
---
---
--- instance RunHandlers '[] es where
---   runHandlers = pure ()
---
---
+class RunHandlers (views :: [Type]) es where
+  runHandlers :: (Page :> es) => Eff es ()
+
+
+instance RunHandlers '[] es where
+  runHandlers = pure ()
+
 -- instance (HyperView view es, RunHandlers views es) => RunHandlers (view : views) es where
 --   runHandlers = do
 --     runHandler @view (update @view)
 --     runHandlers @views
---
 --
 -- runHandler
 --   :: forall id es
@@ -42,6 +42,7 @@ import Web.Hyperbole.View
 --       respondView evt.viewId vw
 --     _ -> do
 --       pure ()
+
 --
 --
 -- runLoad

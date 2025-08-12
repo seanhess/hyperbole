@@ -7,6 +7,7 @@ module Web.Hyperbole.Application.Http where
 import Data.Aeson qualified as Aeson
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
+import Data.Kind (Type)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Effectful
@@ -18,15 +19,18 @@ import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets (PendingConnection, defaultConnectionOptions)
+import Web.Hyperbole.Application.Socket qualified as Socket
 import Web.Hyperbole.Data.Cookie (Cookie)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData
 import Web.Hyperbole.Data.URI (path, uriToText)
 import Web.Hyperbole.Effect.Page
 import Web.Hyperbole.Effect.Server.Wai (ContentType (..), contentType, runPageWai)
+import Web.Hyperbole.Route
 import Web.Hyperbole.View (el, renderLazyByteString)
 
 import Data.String.Interpolate (i)
+import Effectful.Reader.Static
 import GHC.Generics (Generic)
 import Web.Atomic.CSS hiding (style)
 import Web.Hyperbole.Application.Document
@@ -44,13 +48,14 @@ import Web.Hyperbole.View
 > #EMBED Example/Docs/BasicPage.hs main
 -}
 liveApp :: Eff '[Page, Error Interrupt, IOE] Document -> Wai.Application
-liveApp handlePage = do
+liveApp handlePage req = do
   websocketsOr
     defaultConnectionOptions
-    (runEff . runConcurrent . noop)
+    (runEff . runConcurrent . connectSock)
     (waiApp handlePage)
+    req
  where
-  noop = const (pure ())
+  connectSock = Socket.socketApp req
 
 
 waiApp :: Eff '[Page, Error Interrupt, IOE] Document -> Wai.Application
@@ -105,15 +110,16 @@ responseHeaders clnt =
     ("Set-Cookie", Cookie.render cookie)
 
 
+-- expects a router function
+routeRequest :: (Page :> es, Route route) => (route -> Eff es a) -> Eff es a
+routeRequest actions = do
+  pth <- (.path) <$> pageInfo
+  maybe notFound actions $ findRoute pth.segments
+
+
 ----------------------------------------------------------------
 
 -- Apply document in runner? no need to pass it in globally
-
-myDocument :: Eff es (View (Root views) ()) -> Eff es Document
-myDocument pageRoot = do
-  root <- pageRoot
-  pure $ Document myHead $ addContext Root root
-
 
 myHead :: DocumentHead
 myHead = documentHead $ do
@@ -125,14 +131,41 @@ myHead = documentHead $ do
   script' scriptLiveReload
 
 
+runDocument :: (Page :> es) => DocumentHead -> Eff es (View (Root views) ()) -> Eff es Document
+runDocument docHead pageRoot = do
+  root <- pageRoot
+  -- myHead is configuration...
+  pure $ Document docHead $ addContext Root root
+
+
+loadRoute :: (Route r, Page :> es) => DocumentHead -> ((forall views. Eff es (PageView views) -> Eff es Document) -> r -> Eff es Document) -> Eff es Document
+loadRoute docHead router = routeRequest $ router (runDocument docHead)
+
+
 ----------------------------------------------------------------
 
+data AppRoute
+  = Main
+  | Other
+  deriving (Generic, Eq, Route)
+
+
+-- does that views need to be the same for all?
+myRouter :: (Page :> es, Reader Int :> es) => (forall views. Eff es (PageView views) -> Eff es a) -> AppRoute -> Eff es a
+myRouter run = \case
+  Main -> run counterPage
+  Other -> run $ runReader @Int 5 otherPage
+
+
 exampleApp :: Wai.Application
-exampleApp = liveApp handlePage
+exampleApp = liveApp load
  where
-  handlePage :: Eff '[Page, Error Interrupt, IOE] Document
-  handlePage = do
-    myDocument page
+  load :: Eff '[Page, Error Interrupt, IOE] Document
+  load = do
+    runApp $ loadRoute myHead myRouter
+
+  runApp :: Eff (Reader Int : es) a -> Eff es a
+  runApp = runReader @Int 3
 
 
 data Prefs = Prefs
@@ -141,11 +174,20 @@ data Prefs = Prefs
   deriving (Generic, Aeson.ToJSON, Aeson.FromJSON, Session)
 
 
-page :: (Page :> es) => Eff es (PageView '[Counter])
-page = do
+otherPage :: (Page :> es, Reader Int :> es) => Eff es (PageView '[])
+otherPage = do
+  n <- ask @Int
+  pure $ do
+    el "Other"
+    el $ text $ cs $ show n
+
+
+counterPage :: (Page :> es, Reader Int :> es) => Eff es (PageView '[Counter])
+counterPage = do
   setParam @Text "woot" "hello"
   saveSession $ Prefs "Wahoo"
-  pure $ col ~ pad 20 $ hyper Counter (viewCount 0)
+  n <- ask @Int
+  pure $ col ~ pad 20 $ hyper Counter (viewCount n)
 
 
 data Counter = Counter

@@ -29,6 +29,7 @@ data Client = Client
   { session :: Cookies
   , query :: QueryData
   }
+  deriving (Show)
 
 
 -- then we can have 2 runners. One that runs in a handler, and another that runs in Wai

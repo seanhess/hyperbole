@@ -3,6 +3,7 @@
 module Web.Hyperbole.Application.Socket where
 
 import Control.Applicative (many)
+import Control.Monad (forever, void)
 import Data.Attoparsec.Text (Parser, char, endOfLine, isEndOfLine, takeText, takeTill, takeWhile1)
 import Data.Attoparsec.Text qualified as Atto
 import Data.Bifunctor (first)
@@ -14,13 +15,16 @@ import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import Effectful
+import Effectful.Concurrent
+import Effectful.Concurrent.Async
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
-import Effectful.Exception (Exception, throwIO)
+import Effectful.Exception
 import Effectful.State.Static.Local
 import GHC.Generics
 import Network.HTTP.Types as HTTP (parseQuery)
-import Network.WebSockets (Connection)
+import Network.Wai qualified as Wai
+import Network.WebSockets (Connection, PendingConnection)
 import Network.WebSockets qualified as WS
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
@@ -31,16 +35,78 @@ import Web.Hyperbole.Data.URI (Path, URI, path, uriToText)
 import Web.Hyperbole.Effect.Page (Client (..), PageError (..), PageInfo (..))
 import Web.Hyperbole.Effect.Server.Response
 import Web.Hyperbole.Effect.Server.Types
-import Web.Hyperbole.Types.Error (SerializedError (..))
+import Web.Hyperbole.Page (PageView)
+import Web.Hyperbole.Types.Error (SerializedError (..), serverError)
 import Web.Hyperbole.Types.Event (Event (..), RequestId (..), TargetViewId (..))
 import Web.Hyperbole.View (View, renderLazyByteString, renderText)
 
+
+-- TODO: application handlers resolve to a particular page / set of handlers....
+-- you could pass me the same action.... and we could CALCULATE the other actions...
 
 data SocketError
   = InvalidMessageType Text
   | MissingMeta Text
   | MessageParseFail String
   deriving (Show, Exception)
+
+
+data Update = Update
+
+
+-- you still have to apply the same stuff, so you would have to duplicate the handler
+pageHandlers :: Eff es (PageView views) -> SocketRequest -> Eff es Update
+pageHandlers = _
+
+
+-- NOTE: Need a way to
+--  map (Route -> Eff es (PageView views))
+--  well, we don't actually have to *execute* the page, right?
+--  but those views can't be different for each one...
+--  run
+--
+--  (Hello h) -> run $ hello h
+--  (Contacts contact) -> run $ Contacts.page
+--
+--  run :: Eff es (PageView views) x
+--
+
+router :: (Eff es (PageView views) -> Eff es a) -> r -> Eff es a
+router run = _
+
+
+socketApp :: (IOE :> es, Concurrent :> es) => Wai.Request -> PendingConnection -> Eff es ()
+socketApp req pend = do
+  let pth = path $ cs $ Wai.rawPathInfo req
+  conn <- liftIO $ WS.acceptRequest pend
+  forever $ do
+    -- load the message
+    sockReq <- runErrorNoCallStack @SocketError $ runErrorNoCallStack @PageError $ receiveRequest pth conn
+    case sockReq of
+      Left e -> messageError e
+      Right (Left e) -> messageError e
+      Right (Right a) -> do
+        liftIO $ print a
+ where
+  -- -- run handler in the background with async
+  -- void $ async $ do
+  --   res <- trySync $ runHyperbole req actions
+  --   case res of
+  --     -- TODO: catch socket errors separately from SomeException?
+  --     Left (ex :: SomeException) -> do
+  --       -- It's not safe to send any exception over the wire
+  --       -- log it to the console and send the error to the client
+  --       liftIO $ print ex
+  --       res2 <- trySync $ sendError conn (serverError "Internal Server Error")
+  --       case res2 of
+  --         Left e -> liftIO $ putStrLn $ "Socket Error while sending previous error to client: " <> show e
+  --         Right _ -> pure ()
+  --     Right _ -> pure ()
+
+  messageError :: (Show err, IOE :> es) => err -> Eff es ()
+  messageError err = liftIO $ do
+    putStrLn "Socket Message Error"
+    print err
 
 
 receiveRequest :: (IOE :> es, Error SocketError :> es, Error PageError :> es) => Path -> Connection -> Eff es SocketRequest
@@ -90,9 +156,10 @@ parseMessage = do
 
 
 -- NOTE: PageInfo comes from the websocket connection itself
--- actions do need to send the client though
+-- actions do need to send the client though? not sure
 data SocketRequest
   = RunAction Client (Event TargetViewId Text)
+  deriving (Show)
 
 
 fromMessage :: (Error SocketError :> es, Error PageError :> es) => Path -> Message -> Eff es SocketRequest
