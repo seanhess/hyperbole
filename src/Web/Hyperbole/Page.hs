@@ -2,9 +2,7 @@ module Web.Hyperbole.Page where
 
 import Data.Kind (Type)
 import Effectful
-import Web.Hyperbole.Effect.Handler (RunHandlers, runLoad)
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Server (Response)
 import Web.Hyperbole.HyperView (Root)
 import Web.Hyperbole.View (View)
 
@@ -15,19 +13,21 @@ import Web.Hyperbole.View (View)
 #EMBED Example/Docs/MultiView.hs page
 @
 -}
-type Page (views :: [Type]) = View (Root views) ()
+type PageView (views :: [Type]) = View (Root views) ()
 
-
-{- | Run a 'Page' and return a 'Response'
-
-@
-#EMBED Example/Docs/BasicPage.hs main
-
-#EMBED Example/Docs/BasicPage.hs page
-@
--}
-runPage
-  :: (Hyperbole :> es, RunHandlers views es)
-  => Eff es (Page views)
-  -> Eff es Response
-runPage = runLoad
+-- {- | Run a 'Page' and return a 'Response'
+--
+-- @
+-- #EMBED Example/Docs/BasicPage.hs main
+--
+-- #EMBED Example/Docs/BasicPage.hs page
+-- @
+-- -}
+-- runPage
+--   :: (Hyperbole :> es, RunHandlers views es)
+--   => Eff es (Page views)
+--   -> Eff es (View () ())
+-- runPage load = do
+--   vw <- load
+--   let vid = TargetViewId (encodedToText $ toViewId Root)
+--   pure $ addContext Root vw

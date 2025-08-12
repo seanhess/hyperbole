@@ -21,18 +21,19 @@ import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData as QueryData
 import Web.Hyperbole.Data.URI (path, uriToText)
-import Web.Hyperbole.Effect.Browser
+import Web.Hyperbole.Effect.Page
 import Web.Hyperbole.Effect.Server.Response
 import Web.Hyperbole.Effect.Server.Types
+import Web.Hyperbole.Types.Event (RequestId (..))
 import Web.Hyperbole.View (renderLazyByteString)
 
 
-runBrowserWai
+runPageWai
   :: (IOE :> es)
   => Wai.Request
-  -> Eff (Browser : es) a
+  -> Eff (Page : es) a
   -> Eff es (Either Interrupt (a, Client))
-runBrowserWai req = reinterpret runLocal $ \_ -> \case
+runPageWai req = reinterpret runLocal $ \_ -> \case
   GetPageInfo -> pure $ waiPageInfo req
   InterruptWith i -> throwError i
   PutClient c -> put c
@@ -40,15 +41,16 @@ runBrowserWai req = reinterpret runLocal $ \_ -> \case
  where
   runLocal :: (IOE :> es) => Eff (State Client : Error Interrupt : es) a -> Eff es (Either Interrupt (a, Client))
   runLocal eff = do
-    clt <- initClient req
-    runErrorNoCallStack @Interrupt $ runState clt eff
+    runErrorNoCallStack @Interrupt $ do
+      clt <- initClient req
+      runState clt eff
 
-  cookies :: (IOE :> es) => Wai.Request -> Eff es Cookies
+  cookies :: (Error Interrupt :> es) => Wai.Request -> Eff es Cookies
   cookies wr = do
     let header = fromMaybe "" $ L.lookup "Cookie" $ Wai.requestHeaders wr
     fromCookieHeader header
 
-  initClient :: (IOE :> es) => Wai.Request -> Eff es Client
+  initClient :: (Error Interrupt :> es) => Wai.Request -> Eff es Client
   initClient wr = do
     session <- cookies wr
     let query = queryData $ Wai.queryString wr
@@ -138,27 +140,27 @@ runBrowserWai req = reinterpret runLocal $ \_ -> \case
 -- addDocument "GET" bd = toDoc bd
 -- addDocument _ bd = bd
 
-fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
-fromWaiRequest wr = do
-  body <- liftIO $ Wai.consumeRequestBodyLazy wr
-  let pth = path $ cs $ Wai.rawPathInfo wr
-      query = Wai.queryString wr
-      headers = Wai.requestHeaders wr
-      cookie = fromMaybe "" $ L.lookup "Cookie" headers
-      host = Host $ fromMaybe "" $ L.lookup "Host" headers
-      requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Request-Id" headers
-      method = Wai.requestMethod wr
-
-  cookies <- fromCookieHeader cookie
-
-  pure $ Request{body, path = pth, query, method, cookies, host, requestId}
-
+-- fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
+-- fromWaiRequest wr = do
+--   body <- liftIO $ Wai.consumeRequestBodyLazy wr
+--   let pth = path $ cs $ Wai.rawPathInfo wr
+--       query = Wai.queryString wr
+--       headers = Wai.requestHeaders wr
+--       cookie = fromMaybe "" $ L.lookup "Cookie" headers
+--       host = Host $ fromMaybe "" $ L.lookup "Host" headers
+--       requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Request-Id" headers
+--       method = Wai.requestMethod wr
+--
+--   cookies <- fromCookieHeader cookie
+--
+--   pure $ Request{body, path = pth, query, method, cookies, host, requestId}
 
 -- Client only returns ONE Cookie header, with everything concatenated
-fromCookieHeader :: (MonadIO m) => BS.ByteString -> m Cookies
+fromCookieHeader :: (Error Interrupt :> es) => BS.ByteString -> Eff es Cookies
 fromCookieHeader h =
   case Cookie.parse (Web.Cookie.parseCookies h) of
-    Left err -> liftIO $ throwIO $ InvalidCookie h err
+    -- TODO: send an invalid client response, this is bad!
+    Left err -> throwError $ Err $ InvalidCookies (cs err) h
     Right a -> pure a
 
 
@@ -180,3 +182,8 @@ fromCookieHeader h =
 contentType :: ContentType -> (HeaderName, BS.ByteString)
 contentType ContentHtml = ("Content-Type", "text/html; charset=utf-8")
 contentType ContentText = ("Content-Type", "text/plain; charset=utf-8")
+
+
+data ContentType
+  = ContentHtml
+  | ContentText

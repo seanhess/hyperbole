@@ -33,23 +33,25 @@ library
   exposed-modules:
       Web.Hyperbole
       Web.Hyperbole.Application
+      Web.Hyperbole.Application.Document
+      Web.Hyperbole.Application.Http
+      Web.Hyperbole.Application.Socket
       Web.Hyperbole.Data.Cookie
       Web.Hyperbole.Data.Encoded
       Web.Hyperbole.Data.Param
       Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Data.URI
-      Web.Hyperbole.Effect.Browser
       Web.Hyperbole.Effect.GenRandom
       Web.Hyperbole.Effect.Handler
       Web.Hyperbole.Effect.Hyperbole
       Web.Hyperbole.Effect.Javascript
       Web.Hyperbole.Effect.OAuth2
+      Web.Hyperbole.Effect.Page
       Web.Hyperbole.Effect.Query
       Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Server
       Web.Hyperbole.Effect.Server.Response
-      Web.Hyperbole.Effect.Server.Socket
       Web.Hyperbole.Effect.Server.Types
       Web.Hyperbole.Effect.Server.Wai
       Web.Hyperbole.Effect.Session
@@ -61,6 +63,7 @@ library
       Web.Hyperbole.Page
       Web.Hyperbole.Route
       Web.Hyperbole.TypeList
+      Web.Hyperbole.Types.Error
       Web.Hyperbole.Types.Event
       Web.Hyperbole.Types.ViewAction
       Web.Hyperbole.Types.ViewId

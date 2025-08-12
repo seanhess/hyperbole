@@ -1,5 +1,6 @@
 module Web.Hyperbole.Types.Event where
 
+import Data.Aeson (ToJSON)
 import Data.Text (Text)
 import Effectful
 import Web.Hyperbole.HyperView (HyperView (..))
@@ -10,12 +11,17 @@ import Web.Hyperbole.HyperView.Types (decodeAction, decodeViewId)
 data Event id act = Event
   { viewId :: id
   , action :: act
-  , eventId :: EventId
+  , eventId :: RequestId
   }
   deriving (Show)
 
 
 newtype EventId = EventId Text
+  deriving (Show)
+
+
+newtype RequestId = RequestId Text
+  deriving newtype (ToJSON)
   deriving (Show)
 
 
@@ -29,4 +35,5 @@ decodeHyperEvent (Event (TargetViewId ti) ta eventId) = pure $ do
 
 -- | Serialized ViewId
 newtype TargetViewId = TargetViewId {text :: Text}
+  deriving newtype (ToJSON)
   deriving (Show)

@@ -44,11 +44,10 @@ import Network.HTTP.Types (hContentType)
 import Network.URI (parseURI)
 import Text.Casing (quietSnake)
 import Web.Hyperbole.Data.URI
-import Web.Hyperbole.Effect.Browser
 import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Effect.Page
 import Web.Hyperbole.Effect.Query
-import Web.Hyperbole.Effect.Response (respondError)
 import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.Effect.Session (Session (..), deleteSession, saveSession, session)
 
@@ -86,7 +85,7 @@ type instance DispatchOf OAuth2 = 'Dynamic
 
 
 runOAuth2
-  :: (GenRandom :> es, IOE :> es, Browser :> es)
+  :: (GenRandom :> es, IOE :> es, Page :> es)
   => Config
   -> HTTP.Manager
   -> Eff (OAuth2 : es) a
@@ -240,19 +239,19 @@ refreshParams (Token cid) (Token sec) (Token ref) =
   ]
 
 
-validateRedirectParams :: (Browser :> es) => AuthFlow -> Eff es (Token Code)
+validateRedirectParams :: (Page :> es) => AuthFlow -> Eff es (Token Code)
 validateRedirectParams flow = do
   err <- lookupParam @Text "error"
 
   when (isJust err) $ do
     desc <- param "error_description"
-    respondError $ ErrAuth desc
+    pageError $ BadAuth desc
 
   authState <- param @(Token State) "state"
   authCode <- param @(Token Code) "code"
 
   unless (flow.state == authState) $ do
-    respondError $ ErrAuth "Oauth2 State mismatch"
+    pageError $ BadAuth "Oauth2 State mismatch"
 
   pure authCode
 

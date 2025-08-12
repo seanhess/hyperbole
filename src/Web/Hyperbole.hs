@@ -52,14 +52,16 @@ module Web.Hyperbole
     -- $examples
 
     -- * Application
-    liveApp
-  , Warp.run
-  , Page
-  , runPage
+
+  -- liveApp
+    Warp.run
+  , PageView
+  -- , runPage
   , quickStartDocument
 
     -- ** Type-Safe Routes
-  , routeRequest -- maybe belongs in an application section
+
+  -- , routeRequest -- maybe belongs in an application section
   , Route (..)
   , routeUri
   , route
@@ -68,15 +70,17 @@ module Web.Hyperbole
   , Hyperbole
 
     -- ** Response
-  , respondView
-  , respondError
-  , respondErrorView
+
+  -- , respondView
+  -- , respondError
+  -- , respondErrorView
   , notFound
   , redirect
 
     -- ** Request
-  , request
-  , Request (..)
+
+  -- , request
+  -- , Request (..)
 
     -- ** Query Params #query#
   , query
@@ -162,9 +166,9 @@ module Web.Hyperbole
 
     -- * Advanced
   , target
-  , viewResponse
-  , parseError
-  , Response
+  -- , viewResponse
+  , pageError
+  -- , Response
   , ViewId
   , ViewAction
   , ToHttpApiData
@@ -207,10 +211,12 @@ import Web.Atomic.CSS ()
 import Web.Atomic.Types ()
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData)
 import Web.Hyperbole.Application
+import Web.Hyperbole.Application.Document
 import Web.Hyperbole.Data.Encoded ()
 import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.QueryData
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Effect.Page
 import Web.Hyperbole.Effect.Query
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response
@@ -218,8 +224,10 @@ import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.Effect.Session
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.HyperView.Forms
-import Web.Hyperbole.Page (Page, runPage)
+import Web.Hyperbole.Page (PageView)
 import Web.Hyperbole.Route
+import Web.Hyperbole.Types.ViewAction
+import Web.Hyperbole.Types.ViewId
 import Web.Hyperbole.View hiding (placeholder)
 import Web.Hyperbole.View qualified as View
 import Web.Hyperbole.View.Embed

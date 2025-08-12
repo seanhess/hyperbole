@@ -40,6 +40,7 @@ import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
 import Data.Maybe (fromMaybe)
 import Data.String (IsString (..))
+import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
@@ -50,11 +51,12 @@ import Web.FormUrlEncoded (Form (..), FormOptions (..))
 import Web.FormUrlEncoded qualified as FE
 import Web.Hyperbole.Data.Param (FromParam (..), ParamValue (..))
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Effect.Page (Page, PageError (..), pageError)
 import Web.Hyperbole.Effect.Request
-import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView.Event (onSubmit)
 import Web.Hyperbole.HyperView.Input (checked)
 import Web.Hyperbole.HyperView.Types
+import Web.Hyperbole.Types.ViewAction
 import Web.Hyperbole.View
 
 
@@ -90,11 +92,11 @@ instance (FromFormF form) => FromForm (form Identity) where
 
 
 -- | Parse a full type from the form data
-formData :: forall form es. (FromForm form, Hyperbole :> es) => Eff es form
+formData :: forall form es. (FromForm form, Page :> es) => Eff es form
 formData = do
   f <- formBody
   let ef = fromForm @form f :: Either Text form
-  either parseError pure ef
+  either (\t -> pageError $ BadFormData (cs t) f) pure ef
 
 
 ------------------------------------------------------------------------------

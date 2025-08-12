@@ -15,9 +15,7 @@ import GHC.Generics
 import Web.Hyperbole.Data.Cookie as Cookie
 import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.URI (Path)
-import Web.Hyperbole.Effect.Browser
-import Web.Hyperbole.Effect.Request (request)
-import Web.Hyperbole.Effect.Server (Client (..), Request (..), Response (..), ResponseError (..))
+import Web.Hyperbole.Effect.Page
 
 
 {- | Configure a data type to persist in the 'session' as a cookie. These are type-indexed, so only one of each can exist in the session
@@ -64,14 +62,14 @@ class Session a where
 #EMBED Example/Docs/Sessions.hs page
 @
 -}
-session :: (Session a, Default a, Browser :> es) => Eff es a
+session :: (Session a, Default a, Page :> es) => Eff es a
 session = do
   ms <- lookupSession
   pure $ fromMaybe def ms
 
 
 -- | Return a session if it exists
-lookupSession :: forall a es. (Session a, Browser :> es) => Eff es (Maybe a)
+lookupSession :: forall a es. (Session a, Page :> es) => Eff es (Maybe a)
 lookupSession = do
   let key = sessionKey @a
   mck <- Cookie.lookup key <$> sessionCookies
@@ -90,12 +88,12 @@ lookupSession = do
 #EMBED Example/Docs/Sessions.hs instance HyperView Content
 @
 -}
-saveSession :: forall a es. (Session a, Browser :> es) => a -> Eff es ()
+saveSession :: forall a es. (Session a, Page :> es) => a -> Eff es ()
 saveSession a = do
   modifyCookies $ Cookie.insert $ sessionCookie a
 
 
-modifySession :: (Session a, Default a, Browser :> es) => (a -> a) -> Eff es a
+modifySession :: (Session a, Default a, Page :> es) => (a -> a) -> Eff es a
 modifySession f = do
   s <- session
   let updated = f s
@@ -103,57 +101,57 @@ modifySession f = do
   pure updated
 
 
-modifySession_ :: (Session a, Default a, Browser :> es) => (a -> a) -> Eff es ()
+modifySession_ :: (Session a, Default a, Page :> es) => (a -> a) -> Eff es ()
 modifySession_ f = do
   _ <- modifySession f
   pure ()
 
 
 -- | Remove a single 'Session' from the browser cookies
-deleteSession :: forall a es. (Session a, Browser :> es) => Eff es ()
+deleteSession :: forall a es. (Session a, Page :> es) => Eff es ()
 deleteSession = do
   let cookie = Cookie (sessionKey @a) (cookiePath @a) Nothing
   modifyCookies $ Cookie.insert cookie
 
 
-parseSession :: (Session a, Browser :> es) => Key -> CookieValue -> Eff es a
+parseSession :: (Session a, Page :> es) => Key -> CookieValue -> Eff es a
 parseSession prm cook = do
   case parseCookie cook of
-    Left e -> send $ RespondNow $ Err $ ErrSession prm e
+    Left e -> pageError $ BadSession (cs e) prm cook
     Right a -> pure a
 
 
 -- | save a single datatype to a specific key in the session
-setCookie :: (ToParam a, Browser :> es) => Cookie -> Eff es ()
+setCookie :: (ToParam a, Page :> es) => Cookie -> Eff es ()
 setCookie ck = do
   modifyCookies (Cookie.insert ck)
 
 
 -- | Modify the client cookies
-modifyCookies :: (Browser :> es) => (Cookies -> Cookies) -> Eff es ()
+modifyCookies :: (Page :> es) => (Cookies -> Cookies) -> Eff es ()
 modifyCookies f =
-  send $ ModClient $ \client ->
+  modClient $ \client ->
     Client{session = f client.session, query = client.query}
 
 
 -- | Return all the cookies, both those sent in the request and others added by the page
-sessionCookies :: (Browser :> es) => Eff es Cookies
+sessionCookies :: (Page :> es) => Eff es Cookies
 sessionCookies = do
   clt <- clientSessionCookies
-  req <- requestSessionCookies
-  pure $ clt <> req
+  -- req <- requestSessionCookies
+  pure $ clt -- <> req
 
 
 -- | Return the session from the Client cookies
-clientSessionCookies :: (Browser :> es) => Eff es Cookies
+clientSessionCookies :: (Page :> es) => Eff es Cookies
 clientSessionCookies = do
-  (.session) <$> send GetClient
+  (.session) <$> client
 
 
--- | Return the session from the 'Request' cookies
-requestSessionCookies :: (Browser :> es) => Eff es Cookies
-requestSessionCookies = do
-  (.cookies) <$> request
+-- -- | Return the session from the 'Request' cookies
+-- requestSessionCookies :: (Page :> es) => Eff es Cookies
+-- requestSessionCookies = do
+--   (.cookies) <$> client
 
 
 sessionCookie :: forall a. (Session a) => a -> Cookie

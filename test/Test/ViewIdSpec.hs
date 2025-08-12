@@ -9,6 +9,7 @@ import Skeletest
 import Web.Hyperbole
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.Types.ViewId
 
 
 data Thing = Thing
