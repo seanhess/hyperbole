@@ -29,21 +29,20 @@ import Web.Hyperbole.View (renderLazyByteString)
 
 
 runPageWai
-  :: (IOE :> es)
+  :: (IOE :> es, Error Interrupt :> es)
   => Wai.Request
   -> Eff (Page : es) a
-  -> Eff es (Either Interrupt (a, Client))
+  -> Eff es (a, Client)
 runPageWai req = reinterpret runLocal $ \_ -> \case
   GetPageInfo -> pure $ waiPageInfo req
   InterruptWith i -> throwError i
   PutClient c -> put c
   GetClient -> get
  where
-  runLocal :: (IOE :> es) => Eff (State Client : Error Interrupt : es) a -> Eff es (Either Interrupt (a, Client))
+  runLocal :: (IOE :> es, Error Interrupt :> es) => Eff (State Client : es) a -> Eff es (a, Client)
   runLocal eff = do
-    runErrorNoCallStack @Interrupt $ do
-      clt <- initClient req
-      runState clt eff
+    clt <- initClient req
+    runState clt eff
 
   cookies :: (Error Interrupt :> es) => Wai.Request -> Eff es Cookies
   cookies wr = do

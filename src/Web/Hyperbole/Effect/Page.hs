@@ -16,6 +16,7 @@ import Web.Hyperbole.Data.Param (Param)
 import Web.Hyperbole.Data.QueryData as QueryData
 import Web.Hyperbole.Data.URI (Path, Query, URI)
 import Web.Hyperbole.Types.Event (Event (..), TargetViewId (..))
+import Web.Hyperbole.View (View)
 
 
 newtype Host = Host {text :: BS.ByteString}
@@ -104,38 +105,6 @@ redirect :: (Page :> es) => URI -> Eff es a
 redirect = interrupt . Redirect
 
 
--- Forms could definitely be submitted over HTTP
--- AND you need to access them from hyperbole... yuck!
--- .... hmmm
--- so there ARE some things that are common between requests, etc.
--- no... we could pass Form into the action, that would make a little more sense anyway?
---
--- But then how do you access it here?
--- What would it mean to attempt to read it here?
---
--- Do you have to define an http endpoint separately?
---
--- Do we keep the original request around all the time for the user? That might be interesting...
--- Wai.Request - it's just there, along with the body
---
--- It's a security risk to always read the body though, I think...
---
--- We don't have the original wai request do we? The websocket request comes in separately...
--- we can spoof it, but we don't have a wai request...
---
--- ...
--- PageRequest
--- HasPage
--- Page
--- Page :> es
--- PageRoot
--- Page would make A LOT of sense as the name of this...
---
--- but, not if we are also trying to give it the form body...
--- well, yeah, maybe, it's the form body of the request itself...
-
--- well, we have errors related to the parsing of specific things... like
-
 data PageError
   = InvalidCookies String BS.ByteString
   | InvalidForm String BL.ByteString
@@ -143,10 +112,18 @@ data PageError
   | BadQuery String QueryData
   | BadQueryParam String Param QueryData
   | BadFormData String Form
-  | CustomError String BS.ByteString
-  | InternalError String
   | NotHandled (Event TargetViewId Text)
   | BadAuth String
+  | CustomError String BS.ByteString
+  | InternalError String
   deriving (Show)
 instance IsString PageError where
   fromString s = InternalError (cs s)
+
+
+-- always has a client? no, not necesssarily!
+-- it might just be an error
+
+data PageResponse = PageResponse
+  { view :: View () ()
+  }
