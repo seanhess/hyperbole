@@ -40,7 +40,7 @@ import Effectful.Exception
 import GHC.Generics (Generic)
 import Network.HTTP.Client (HttpException, Request (..), RequestBody (..))
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Types (hContentType)
+import Network.HTTP.Types (hContentType, hAccept)
 import Network.URI (parseURI)
 import Text.Casing (quietSnake)
 import Web.Hyperbole.Data.URI
@@ -178,7 +178,7 @@ data TokenType
 instance ToJSON TokenType where
   toJSON s = toJSON $ show s
 instance FromJSON TokenType where
-  parseJSON (String "Bearer") = pure Bearer
+  parseJSON (String ttyp) | T.toLower ttyp == "bearer" = pure Bearer
   parseJSON val = fail $ "expected TokenType but got " <> show val
 
 
@@ -265,7 +265,10 @@ sendTokenRequest cfg mgr params = do
         baseReq
           { method = "POST"
           , requestBody = RequestBodyBS $ renderQuery False params
-          , requestHeaders = [(hContentType, "application/x-www-form-urlencoded")]
+          , requestHeaders =
+              [ (hContentType, "application/x-www-form-urlencoded")
+              , (hAccept, "application/json")
+              ]
           }
 
   res <- liftIO (HTTP.httpLbs req mgr) `catch` (throwIO . OAuth2TokenRequest)
