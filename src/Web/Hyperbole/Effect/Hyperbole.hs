@@ -4,10 +4,12 @@
 module Web.Hyperbole.Effect.Hyperbole where
 
 import Data.Text (Text)
+import Debug.Trace
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
+import Network.WebSockets (Connection)
 
 
 -- import Web.Hyperbole.Effect.Server
@@ -18,7 +20,8 @@ import Effectful.State.Static.Local
 -- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', manually respond, and manipulate the Client 'session' and 'query'.
 data Hyperbole :: Effect where
   -- you can only do this in an update
-  RunJavascript :: Hyperbole m ()
+  -- RunJavascript :: Hyperbole m ()
+  TestHyperbole :: Hyperbole m ()
 
 
 -- -- the active event we are executing
@@ -28,13 +31,18 @@ data Hyperbole :: Effect where
 
 type instance DispatchOf Hyperbole = 'Dynamic
 
+
 -- -- | Run the 'Hyperbole' effect to 'Server'
--- runHyperbole
---   :: (Server :> es)
---   => Request
---   -> Eff (Hyperbole : es) Response
---   -> Eff es Response
--- runHyperbole req = fmap combine $ reinterpret runLocal $ \_ -> \case
+runHyperbole
+  :: (Hyperbole :> es)
+  => Connection
+  -> Eff (Hyperbole : es) a
+  -> Eff es a
+runHyperbole conn = interpret $ \_ -> \case
+  TestHyperbole -> do
+    traceM "RUNNING IN A SOCKET"
+    pure ()
+
 --   GetRequest -> do
 --     pure req
 --   RespondNow r -> do

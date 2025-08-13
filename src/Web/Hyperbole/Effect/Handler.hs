@@ -4,6 +4,7 @@
 module Web.Hyperbole.Effect.Handler where
 
 import Data.Kind (Type)
+import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
@@ -17,31 +18,37 @@ import Web.Hyperbole.View
 
 
 class RunHandlers (views :: [Type]) es where
-  runHandlers :: (Page :> es) => Eff es ()
+  runHandlers :: (Page :> es) => Event TargetViewId Text -> Eff (Hyperbole : es) (Maybe (View () ()))
 
 
 instance RunHandlers '[] es where
-  runHandlers = pure ()
+  runHandlers _ = pure Nothing
 
--- instance (HyperView view es, RunHandlers views es) => RunHandlers (view : views) es where
---   runHandlers = do
---     runHandler @view (update @view)
---     runHandlers @views
---
--- runHandler
---   :: forall id es
---    . (HyperView id es, Hyperbole :> es)
---   => (Action id -> Eff (Reader id : es) (View id ()))
---   -> Eff es ()
--- runHandler run = do
---   -- Get an event matching our type. If it doesn't match, skip to the next handler
---   mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
---   case mev of
---     Just evt -> do
---       vw <- runReader evt.viewId $ run evt.action
---       respondView evt.viewId vw
---     _ -> do
---       pure ()
+
+instance (HyperView view (Hyperbole : es), RunHandlers views es) => RunHandlers (view : views) es where
+  runHandlers rawEvent = do
+    mview <- runHandler @view rawEvent (update @view)
+
+    case mview of
+      Nothing -> runHandlers @views rawEvent
+      Just vw -> pure $ Just vw
+
+
+runHandler
+  :: forall id es
+   . (HyperView id es)
+  => Event TargetViewId Text
+  -> (Action id -> Eff (Reader id : es) (View id ()))
+  -> Eff es (Maybe (View () ()))
+runHandler rawEvent update_ = do
+  -- Get an event matching our type. If it doesn't match, skip to the next handler
+  mev <- decodeHyperEvent @id rawEvent :: Eff es (Maybe (Event id (Action id)))
+  case mev of
+    Just evt -> do
+      vw <- runReader evt.viewId $ update_ evt.action
+      pure $ Just $ addContext evt.viewId vw
+    _ -> do
+      pure Nothing
 
 --
 --

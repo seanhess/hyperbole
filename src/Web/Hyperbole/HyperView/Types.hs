@@ -12,7 +12,9 @@ import Web.Atomic.CSS
 import Web.Atomic.Types
 import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
+import Web.Hyperbole.Effect.Page
 import Web.Hyperbole.TypeList
+import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.ViewAction
 import Web.Hyperbole.Types.ViewId
 import Web.Hyperbole.View (View, addContext, context, none, tag)
@@ -49,7 +51,7 @@ class (ViewId id, ViewAction (Action id)) => HyperView id es where
   --
   -- > update (SetMessage msg) = pure $ messageView msg
   -- > update ClearMessage = pure $ messageView ""
-  update :: (Hyperbole :> es) => Action id -> Eff (Reader id : es) (View id ())
+  update :: (Hyperbole :> es, Page :> es) => Action id -> Eff (Reader id : es) (View id ())
 
 
 -- | The top-level view returned by a 'Page'. It carries a type-level list of every 'HyperView' used in our 'Page' so the compiler can check our work and wire everything together.
@@ -194,3 +196,11 @@ decodeAction t = do
   case parseAction =<< encodedParseText t of
     Left _ -> Nothing
     Right a -> pure a
+
+
+-- must be in an effect to get `es` on the right-hand-side
+decodeHyperEvent :: (HyperView id es) => Event TargetViewId Text -> Eff es (Maybe (Event id (Action id)))
+decodeHyperEvent (Event (TargetViewId ti) ta eventId) = pure $ do
+  vid <- decodeViewId ti
+  act <- decodeAction ta
+  pure $ Event vid act eventId

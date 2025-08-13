@@ -38,6 +38,7 @@ quickStartDocument cnt =
 
 
 newtype DocumentHead = DocumentHead {html :: BL.ByteString}
+newtype DocumentBody = DocumentBody {content :: View () ()}
 
 
 documentHead :: View () () -> DocumentHead
@@ -47,14 +48,14 @@ documentHead vh = do
 
 data Document = Document
   { head :: DocumentHead
-  , body :: View () ()
+  , body :: DocumentBody
   }
 
 
 renderDocument :: Document -> BL.ByteString
 renderDocument doc =
   let hd = doc.head.html
-      bd = renderLazyByteString doc.body
+      bd = renderLazyByteString doc.body.content
    in [i|<html>
       <head>
         #{hd}
