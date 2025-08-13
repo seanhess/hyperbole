@@ -49,7 +49,6 @@ runServerWai toDoc req respond =
    where
     response :: Response -> Wai.Response
     response NotFound = respError status404 "Not Found"
-    response Empty = respError status500 "Empty Response"
     response (Err (ErrParse e)) = respError status400 ("Parse Error: " <> cs e)
     response (Err (ErrQuery e)) = respError status400 $ "ErrQuery: " <> cs e
     response (Err (ErrSession param e)) = respError status400 $ "ErrSession: " <> cs (show param) <> " " <> cs e

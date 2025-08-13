@@ -19,7 +19,6 @@ data Response
   | NotFound
   | Redirect URI
   | Err ResponseError
-  | Empty
 
 
 data ResponseError

@@ -47,7 +47,6 @@ runServerSockets conn = reinterpret runLocal $ \_ -> \case
         sendView req.path conn client vid vw
       (Err (ErrServer m)) -> sendError req.requestId conn (serverError m)
       (Err err) -> sendError req.requestId conn (serializeError err)
-      Empty -> sendError req.requestId conn (serverError "Empty")
       NotFound -> sendError req.requestId conn (serverError "Not Found")
       (Redirect url) -> sendRedirect req.path conn client url
  where
