@@ -5,7 +5,6 @@ module Web.Hyperbole.Effect.Handler where
 
 import Data.Kind (Type)
 import Data.Text
-import Debug.Trace
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
@@ -60,19 +59,15 @@ runLoad
   -> Eff es Response
 runLoad loadPage = do
   q <- (.query) <$> send GetRequest
-  traceM $ "Query " <> show q
   case lookupEvent q of
     Just rawEvent -> do
-      traceM $ "Got Event: " <> show rawEvent
       res <- runHandlers @views rawEvent
       case res of
         -- we expect it to be handled by one of the views
         Nothing -> respondError $ ErrNotHandled rawEvent
         Just r -> do
-          traceM "RESPODING..."
           send $ RespondNow r
     Nothing -> do
-      traceM "loadPage"
       loadToResponse loadPage
 
 

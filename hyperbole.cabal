@@ -59,7 +59,6 @@ library
       Web.Hyperbole.HyperView.ViewId
       Web.Hyperbole.Page
       Web.Hyperbole.Route
-      Web.Hyperbole.Server
       Web.Hyperbole.Server.Socket
       Web.Hyperbole.Server.Types
       Web.Hyperbole.Server.Wai

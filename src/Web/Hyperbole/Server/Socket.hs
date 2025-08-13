@@ -1,7 +1,6 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Web.Hyperbole.Server.Socket where
 
+import Control.Monad (void)
 import Data.Bifunctor (first)
 import Data.ByteString.Lazy qualified as BL
 import Data.Maybe (fromMaybe)
@@ -9,9 +8,8 @@ import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import Effectful
-import Effectful.Dispatch.Dynamic
-import Effectful.Exception (throwIO)
-import Effectful.State.Static.Local
+import Effectful.Concurrent.Async
+import Effectful.Exception
 import Network.HTTP.Types as HTTP (parseQuery)
 import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
@@ -20,6 +18,7 @@ import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData as QueryData
 import Web.Hyperbole.Data.URI (Path, URI, path, uriToText)
+import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Types
 import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
@@ -33,41 +32,35 @@ data SocketRequest = SocketRequest
   }
 
 
-runServerSockets
-  :: (IOE :> es)
+handleRequestSocket
+  :: (IOE :> es, Concurrent :> es)
   => Connection
-  -> Eff (Server : es) a
-  -> Eff es a
-runServerSockets conn = reinterpret runLocal $ \_ -> \case
-  -- load the request
-  LoadRequest -> do
-    loadRequest
-  SendResponse client res -> do
-    req <- loadRequest
-    -- cannot be called before loading the request!
+  -> Eff (Hyperbole : es) Response
+  -> Eff es ()
+handleRequestSocket conn actions = do
+  req <- receiveRequest conn
+  -- run handler in the background = async
+  void $ async $ do
+    res <- trySync $ runHyperbole req actions
     case res of
-      (Response vid vw) -> do
-        sendView req.path conn client vid vw
-      (Err (ErrServer m)) -> sendError req.requestId conn (serverError m)
-      (Err err) -> sendError req.requestId conn (serializeError err)
-      NotFound -> sendError req.requestId conn (serverError "Not Found")
-      (Redirect url) -> sendRedirect req.path conn client url
+      -- TODO: catch socket errors separately from SomeException?
+      Left (ex :: SomeException) -> do
+        -- It's not safe to send any exception over the wire
+        -- log it to the console and send the error to the client
+        liftIO $ print ex
+        res2 <- trySync $ sendError req.requestId conn (serverError "Internal Server Error")
+        case res2 of
+          Left e -> liftIO $ putStrLn $ "Socket Error while sending previous error to client: " <> show e
+          Right _ -> pure ()
+      Right (resp, clnt) -> do
+        case resp of
+          (Response vid vw) -> do
+            sendView req.path conn clnt vid vw
+          (Err (ErrServer m)) -> sendError req.requestId conn (serverError m)
+          (Err err) -> sendError req.requestId conn (serializeError err)
+          NotFound -> sendError req.requestId conn (serverError "Not Found")
+          (Redirect url) -> sendRedirect req.path conn clnt url
  where
-  runLocal :: Eff (State SocketRequest : es) a -> Eff es a
-  runLocal = evalState (SocketRequest Nothing)
-
-  loadRequest :: (State SocketRequest :> es, IOE :> es) => Eff es Request
-  loadRequest = do
-    sock <- get @SocketRequest
-    case sock.request of
-      -- return the existing request, don't wait for another one!
-      Just r -> pure r
-      -- load the request for the first time
-      Nothing -> do
-        req <- receiveRequest conn
-        put $ SocketRequest (Just req)
-        pure req
-
   errMsg (ErrServer m) = m
   errMsg ErrInternal = "Internal Server Error"
   errMsg e = pack (drop 3 $ show e)

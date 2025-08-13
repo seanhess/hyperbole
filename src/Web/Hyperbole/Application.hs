@@ -11,13 +11,12 @@ module Web.Hyperbole.Application
   , routeRequest
   ) where
 
-import Control.Monad (forever, void)
+import Control.Monad (forever)
 import Data.ByteString.Lazy qualified as BL
 import Data.String.Interpolate (i)
 import Effectful
 import Effectful.Concurrent.Async
 import Effectful.Dispatch.Dynamic
-import Effectful.Exception (SomeException, trySync)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets (PendingConnection, defaultConnectionOptions)
@@ -25,11 +24,8 @@ import Network.WebSockets qualified as WS
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (reqPath)
 import Web.Hyperbole.Route
-import Web.Hyperbole.Server.Socket (runServerSockets)
-import Web.Hyperbole.Server.Socket qualified as Socket
-import Web.Hyperbole.Server.Types
-import Web.Hyperbole.Server.Wai (runServerWai)
-import Web.Hyperbole.Types.Request
+import Web.Hyperbole.Server.Socket (handleRequestSocket)
+import Web.Hyperbole.Server.Wai (handleRequestWai)
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed, scriptLiveReload)
 
@@ -38,48 +34,26 @@ import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed, scriptLiveReload)
 
 > #EMBED Example/Docs/BasicPage.hs main
 -}
-liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, Concurrent, IOE] Response -> Wai.Application
+liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Concurrent, IOE] Response -> Wai.Application
 liveApp toDoc app req res = do
   websocketsOr
     defaultConnectionOptions
-    (runEff . runConcurrent . socketApp app)
+    (socketApp app)
     (waiApp toDoc app)
     req
     res
 
 
-waiApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Server, Concurrent, IOE] Response -> Wai.Application
+waiApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Concurrent, IOE] Response -> Wai.Application
 waiApp toDoc actions req res = do
-  rr <- runEff $ runConcurrent $ runServerWai toDoc req res $ do
-    req' <- send LoadRequest
-    runHyperbole req' actions
-  case rr of
-    Nothing -> error "Missing required response in handler"
-    Just r -> pure r
+  runEff $ runConcurrent $ handleRequestWai toDoc req res actions
 
 
-socketApp :: (IOE :> es, Concurrent :> es) => Eff (Hyperbole : Server : es) Response -> PendingConnection -> Eff es ()
+socketApp :: Eff '[Hyperbole, Concurrent, IOE] Response -> PendingConnection -> IO ()
 socketApp actions pend = do
   conn <- liftIO $ WS.acceptRequest pend
   forever $ do
-    runServerSockets conn $ do
-      -- block loading the request
-      req <- send LoadRequest
-
-      -- run handler in the background = async
-      void $ async $ do
-        res <- trySync $ runHyperbole req actions
-        case res of
-          -- TODO: catch socket errors separately from SomeException?
-          Left (ex :: SomeException) -> do
-            -- It's not safe to send any exception over the wire
-            -- log it to the console and send the error to the client
-            liftIO $ print ex
-            res2 <- trySync $ Socket.sendError req.requestId conn (serverError "Internal Server Error")
-            case res2 of
-              Left e -> liftIO $ putStrLn $ "Socket Error while sending previous error to client: " <> show e
-              Right _ -> pure ()
-          Right _ -> pure ()
+    runEff $ runConcurrent $ handleRequestSocket conn actions
 
 
 {- | wrap HTML fragments in a simple document with a custom title and include required embeds

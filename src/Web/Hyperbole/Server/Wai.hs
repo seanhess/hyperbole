@@ -10,8 +10,6 @@ import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Effectful
-import Effectful.Dispatch.Dynamic
-import Effectful.State.Static.Local
 import Network.HTTP.Types (Header, HeaderName, Method, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
@@ -20,6 +18,7 @@ import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData as QueryData
 import Web.Hyperbole.Data.URI (path, uriToText)
+import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Types
 import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
@@ -28,45 +27,41 @@ import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View (renderLazyByteString)
 
 
-runServerWai
+handleRequestWai
   :: (IOE :> es)
   => (BL.ByteString -> BL.ByteString)
   -> Wai.Request
   -> (Wai.Response -> IO ResponseReceived)
-  -> Eff (Server : es) a
-  -> Eff es (Maybe Wai.ResponseReceived)
-runServerWai toDoc req respond =
-  reinterpret runLocal $ \_ -> \case
-    LoadRequest -> do
-      fromWaiRequest req
-    SendResponse client r -> do
-      rr <- liftIO $ sendResponse client r
-      put (Just rr)
- where
-  runLocal :: (IOE :> es) => Eff (State (Maybe ResponseReceived) : es) a -> Eff es (Maybe ResponseReceived)
-  runLocal = execState Nothing
+  -> Eff (Hyperbole : es) Response
+  -> Eff es Wai.ResponseReceived
+handleRequestWai toDoc req respond actions = do
+  rq <- fromWaiRequest req
+  (res, client) <- runHyperbole rq actions
+  liftIO $ sendResponse toDoc req respond client res
 
-  sendResponse :: Client -> Response -> IO Wai.ResponseReceived
-  sendResponse client r =
-    respond $ response r
-   where
-    response :: Response -> Wai.Response
-    response NotFound = respError status404 "Not Found"
-    response (Err (ErrParse e)) = respError status400 ("Parse Error: " <> cs e)
-    response (Err (ErrQuery e)) = respError status400 $ "ErrQuery: " <> cs e
-    response (Err (ErrSession param e)) = respError status400 $ "ErrSession: " <> cs (show param) <> " " <> cs e
-    response (Err (ErrServer msg)) = do
+
+sendResponse :: (BL.ByteString -> BL.ByteString) -> Wai.Request -> (Wai.Response -> IO ResponseReceived) -> Client -> Response -> IO Wai.ResponseReceived
+sendResponse toDoc req respond client res = do
+  respond $ response res
+ where
+  response :: Response -> Wai.Response
+  response = \case
+    NotFound -> respError status404 "Not Found"
+    (Err (ErrParse e)) -> respError status400 ("Parse Error: " <> cs e)
+    (Err (ErrQuery e)) -> respError status400 $ "ErrQuery: " <> cs e
+    (Err (ErrSession param e)) -> respError status400 $ "ErrSession: " <> cs (show param) <> " " <> cs e
+    (Err (ErrServer msg)) -> do
       respError status500 $ "Server Error: " <> cs msg
-    response (Err (ErrCustom _ body)) = do
+    (Err (ErrCustom _ body)) -> do
       let out = addDocument (Wai.requestMethod req) (renderLazyByteString body)
       Wai.responseLBS status500 [contentType ContentHtml] out
-    response (Err ErrInternal) = respError status500 "Internal Server Error"
-    response (Err (ErrAuth m)) = respError status401 $ "Unauthorized: " <> cs m
-    response (Err (ErrNotHandled e)) = respError status400 $ cs $ errNotHandled e
-    response (Response _ vw) =
+    (Err ErrInternal) -> respError status500 "Internal Server Error"
+    (Err (ErrAuth m)) -> respError status401 $ "Unauthorized: " <> cs m
+    (Err (ErrNotHandled e)) -> respError status400 $ cs $ errNotHandled e
+    (Response _ vw) ->
       respHtml $
         addDocument (Wai.requestMethod req) (renderLazyByteString vw)
-    response (Redirect u) = do
+    (Redirect u) -> do
       let url = uriToText u
       -- We have to use a 200 javascript redirect because javascript
       -- will redirect the fetch(), while we want to redirect the whole page
@@ -74,30 +69,30 @@ runServerWai toDoc req respond =
       let hs = ("Location", cs url) : contentType ContentHtml : headers
       Wai.responseLBS status200 hs $ "<script>window.location = '" <> cs url <> "'</script>"
 
-    respError s = Wai.responseLBS s [contentType ContentText]
+  respError s = Wai.responseLBS s [contentType ContentText]
 
-    respHtml body =
-      -- always set the session...
-      let hs = contentType ContentHtml : (setQuery client.query <> headers)
-       in Wai.responseLBS status200 hs body
+  respHtml body =
+    -- always set the session...
+    let hs = contentType ContentHtml : (setQuery client.query <> headers)
+     in Wai.responseLBS status200 hs body
 
-    headers :: [Header]
-    headers = setRequestId client.requestId : setCookies
+  headers :: [Header]
+  headers = setRequestId client.requestId : setCookies
 
-    setCookies =
-      fmap setCookie $ Cookie.toList client.session
+  setCookies =
+    fmap setCookie $ Cookie.toList client.session
 
-    setCookie :: Cookie -> (HeaderName, BS.ByteString)
-    setCookie cookie =
-      ("Set-Cookie", Cookie.render (path $ cs $ Wai.rawPathInfo req) cookie)
+  setCookie :: Cookie -> (HeaderName, BS.ByteString)
+  setCookie cookie =
+    ("Set-Cookie", Cookie.render (path $ cs $ Wai.rawPathInfo req) cookie)
 
-    setRequestId :: RequestId -> (HeaderName, BS.ByteString)
-    setRequestId (RequestId rid) =
-      ("Request-Id", cs rid)
+  setRequestId :: RequestId -> (HeaderName, BS.ByteString)
+  setRequestId (RequestId rid) =
+    ("Request-Id", cs rid)
 
-    setQuery Nothing = []
-    setQuery (Just qd) =
-      [("Set-Query", QueryData.render qd)]
+  setQuery Nothing = []
+  setQuery (Just qd) =
+    [("Set-Query", QueryData.render qd)]
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
   addDocument :: Method -> BL.ByteString -> BL.ByteString
