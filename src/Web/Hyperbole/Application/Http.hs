@@ -43,20 +43,59 @@ import Web.Hyperbole.Types.ViewId
 import Web.Hyperbole.View
 
 
+type RunPage es a = (forall views. Eff es (PageView views) -> Eff es a)
+
+
+type Router route = (forall a es. RunPage es a -> route -> Eff es a)
+
+
+-- expects a router function
+routeRequest :: (Page :> es, Route route) => (route -> Eff es a) -> Eff es a
+routeRequest actions = do
+  pth <- (.path) <$> pageInfo
+  maybe notFound actions $ findRoute pth.segments
+
+
+loadRoute :: (Route r, Page :> es) => DocumentHead -> Router r -> Eff es Document
+loadRoute docHead router = routeRequest $ router (runDocument docHead)
+
+
+runDocument :: (Page :> es) => DocumentHead -> Eff es (View (Root views) ()) -> Eff es Document
+runDocument docHead pageRoot = do
+  root <- pageRoot
+  -- myHead is configuration...
+  pure $ Document docHead $ addContext Root root
+
+
 {- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
 
 > #EMBED Example/Docs/BasicPage.hs main
 -}
-liveApp :: Eff '[Page, Error Interrupt, IOE] Document -> Wai.Application
-liveApp handlePage req = do
+liveApp :: (Route route) => DocumentHead -> Router route -> Wai.Application
+liveApp docHead router req = do
   websocketsOr
     defaultConnectionOptions
     (runEff . runConcurrent . connectSock)
-    (waiApp handlePage)
+    (waiApp handlePage')
     req
  where
   connectSock = Socket.socketApp req
 
+  -- runApp $ loadRoute myHead myRouter
+
+  handlePage' :: Eff '[Page, Error Interrupt, IOE] Document
+  handlePage' = loadRoute docHead router
+
+
+-- runPageDocument :: Eff es (PageView views) -> Eff es Document
+-- runPageDocument = _
+--
+-- load :: Eff '[Page, Error Interrupt, IOE] Document
+-- load = do
+--   runApp $ loadRoute myHead myRouter
+
+-- runApp :: Eff (Reader Int : es) a -> Eff es a
+-- runApp = runReader @Int 3
 
 waiApp :: Eff '[Page, Error Interrupt, IOE] Document -> Wai.Application
 waiApp handlePage req respond = do
@@ -70,9 +109,9 @@ waiApp handlePage req respond = do
     NotFound ->
       Wai.responseLBS status400 [contentType ContentText] "Not Found"
     Redirect u -> do
-      let uri = cs $ uriToText u
-          heads = [("Location", uri), contentType ContentHtml]
-      Wai.responseLBS status303 heads $ "Redirecting: " <> cs uri
+      let loc = cs $ uriToText u
+          heads = [("Location", loc), contentType ContentHtml]
+      Wai.responseLBS status303 heads $ "Redirecting: " <> cs loc
     Err err ->
       errorResponse err
 
@@ -110,13 +149,6 @@ responseHeaders clnt =
     ("Set-Cookie", Cookie.render cookie)
 
 
--- expects a router function
-routeRequest :: (Page :> es, Route route) => (route -> Eff es a) -> Eff es a
-routeRequest actions = do
-  pth <- (.path) <$> pageInfo
-  maybe notFound actions $ findRoute pth.segments
-
-
 ----------------------------------------------------------------
 
 -- Apply document in runner? no need to pass it in globally
@@ -131,17 +163,6 @@ myHead = documentHead $ do
   script' scriptLiveReload
 
 
-runDocument :: (Page :> es) => DocumentHead -> Eff es (View (Root views) ()) -> Eff es Document
-runDocument docHead pageRoot = do
-  root <- pageRoot
-  -- myHead is configuration...
-  pure $ Document docHead $ addContext Root root
-
-
-loadRoute :: (Route r, Page :> es) => DocumentHead -> ((forall views. Eff es (PageView views) -> Eff es Document) -> r -> Eff es Document) -> Eff es Document
-loadRoute docHead router = routeRequest $ router (runDocument docHead)
-
-
 ----------------------------------------------------------------
 
 data AppRoute
@@ -150,19 +171,19 @@ data AppRoute
   deriving (Generic, Eq, Route)
 
 
--- does that views need to be the same for all?
-myRouter :: (Page :> es, Reader Int :> es) => (forall views. Eff es (PageView views) -> Eff es a) -> AppRoute -> Eff es a
+-- there has got to be a way to simplify this...
+myRouter :: (Page :> es, Reader Int :> es) => RunPage es a -> AppRoute -> Eff es a
 myRouter run = \case
   Main -> run counterPage
   Other -> run $ runReader @Int 5 otherPage
 
 
 exampleApp :: Wai.Application
-exampleApp = liveApp load
+exampleApp = liveApp myHead (\run rt -> myRouter (\effPage -> run $ runApp effPage) rt)
  where
-  load :: Eff '[Page, Error Interrupt, IOE] Document
-  load = do
-    runApp $ loadRoute myHead myRouter
+  -- load :: Eff '[Page, Error Interrupt, IOE] Document
+  -- load = do
+  --   runApp $ loadRoute myHead myRouter
 
   runApp :: Eff (Reader Int : es) a -> Eff es a
   runApp = runReader @Int 3
