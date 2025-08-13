@@ -4,8 +4,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.Effect.Server (Event (..), Request (..), TargetViewId (..), lookupEvent)
-import Web.Hyperbole.HyperView (HyperView (..))
-import Web.Hyperbole.HyperView.Types (decodeAction, decodeViewId)
+import Web.Hyperbole.HyperView (HyperView (..), decodeAction, decodeViewId)
 
 
 getEvent :: (HyperView id es, Hyperbole :> es) => Eff es (Maybe (Event id (Action id)))

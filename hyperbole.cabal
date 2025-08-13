@@ -57,8 +57,11 @@ library
       Web.Hyperbole.HyperView
       Web.Hyperbole.HyperView.Event
       Web.Hyperbole.HyperView.Forms
+      Web.Hyperbole.HyperView.Handled
       Web.Hyperbole.HyperView.Input
       Web.Hyperbole.HyperView.Types
+      Web.Hyperbole.HyperView.ViewAction
+      Web.Hyperbole.HyperView.ViewId
       Web.Hyperbole.Page
       Web.Hyperbole.Route
       Web.Hyperbole.TypeList
