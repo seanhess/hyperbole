@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE CPP #-}
 
 module Web.Hyperbole.Effect.OAuth2
   ( OAuth2 (..)
@@ -151,6 +152,12 @@ data Access
 data State
 data Auth
 
+#if (!MIN_VERSION_aeson(2,2,0))
+instance FromJSON URI
+instance ToJSON URI
+instance FromJSON URIAuth
+instance ToJSON URIAuth
+#endif
 
 data AuthFlow = AuthFlow
   { redirect :: URI

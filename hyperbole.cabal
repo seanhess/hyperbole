@@ -85,7 +85,7 @@ library
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes
   build-depends:
-      aeson >=2.2.0.0
+      aeson >=2.1.2.1
     , atomic-css ==0.1.*
     , attoparsec
     , attoparsec-aeson
@@ -144,7 +144,7 @@ test-suite test
   build-tool-depends:
       skeletest:skeletest-preprocessor
   build-depends:
-      aeson >=2.2.0.0
+      aeson >=2.1.2.1
     , atomic-css ==0.1.*
     , attoparsec
     , attoparsec-aeson
