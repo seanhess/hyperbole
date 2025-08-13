@@ -10,7 +10,7 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Response (respondError, viewResponse)
+import Web.Hyperbole.Effect.Response (hyperView, respondError)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
@@ -46,7 +46,7 @@ runHandler rawEvent run = do
   case mev of
     Just evt -> do
       vw <- runReader evt.viewId $ run evt.action
-      res <- viewResponse evt.viewId vw
+      res <- hyperView evt.viewId vw
       pure $ Just res
     _ -> do
       pure Nothing
@@ -65,8 +65,7 @@ runLoad loadPage = do
       case res of
         -- we expect it to be handled by one of the views
         Nothing -> respondError $ ErrNotHandled rawEvent
-        Just r -> do
-          send $ RespondNow r
+        Just r -> pure r
     Nothing -> do
       loadToResponse loadPage
 

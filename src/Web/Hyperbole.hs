@@ -68,7 +68,8 @@ module Web.Hyperbole
   , Hyperbole
 
     -- ** Response
-  , respondView
+
+  -- , respondView
   , respondError
   , respondErrorView
   , notFound
@@ -162,7 +163,7 @@ module Web.Hyperbole
 
     -- * Advanced
   , target
-  , viewResponse
+  , hyperView
   , parseError
   , Response
   , ViewId
