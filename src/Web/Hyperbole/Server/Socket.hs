@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Web.Hyperbole.Effect.Server.Socket where
+module Web.Hyperbole.Server.Socket where
 
 import Data.Bifunctor (first)
 import Data.ByteString.Lazy qualified as BL
@@ -20,7 +20,7 @@ import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData as QueryData
 import Web.Hyperbole.Data.URI (Path, URI, path, uriToText)
-import Web.Hyperbole.Effect.Server.Types
+import Web.Hyperbole.Server.Types
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Event

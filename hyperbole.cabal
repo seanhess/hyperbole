@@ -48,10 +48,6 @@ library
       Web.Hyperbole.Effect.Query
       Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Response
-      Web.Hyperbole.Effect.Server
-      Web.Hyperbole.Effect.Server.Socket
-      Web.Hyperbole.Effect.Server.Types
-      Web.Hyperbole.Effect.Server.Wai
       Web.Hyperbole.Effect.Session
       Web.Hyperbole.HyperView
       Web.Hyperbole.HyperView.Event
@@ -63,6 +59,10 @@ library
       Web.Hyperbole.HyperView.ViewId
       Web.Hyperbole.Page
       Web.Hyperbole.Route
+      Web.Hyperbole.Server
+      Web.Hyperbole.Server.Socket
+      Web.Hyperbole.Server.Types
+      Web.Hyperbole.Server.Wai
       Web.Hyperbole.TypeList
       Web.Hyperbole.Types.Event
       Web.Hyperbole.Types.Request

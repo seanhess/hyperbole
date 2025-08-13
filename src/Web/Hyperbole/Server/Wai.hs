@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Web.Hyperbole.Effect.Server.Wai where
+module Web.Hyperbole.Server.Wai where
 
 import Control.Exception (throwIO)
 import Data.ByteString qualified as BS
@@ -20,7 +20,7 @@ import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData as QueryData
 import Web.Hyperbole.Data.URI (path, uriToText)
-import Web.Hyperbole.Effect.Server.Types
+import Web.Hyperbole.Server.Types
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response

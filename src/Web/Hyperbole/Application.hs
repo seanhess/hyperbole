@@ -24,11 +24,11 @@ import Network.WebSockets (PendingConnection, defaultConnectionOptions)
 import Network.WebSockets qualified as WS
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (reqPath)
-import Web.Hyperbole.Effect.Server.Socket (runServerSockets)
-import Web.Hyperbole.Effect.Server.Socket qualified as Socket
-import Web.Hyperbole.Effect.Server.Types
-import Web.Hyperbole.Effect.Server.Wai (runServerWai)
 import Web.Hyperbole.Route
+import Web.Hyperbole.Server.Socket (runServerSockets)
+import Web.Hyperbole.Server.Socket qualified as Socket
+import Web.Hyperbole.Server.Types
+import Web.Hyperbole.Server.Wai (runServerWai)
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View.Embed (cssResetEmbed, scriptEmbed, scriptLiveReload)

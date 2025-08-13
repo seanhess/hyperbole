@@ -1,4 +1,4 @@
-module Web.Hyperbole.Effect.Server.Types where
+module Web.Hyperbole.Server.Types where
 
 import Control.Exception (Exception)
 import Data.ByteString qualified as BS
