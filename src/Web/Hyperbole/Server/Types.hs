@@ -5,8 +5,7 @@ import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.Text (Text)
 import Effectful
-import Web.Hyperbole.Data.Cookie (Cookies)
-import Web.Hyperbole.Data.QueryData as QueryData
+import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 
@@ -18,13 +17,6 @@ data Server :: Effect where
 
 
 type instance DispatchOf Server = 'Dynamic
-
-
-data Client = Client
-  { requestId :: RequestId
-  , session :: Cookies
-  , query :: Maybe QueryData
-  }
 
 
 data InternalServerError

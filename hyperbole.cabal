@@ -64,6 +64,7 @@ library
       Web.Hyperbole.Server.Types
       Web.Hyperbole.Server.Wai
       Web.Hyperbole.TypeList
+      Web.Hyperbole.Types.Client
       Web.Hyperbole.Types.Event
       Web.Hyperbole.Types.Request
       Web.Hyperbole.Types.Response

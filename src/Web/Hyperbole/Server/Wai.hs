@@ -21,6 +21,7 @@ import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData as QueryData
 import Web.Hyperbole.Data.URI (path, uriToText)
 import Web.Hyperbole.Server.Types
+import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
