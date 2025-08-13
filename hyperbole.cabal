@@ -21,6 +21,7 @@ tested-with:
   , GHC == 9.6.6
 extra-source-files:
     client/dist/hyperbole.js
+    client/util/live-reload.js
 extra-doc-files:
     README.md
     CHANGELOG.md
