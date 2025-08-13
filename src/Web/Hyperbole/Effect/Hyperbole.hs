@@ -7,7 +7,9 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-import Web.Hyperbole.Effect.Server
+import Web.Hyperbole.Effect.Server.Types (Client (..), Server (..))
+import Web.Hyperbole.Types.Request
+import Web.Hyperbole.Types.Response
 
 
 -- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', manually respond, and manipulate the Client 'session' and 'query'.

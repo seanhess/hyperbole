@@ -4,47 +4,53 @@
 module Web.Hyperbole.Effect.Handler where
 
 import Data.Kind (Type)
+import Data.Text
+import Debug.Trace
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
 import Web.Hyperbole.Data.Encoded
-import Web.Hyperbole.Effect.Event (getEvent)
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Request (request)
-import Web.Hyperbole.Effect.Response (respondView)
-import Web.Hyperbole.Effect.Server
+import Web.Hyperbole.Effect.Response (respondError, viewResponse)
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.Types.Event
+import Web.Hyperbole.Types.Request
+import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View
 
 
 class RunHandlers (views :: [Type]) es where
-  runHandlers :: (Hyperbole :> es) => Eff es ()
+  runHandlers :: (Hyperbole :> es) => Event TargetViewId Text -> Eff es (Maybe Response)
 
 
 instance RunHandlers '[] es where
-  runHandlers = pure ()
+  runHandlers _ = pure Nothing
 
 
 instance (HyperView view es, RunHandlers views es) => RunHandlers (view : views) es where
-  runHandlers = do
-    runHandler @view (update @view)
-    runHandlers @views
+  runHandlers rawEvent = do
+    mr <- runHandler @view rawEvent (update @view)
+    case mr of
+      Nothing -> runHandlers @views rawEvent
+      Just r -> pure (Just r)
 
 
 runHandler
   :: forall id es
    . (HyperView id es, Hyperbole :> es)
-  => (Action id -> Eff (Reader id : es) (View id ()))
-  -> Eff es ()
-runHandler run = do
+  => Event TargetViewId Text
+  -> (Action id -> Eff (Reader id : es) (View id ()))
+  -> Eff es (Maybe Response)
+runHandler rawEvent run = do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
-  mev <- getEvent @id :: Eff es (Maybe (Event id (Action id)))
+  mev <- decodeEvent @id rawEvent :: Eff es (Maybe (Event id (Action id)))
   case mev of
     Just evt -> do
       vw <- runReader evt.viewId $ run evt.action
-      respondView evt.viewId vw
+      res <- viewResponse evt.viewId vw
+      pure $ Just res
     _ -> do
-      pure ()
+      pure Nothing
 
 
 runLoad
@@ -53,19 +59,30 @@ runLoad
   => Eff es (View (Root views) ())
   -> Eff es Response
 runLoad loadPage = do
-  runHandlers @views
-  guardNoEvent
-  loadToResponse loadPage
-
-
-guardNoEvent :: (Hyperbole :> es) => Eff es ()
-guardNoEvent = do
-  q <- (.query) <$> request
+  q <- (.query) <$> send GetRequest
+  traceM $ "Query " <> show q
   case lookupEvent q of
-    -- Are id and action set to something?
-    Just e -> send $ RespondNow $ Err $ ErrNotHandled e
-    Nothing -> pure ()
+    Just rawEvent -> do
+      traceM $ "Got Event: " <> show rawEvent
+      res <- runHandlers @views rawEvent
+      case res of
+        -- we expect it to be handled by one of the views
+        Nothing -> respondError $ ErrNotHandled rawEvent
+        Just r -> do
+          traceM "RESPODING..."
+          send $ RespondNow r
+    Nothing -> do
+      traceM "loadPage"
+      loadToResponse loadPage
 
+
+-- guardNoEvent :: (Hyperbole :> es) => Eff es ()
+-- guardNoEvent = do
+--   q <- (.query) <$> request
+--   case lookupEvent q of
+--     -- Are id and action set to something?
+--     Just e -> send $ RespondNow $ Err $ ErrNotHandled e
+--     Nothing -> pure ()
 
 loadToResponse :: Eff es (View (Root total) ()) -> Eff es Response
 loadToResponse run = do
@@ -73,3 +90,12 @@ loadToResponse run = do
   let vid = TargetViewId (encodedToText $ toViewId Root)
   let res = Response vid $ addContext Root vw
   pure res
+
+
+-- despite not needing any effects, this must be in Eff es to get `es` on the RHS
+decodeEvent :: (HyperView id es) => Event TargetViewId Text -> Eff es (Maybe (Event id (Action id)))
+decodeEvent (Event (TargetViewId ti) ta) =
+  pure $ do
+    vid <- decodeViewId ti
+    act <- decodeAction ta
+    pure $ Event vid act

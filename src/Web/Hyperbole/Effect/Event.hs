@@ -1,17 +1,10 @@
-module Web.Hyperbole.Effect.Event (getEvent) where
-
-import Effectful
-import Effectful.Dispatch.Dynamic
-import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
-import Web.Hyperbole.Effect.Server (Event (..), Request (..), TargetViewId (..), lookupEvent)
-import Web.Hyperbole.HyperView (HyperView (..), decodeAction, decodeViewId)
+module Web.Hyperbole.Effect.Event where
 
 
-getEvent :: (HyperView id es, Hyperbole :> es) => Eff es (Maybe (Event id (Action id)))
-getEvent = do
-  q <- (.query) <$> send GetRequest
-  pure $ do
-    Event (TargetViewId ti) ta <- lookupEvent q
-    vid <- decodeViewId ti
-    act <- decodeAction ta
-    pure $ Event vid act
+-- -- despite not needing any effects, this must be in Eff es to get `es` on the RHS
+-- decodeEvent :: (HyperView id es) => Event TargetViewId Text -> Eff es (Maybe (Event id (Action id)))
+-- decodeEvent (Event (TargetViewId ti) ta) =
+--   pure $ do
+--     vid <- decodeViewId ti
+--     act <- decodeAction ta
+--     pure $ Event vid act

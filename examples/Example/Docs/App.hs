@@ -5,11 +5,11 @@ module Example.Docs.App where
 import Data.ByteString (ByteString)
 import Data.String.Interpolate (i)
 import Effectful.Dispatch.Dynamic (send)
-import Example.Effects.Users (User, Users (..))
-
 import Example.Docs.Page.Messages qualified as Messages
 import Example.Docs.Page.Users qualified as Users
+import Example.Effects.Users (User, Users (..))
 import Web.Hyperbole
+import Web.Hyperbole.Effect.Response (view)
 
 customDocument :: ByteString -> ByteString
 customDocument content =
@@ -27,7 +27,7 @@ router :: (Hyperbole :> es) => AppRoute -> Eff es Response
 router Messages = runPage Messages.page
 router (User cid) = runPage $ Users.page cid
 router Main = do
-  pure $ viewResponse $ do
+  pure $ view $ do
     el "click a link below to visit a page"
     route Messages "Messages"
     route (User 1) "User 1"

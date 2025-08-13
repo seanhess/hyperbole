@@ -214,12 +214,13 @@ import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response
-import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.Effect.Session
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.HyperView.Forms
 import Web.Hyperbole.Page (Page, runPage)
 import Web.Hyperbole.Route
+import Web.Hyperbole.Types.Request
+import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View hiding (placeholder)
 import Web.Hyperbole.View qualified as View
 import Web.Hyperbole.View.Embed

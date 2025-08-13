@@ -4,8 +4,8 @@ import Data.Kind (Type)
 import Effectful
 import Web.Hyperbole.Effect.Handler (RunHandlers, runLoad)
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Server (Response)
 import Web.Hyperbole.HyperView (Root)
+import Web.Hyperbole.Types.Response (Response)
 import Web.Hyperbole.View (View)
 
 

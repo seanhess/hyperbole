@@ -17,7 +17,9 @@ import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.URI (Path)
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.Effect.Request (request)
-import Web.Hyperbole.Effect.Server (Client (..), Request (..), Response (..), ResponseError (..))
+import Web.Hyperbole.Effect.Server (Client (..))
+import Web.Hyperbole.Types.Request
+import Web.Hyperbole.Types.Response
 
 
 {- | Configure a data type to persist in the 'session' as a cookie. These are type-indexed, so only one of each can exist in the session

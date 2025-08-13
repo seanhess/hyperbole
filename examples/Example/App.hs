@@ -83,7 +83,6 @@ import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Handler (RunHandlers)
 import Web.Hyperbole.Effect.OAuth2 (OAuth2, runOAuth2)
 import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
-import Web.Hyperbole.Effect.Server (Request (..))
 
 run :: IO ()
 run = do

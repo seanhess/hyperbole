@@ -49,7 +49,6 @@ library
       Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Server
-      Web.Hyperbole.Effect.Server.Response
       Web.Hyperbole.Effect.Server.Socket
       Web.Hyperbole.Effect.Server.Types
       Web.Hyperbole.Effect.Server.Wai
@@ -65,6 +64,9 @@ library
       Web.Hyperbole.Page
       Web.Hyperbole.Route
       Web.Hyperbole.TypeList
+      Web.Hyperbole.Types.Event
+      Web.Hyperbole.Types.Request
+      Web.Hyperbole.Types.Response
       Web.Hyperbole.View
       Web.Hyperbole.View.CSS
       Web.Hyperbole.View.Embed

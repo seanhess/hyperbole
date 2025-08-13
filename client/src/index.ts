@@ -103,6 +103,9 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 
     // Emit relevant events
     let newTarget = document.getElementById(target.id)
+    console.log("target", target)
+    console.log("CHECK id", target.id)
+    console.log("newTarget", newTarget)
     dispatchContent(newTarget)
 
     if (newTarget) {

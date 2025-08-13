@@ -41,7 +41,7 @@ import Effectful.Exception
 import GHC.Generics (Generic)
 import Network.HTTP.Client (HttpException, Request (..), RequestBody (..))
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Types (hContentType, hAccept)
+import Network.HTTP.Types (hAccept, hContentType)
 import Network.URI (parseURI)
 import Text.Casing (quietSnake)
 import Web.Hyperbole.Data.URI
@@ -49,8 +49,8 @@ import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
 import Web.Hyperbole.Effect.Response (respondError)
-import Web.Hyperbole.Effect.Server
 import Web.Hyperbole.Effect.Session (Session (..), deleteSession, saveSession, session)
+import Web.Hyperbole.Types.Response
 
 
 -- TODO: could all hyperbole applications have an oauth2 redirect endpoint?
@@ -109,7 +109,6 @@ runOAuth2 cfg mgr = interpret $ \_ -> \case
   ExchangeRefresh refToken -> do
     let params = refreshParams cfg.clientId cfg.clientSecret refToken
     sendTokenRequest cfg mgr params
-
 
 
 {- | read oauth config from env. This is not required, you can obtain these secrets another way

@@ -8,7 +8,9 @@ import Effectful.Dispatch.Dynamic
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.Hyperbole.Data.URI (Path (..))
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Server
+import Web.Hyperbole.Types.Event
+import Web.Hyperbole.Types.Request
+import Web.Hyperbole.Types.Response
 
 
 -- | Return all information about the 'Request'

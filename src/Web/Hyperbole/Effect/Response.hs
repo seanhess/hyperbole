@@ -6,17 +6,23 @@ import Effectful.Dispatch.Dynamic
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
-import Web.Hyperbole.Effect.Server (Response (..), ResponseError (..), TargetViewId (..))
 import Web.Hyperbole.HyperView (HyperView (..), ViewId (..), hyperUnsafe)
+import Web.Hyperbole.Types.Event
+import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View.Types
 
 
 -- | Respond with the given view immediately, stopping execution
 respondView :: (Hyperbole :> es, HyperView id es) => id -> View id () -> Eff es a
 respondView i vw = do
-  let vid = TargetViewId (encodedToText $ toViewId i)
-  let res = Response vid $ hyperUnsafe i vw
+  res <- viewResponse i vw
   send $ RespondNow res
+
+
+viewResponse :: (HyperView id es) => id -> View id () -> Eff es Response
+viewResponse i vw = do
+  let vid = TargetViewId (encodedToText $ toViewId i)
+  pure $ Response vid $ hyperUnsafe i vw
 
 
 respondError :: (Hyperbole :> es) => ResponseError -> Eff es a
@@ -52,6 +58,6 @@ redirect = send . RespondNow . Redirect
 
 
 -- | Create a response from a given view. This is rarely used. Normally you will return a view from a handler instead
-viewResponse :: View () () -> Response
-viewResponse =
+view :: View () () -> Response
+view =
   Response (TargetViewId "")

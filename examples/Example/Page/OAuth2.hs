@@ -19,7 +19,7 @@ import Web.Hyperbole
 import Web.Hyperbole.Data.URI (Endpoint (..), Path (..), pathToText)
 import Web.Hyperbole.Effect.OAuth2 (Access, OAuth2, Token (..))
 import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
-import Web.Hyperbole.Effect.Server.Response (ResponseError (ErrAuth))
+import Web.Hyperbole.Types.Response (ResponseError (ErrAuth))
 
 --------------------------------------------------------------------------------
 -- App Specific Login
