@@ -34,8 +34,7 @@ type instance DispatchOf Hyperbole = 'Dynamic
 
 -- -- | Run the 'Hyperbole' effect to 'Server'
 runHyperbole
-  :: (Hyperbole :> es)
-  => Connection
+  :: Connection
   -> Eff (Hyperbole : es) a
   -> Eff es a
 runHyperbole conn = interpret $ \_ -> \case

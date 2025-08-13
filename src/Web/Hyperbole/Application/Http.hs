@@ -18,14 +18,14 @@ import Network.Wai (ResponseReceived, responseLBS)
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Handler.WebSockets (websocketsOr)
-import Network.WebSockets (PendingConnection, defaultConnectionOptions)
+import Network.WebSockets (Connection, PendingConnection, defaultConnectionOptions)
 import Web.Hyperbole.Application.Socket qualified as Socket
 import Web.Hyperbole.Data.Cookie (Cookie)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData
 import Web.Hyperbole.Data.URI (path, uriToText)
 import Web.Hyperbole.Effect.Handler (RunHandlers, runHandlers)
-import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
+import Web.Hyperbole.Effect.Hyperbole (Hyperbole, runHyperbole)
 import Web.Hyperbole.Effect.Page
 import Web.Hyperbole.Effect.Server.Wai (ContentType (..), contentType, runPageWai)
 import Web.Hyperbole.Route
@@ -48,14 +48,14 @@ import Web.Hyperbole.View
 
 data PageEndpoint es = PageEndpoint
   { load :: Eff es DocumentBody
-  , update :: Event TargetViewId Text -> Eff es (View () ())
+  , update :: Connection -> Event TargetViewId Text -> Eff es (View () ())
   }
 
 
 liftRunEndpoint :: (forall a. Eff es1 a -> Eff es2 a) -> Eff es1 (PageEndpoint es1) -> Eff es2 (PageEndpoint es2)
 liftRunEndpoint run eff = do
   PageEndpoint l u <- run eff
-  pure $ PageEndpoint (run l) (run . u)
+  pure $ PageEndpoint (run l) (\conn ev -> run $ u conn ev)
 
 
 runPage :: forall views es. (Page :> es, RunHandlers views es) => Eff es (PageView views) -> PageEndpoint es
@@ -65,14 +65,11 @@ runPage pg =
     , update = handleUpdate
     }
  where
-  handleUpdate :: Event TargetViewId Text -> Eff es (View () ())
-  handleUpdate ev = do
+  handleUpdate :: Connection -> Event TargetViewId Text -> Eff es (View () ())
+  handleUpdate conn ev = do
     -- we need enough info to run hyperbole here!
-    mview <- runHyperbole $ runHandlers @views ev
+    mview <- runHyperbole conn $ runHandlers @views ev
     maybe notFound pure mview
-
-  runHyperbole :: Eff (Hyperbole : es) a -> Eff es a
-  runHyperbole = undefined
 
 
 type RunPage es a = (forall views. Eff es (PageView views) -> Eff es a)
