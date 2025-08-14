@@ -8,13 +8,6 @@ import { parseResponse, parseMetadata, Response, LiveUpdate, Metadata } from './
 
 let PACKAGE = require('../package.json');
 
-// import { listenEvents } from './events';
-// import { WEBSOCKET_ADDRESS, Messages } from './Messages'
-// import { INIT_PAGE, INIT_STATE, State, Class } from './types';
-// import { fromVDOM, VDOM } from './vdom'
-
-
-// const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
 console.log("Hyperbole " + PACKAGE.version)
@@ -62,7 +55,6 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 
   try {
     let res: Response = await sendAction(reqId, msg)
-    let meta = res.meta
 
     if (res.meta.requestId != target.dataset.requestId) {
       let err = new Error()
@@ -141,10 +133,16 @@ function runMetadataDeferred(meta: Metadata, target?: HTMLElement) {
     }
 
     for (var remoteEvent of meta.events) {
-      console.log("dipsatching custom event", remoteEvent)
+      // console.log("dipsatching custom event", remoteEvent)
       let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
       let eventTarget = target || document
       eventTarget.dispatchEvent(event)
+    }
+
+    for (var [viewId, action] of meta.actions) {
+      // console.log("FOUND TRIGGER", viewId, action)
+      let view = window.Hyperbole.hyperView(viewId)
+      runAction(view, action)
     }
   }, 0)
 
@@ -238,7 +236,10 @@ function init() {
 function runInitMetadata(input: string) {
   let meta = parseMetadata(input)
   runMetadataRedirect(meta)
-  runMetadataDeferred(meta)
+
+  window.addEventListener("load", function() {
+    runMetadataDeferred(meta)
+  })
 }
 
 

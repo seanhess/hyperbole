@@ -76,9 +76,13 @@ addContext c (View eff) = View $ do
 -- Html ---------------------------------------------
 
 tag :: Text -> View c () -> View c ()
-tag n (View eff) = View $ do
+tag = tag' False
+
+
+tag' :: Bool -> Text -> View c () -> View c ()
+tag' inline n (View eff) = View $ do
   content <- eff
-  pure $ Atomic.tag n content
+  pure $ Atomic.tag' inline n content
 
 
 text :: Text -> View c ()

@@ -21,6 +21,7 @@ export type Metadata = {
     error?: string;
     query?: string;
     events: RemoteEvent[];
+    actions: [ViewId, string][];
     requestId?: string;
 };
 type Meta = {
@@ -35,6 +36,7 @@ export declare function parseMetas(meta: Meta[]): Metadata;
 export declare function parseMetadata(input: string): Metadata;
 export declare function splitMetadata(lines: string[]): ParsedResponse;
 export declare function parseRemoteEvent(input: string): RemoteEvent;
+export declare function parseAction(input: string): [ViewId, string];
 export declare function parseMeta(line: string): Meta | undefined;
 export type ParsedResponse = {
     metadata: Metadata;

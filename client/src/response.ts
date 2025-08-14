@@ -1,6 +1,7 @@
 
 import { ViewId } from './action'
 import { takeWhileMap } from "./lib"
+import { actionMessage, ActionMessage } from "./action"
 
 
 
@@ -47,6 +48,7 @@ export type Metadata = {
   error?: string
   query?: string
   events: RemoteEvent[]
+  actions: [ViewId, string][],
   requestId?: string
 }
 
@@ -66,10 +68,12 @@ export function parseMetas(meta: Meta[]): Metadata {
     viewId: meta.find(m => m.key == "VIEW-ID")?.value,
     query: meta.find(m => m.key == "QUERY")?.value,
     events: meta.filter(m => m.key == "EVENT").map((m) => parseRemoteEvent(m.value)),
+    actions: meta.filter(m => m.key == "TRIGGER").map((m) => parseAction(m.value)),
     requestId
   }
 }
 
+// decode entities
 export function parseMetadata(input: string): Metadata {
   return splitMetadata(input.trim().split("\n")).metadata
 
@@ -96,6 +100,11 @@ export function parseRemoteEvent(input: string): RemoteEvent {
     name,
     detail: JSON.parse(data)
   }
+}
+
+export function parseAction(input: string): [ViewId, string] {
+  let [viewId, action] = breakNextSegment(input)
+  return [viewId, action]
 }
 
 function breakNextSegment(input: string): [string, string] | undefined {

@@ -29,7 +29,7 @@ import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View (renderLazyByteString)
 import Web.Hyperbole.View.Tag
-import Web.Hyperbole.View.Types (View, raw, tag, text)
+import Web.Hyperbole.View.Types (View)
 
 
 handleRequestWai
@@ -48,7 +48,7 @@ handleRequestWai toDoc req respond actions = do
   addDocument :: BL.ByteString -> BL.ByteString
   addDocument bd =
     case Wai.requestMethod req of
-      "GET" -> toDoc bd
+      "GET" -> toDoc $ "\n" <> bd
       _ -> bd
 
 
@@ -83,18 +83,18 @@ sendResponse addDoc req respond client res remotes = do
       let hs = ("Location", cs url) : clientHeaders client
       respondHtml status200 hs $ renderViewResponse (metaRedirect u <> meta) $ do
         el "Redirecting"
-        tag "script" $
+        script'
           -- static script is safe to execute
-          raw
-            [i|
-              let metaInput = document.getElementById("hyp.metadata").innerText;
-              let meta = Hyperbole.parseMetadata(metaInput)
-              window.location = meta.redirect
-            |]
+          [i|
+            let metaInput = document.getElementById("hyp.metadata").innerText;
+            let meta = Hyperbole.parseMetadata(metaInput)
+            window.location = meta.redirect
+          |]
 
   renderViewResponse :: Metadata -> View () () -> BL.ByteString
   renderViewResponse meta vw =
-    addDoc $ scriptMeta meta <> "\n\n" <> renderLazyByteString vw
+    addDoc $
+      scriptMeta meta <> "\n\n" <> renderLazyByteString vw
 
   respondText s hs = Wai.responseLBS s (contentType ContentText : hs)
   respondHtml s hs = Wai.responseLBS s (contentType ContentHtml : hs)
@@ -114,11 +114,9 @@ sendResponse addDoc req respond client res remotes = do
 scriptMeta :: Metadata -> BL.ByteString
 scriptMeta m =
   renderLazyByteString $
-    tag "script" @ type_ "application/hyp.metadata" . att "id" "hyp.metadata" $
-      -- text instead of raw will escape
-      text $
-        cs $
-          "\n" <> renderMetadata m <> "\n"
+    script' @ type_ "application/hyp.metadata" . att "id" "hyp.metadata" $
+      cs $
+        "\n" <> renderMetadata m <> "\n"
 
 
 fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request

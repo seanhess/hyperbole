@@ -3,8 +3,8 @@
 module Web.Hyperbole.View.Tag where
 
 import Control.Monad (forM_)
-import Data.String (IsString)
 import Data.Text (Text, pack)
+import Data.Text qualified as T
 import Effectful
 import Effectful.State.Static.Local
 import Web.Atomic.CSS
@@ -90,7 +90,12 @@ src = att "src"
 
 
 script :: Text -> View c ()
-script s = tag "script" none @ type_ "text/javascript" @ src s
+script s = tag "script" none @ src s
+
+
+-- | Embed raw script
+script' :: Text -> View c ()
+script' dat = tag' True "script" $ raw $ T.replace "</" "\\u003C/" $ dat
 
 
 style :: Text -> View c ()

@@ -4,7 +4,7 @@ packages:
   .
   ./examples/
   ./docs/
-  -- ../atomic-css/
+  ../atomic-css/
 
 -- source-repository-package
 --   type: git
