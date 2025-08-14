@@ -3,11 +3,15 @@
 
 module Web.Hyperbole.Effect.Hyperbole where
 
+import Data.Aeson (ToJSON (..), Value, object, (.=), (.?=))
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
+import Effectful.Writer.Static.Local
+import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Types.Client
+import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 
@@ -18,16 +22,32 @@ data Hyperbole :: Effect where
   RespondNow :: Response -> Hyperbole m a
   ModClient :: (Client -> Client) -> Hyperbole m ()
   GetClient :: Hyperbole m Client
+  -- TODO: this should actually execute the other view, and send the response to the client
+  TriggerAction :: TargetViewId -> Encoded -> Hyperbole m ()
+  TriggerEvent :: Maybe TargetViewId -> String -> Value -> Hyperbole m ()
 
 
 type instance DispatchOf Hyperbole = 'Dynamic
+
+
+data Remote
+  = RemoteAction TargetViewId Encoded
+  | RemoteEvent (Maybe TargetViewId) String Value
+
+
+instance ToJSON Remote where
+  toJSON = \case
+    RemoteAction vid act ->
+      object ["viewId" .= toJSON vid, "action" .= toJSON act]
+    RemoteEvent mvid event dat ->
+      object ["event" .= toJSON event, "viewId" .= toJSON mvid, "data" .= toJSON dat]
 
 
 -- | Run the 'Hyperbole' effect to get a response
 runHyperbole
   :: Request
   -> Eff (Hyperbole : es) Response
-  -> Eff es (Response, Client)
+  -> Eff es (Response, Client, [Remote])
 runHyperbole req = reinterpret runLocal $ \_ -> \case
   GetRequest -> do
     pure req
@@ -37,11 +57,13 @@ runHyperbole req = reinterpret runLocal $ \_ -> \case
     get @Client
   ModClient f -> do
     modify @Client f
+  TriggerAction vid act -> do
+    tell [RemoteAction vid act]
+  TriggerEvent mvid name dat -> do
+    tell [RemoteEvent mvid name dat]
  where
-  runLocal :: Eff (Error Response : State Client : es) Response -> Eff es (Response, Client)
+  runLocal :: Eff (Error Response : State Client : Writer [Remote] : es) Response -> Eff es (Response, Client, [Remote])
   runLocal eff = do
     let client = Client req.requestId mempty mempty
-    res :: (Either Response Response, Client) <- runState client . runErrorNoCallStack @Response $ eff
-    case res of
-      (Left r, c) -> pure (r, c)
-      (Right r, c) -> pure (r, c)
+    ((eresp, client'), rmts) <- runWriter @[Remote] . runState client . runErrorNoCallStack @Response $ eff
+    pure (either id id eresp, client', rmts)

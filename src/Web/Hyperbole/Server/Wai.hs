@@ -1,13 +1,17 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Web.Hyperbole.Server.Wai where
 
 import Control.Exception (throwIO)
+import Data.Aeson (ToJSON, encode)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
+import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.List qualified as L
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
+import Data.String.Interpolate (i)
 import Data.Text (Text)
 import Effectful
 import Network.HTTP.Types (Header, HeaderName, Method, status200, status400, status401, status404, status500)
@@ -36,48 +40,45 @@ handleRequestWai
   -> Eff es Wai.ResponseReceived
 handleRequestWai toDoc req respond actions = do
   rq <- fromWaiRequest req
-  (res, client) <- runHyperbole rq actions
-  liftIO $ sendResponse toDoc req respond client res
+  (res, client, rmts) <- runHyperbole rq actions
+  liftIO $ sendResponse toDoc req respond client res rmts
 
 
-sendResponse :: (BL.ByteString -> BL.ByteString) -> Wai.Request -> (Wai.Response -> IO ResponseReceived) -> Client -> Response -> IO Wai.ResponseReceived
-sendResponse toDoc req respond client res = do
+sendResponse :: (BL.ByteString -> BL.ByteString) -> Wai.Request -> (Wai.Response -> IO ResponseReceived) -> Client -> Response -> [Remote] -> IO Wai.ResponseReceived
+sendResponse toDoc req respond client res remotes = do
   respond $ response res
  where
   response :: Response -> Wai.Response
   response = \case
     NotFound -> respError status404 "Not Found"
-    (Err (ErrParse e)) -> respError status400 ("Parse Error: " <> cs e)
-    (Err (ErrQuery e)) -> respError status400 $ "ErrQuery: " <> cs e
-    (Err (ErrSession param e)) -> respError status400 $ "ErrSession: " <> cs (show param) <> " " <> cs e
-    (Err (ErrServer msg)) -> do
-      respError status500 $ "Server Error: " <> cs msg
-    (Err (ErrCustom _ body)) -> do
-      let out = addDocument (Wai.requestMethod req) (renderLazyByteString body)
-      Wai.responseLBS status500 [contentType ContentHtml] out
-    (Err ErrInternal) -> respError status500 "Internal Server Error"
-    (Err (ErrAuth m)) -> respError status401 $ "Unauthorized: " <> cs m
-    (Err (ErrNotHandled e)) -> respError status400 $ cs $ errNotHandled e
+    (Err err) ->
+      case err of
+        ErrParse e -> respError status400 ("Parse Error: " <> cs e)
+        ErrQuery e -> respError status400 $ "ErrQuery: " <> cs e
+        ErrSession param e -> respError status400 $ "ErrSession: " <> cs (show param) <> " " <> cs e
+        ErrServer msg -> do
+          respError status500 $ "Server Error: " <> cs msg
+        ErrCustom _ body -> do
+          let out = addDocument (renderLazyByteString body)
+          Wai.responseLBS status500 [contentType ContentHtml] out
+        ErrInternal -> respError status500 "Internal Server Error"
+        ErrAuth m -> respError status401 $ "Unauthorized: " <> cs m
+        ErrNotHandled e -> respError status400 $ cs $ errNotHandled e
     (Response _ vw) ->
-      respHtml $
-        addDocument (Wai.requestMethod req) (renderLazyByteString vw)
+      let hs = contentType ContentHtml : metaHeaders
+       in Wai.responseLBS status200 hs $ addDocument $ addRemotes $ renderLazyByteString vw
     (Redirect u) -> do
       let url = uriToText u
       -- We have to use a 200 javascript redirect because javascript
       -- will redirect the fetch(), while we want to redirect the whole page
       -- see index.ts sendAction()
-      let hs = ("Location", cs url) : contentType ContentHtml : headers
-      Wai.responseLBS status200 hs $ "<script>window.location = '" <> cs url <> "'</script>"
+      let hs = ("Location", cs url) : contentType ContentHtml : metaHeaders
+      Wai.responseLBS status200 hs $ addDocument $ addRemotes [i|<script>window.location = '#{url}'</script>|]
 
   respError s = Wai.responseLBS s [contentType ContentText]
 
-  respHtml body =
-    -- always set the session...
-    let hs = contentType ContentHtml : (setQuery client.query <> headers)
-     in Wai.responseLBS status200 hs body
-
-  headers :: [Header]
-  headers = setRequestId client.requestId : setCookies
+  metaHeaders :: [Header]
+  metaHeaders = setQuery client.query <> (setRequestId client.requestId : setCookies)
 
   setCookies =
     fmap setCookie $ Cookie.toList client.session
@@ -95,9 +96,32 @@ sendResponse toDoc req respond client res = do
     [("Set-Query", QueryData.render qd)]
 
   -- convert to document if full page request. Subsequent POST requests will only include fragments
-  addDocument :: Method -> BL.ByteString -> BL.ByteString
-  addDocument "GET" bd = toDoc bd
-  addDocument _ bd = bd
+  addDocument :: BL.ByteString -> BL.ByteString
+  addDocument bd =
+    case Wai.requestMethod req of
+      "GET" -> toDoc bd
+      _ -> bd
+
+  -- TODO: the problem is that we've simply rendered the html for the page...
+  -- http is different. For sockets, we could send the message out-of-band?
+  -- I'm still annoyed by the WAI fallback
+  -- it's overfly complicated
+  addRemotes :: BL.ByteString -> BL.ByteString
+  addRemotes body =
+    let events = filter isEvent remotes
+        actions = filter isAction remotes
+     in BLC.intercalate "\n" [body, scriptData "events" events, scriptData "actions" actions]
+   where
+    isEvent RemoteEvent{} = True
+    isEvent _ = False
+
+    isAction RemoteAction{} = True
+    isAction _ = False
+
+  -- TODO: escape </script>
+  scriptData :: (ToJSON a) => Text -> a -> BL.ByteString
+  scriptData sid a =
+    [i|<script id="#{sid}" type="application/json">#{encode a}</script>|]
 
 
 fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request

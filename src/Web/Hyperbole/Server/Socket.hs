@@ -52,7 +52,7 @@ handleRequestSocket conn actions = do
         case res2 of
           Left e -> liftIO $ putStrLn $ "Socket Error while sending previous error to client: " <> show e
           Right _ -> pure ()
-      Right (resp, clnt) -> do
+      Right (resp, clnt, rmts) -> do
         case resp of
           (Response vid vw) -> do
             sendView req.path conn clnt vid vw
@@ -133,7 +133,7 @@ sendRedirect reqPath conn client u = do
 -- send response with client metadata
 sendResponse :: (MonadIO m) => Path -> Connection -> Client -> Metadata -> BL.ByteString -> m ()
 sendResponse reqPath conn client meta =
-  sendMessage conn (responseMeta <> meta)
+  sendMessage conn (meta <> responseMeta)
  where
   responseMeta :: Metadata
   responseMeta =
@@ -149,7 +149,7 @@ sendResponse reqPath conn client meta =
 
 sendError :: (IOE :> es) => RequestId -> Connection -> SerializedError -> Eff es ()
 sendError reqId conn (SerializedError err body) = do
-  sendMessage conn (metaRequestId reqId <> metadata "ERROR" err) body
+  sendMessage conn (metadata "ERROR" err <> metaRequestId reqId) body
 
 
 -- low level message. Use sendResponse

@@ -2,7 +2,7 @@ import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
 import { actionMessage, ActionMessage, requestId, RequestId, ViewId } from './action'
-import { sendActionHttp } from './http'
+import http
 import { setQuery } from "./browser"
 import { parseResponse, Response, LiveUpdate } from './response'
 
@@ -29,7 +29,7 @@ async function sendAction(reqId: RequestId, msg: ActionMessage): Promise<Respons
     return sock.sendAction(reqId, msg)
   }
   else {
-    return sendActionHttp(reqId, msg)
+    return http.sendAction(reqId, msg)
   }
 }
 

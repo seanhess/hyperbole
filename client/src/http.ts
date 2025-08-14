@@ -1,7 +1,7 @@
 import { ActionMessage, RequestId } from './action'
 import { Response, FetchError } from "./response"
 
-export async function sendActionHttp(reqId: RequestId, msg: ActionMessage): Promise<Response> {
+export async function sendAction(reqId: RequestId, msg: ActionMessage): Promise<Response> {
   // console.log("HTTP sendAction", msg.url.toString())
   let res = await fetch(msg.url, {
     method: "POST",

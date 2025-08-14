@@ -1,5 +1,6 @@
 module Web.Hyperbole.Types.Event where
 
+import Data.Aeson (ToJSON)
 import Data.ByteString (ByteString)
 import Data.List qualified as L
 import Data.String.Conversions (cs)
@@ -10,6 +11,7 @@ import Network.HTTP.Types (Query, QueryItem)
 -- | Serialized ViewId
 newtype TargetViewId = TargetViewId {text :: Text}
   deriving (Show)
+  deriving newtype (ToJSON)
 
 
 -- | An action, with its corresponding id
