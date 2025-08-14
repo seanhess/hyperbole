@@ -27,6 +27,7 @@ export async function sendActionHttp(reqId: RequestId, msg: ActionMessage): Prom
     requestId: metadata.requestId,
     location: metadata.redirect,
     query: metadata.query,
+    events: metadata.events,
     body: rest.join('\n')
   }
 

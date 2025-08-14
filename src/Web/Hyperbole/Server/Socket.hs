@@ -2,7 +2,6 @@ module Web.Hyperbole.Server.Socket where
 
 import Control.Monad (void)
 import Data.Bifunctor (first)
-import Data.ByteString.Lazy qualified as BL
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
@@ -14,14 +13,11 @@ import Network.HTTP.Types as HTTP (parseQuery)
 import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
 import Web.Cookie qualified
-import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
-import Web.Hyperbole.Data.QueryData as QueryData
-import Web.Hyperbole.Data.URI (Path, URI, path, uriToText)
+import Web.Hyperbole.Data.URI (URI, path)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Server.Types
-import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
@@ -70,12 +66,6 @@ handleRequestSocket conn actions = do
 
   serializeError (ErrCustom m b) = SerializedError m (renderLazyByteString b)
   serializeError err = serverError $ errMsg err
-
-  -- onSocketError :: (IOE :> es) => SocketError -> Eff es Response
-  -- onSocketError e = do
-  --   let msg = cs $ show e
-  --   sendError req conn $ serverError msg
-  --   pure $ Err $ ErrServer msg
 
   receiveRequest :: (IOE :> es) => Connection -> Eff es Request
   receiveRequest _ = do

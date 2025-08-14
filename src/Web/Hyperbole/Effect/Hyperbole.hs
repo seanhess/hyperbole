@@ -3,7 +3,7 @@
 
 module Web.Hyperbole.Effect.Hyperbole where
 
-import Data.Aeson (ToJSON (..), Value, object, (.=), (.?=))
+import Data.Aeson (Value)
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
@@ -25,7 +25,7 @@ data Hyperbole :: Effect where
   GetClient :: Hyperbole m Client
   -- TODO: this should actually execute the other view, and send the response to the client
   TriggerAction :: TargetViewId -> Encoded -> Hyperbole m ()
-  TriggerEvent :: Maybe TargetViewId -> Text -> Value -> Hyperbole m ()
+  TriggerEvent :: Text -> Value -> Hyperbole m ()
 
 
 type instance DispatchOf Hyperbole = 'Dynamic
@@ -33,15 +33,7 @@ type instance DispatchOf Hyperbole = 'Dynamic
 
 data Remote
   = RemoteAction TargetViewId Encoded
-  | RemoteEvent (Maybe TargetViewId) Text Value
-
-
-instance ToJSON Remote where
-  toJSON = \case
-    RemoteAction vid act ->
-      object ["viewId" .= toJSON vid, "action" .= toJSON act]
-    RemoteEvent mvid event dat ->
-      object ["event" .= toJSON event, "viewId" .= toJSON mvid, "data" .= toJSON dat]
+  | RemoteEvent Text Value
 
 
 -- | Run the 'Hyperbole' effect to get a response
@@ -60,8 +52,8 @@ runHyperbole req = reinterpret runLocal $ \_ -> \case
     modify @Client f
   TriggerAction vid act -> do
     tell [RemoteAction vid act]
-  TriggerEvent mvid name dat -> do
-    tell [RemoteEvent mvid name dat]
+  TriggerEvent name dat -> do
+    tell [RemoteEvent name dat]
  where
   runLocal :: Eff (Error Response : State Client : Writer [Remote] : es) Response -> Eff es (Response, Client, [Remote])
   runLocal eff = do

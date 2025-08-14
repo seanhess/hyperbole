@@ -8,6 +8,7 @@ export type Response = {
   requestId: string
   location?: string
   query?: string
+  events: RemoteEvent[]
   body: ResponseBody
 }
 
@@ -48,10 +49,12 @@ export type Metadata = {
   redirect?: string
   error?: string
   query?: string
+  events: RemoteEvent[]
   requestId?: string
 }
 
 type Meta = { key: string, value: string }
+type RemoteEvent = { name: string, detail: any }
 
 
 
@@ -65,6 +68,7 @@ export function parseMetas(meta: Meta[]): Metadata {
     error: meta.find(m => m.key == "ERROR")?.value,
     viewId: meta.find(m => m.key == "VIEW-ID")?.value,
     query: meta.find(m => m.key == "QUERY")?.value,
+    events: meta.filter(m => m.key == "EVENT").map((m) => parseRemoteEvent(m.value)),
     requestId
   }
 }
@@ -88,6 +92,26 @@ export function splitMetadata(lines: string[]): ParsedResponse {
 
 }
 
+
+export function parseRemoteEvent(input: string): RemoteEvent {
+  let [name, data] = breakNextSegment(input)
+
+  console.log("Event", name, data)
+  return {
+    name,
+    detail: JSON.parse(data)
+  }
+}
+
+function breakNextSegment(input: string): [string, string] | undefined {
+  let ix = input.indexOf('|')
+  if (ix === -1) {
+    let err = new Error("Bad Encoding, Expected Segment")
+    err.message = input
+    throw err
+  }
+  return [input.slice(0, ix), input.slice(ix + 1)]
+}
 
 export function parseMeta(line: string): Meta | undefined {
   let match = line.match(/^\|([A-Z\-]+)\|(.*)$/)

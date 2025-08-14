@@ -73,6 +73,7 @@ export class SocketConnection {
       requestId: metadata.requestId,
       location: metadata.redirect,
       query: metadata.query,
+      events: metadata.events,
       body: rest.join('\n')
     }
 

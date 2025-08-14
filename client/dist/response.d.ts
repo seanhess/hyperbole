@@ -3,6 +3,7 @@ export type Response = {
     requestId: string;
     location?: string;
     query?: string;
+    events: RemoteEvent[];
     body: ResponseBody;
 };
 export type ResponseBody = string;
@@ -22,15 +23,21 @@ export type Metadata = {
     redirect?: string;
     error?: string;
     query?: string;
+    events: RemoteEvent[];
     requestId?: string;
 };
 type Meta = {
     key: string;
     value: string;
 };
+type RemoteEvent = {
+    name: string;
+    detail: any;
+};
 export declare function parseMetas(meta: Meta[]): Metadata;
 export declare function parseMetadata(input: string): Metadata;
 export declare function splitMetadata(lines: string[]): ParsedResponse;
+export declare function parseRemoteEvent(input: string): RemoteEvent;
 export declare function parseMeta(line: string): Meta | undefined;
 export type ParsedResponse = {
     metadata: Metadata;

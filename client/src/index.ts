@@ -117,6 +117,11 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
       console.warn("Target Missing: ", target.id)
     }
 
+    for (var remoteEvent of res.events) {
+      let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
+      newTarget.dispatchEvent(event)
+    }
+
 
   }
   catch (err) {

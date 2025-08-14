@@ -94,12 +94,8 @@ metaRemotes rs = mconcat $ fmap meta rs
   meta = \case
     RemoteAction (TargetViewId vid) act ->
       metadata "TRIGGER" $ vid <> "|" <> encodedToText act
-    RemoteEvent mvid ev dat ->
-      metadata "EVENT" $ T.intercalate "|" [eventTarget mvid, ev, cs $ Aeson.encode dat]
-
-  eventTarget = \case
-    Just (TargetViewId t) -> t
-    Nothing -> ""
+    RemoteEvent ev dat ->
+      metadata "EVENT" $ T.intercalate "|" [ev, cs $ Aeson.encode dat]
 
 
 metaError :: Text -> Metadata

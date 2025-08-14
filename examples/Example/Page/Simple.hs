@@ -39,6 +39,7 @@ instance HyperView Message es where
 
   update (Louder msg) = do
     let new = msg <> "!"
+    pushEvent "hello2" ()
     pure $ messageView new
 
 messageView :: Text -> View Message ()
