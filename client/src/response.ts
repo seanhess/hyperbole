@@ -5,10 +5,7 @@ import { takeWhileMap } from "./lib"
 
 
 export type Response = {
-  requestId: string
-  location?: string
-  query?: string
-  events: RemoteEvent[]
+  meta: Metadata
   body: ResponseBody
 }
 
@@ -95,8 +92,6 @@ export function splitMetadata(lines: string[]): ParsedResponse {
 
 export function parseRemoteEvent(input: string): RemoteEvent {
   let [name, data] = breakNextSegment(input)
-
-  console.log("Event", name, data)
   return {
     name,
     detail: JSON.parse(data)

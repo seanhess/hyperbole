@@ -70,10 +70,7 @@ export class SocketConnection {
     let { metadata, rest } = await this.fetch(reqId, action.id, msg)
 
     return {
-      requestId: metadata.requestId,
-      location: metadata.redirect,
-      query: metadata.query,
-      events: metadata.events,
+      meta: metadata,
       body: rest.join('\n')
     }
 

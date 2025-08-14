@@ -62,8 +62,9 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 
   try {
     let res: Response = await sendAction(reqId, msg)
+    let meta = res.meta
 
-    if (res.requestId != target.dataset.requestId) {
+    if (res.meta.requestId != target.dataset.requestId) {
       let err = new Error()
       err.name = "Concurrency Error"
       err.message = "Stale Action (" + reqId + "):" + action
@@ -73,22 +74,14 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
       delete target.dataset.requestId
     }
 
-    if (res.location) {
-      window.location.href = res.location
-      return // skip the rest of the steps. Do not patch, etc
-    }
-
-    if (res.query != null) {
-      setQuery(res.query)
-    }
-
+    runMetadataRedirect(res.meta)
 
     let update: LiveUpdate = parseResponse(res.body)
 
     if (!update.content) {
-      // TODO: error handling
-      console.error("Empty Response", res)
-      return
+      let err = new Error("Empty Response")
+      err.message = res.toString()
+      throw err
     }
 
     // First, update the stylesheet
@@ -117,12 +110,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
       console.warn("Target Missing: ", target.id)
     }
 
-    for (var remoteEvent of res.events) {
-      let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
-      newTarget.dispatchEvent(event)
-    }
-
-
+    runMetadataDeferred(res.meta, newTarget)
   }
   catch (err) {
     console.error("Caught Error in HyperView (" + target.id + "):\n", err)
@@ -137,6 +125,31 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   clearTimeout(timeout)
   target.classList.remove("hyp-loading")
 }
+
+function runMetadataRedirect(meta: Metadata) {
+  if (meta.redirect) {
+    // perform a redirect immediately
+    window.location.href = meta.redirect
+  }
+}
+
+function runMetadataDeferred(meta: Metadata, target?: HTMLElement) {
+  // defer the rest of the actions
+  setTimeout(() => {
+    if (meta.query != null) {
+      setQuery(meta.query)
+    }
+
+    for (var remoteEvent of meta.events) {
+      console.log("dipsatching custom event", remoteEvent)
+      let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
+      let eventTarget = target || document
+      eventTarget.dispatchEvent(event)
+    }
+  }, 0)
+
+}
+
 
 function fixInputs(target: HTMLElement) {
   let focused = target.querySelector("[autofocus]") as HTMLInputElement
@@ -172,6 +185,9 @@ function addCSS(src: HTMLStyleElement | null) {
 
 
 function init() {
+  // metadata attached to initial page loads need to be executed
+  runInitMetadata(document.getElementById("hyp.metadata").innerText)
+
   rootStyles = document.querySelector('style')
 
   listenTopLevel(async function(target: HyperView, action: string) {
@@ -218,6 +234,13 @@ function init() {
     runAction(target, action)
   })
 }
+
+function runInitMetadata(input: string) {
+  let meta = parseMetadata(input)
+  runMetadataRedirect(meta)
+  runMetadataDeferred(meta)
+}
+
 
 function enrichHyperViews(node: HTMLElement): void {
   // enrich all the hyperviews

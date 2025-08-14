@@ -1,9 +1,6 @@
 import { ViewId } from './action';
 export type Response = {
-    requestId: string;
-    location?: string;
-    query?: string;
-    events: RemoteEvent[];
+    meta: Metadata;
     body: ResponseBody;
 };
 export type ResponseBody = string;
