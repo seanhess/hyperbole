@@ -19,6 +19,7 @@ import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.QueryData as QueryData
 import Web.Hyperbole.Data.URI (Path, URI, path, uriToText)
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Server.Types
 import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
@@ -39,6 +40,7 @@ handleRequestSocket
   -> Eff es ()
 handleRequestSocket conn actions = do
   req <- receiveRequest conn
+
   -- run handler in the background = async
   void $ async $ do
     res <- trySync $ runHyperbole req actions
@@ -48,18 +50,19 @@ handleRequestSocket conn actions = do
         -- It's not safe to send any exception over the wire
         -- log it to the console and send the error to the client
         liftIO $ print ex
-        res2 <- trySync $ sendError req.requestId conn (serverError "Internal Server Error")
+        res2 <- trySync $ sendError conn (requestMetadata req) (serverError "Internal Server Error")
         case res2 of
           Left e -> liftIO $ putStrLn $ "Socket Error while sending previous error to client: " <> show e
           Right _ -> pure ()
       Right (resp, clnt, rmts) -> do
+        let meta = requestMetadata req <> responseMetadata req.path clnt rmts
         case resp of
-          (Response vid vw) -> do
-            sendView req.path conn clnt vid vw
-          (Err (ErrServer m)) -> sendError req.requestId conn (serverError m)
-          (Err err) -> sendError req.requestId conn (serializeError err)
-          NotFound -> sendError req.requestId conn (serverError "Not Found")
-          (Redirect url) -> sendRedirect req.path conn clnt url
+          (Response _ vw) -> do
+            sendUpdateView conn meta vw
+          (Err (ErrServer m)) -> sendError conn meta (serverError m)
+          (Err err) -> sendError conn meta (serializeError err)
+          NotFound -> sendError conn meta (serverError "Not Found")
+          (Redirect url) -> sendRedirect conn meta url
  where
   errMsg (ErrServer m) = m
   errMsg ErrInternal = "Internal Server Error"
@@ -108,75 +111,33 @@ handleRequestSocket conn actions = do
           method = "POST"
           body = cs $ fromMaybe "" mbody
           requestId = RequestId $ header reqId
+          event = lookupEvent query
 
       cookies <- first (InternalSocket . InvalidCookie (cs cook)) <$> Cookie.parse $ Web.Cookie.parseCookies $ cs $ header cook
 
-      pure $ Request{path = pth, host, query, body, method, cookies, requestId}
+      pure $ Request{path = pth, event, host, query = queryRemoveSystem query, body, method, cookies, requestId}
 
     -- drop up to the colon, then ': '
     header = T.drop 2 . T.dropWhile (/= ':')
 
 
-sendView :: (IOE :> es) => Path -> Connection -> Client -> TargetViewId -> View () () -> Eff es ()
-sendView reqPath conn client tv vw = do
-  sendResponse reqPath conn client (viewIdMeta tv) (renderLazyByteString vw)
- where
-  viewIdMeta :: TargetViewId -> Metadata
-  viewIdMeta (TargetViewId vid) = Metadata [("VIEW-ID", cs vid)]
+sendUpdateView :: (IOE :> es) => Connection -> Metadata -> View () () -> Eff es ()
+sendUpdateView conn meta vw = do
+  sendMessage conn meta (RenderedHtml $ renderLazyByteString vw)
 
 
-sendRedirect :: (IOE :> es) => Path -> Connection -> Client -> URI -> Eff es ()
-sendRedirect reqPath conn client u = do
-  sendResponse reqPath conn client (metadata "REDIRECT" (uriToText u)) ""
+sendRedirect :: (IOE :> es) => Connection -> Metadata -> URI -> Eff es ()
+sendRedirect conn meta u = do
+  sendMessage conn (metaRedirect u <> meta) mempty
 
 
--- send response with client metadata
-sendResponse :: (MonadIO m) => Path -> Connection -> Client -> Metadata -> BL.ByteString -> m ()
-sendResponse reqPath conn client meta =
-  sendMessage conn (meta <> responseMeta)
- where
-  responseMeta :: Metadata
-  responseMeta =
-    metaRequestId client.requestId <> metaSession client.session <> metaQuery client.query
-
-  metaSession :: Cookies -> Metadata
-  metaSession cookies = mconcat $ fmap metaCookie $ Cookie.toList cookies
-   where
-    metaCookie :: Cookie -> Metadata
-    metaCookie cookie =
-      Metadata [("COOKIE", cs (Cookie.render reqPath cookie))]
-
-
-sendError :: (IOE :> es) => RequestId -> Connection -> SerializedError -> Eff es ()
-sendError reqId conn (SerializedError err body) = do
-  sendMessage conn (metadata "ERROR" err <> metaRequestId reqId) body
+sendError :: (IOE :> es) => Connection -> Metadata -> SerializedError -> Eff es ()
+sendError conn meta (SerializedError err body) = do
+  sendMessage conn (metadata "ERROR" err <> meta) (RenderedHtml body)
 
 
 -- low level message. Use sendResponse
-sendMessage :: (MonadIO m) => Connection -> Metadata -> BL.ByteString -> m ()
-sendMessage conn meta' cnt = do
-  let msg = renderMetadata meta' <> "\n" <> cnt
+sendMessage :: (MonadIO m) => Connection -> Metadata -> RenderedHtml -> m ()
+sendMessage conn meta' (RenderedHtml html) = do
+  let msg = renderMetadata meta' <> "\n" <> html
   liftIO $ WS.sendTextData conn msg
- where
-  renderMetadata :: Metadata -> BL.ByteString
-  renderMetadata (Metadata m) = BL.intercalate "\n" $ fmap (uncurry metaLine) m
-
-  metaLine :: BL.ByteString -> Text -> BL.ByteString
-  metaLine name value = "|" <> name <> "|" <> cs value
-
-
--- Metadata --------------------------------------------
-
-metadata :: BL.ByteString -> Text -> Metadata
-metadata name value = Metadata [(name, value)]
-
-
-metaRequestId :: RequestId -> Metadata
-metaRequestId (RequestId reqId) =
-  Metadata [("REQUEST-ID", cs reqId)]
-
-
-metaQuery :: Maybe QueryData -> Metadata
-metaQuery Nothing = mempty
-metaQuery (Just q) =
-  Metadata [("QUERY", cs $ QueryData.render q)]

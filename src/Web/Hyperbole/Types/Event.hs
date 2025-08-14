@@ -44,3 +44,7 @@ isSystemParam :: QueryItem -> Bool
 isSystemParam ("hyp-id", _) = True
 isSystemParam ("hyp-action", _) = True
 isSystemParam _ = False
+
+
+queryRemoveSystem :: Query -> Query
+queryRemoveSystem = filter (not . isSystemParam)

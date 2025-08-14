@@ -3,6 +3,7 @@
 module Web.Hyperbole.View.Tag where
 
 import Control.Monad (forM_)
+import Data.String (IsString)
 import Data.Text (Text, pack)
 import Effectful
 import Effectful.State.Static.Local

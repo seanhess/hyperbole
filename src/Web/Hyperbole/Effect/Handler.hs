@@ -58,8 +58,8 @@ runLoad
   => Eff es (View (Root views) ())
   -> Eff es Response
 runLoad loadPage = do
-  q <- (.query) <$> send GetRequest
-  case lookupEvent q of
+  ev <- (.event) <$> send GetRequest
+  case ev of
     Just rawEvent -> do
       res <- runHandlers @views rawEvent
       case res of

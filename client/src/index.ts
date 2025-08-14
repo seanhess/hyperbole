@@ -2,9 +2,9 @@ import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
 import { actionMessage, ActionMessage, requestId, RequestId, ViewId } from './action'
-import http
+import { sendActionHttp } from './http'
 import { setQuery } from "./browser"
-import { parseResponse, Response, LiveUpdate } from './response'
+import { parseResponse, parseMetadata, Response, LiveUpdate, Metadata } from './response'
 
 let PACKAGE = require('../package.json');
 
@@ -29,7 +29,7 @@ async function sendAction(reqId: RequestId, msg: ActionMessage): Promise<Respons
     return sock.sendAction(reqId, msg)
   }
   else {
-    return http.sendAction(reqId, msg)
+    return sendActionHttp(reqId, msg)
   }
 }
 
@@ -63,7 +63,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   try {
     let res: Response = await sendAction(reqId, msg)
 
-    if (reqId != target.dataset.requestId) {
+    if (res.requestId != target.dataset.requestId) {
       let err = new Error()
       err.name = "Concurrency Error"
       err.message = "Stale Action (" + reqId + "):" + action
@@ -103,9 +103,6 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 
     // Emit relevant events
     let newTarget = document.getElementById(target.id)
-    console.log("target", target)
-    console.log("CHECK id", target.id)
-    console.log("newTarget", newTarget)
     dispatchContent(newTarget)
 
     if (newTarget) {
@@ -127,7 +124,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 
     // Hyperbole catches handler errors, and the server controls what to display to the user on an error
     //  but if you manage to crash your parent server process somehow, the response may be empty
-    target.innerHTML = err.body || "<div style='background:red;color:white;padding:10px'>Hyperbole server crashed</div>"
+    target.innerHTML = err.body || "<div style='background:red;color:white;padding:10px'>Hyperbole Internal Error</div>"
   }
 
 
@@ -286,6 +283,7 @@ export interface HyperboleAPI {
   runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
   action(con: string, ...params: any[]): string
   hyperView(viewId: ViewId): HyperView | undefined
+  parseMetadata(input: string): Metadata
 }
 
 
@@ -300,6 +298,7 @@ export interface HyperView extends HTMLElement {
 window.Hyperbole =
 {
   runAction: runAction,
+  parseMetadata: parseMetadata,
   action: function(con, ...params: any[]) {
     let ps = params.reduce((str, param) => str + " " + JSON.stringify(param), "")
     return con + ps

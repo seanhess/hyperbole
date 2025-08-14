@@ -1,6 +1,6 @@
 import { ActionMessage, ViewId, RequestId } from './action'
-import { takeWhileMap, dropWhile } from "./lib"
-import { Response, ResponseBody, FetchError } from "./response"
+import { Response, FetchError } from "./response"
+import { Metadata, ParsedResponse, splitMetadata } from "./response"
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
@@ -67,18 +67,18 @@ export class SocketConnection {
       , "Request-Id: " + reqId
       , action.form
     ].join("\n")
-    let { metadata, body } = await this.fetch(reqId, action.id, msg)
+    let { metadata, rest } = await this.fetch(reqId, action.id, msg)
 
     return {
       requestId: metadata.requestId,
       location: metadata.redirect,
       query: metadata.query,
-      body
+      body: rest.join('\n')
     }
 
   }
 
-  async fetch(reqId: RequestId, id: ViewId, msg: string): Promise<SocketResponse> {
+  async fetch(reqId: RequestId, id: ViewId, msg: string): Promise<ParsedResponse> {
     this.sendMessage(msg)
     let res = await this.waitMessage(reqId, id)
     return res
@@ -88,12 +88,13 @@ export class SocketConnection {
     this.socket.send(msg)
   }
 
-  private async waitMessage(reqId: RequestId, id: ViewId): Promise<SocketResponse> {
+  private async waitMessage(reqId: RequestId, id: ViewId): Promise<ParsedResponse> {
     return new Promise((resolve, reject) => {
       const onMessage = (event: MessageEvent) => {
-        let data = event.data
+        let data: string = event.data
 
-        let { metadata, body } = parseMetadataResponse(data)
+        let parsed = splitMetadata(data.split("\n"))
+        let metadata: Metadata = parsed.metadata
 
         if (!metadata.requestId) {
           console.error("Missing RequestId!", metadata, event.data)
@@ -110,16 +111,16 @@ export class SocketConnection {
         this.socket.removeEventListener('message', onMessage)
 
         // set the cookies. These happen automatically in http
-        metadata.cookies.forEach(cookie => {
+        metadata.cookies.forEach((cookie: string) => {
           document.cookie = cookie
         })
 
         if (metadata.error) {
-          reject(new FetchError(id, metadata.error, body))
+          reject(new FetchError(id, metadata.error, parsed.rest.join('\n')))
           return
         }
 
-        resolve({ metadata, body })
+        resolve(parsed)
       }
 
       this.socket.addEventListener('message', onMessage)
@@ -136,56 +137,4 @@ export class SocketConnection {
 
 
 
-
-type SocketResponse = {
-  metadata: Metadata,
-  body: ResponseBody
-}
-
-type Metadata = {
-  viewId?: ViewId
-  cookies: string[]
-  redirect?: string
-  error?: string
-  query?: string
-  requestId?: string
-}
-
-type Meta = { key: string, value: string }
-
-
-function parseMetadataResponse(ret: string): SocketResponse {
-  let lines = ret.split("\n")
-  let metas: Meta[] = takeWhileMap(parseMeta, lines)
-  let rest = dropWhile(parseMeta, lines).join("\n")
-
-  return {
-    metadata: parseMetas(metas),
-    body: rest
-  }
-
-  function parseMeta(line: string): Meta | undefined {
-    let match = line.match(/^\|([A-Z\-]+)\|(.*)$/)
-    if (match) {
-      return {
-        key: match[1],
-        value: match[2]
-      }
-    }
-  }
-}
-
-function parseMetas(meta: Meta[]): Metadata {
-
-  let requestId = meta.find(m => m.key == "REQUEST-ID")?.value
-
-  return {
-    cookies: meta.filter(m => m.key == "COOKIE").map(m => m.value),
-    redirect: meta.find(m => m.key == "REDIRECT")?.value,
-    error: meta.find(m => m.key == "ERROR")?.value,
-    viewId: meta.find(m => m.key == "VIEW-ID")?.value,
-    query: meta.find(m => m.key == "QUERY")?.value,
-    requestId
-  }
-}
 
