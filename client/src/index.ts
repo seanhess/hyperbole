@@ -30,6 +30,11 @@ async function sendAction(reqId: RequestId, msg: ActionMessage): Promise<Respons
 
 async function runAction(target: HyperView, action: string, form?: FormData) {
 
+  if (target === undefined) {
+    console.error("Undefined HyperView!")
+    return
+  }
+
   if (action === undefined) {
     console.error("Undefined Action!", target, "this is a bug, please report: https://github.com/seanhess/hyperbole")
     return
@@ -142,7 +147,9 @@ function runMetadataDeferred(meta: Metadata, target?: HTMLElement) {
     for (var [viewId, action] of meta.actions) {
       // console.log("FOUND TRIGGER", viewId, action)
       let view = window.Hyperbole.hyperView(viewId)
-      runAction(view, action)
+      if (view) {
+        runAction(view, action)
+      }
     }
   }, 0)
 
