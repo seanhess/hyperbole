@@ -177,7 +177,7 @@ requestMetadata req =
   eventMetadata event =
     Metadata
       [ ("ViewId", event.viewId.text)
-      , ("ViewAction", encodedToText event.action)
+      , ("Action", encodedToText event.action)
       ]
 
 

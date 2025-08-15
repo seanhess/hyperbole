@@ -15,4 +15,9 @@ window.onload = function() {
       boxes.runAction("Clear")
     }
   })
+
+  // you can listen on docuemnt instead, the event will bubble
+  Hyperbole.hyperView("Message").addEventListener("server-message", function(e) {
+    alert("Server Message: " + e.detail)
+  })
 }
