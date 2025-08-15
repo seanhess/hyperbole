@@ -1,7 +1,7 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
-import { actionMessage, ActionMessage, requestId, RequestId, ViewId, parseMetadata, Metadata } from './action'
+import { actionMessage, ActionMessage, requestId, ViewId, parseMetadata, Metadata } from './action'
 import { sendActionHttp } from './http'
 import { setQuery } from "./browser"
 import { parseResponse, Response, LiveUpdate } from './response'

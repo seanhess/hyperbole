@@ -40,7 +40,7 @@ export function parseMetadataHttp(inp: string): ParsedResponse {
   // drop the <script> start line
   let { metadata, rest } = splitMetadata(lines.slice(1))
   // drop the </script> end line and 2x whitespace
-  return { metadata, rest: rest.slice(3) }
+  return { metadata, rest: rest.slice(2) }
 }
 
 
