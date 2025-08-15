@@ -3,7 +3,7 @@
 
 module Web.Hyperbole.Server.Wai where
 
-import Data.Bifunctor (bimap, first)
+import Data.Bifunctor (first)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as L

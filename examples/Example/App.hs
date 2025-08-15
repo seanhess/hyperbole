@@ -38,6 +38,7 @@ import Example.Config
 import Example.Effects.Debug as Debug
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
+import Example.Page.Advanced qualified as Advanced
 import Example.Page.Autocomplete qualified as Autocomplete
 import Example.Page.CSS qualified as CSS
 import Example.Page.Concurrency qualified as Concurrency
@@ -149,6 +150,7 @@ app config users count = do
   router Simple = redirect (routeUri Intro)
   router Counter = redirect (routeUri Intro)
   router Test = runPage Test.page
+  router Advanced = runPage Advanced.page
   router Main = do
     redirect (routeUri Intro)
 

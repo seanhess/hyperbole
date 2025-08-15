@@ -113,6 +113,7 @@ exampleMenu current = do
     (Contacts _) ->
       completeExamples
     _ -> none
+  exampleLink Advanced
  where
   completeExamples = do
     exampleLink (Examples Todos) ~ sub

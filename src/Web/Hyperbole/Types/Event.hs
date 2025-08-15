@@ -6,7 +6,6 @@ import Data.List qualified as L
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Network.HTTP.Types (Query, QueryItem)
-import Web.Hyperbole.Data.Encoded (Encoded, encodedParseText)
 
 
 -- | Serialized ViewId

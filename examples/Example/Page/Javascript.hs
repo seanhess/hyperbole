@@ -14,8 +14,9 @@ page = do
     -- NOTE: include custom javascript only on this page
     script "custom.js"
 
+    el "Include custom js on a page with the script tag on only the page where it is needed, or globally via your toDocument function"
+
     example "Javascript - runAction" "Example/Page/Javascript.hs" $ do
-      el "Include custom js on a page with the script tag on only the page where it is needed"
       el $ do
         text "JS can call the server via an API attached to "
         code "window.Hyperbole"

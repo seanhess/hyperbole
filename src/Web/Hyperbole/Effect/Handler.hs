@@ -3,9 +3,7 @@
 
 module Web.Hyperbole.Effect.Handler where
 
-import Data.Bifunctor (bimap)
 import Data.Kind (Type)
-import Data.Text
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic

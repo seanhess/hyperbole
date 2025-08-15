@@ -2,19 +2,15 @@
 
 module Web.Hyperbole.Server.Message where
 
-import Control.Applicative (many)
 import Control.Exception (Exception)
 import Data.Aeson qualified as Aeson
-import Data.Attoparsec.Text (Parser, atEnd, char, endOfInput, endOfLine, isEndOfLine, many1, parseOnly, sepBy, skip, skipSpace, string, takeText, takeTill, takeWhile1, (<?>))
+import Data.Attoparsec.Text (Parser, char, endOfLine, isEndOfLine, parseOnly, sepBy, string, takeText, takeTill, takeWhile1)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
-import Data.Char (isSpace)
 import Data.List qualified as L
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
-import Effectful
-import Effectful.Error.Static
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.Encoded
@@ -22,8 +18,6 @@ import Web.Hyperbole.Data.QueryData (QueryData)
 import Web.Hyperbole.Data.QueryData qualified as QueryData
 import Web.Hyperbole.Data.URI (Path, URI, uriToText)
 import Web.Hyperbole.Effect.Hyperbole (Remote (..))
-import Web.Hyperbole.HyperView.ViewAction
-import Web.Hyperbole.HyperView.ViewId
 import Web.Hyperbole.Types.Client (Client (..))
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request

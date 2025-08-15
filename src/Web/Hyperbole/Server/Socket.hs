@@ -2,13 +2,10 @@ module Web.Hyperbole.Server.Socket where
 
 import Control.Monad (void)
 import Data.Bifunctor (first)
-import Data.ByteString qualified as BS
 import Data.List qualified as L
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
-import Data.Text qualified as T
-import Debug.Trace
 import Effectful
 import Effectful.Concurrent.Async
 import Effectful.Exception
