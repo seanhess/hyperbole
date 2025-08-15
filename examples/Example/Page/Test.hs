@@ -49,6 +49,8 @@ data Other = Other
   deriving (Generic, ViewId)
 
 instance (Debug :> es) => HyperView Other es where
+  type Require Other = '[Message]
+
   data Action Other
     = GoTrigger
     | Sneaky
@@ -56,7 +58,7 @@ instance (Debug :> es) => HyperView Other es where
 
   update GoTrigger = do
     trigger Message2 (Louder "remote")
-    trigger Fake Noop
+    -- trigger Fake Noop
     pushEvent "hello" (String "woot")
     pure "OK"
   update Sneaky = do

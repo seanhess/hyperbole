@@ -19,7 +19,7 @@ export type RequestId = string
 
 export function actionMessage(id: ViewId, action: EncodedAction, reqId: RequestId, form?: FormData): ActionMessage {
   let meta: Meta[] = [
-    { key: "Cookie", value: document.cookie },
+    { key: "Cookie", value: decodeURI(document.cookie) },
     { key: "Query", value: window.location.search }
   ]
 
