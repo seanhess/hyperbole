@@ -5,6 +5,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.Text (Text)
 import Network.HTTP.Types (Method)
 import Web.Hyperbole.Data.Cookie (Cookies)
+import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Data.URI (Path, Query)
 import Web.Hyperbole.Types.Event (Event (..), TargetViewId)
 
@@ -20,7 +21,7 @@ data Request = Request
   , body :: BL.ByteString
   , method :: Method
   , cookies :: Cookies
-  , event :: Maybe (Event TargetViewId Text)
+  , event :: Maybe (Event TargetViewId Encoded)
   , requestId :: RequestId
   }
   deriving (Show)

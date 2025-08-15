@@ -1,6 +1,6 @@
-import { ActionMessage, ViewId, RequestId } from './action'
+import { ActionMessage, ViewId, RequestId, renderActionMessage } from './action'
+import { Metadata, ParsedResponse, splitMetadata } from "./action"
 import { Response, FetchError } from "./response"
-import { Metadata, ParsedResponse, splitMetadata } from "./response"
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
@@ -59,15 +59,10 @@ export class SocketConnection {
     })
   }
 
-  async sendAction(reqId: RequestId, action: ActionMessage): Promise<Response> {
+  async sendAction(action: ActionMessage): Promise<Response> {
     // console.log("SOCKET sendAction", action)
-    let msg = [action.url.pathname + action.url.search
-      , "Host: " + window.location.host
-      , "Cookie: " + document.cookie
-      , "Request-Id: " + reqId
-      , action.form
-    ].join("\n")
-    let { metadata, rest } = await this.fetch(reqId, action.id, msg)
+    let msg = renderActionMessage(action)
+    let { metadata, rest } = await this.fetch(action.requestId, action.viewId, msg)
 
     return {
       meta: metadata,
@@ -90,8 +85,9 @@ export class SocketConnection {
     return new Promise((resolve, reject) => {
       const onMessage = (event: MessageEvent) => {
         let data: string = event.data
+        let lines = data.split("\n").slice(1)  // drop the command line
 
-        let parsed = splitMetadata(data.split("\n"))
+        let parsed = splitMetadata(lines)
         let metadata: Metadata = parsed.metadata
 
         if (!metadata.requestId) {

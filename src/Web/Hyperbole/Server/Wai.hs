@@ -3,15 +3,15 @@
 
 module Web.Hyperbole.Server.Wai where
 
-import Control.Exception (throwIO)
+import Data.Bifunctor (bimap, first)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as L
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.String.Interpolate (i)
-import Data.Text (Text)
 import Effectful
+import Effectful.Exception (throwIO)
 import Network.HTTP.Types (Header, HeaderName, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
@@ -19,10 +19,10 @@ import Web.Atomic (att, (@))
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
+import Web.Hyperbole.Data.Encoded (Encoded, encodedParseText, encodedToText)
 import Web.Hyperbole.Data.URI (path, uriToText)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
-import Web.Hyperbole.Server.Types
 import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
@@ -40,7 +40,10 @@ handleRequestWai
   -> Eff (Hyperbole : es) Response
   -> Eff es Wai.ResponseReceived
 handleRequestWai toDoc req respond actions = do
-  rq <- fromWaiRequest req
+  -- NOTE: This is called for both updates AND for page loads
+  body <- liftIO $ Wai.consumeRequestBodyLazy req
+  rq <- either throwIO pure $ do
+    fromWaiRequest req body
   (res, client, rmts) <- runHyperbole rq actions
   liftIO $ sendResponse addDocument rq respond client res rmts
  where
@@ -88,7 +91,12 @@ sendResponse addDoc req respond client res remotes = do
           [i|
             let metaInput = document.getElementById("hyp.metadata").innerText;
             let meta = Hyperbole.parseMetadata(metaInput)
-            window.location = meta.redirect
+            if (meta.redirect) {
+              window.location = meta.redirect
+            }
+            else {
+              console.error("Invalid Redirect", meta.rediect)
+            }
           |]
 
   renderViewResponse :: Metadata -> View () () -> BL.ByteString
@@ -119,37 +127,58 @@ scriptMeta m =
         "\n" <> renderMetadata m <> "\n"
 
 
-fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
-fromWaiRequest wr = do
-  body <- liftIO $ Wai.consumeRequestBodyLazy wr
+messageFromBody :: BL.ByteString -> Either MessageError Message
+messageFromBody inp = do
+  first (\e -> InvalidMessage e (cs inp)) $ parseActionMessage (cs inp)
 
+
+fromWaiRequest :: Wai.Request -> BL.ByteString -> Either MessageError Request
+fromWaiRequest wr body = do
   let pth = path $ cs $ Wai.rawPathInfo wr
       query = Wai.queryString wr
       headers = Wai.requestHeaders wr
       cookie = fromMaybe "" $ L.lookup "Cookie" headers
       host = Host $ fromMaybe "" $ L.lookup "Host" headers
-      requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Request-Id" headers
+      requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Hyp-RequestId" headers
       method = Wai.requestMethod wr
-      event = lookupEvent query
+      event = lookupEvent headers
 
   cookies <- fromCookieHeader cookie
 
-  pure $ Request{body, event, path = pth, query = queryRemoveSystem query, method, cookies, host, requestId}
+  pure $
+    Request
+      { body = body
+      , event
+      , path = pth
+      , query = queryRemoveSystem query
+      , method
+      , cookies
+      , host
+      , requestId
+      }
+ where
+  lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded)
+  lookupEvent headers = do
+    viewId <- TargetViewId . cs <$> L.lookup "Hyp-ViewId" headers
+    actText <- cs <$> L.lookup "Hyp-Action" headers
+    case encodedParseText actText of
+      Left _ -> Nothing
+      Right a -> pure $ Event viewId a
 
 
 -- Client only returns ONE Cookie header, with everything concatenated
-fromCookieHeader :: (MonadIO m) => BS.ByteString -> m Cookies
+fromCookieHeader :: BS.ByteString -> Either MessageError Cookies
 fromCookieHeader h =
   case Cookie.parse (Web.Cookie.parseCookies h) of
-    Left err -> liftIO $ throwIO $ InvalidCookie h err
+    Left err -> Left $ InvalidCookie h err
     Right a -> pure a
 
 
-errNotHandled :: Event TargetViewId Text -> String
+errNotHandled :: Event TargetViewId Encoded -> String
 errNotHandled ev =
   L.intercalate
     "\n"
-    [ "No Handler for Event viewId: " <> cs ev.viewId.text <> " action: " <> cs ev.action
+    [ "No Handler for Event viewId: " <> cs ev.viewId.text <> " action: " <> cs (encodedToText ev.action)
     , "<p>Remember to add a `hyper` handler in your page function</p>"
     , "<pre>"
     , "page :: (Hyperbole :> es) => Page es Response"

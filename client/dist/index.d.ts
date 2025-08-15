@@ -1,5 +1,4 @@
-import { ViewId } from './action';
-import { Metadata } from './response';
+import { ViewId, Metadata } from './action';
 declare global {
     interface Window {
         Hyperbole?: HyperboleAPI;

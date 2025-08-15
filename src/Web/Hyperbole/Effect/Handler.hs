@@ -3,6 +3,7 @@
 
 module Web.Hyperbole.Effect.Handler where
 
+import Data.Bifunctor (bimap)
 import Data.Kind (Type)
 import Data.Text
 import Effectful
@@ -19,7 +20,7 @@ import Web.Hyperbole.View
 
 
 class RunHandlers (views :: [Type]) es where
-  runHandlers :: (Hyperbole :> es) => Event TargetViewId Text -> Eff es (Maybe Response)
+  runHandlers :: (Hyperbole :> es) => Event TargetViewId Encoded -> Eff es (Maybe Response)
 
 
 instance RunHandlers '[] es where
@@ -37,7 +38,7 @@ instance (HyperView view es, RunHandlers views es) => RunHandlers (view : views)
 runHandler
   :: forall id es
    . (HyperView id es, Hyperbole :> es)
-  => Event TargetViewId Text
+  => Event TargetViewId Encoded
   -> (Action id -> Eff (Reader id : es) (View id ()))
   -> Eff es (Maybe Response)
 runHandler rawEvent run = do
@@ -87,9 +88,9 @@ loadToResponse run = do
 
 
 -- despite not needing any effects, this must be in Eff es to get `es` on the RHS
-decodeEvent :: (HyperView id es) => Event TargetViewId Text -> Eff es (Maybe (Event id (Action id)))
-decodeEvent (Event (TargetViewId ti) ta) =
+decodeEvent :: forall id es. (HyperView id es) => Event TargetViewId Encoded -> Eff es (Maybe (Event id (Action id)))
+decodeEvent (Event (TargetViewId ti) eact) =
   pure $ do
     vid <- decodeViewId ti
-    act <- decodeAction ta
+    act <- either (const Nothing) Just $ parseAction eact
     pure $ Event vid act

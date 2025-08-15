@@ -62,7 +62,6 @@ library
       Web.Hyperbole.Route
       Web.Hyperbole.Server.Message
       Web.Hyperbole.Server.Socket
-      Web.Hyperbole.Server.Types
       Web.Hyperbole.Server.Wai
       Web.Hyperbole.TypeList
       Web.Hyperbole.Types.Client

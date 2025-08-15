@@ -1,15 +1,18 @@
-import { ActionMessage, RequestId } from './action'
-import { Response, FetchError, Metadata, ParsedResponse, splitMetadata } from "./response"
+import { ActionMessage, splitMetadata, ParsedResponse } from './action'
+import { Response, FetchError } from "./response"
 
-export async function sendActionHttp(reqId: RequestId, msg: ActionMessage): Promise<Response> {
+export async function sendActionHttp(msg: ActionMessage): Promise<Response> {
   // console.log("HTTP sendAction", msg.url.toString())
-  let res = await fetch(msg.url, {
+  let url = window.location.href
+  let res = await fetch(url, {
     method: "POST",
     headers:
     {
       'Accept': 'text/html',
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Request-Id': reqId
+      'Hyp-RequestId': msg.requestId,
+      'Hyp-ViewId': msg.viewId,
+      'Hyp-Action': msg.action
     },
     body: msg.form,
     // we never want this to be redirected
@@ -20,7 +23,7 @@ export async function sendActionHttp(reqId: RequestId, msg: ActionMessage): Prom
   let { metadata, rest } = parseMetadataHttp(body)
 
   if (!res.ok) {
-    throw new FetchError(msg.id, body, body)
+    throw new FetchError(msg.viewId, body, body)
   }
 
   let response: Response = {

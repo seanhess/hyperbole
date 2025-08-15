@@ -1,4 +1,5 @@
 import { ViewId } from './action';
+import { Metadata } from "./action";
 export type Response = {
     meta: Metadata;
     body: ResponseBody;
@@ -14,32 +15,3 @@ export declare class FetchError extends Error {
     body: string;
     constructor(viewId: ViewId, msg: string, body: string);
 }
-export type Metadata = {
-    viewId?: ViewId;
-    cookies: string[];
-    redirect?: string;
-    error?: string;
-    query?: string;
-    events: RemoteEvent[];
-    actions: [ViewId, string][];
-    requestId?: string;
-};
-type Meta = {
-    key: string;
-    value: string;
-};
-type RemoteEvent = {
-    name: string;
-    detail: any;
-};
-export declare function parseMetas(meta: Meta[]): Metadata;
-export declare function parseMetadata(input: string): Metadata;
-export declare function splitMetadata(lines: string[]): ParsedResponse;
-export declare function parseRemoteEvent(input: string): RemoteEvent;
-export declare function parseAction(input: string): [ViewId, string];
-export declare function parseMeta(line: string): Meta | undefined;
-export type ParsedResponse = {
-    metadata: Metadata;
-    rest: string[];
-};
-export {};

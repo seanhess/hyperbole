@@ -38,7 +38,7 @@ liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Concurrent, IOE]
 liveApp toDoc app req res = do
   websocketsOr
     defaultConnectionOptions
-    (socketApp app)
+    (socketApp req app)
     (waiApp toDoc app)
     req
     res
@@ -49,11 +49,11 @@ waiApp toDoc actions req res = do
   runEff $ runConcurrent $ handleRequestWai toDoc req res actions
 
 
-socketApp :: Eff '[Hyperbole, Concurrent, IOE] Response -> PendingConnection -> IO ()
-socketApp actions pend = do
+socketApp :: Wai.Request -> Eff '[Hyperbole, Concurrent, IOE] Response -> PendingConnection -> IO ()
+socketApp req actions pend = do
   conn <- liftIO $ WS.acceptRequest pend
   forever $ do
-    runEff $ runConcurrent $ handleRequestSocket conn actions
+    runEff $ runConcurrent $ handleRequestSocket req conn actions
 
 
 {- | wrap HTML fragments in a simple document with a custom title and include required embeds
