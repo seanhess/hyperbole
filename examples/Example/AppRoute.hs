@@ -22,6 +22,7 @@ data AppRoute
   | Examples ExamplesRoute
   | Errors
   | Javascript
+  | Advanced
   | OAuth2Authenticate
   | OAuth2
   | Test

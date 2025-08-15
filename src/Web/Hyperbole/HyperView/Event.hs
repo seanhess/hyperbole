@@ -130,6 +130,5 @@ dataTarget = att "data-target" . encodedToText . toViewId
 -- | Allow inputs to trigger actions for a different view
 target :: forall id ctx. (HyperViewHandled id ctx, ViewId id) => id -> View id () -> View ctx ()
 target newId view = do
-  -- TEST: Target
   addContext newId $ do
     view @ dataTarget newId

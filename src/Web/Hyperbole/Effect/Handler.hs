@@ -4,14 +4,12 @@
 module Web.Hyperbole.Effect.Handler where
 
 import Data.Kind (Type)
-import Data.Text
-import Debug.Trace
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Response (respondError, viewResponse)
+import Web.Hyperbole.Effect.Response (hyperView, respondError)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
@@ -20,7 +18,7 @@ import Web.Hyperbole.View
 
 
 class RunHandlers (views :: [Type]) es where
-  runHandlers :: (Hyperbole :> es) => Event TargetViewId Text -> Eff es (Maybe Response)
+  runHandlers :: (Hyperbole :> es) => Event TargetViewId Encoded -> Eff es (Maybe Response)
 
 
 instance RunHandlers '[] es where
@@ -38,7 +36,7 @@ instance (HyperView view es, RunHandlers views es) => RunHandlers (view : views)
 runHandler
   :: forall id es
    . (HyperView id es, Hyperbole :> es)
-  => Event TargetViewId Text
+  => Event TargetViewId Encoded
   -> (Action id -> Eff (Reader id : es) (View id ()))
   -> Eff es (Maybe Response)
 runHandler rawEvent run = do
@@ -47,7 +45,7 @@ runHandler rawEvent run = do
   case mev of
     Just evt -> do
       vw <- runReader evt.viewId $ run evt.action
-      res <- viewResponse evt.viewId vw
+      res <- hyperView evt.viewId vw
       pure $ Just res
     _ -> do
       pure Nothing
@@ -59,20 +57,15 @@ runLoad
   => Eff es (View (Root views) ())
   -> Eff es Response
 runLoad loadPage = do
-  q <- (.query) <$> send GetRequest
-  traceM $ "Query " <> show q
-  case lookupEvent q of
+  ev <- (.event) <$> send GetRequest
+  case ev of
     Just rawEvent -> do
-      traceM $ "Got Event: " <> show rawEvent
       res <- runHandlers @views rawEvent
       case res of
         -- we expect it to be handled by one of the views
         Nothing -> respondError $ ErrNotHandled rawEvent
-        Just r -> do
-          traceM "RESPODING..."
-          send $ RespondNow r
+        Just r -> pure r
     Nothing -> do
-      traceM "loadPage"
       loadToResponse loadPage
 
 
@@ -93,9 +86,9 @@ loadToResponse run = do
 
 
 -- despite not needing any effects, this must be in Eff es to get `es` on the RHS
-decodeEvent :: (HyperView id es) => Event TargetViewId Text -> Eff es (Maybe (Event id (Action id)))
-decodeEvent (Event (TargetViewId ti) ta) =
+decodeEvent :: forall id es. (HyperView id es) => Event TargetViewId Encoded -> Eff es (Maybe (Event id (Action id)))
+decodeEvent (Event (TargetViewId ti) eact) =
   pure $ do
     vid <- decodeViewId ti
-    act <- decodeAction ta
+    act <- either (const Nothing) Just $ parseAction eact
     pure $ Event vid act

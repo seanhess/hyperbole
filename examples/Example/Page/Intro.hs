@@ -17,6 +17,7 @@ page :: (Hyperbole :> es) => Eff es (Page '[Message, Counter])
 page = do
   simple <- Simple.page
   counter <- Counter.page
+
   pure $ exampleLayout Intro $ do
     example "Simple" "Example/Page/Simple.hs" $ do
       el "HyperViews update independently. In this example, two Message HyperViews are embedded into the same page with different ids."

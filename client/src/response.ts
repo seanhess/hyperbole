@@ -1,12 +1,12 @@
 
 import { ViewId } from './action'
+import { takeWhileMap } from "./lib"
+import { actionMessage, ActionMessage, Metadata } from "./action"
 
 
 
 export type Response = {
-  requestId: string
-  location?: string
-  query?: string
+  meta: Metadata
   body: ResponseBody
 }
 

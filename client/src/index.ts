@@ -1,20 +1,13 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
-import { actionMessage, ActionMessage, requestId, RequestId, ViewId } from './action'
+import { actionMessage, ActionMessage, requestId, ViewId, parseMetadata, Metadata } from './action'
 import { sendActionHttp } from './http'
 import { setQuery } from "./browser"
 import { parseResponse, Response, LiveUpdate } from './response'
 
 let PACKAGE = require('../package.json');
 
-// import { listenEvents } from './events';
-// import { WEBSOCKET_ADDRESS, Messages } from './Messages'
-// import { INIT_PAGE, INIT_STATE, State, Class } from './types';
-// import { fromVDOM, VDOM } from './vdom'
-
-
-// const CONTENT_ID = "yeti-root-content"
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
 console.log("Hyperbole " + PACKAGE.version)
@@ -24,18 +17,23 @@ let rootStyles: HTMLStyleElement;
 let addedRulesIndex = new Set();
 
 
-async function sendAction(reqId: RequestId, msg: ActionMessage): Promise<Response> {
+async function sendAction(msg: ActionMessage): Promise<Response> {
   if (sock.isConnected) {
-    return sock.sendAction(reqId, msg)
+    return sock.sendAction(msg)
   }
   else {
-    return sendActionHttp(reqId, msg)
+    return sendActionHttp(msg)
   }
 }
 
 
 
 async function runAction(target: HyperView, action: string, form?: FormData) {
+
+  if (target === undefined) {
+    console.error("Undefined HyperView!")
+    return
+  }
 
   if (action === undefined) {
     console.error("Undefined Action!", target, "this is a bug, please report: https://github.com/seanhess/hyperbole")
@@ -48,7 +46,8 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     target.classList.add("hyp-loading")
   }, 100)
 
-  let msg = actionMessage(target.id, action, form)
+  let reqId = requestId()
+  let msg = actionMessage(target.id, action, reqId, form)
 
   // Ignore any request if a requestId is active
   if (target.dataset.requestId) {
@@ -57,13 +56,12 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   }
 
   // Set the requestId
-  let reqId = requestId()
   target.dataset.requestId = reqId
 
   try {
-    let res: Response = await sendAction(reqId, msg)
+    let res: Response = await sendAction(msg)
 
-    if (reqId != target.dataset.requestId) {
+    if (res.meta.requestId != target.dataset.requestId) {
       let err = new Error()
       err.name = "Concurrency Error"
       err.message = "Stale Action (" + reqId + "):" + action
@@ -73,22 +71,14 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
       delete target.dataset.requestId
     }
 
-    if (res.location) {
-      window.location.href = res.location
-      return // skip the rest of the steps. Do not patch, etc
-    }
-
-    if (res.query != null) {
-      setQuery(res.query)
-    }
-
+    runMetadataRedirect(res.meta)
 
     let update: LiveUpdate = parseResponse(res.body)
 
     if (!update.content) {
-      // TODO: error handling
-      console.error("Empty Response", res)
-      return
+      let err = new Error("Empty Response")
+      err.message = res.toString()
+      throw err
     }
 
     // First, update the stylesheet
@@ -103,9 +93,6 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 
     // Emit relevant events
     let newTarget = document.getElementById(target.id)
-    console.log("target", target)
-    console.log("CHECK id", target.id)
-    console.log("newTarget", newTarget)
     dispatchContent(newTarget)
 
     if (newTarget) {
@@ -120,14 +107,14 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
       console.warn("Target Missing: ", target.id)
     }
 
-
+    runMetadataDeferred(res.meta, newTarget)
   }
   catch (err) {
     console.error("Caught Error in HyperView (" + target.id + "):\n", err)
 
     // Hyperbole catches handler errors, and the server controls what to display to the user on an error
     //  but if you manage to crash your parent server process somehow, the response may be empty
-    target.innerHTML = err.body || "<div style='background:red;color:white;padding:10px'>Hyperbole server crashed</div>"
+    target.innerHTML = err.body || "<div style='background:red;color:white;padding:10px'>Hyperbole Internal Error</div>"
   }
 
 
@@ -135,6 +122,39 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   clearTimeout(timeout)
   target.classList.remove("hyp-loading")
 }
+
+function runMetadataRedirect(meta: Metadata) {
+  if (meta.redirect) {
+    // perform a redirect immediately
+    window.location.href = meta.redirect
+  }
+}
+
+function runMetadataDeferred(meta: Metadata, target?: HTMLElement) {
+  // defer the rest of the actions
+  setTimeout(() => {
+    if (meta.query != null) {
+      setQuery(meta.query)
+    }
+
+    for (var remoteEvent of meta.events) {
+      // console.log("dipsatching custom event", remoteEvent)
+      let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
+      let eventTarget = target || document
+      eventTarget.dispatchEvent(event)
+    }
+
+    for (var [viewId, action] of meta.actions) {
+      // console.log("FOUND TRIGGER", viewId, action)
+      let view = window.Hyperbole.hyperView(viewId)
+      if (view) {
+        runAction(view, action)
+      }
+    }
+  }, 0)
+
+}
+
 
 function fixInputs(target: HTMLElement) {
   let focused = target.querySelector("[autofocus]") as HTMLInputElement
@@ -170,6 +190,9 @@ function addCSS(src: HTMLStyleElement | null) {
 
 
 function init() {
+  // metadata attached to initial page loads need to be executed
+  runInitMetadata(document.getElementById("hyp.metadata").innerText)
+
   rootStyles = document.querySelector('style')
 
   listenTopLevel(async function(target: HyperView, action: string) {
@@ -216,6 +239,16 @@ function init() {
     runAction(target, action)
   })
 }
+
+function runInitMetadata(input: string) {
+  let meta = parseMetadata(input)
+  runMetadataRedirect(meta)
+
+  window.addEventListener("load", function() {
+    runMetadataDeferred(meta)
+  })
+}
+
 
 function enrichHyperViews(node: HTMLElement): void {
   // enrich all the hyperviews
@@ -286,6 +319,7 @@ export interface HyperboleAPI {
   runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
   action(con: string, ...params: any[]): string
   hyperView(viewId: ViewId): HyperView | undefined
+  parseMetadata(input: string): Metadata
 }
 
 
@@ -300,6 +334,7 @@ export interface HyperView extends HTMLElement {
 window.Hyperbole =
 {
   runAction: runAction,
+  parseMetadata: parseMetadata,
   action: function(con, ...params: any[]) {
     let ps = params.reduce((str, param) => str + " " + JSON.stringify(param), "")
     return con + ps

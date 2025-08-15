@@ -8,19 +8,13 @@ import Effectful.Dispatch.Dynamic
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.Hyperbole.Data.URI (Path (..))
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 
 
 -- | Return all information about the 'Request'
 request :: (Hyperbole :> es) => Eff es Request
-request = reqRemoveSystem <$> send GetRequest
-
-
-reqRemoveSystem :: Request -> Request
-reqRemoveSystem Request{..} =
-  Request{query = filter (not . isSystemParam) query, ..}
+request = send GetRequest
 
 
 {- | Return the request path
