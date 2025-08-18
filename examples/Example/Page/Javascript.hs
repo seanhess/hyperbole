@@ -1,24 +1,35 @@
 module Example.Page.Javascript where
 
-import Data.Text (pack)
+import Data.Text (Text, pack)
 import Example.AppRoute qualified as Route
 import Example.Page.Interactivity.Events (box, viewBoxes')
+import Example.Style
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: (Hyperbole :> es) => Eff es (Page '[Boxes])
+page :: (Hyperbole :> es) => Eff es (Page '[Boxes, Message])
 page = do
   pure $ exampleLayout Route.Javascript $ do
     -- NOTE: include custom javascript only on this page
     script "custom.js"
 
-    example "JS Events" "Example/Page/Javascript.hs" $ do
-      el "Include custom js on a page with the 'script' tag only on the page where it is needed"
-      el "You can call the server from Javascript via an API attached to window. Here we re-implement mouseover boxes from the Interactivity example using Javascript"
+    el "Include custom js on a page with the script tag on only the page where it is needed, or globally via your toDocument function"
+
+    example "Javascript - runAction" "Example/Page/Javascript.hs" $ do
+      el $ do
+        text "JS can call the server via an API attached to "
+        code "window.Hyperbole"
+        text ". Here we re-implement mouseover boxes from the Interactivity example using Javascript"
 
       col ~ embed $ do
         hyper Boxes $ viewBoxes Nothing
+
+    example "Javascript - pushEvent" "Example/Page/Javascript.hs" $ do
+      el "The server can push an event to be dispatched on a HyperView"
+
+      col ~ embed $ do
+        hyper Message $ button AlertMe ~ btn $ "Alert Me"
 
 data Boxes = Boxes
   deriving (Generic, ViewId)
@@ -38,3 +49,14 @@ viewBoxes :: Maybe Int -> View Boxes ()
 viewBoxes mn = do
   viewBoxes' mn $ \n -> do
     el ~ box . cls "box" $ text $ pack $ show n
+
+data Message = Message
+  deriving (Generic, ViewId)
+
+instance HyperView Message es where
+  data Action Message = AlertMe
+    deriving (Generic, ViewAction)
+
+  update AlertMe = do
+    pushEvent @Text "server-message" "hello"
+    pure "Sent 'server-message' event"

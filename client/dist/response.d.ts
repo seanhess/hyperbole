@@ -1,8 +1,7 @@
 import { ViewId } from './action';
+import { Metadata } from "./action";
 export type Response = {
-    requestId: string;
-    location?: string;
-    query?: string;
+    meta: Metadata;
     body: ResponseBody;
 };
 export type ResponseBody = string;

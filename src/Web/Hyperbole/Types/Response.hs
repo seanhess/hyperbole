@@ -7,6 +7,7 @@ import Data.String (IsString (..))
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Web.Atomic
+import Web.Hyperbole.Data.Encoded (Encoded)
 import Web.Hyperbole.Data.URI (URI)
 import Web.Hyperbole.Types.Event (Event, TargetViewId)
 import Web.Hyperbole.View (View)
@@ -26,7 +27,7 @@ data ResponseError
   | ErrServer Text
   | ErrCustom Text (View () ())
   | ErrInternal
-  | ErrNotHandled (Event TargetViewId Text)
+  | ErrNotHandled (Event TargetViewId Encoded)
   | ErrAuth Text
 instance Show ResponseError where
   show = \case

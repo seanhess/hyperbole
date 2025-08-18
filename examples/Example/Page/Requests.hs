@@ -88,17 +88,17 @@ instance HyperView ControlResponse es where
   data Action ControlResponse
     = RedirectAsAction
     | RespondNotFound
-    | RespondEarlyView
-    | RespondWithError
+    | -- \| RespondEarlyView
+      RespondWithError
     deriving (Generic, ViewAction)
   update RedirectAsAction = do
     redirect $ pathUri "/hello/redirected"
   update RespondNotFound = do
     _ <- notFound
     pure "This will not be rendered"
-  update RespondEarlyView = do
-    _ <- respondView ControlResponse "Responded early!"
-    pure "This will not be rendered"
+  -- update RespondEarlyView = do
+  --   _ <- respondView ControlResponse "Responded early!"
+  --   pure "This will not be rendered"
   update RespondWithError = do
     _ <- respondError "Some custom error"
     pure "This will not be rendered"
@@ -107,6 +107,6 @@ responseView :: View ControlResponse ()
 responseView = do
   row ~ gap 10 $ do
     button RedirectAsAction ~ Style.btn $ "Redirect Me"
-    button RespondEarlyView ~ Style.btn $ "Respond Early"
+    -- button RespondEarlyView ~ Style.btn $ "Respond Early"
     button RespondNotFound ~ Style.btn' Danger $ "Respond Not Found"
     button RespondWithError ~ Style.btn' Danger $ "Respond Error"

@@ -1,139 +1,184 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Web.Hyperbole.Server.Wai where
 
-import Control.Exception (throwIO)
+import Data.Bifunctor (first)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as L
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
-import Data.Text (Text)
+import Data.String.Interpolate (i)
 import Effectful
-import Effectful.Dispatch.Dynamic
-import Effectful.State.Static.Local
-import Network.HTTP.Types (Header, HeaderName, Method, status200, status400, status401, status404, status500)
+import Effectful.Exception (throwIO)
+import Network.HTTP.Types (Header, HeaderName, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
+import Web.Atomic (att, (@))
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
-import Web.Hyperbole.Data.QueryData as QueryData
+import Web.Hyperbole.Data.Encoded (Encoded, encodedParseText, encodedToText)
 import Web.Hyperbole.Data.URI (path, uriToText)
-import Web.Hyperbole.Server.Types
+import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View (renderLazyByteString)
+import Web.Hyperbole.View.Tag
+import Web.Hyperbole.View.Types (View)
 
 
-runServerWai
+handleRequestWai
   :: (IOE :> es)
   => (BL.ByteString -> BL.ByteString)
   -> Wai.Request
   -> (Wai.Response -> IO ResponseReceived)
-  -> Eff (Server : es) a
-  -> Eff es (Maybe Wai.ResponseReceived)
-runServerWai toDoc req respond =
-  reinterpret runLocal $ \_ -> \case
-    LoadRequest -> do
-      fromWaiRequest req
-    SendResponse client r -> do
-      rr <- liftIO $ sendResponse client r
-      put (Just rr)
+  -> Eff (Hyperbole : es) Response
+  -> Eff es Wai.ResponseReceived
+handleRequestWai toDoc req respond actions = do
+  -- NOTE: This is called for both updates AND for page loads
+  body <- liftIO $ Wai.consumeRequestBodyLazy req
+  rq <- either throwIO pure $ do
+    fromWaiRequest req body
+  (res, client, rmts) <- runHyperbole rq actions
+  liftIO $ sendResponse addDocument rq respond client res rmts
  where
-  runLocal :: (IOE :> es) => Eff (State (Maybe ResponseReceived) : es) a -> Eff es (Maybe ResponseReceived)
-  runLocal = execState Nothing
+  -- convert to document if full page request. Subsequent POST requests will only include html fragments for updates
+  addDocument :: BL.ByteString -> BL.ByteString
+  addDocument bd =
+    case Wai.requestMethod req of
+      "GET" -> toDoc $ "\n" <> bd
+      _ -> bd
 
-  sendResponse :: Client -> Response -> IO Wai.ResponseReceived
-  sendResponse client r =
-    respond $ response r
-   where
-    response :: Response -> Wai.Response
-    response NotFound = respError status404 "Not Found"
-    response (Err (ErrParse e)) = respError status400 ("Parse Error: " <> cs e)
-    response (Err (ErrQuery e)) = respError status400 $ "ErrQuery: " <> cs e
-    response (Err (ErrSession param e)) = respError status400 $ "ErrSession: " <> cs (show param) <> " " <> cs e
-    response (Err (ErrServer msg)) = do
-      respError status500 $ "Server Error: " <> cs msg
-    response (Err (ErrCustom _ body)) = do
-      let out = addDocument (Wai.requestMethod req) (renderLazyByteString body)
-      Wai.responseLBS status500 [contentType ContentHtml] out
-    response (Err ErrInternal) = respError status500 "Internal Server Error"
-    response (Err (ErrAuth m)) = respError status401 $ "Unauthorized: " <> cs m
-    response (Err (ErrNotHandled e)) = respError status400 $ cs $ errNotHandled e
-    response (Response _ vw) =
-      respHtml $
-        addDocument (Wai.requestMethod req) (renderLazyByteString vw)
-    response (Redirect u) = do
+
+sendResponse :: (BL.ByteString -> BL.ByteString) -> Request -> (Wai.Response -> IO ResponseReceived) -> Client -> Response -> [Remote] -> IO Wai.ResponseReceived
+sendResponse addDoc req respond client res remotes = do
+  let meta = requestMetadata req <> responseMetadata req.path client remotes
+  respond $ response meta res
+ where
+  response :: Metadata -> Response -> Wai.Response
+  response meta = \case
+    NotFound -> respondText status404 [] "Not Found"
+    (Err err) ->
+      case err of
+        ErrParse e -> respondText status400 [] ("Parse Error: " <> cs e)
+        ErrQuery e -> respondText status400 [] $ "ErrQuery: " <> cs e
+        ErrSession param e -> respondText status400 [] $ "ErrSession: " <> cs (show param) <> " " <> cs e
+        ErrServer msg -> do
+          respondText status500 [] $ "Server Error: " <> cs msg
+        ErrCustom _ body -> do
+          let out = addDoc (renderLazyByteString body)
+          respondHtml status500 [] out
+        ErrInternal -> respondText status500 [] "Internal Server Error"
+        ErrAuth m -> respondText status401 [] $ "Unauthorized: " <> cs m
+        ErrNotHandled e -> respondText status400 [] $ cs $ errNotHandled e
+    (Response _ vw) -> do
+      respondHtml status200 (clientHeaders client) $ renderViewResponse meta vw
+    (Redirect u) -> do
       let url = uriToText u
       -- We have to use a 200 javascript redirect because javascript
       -- will redirect the fetch(), while we want to redirect the whole page
       -- see index.ts sendAction()
-      let hs = ("Location", cs url) : contentType ContentHtml : headers
-      Wai.responseLBS status200 hs $ "<script>window.location = '" <> cs url <> "'</script>"
+      let hs = ("Location", cs url) : clientHeaders client
+      respondHtml status200 hs $ renderViewResponse (metaRedirect u <> meta) $ do
+        el "Redirecting"
+        script'
+          -- static script is safe to execute
+          [i|
+            let metaInput = document.getElementById("hyp.metadata").innerText;
+            let meta = Hyperbole.parseMetadata(metaInput)
+            if (meta.redirect) {
+              window.location = meta.redirect
+            }
+            else {
+              console.error("Invalid Redirect", meta.rediect)
+            }
+          |]
 
-    respError s = Wai.responseLBS s [contentType ContentText]
+  renderViewResponse :: Metadata -> View () () -> BL.ByteString
+  renderViewResponse meta vw =
+    addDoc $
+      scriptMeta meta <> "\n\n" <> renderLazyByteString vw
 
-    respHtml body =
-      -- always set the session...
-      let hs = contentType ContentHtml : (setQuery client.query <> headers)
-       in Wai.responseLBS status200 hs body
+  respondText s hs = Wai.responseLBS s (contentType ContentText : hs)
+  respondHtml s hs = Wai.responseLBS s (contentType ContentHtml : hs)
 
-    headers :: [Header]
-    headers = setRequestId client.requestId : setCookies
-
-    setCookies =
-      fmap setCookie $ Cookie.toList client.session
+  -- via HTTP, we want to manually set some headers rather than just rely on the client
+  clientHeaders :: Client -> [Header]
+  clientHeaders = setCookies
+   where
+    setCookies clnt =
+      fmap setCookie $ Cookie.toList clnt.session
 
     setCookie :: Cookie -> (HeaderName, BS.ByteString)
     setCookie cookie =
-      ("Set-Cookie", Cookie.render (path $ cs $ Wai.rawPathInfo req) cookie)
-
-    setRequestId :: RequestId -> (HeaderName, BS.ByteString)
-    setRequestId (RequestId rid) =
-      ("Request-Id", cs rid)
-
-    setQuery Nothing = []
-    setQuery (Just qd) =
-      [("Set-Query", QueryData.render qd)]
-
-  -- convert to document if full page request. Subsequent POST requests will only include fragments
-  addDocument :: Method -> BL.ByteString -> BL.ByteString
-  addDocument "GET" bd = toDoc bd
-  addDocument _ bd = bd
+      ("Set-Cookie", Cookie.render req.path cookie)
 
 
-fromWaiRequest :: (MonadIO m) => Wai.Request -> m Request
-fromWaiRequest wr = do
-  body <- liftIO $ Wai.consumeRequestBodyLazy wr
+scriptMeta :: Metadata -> BL.ByteString
+scriptMeta m =
+  renderLazyByteString $
+    script' @ type_ "application/hyp.metadata" . att "id" "hyp.metadata" $
+      cs $
+        "\n" <> renderMetadata m <> "\n"
+
+
+messageFromBody :: BL.ByteString -> Either MessageError Message
+messageFromBody inp = do
+  first (\e -> InvalidMessage e (cs inp)) $ parseActionMessage (cs inp)
+
+
+fromWaiRequest :: Wai.Request -> BL.ByteString -> Either MessageError Request
+fromWaiRequest wr body = do
   let pth = path $ cs $ Wai.rawPathInfo wr
       query = Wai.queryString wr
       headers = Wai.requestHeaders wr
       cookie = fromMaybe "" $ L.lookup "Cookie" headers
       host = Host $ fromMaybe "" $ L.lookup "Host" headers
-      requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Request-Id" headers
+      requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Hyp-RequestId" headers
       method = Wai.requestMethod wr
+      event = lookupEvent headers
 
   cookies <- fromCookieHeader cookie
 
-  pure $ Request{body, path = pth, query, method, cookies, host, requestId}
+  pure $
+    Request
+      { body = body
+      , event
+      , path = pth
+      , query = queryRemoveSystem query
+      , method
+      , cookies
+      , host
+      , requestId
+      }
+ where
+  lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded)
+  lookupEvent headers = do
+    viewId <- TargetViewId . cs <$> L.lookup "Hyp-ViewId" headers
+    actText <- cs <$> L.lookup "Hyp-Action" headers
+    case encodedParseText actText of
+      Left _ -> Nothing
+      Right a -> pure $ Event viewId a
 
 
 -- Client only returns ONE Cookie header, with everything concatenated
-fromCookieHeader :: (MonadIO m) => BS.ByteString -> m Cookies
+fromCookieHeader :: BS.ByteString -> Either MessageError Cookies
 fromCookieHeader h =
   case Cookie.parse (Web.Cookie.parseCookies h) of
-    Left err -> liftIO $ throwIO $ InvalidCookie h err
+    Left err -> Left $ InvalidCookie h err
     Right a -> pure a
 
 
-errNotHandled :: Event TargetViewId Text -> String
+errNotHandled :: Event TargetViewId Encoded -> String
 errNotHandled ev =
   L.intercalate
     "\n"
-    [ "No Handler for Event viewId: " <> cs ev.viewId.text <> " action: " <> cs ev.action
+    [ "No Handler for Event viewId: " <> cs ev.viewId.text <> " action: " <> cs (encodedToText ev.action)
     , "<p>Remember to add a `hyper` handler in your page function</p>"
     , "<pre>"
     , "page :: (Hyperbole :> es) => Page es Response"

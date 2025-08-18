@@ -39,6 +39,14 @@ instance Semigroup Encoded where
     Encoded (c1 <> c2) (es1 <> es2)
 instance Monoid Encoded where
   mempty = Encoded mempty mempty
+instance ToJSON Encoded where
+  toJSON e = toJSON $ encode e
+instance FromJSON Encoded where
+  parseJSON (String t) =
+    case decodeEither t of
+      Left e -> fail $ "Encoded " <> cs e
+      Right a -> pure a
+  parseJSON val = fail $ "Expected Encoded but got: " <> show val
 
 
 encode :: (ToEncoded a) => a -> Text

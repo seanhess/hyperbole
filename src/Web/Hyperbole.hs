@@ -66,9 +66,12 @@ module Web.Hyperbole
 
     -- * Hyperbole Effect
   , Hyperbole
+  , trigger
+  , pushEvent
 
     -- ** Response
-  , respondView
+
+  -- , respondView
   , respondError
   , respondErrorView
   , notFound
@@ -162,7 +165,7 @@ module Web.Hyperbole
 
     -- * Advanced
   , target
-  , viewResponse
+  , hyperView
   , parseError
   , Response
   , ViewId
@@ -215,6 +218,7 @@ import Web.Hyperbole.Effect.Query
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response
 import Web.Hyperbole.Effect.Session
+import Web.Hyperbole.Effect.Trigger
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.HyperView.Forms
 import Web.Hyperbole.Page (Page, runPage)

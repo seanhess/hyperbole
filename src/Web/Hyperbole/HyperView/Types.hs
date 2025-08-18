@@ -56,3 +56,4 @@ instance HyperView (Root views) es where
     deriving (Generic, ViewAction)
   type Require (Root views) = views
   update _ = pure none
+
