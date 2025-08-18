@@ -1,6 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE QuasiQuotes #-}
-
 module Web.Hyperbole.Application
   ( waiApp
   , websocketsOr
@@ -16,7 +13,7 @@ import Effectful
 import Effectful.Concurrent.Async
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
-import Network.WebSockets (PendingConnection, defaultConnectionOptions)
+import Network.WebSockets (PendingConnection, defaultConnectionOptions, withPingThread)
 import Network.WebSockets qualified as WS
 import Web.Hyperbole.Document
 import Web.Hyperbole.Effect.Hyperbole
@@ -51,8 +48,10 @@ waiApp doc actions req res = do
 socketApp :: Wai.Request -> Eff '[Hyperbole, Concurrent, IOE] Response -> PendingConnection -> IO ()
 socketApp req actions pend = do
   conn <- liftIO $ WS.acceptRequest pend
-  forever $ do
-    runEff $ runConcurrent $ handleRequestSocket req conn actions
+  -- ping to keep the socket alive
+  withPingThread conn 25 (pure ()) $ do
+    forever $ do
+      runEff $ runConcurrent $ handleRequestSocket req conn actions
 
 
 {- | Route URL patterns to different pages

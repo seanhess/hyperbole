@@ -28,7 +28,7 @@ import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
-import Web.Hyperbole.View (View, addContext, el, renderLazyByteString, script', text, type_)
+import Web.Hyperbole.View (View, addContext, el, renderLazyByteString, script', type_)
 
 
 handleRequestWai

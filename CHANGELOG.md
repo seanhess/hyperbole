@@ -11,6 +11,7 @@
 * Javascript pushEvent
 * Live reload
 * quickStartDocument
+* View DocumentHead ()
 
 ## 0.4.3 -- 2024-01-31
 

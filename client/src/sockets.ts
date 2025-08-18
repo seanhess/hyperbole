@@ -60,7 +60,6 @@ export class SocketConnection {
   }
 
   async sendAction(action: ActionMessage): Promise<Response> {
-    // console.log("SOCKET sendAction", action)
     let msg = renderActionMessage(action)
     let { metadata, rest } = await this.fetch(action.requestId, action.viewId, msg)
 
