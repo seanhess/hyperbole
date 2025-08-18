@@ -45,11 +45,11 @@ import Web.Hyperbole.Data.URI
 --    ExternalCSS -> "Example/Page/ExternalCSS.hs"
 
 exampleLayout :: AppRoute -> View c () -> View c ()
-exampleLayout rt content =
+exampleLayout rt contents =
   el ~ grow $ do
     navigation rt ~ position Fixed . onDesktop leftMenu . onMobile topMenu
     col ~ pad 25 . gap 30 . onDesktop horizontal . onMobile vertical $ do
-      content
+      contents
  where
   leftMenu = width menuWidth . left 0 . top 0 . bottom 0
   horizontal = margin (L menuWidth)

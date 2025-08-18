@@ -12,7 +12,7 @@ import Web.Hyperbole
 import Web.Hyperbole.Effect.Response (view)
 
 customDocument :: ByteString -> ByteString
-customDocument content =
+customDocument contents =
   [i|<html>
     <head>
       <title>My Website</title>
@@ -20,7 +20,7 @@ customDocument content =
       <style type="text/css">#{cssResetEmbed}</style>
       <script type="text/javascript" src="custom.js"></script>
     </head>
-    <body>#{content}</body>
+    <body>#{contents}</body>
   </html>|]
 
 router :: (Hyperbole :> es) => AppRoute -> Eff es Response

@@ -21,26 +21,25 @@ import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.Encoded (Encoded, encodedParseText, encodedToText)
 import Web.Hyperbole.Data.URI (path, uriToText)
+import Web.Hyperbole.Document (Body (..), DocumentHead (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
-import Web.Hyperbole.View (renderLazyByteString)
-import Web.Hyperbole.View.Tag
-import Web.Hyperbole.View.Types (View)
+import Web.Hyperbole.View (View, addContext, el, renderLazyByteString, script', text, type_)
 
 
 handleRequestWai
   :: (IOE :> es)
-  => (BL.ByteString -> BL.ByteString)
+  => View DocumentHead ()
   -> Wai.Request
   -> (Wai.Response -> IO ResponseReceived)
   -> Eff (Hyperbole : es) Response
   -> Eff es Wai.ResponseReceived
-handleRequestWai toDoc req respond actions = do
-  -- NOTE: This is called for both updates AND for page loads
+handleRequestWai doc req respond actions = do
+  -- NOTE: Remember, this is called for both updates AND for page loads
   body <- liftIO $ Wai.consumeRequestBodyLazy req
   rq <- either throwIO pure $ do
     fromWaiRequest req body
@@ -49,19 +48,30 @@ handleRequestWai toDoc req respond actions = do
  where
   -- convert to document if full page request. Subsequent POST requests will only include html fragments for updates
   addDocument :: BL.ByteString -> BL.ByteString
-  addDocument bd =
+  addDocument body =
     case Wai.requestMethod req of
-      "GET" -> toDoc $ "\n" <> bd
-      _ -> bd
+      "GET" -> document body
+      _ -> body
+
+  document :: BL.ByteString -> BL.ByteString
+  document body =
+    [i|<html>
+  <head>
+    #{renderLazyByteString $ addContext DocumentHead doc}
+  </head>
+  <body>
+    #{body}
+  </body>
+</html>|]
 
 
 sendResponse :: (BL.ByteString -> BL.ByteString) -> Request -> (Wai.Response -> IO ResponseReceived) -> Client -> Response -> [Remote] -> IO Wai.ResponseReceived
-sendResponse addDoc req respond client res remotes = do
-  let meta = requestMetadata req <> responseMetadata req.path client remotes
-  respond $ response meta res
+sendResponse addDocument req respond client res remotes = do
+  let metas = requestMetadata req <> responseMetadata req.path client remotes
+  respond $ response metas res
  where
   response :: Metadata -> Response -> Wai.Response
-  response meta = \case
+  response metas = \case
     NotFound -> respondText status404 [] "Not Found"
     (Err err) ->
       case err of
@@ -71,20 +81,19 @@ sendResponse addDoc req respond client res remotes = do
         ErrServer msg -> do
           respondText status500 [] $ "Server Error: " <> cs msg
         ErrCustom _ body -> do
-          let out = addDoc (renderLazyByteString body)
-          respondHtml status500 [] out
+          respondHtml status500 [] $ renderViewResponse mempty body
         ErrInternal -> respondText status500 [] "Internal Server Error"
         ErrAuth m -> respondText status401 [] $ "Unauthorized: " <> cs m
         ErrNotHandled e -> respondText status400 [] $ cs $ errNotHandled e
     (Response _ vw) -> do
-      respondHtml status200 (clientHeaders client) $ renderViewResponse meta vw
+      respondHtml status200 (clientHeaders client) $ renderViewResponse metas vw
     (Redirect u) -> do
       let url = uriToText u
       -- We have to use a 200 javascript redirect because javascript
       -- will redirect the fetch(), while we want to redirect the whole page
       -- see index.ts sendAction()
       let hs = ("Location", cs url) : clientHeaders client
-      respondHtml status200 hs $ renderViewResponse (metaRedirect u <> meta) $ do
+      respondHtml status200 hs $ renderViewResponse (metaRedirect u <> metas) $ do
         el "Redirecting"
         script'
           -- static script is safe to execute
@@ -99,10 +108,9 @@ sendResponse addDoc req respond client res remotes = do
             }
           |]
 
-  renderViewResponse :: Metadata -> View () () -> BL.ByteString
-  renderViewResponse meta vw =
-    addDoc $
-      scriptMeta meta <> "\n\n" <> renderLazyByteString vw
+  renderViewResponse :: Metadata -> View Body () -> BL.ByteString
+  renderViewResponse metas vw =
+    addDocument $ renderLazyByteString (addContext metas $ scriptMeta metas) <> "\n\n" <> renderLazyByteString (addContext Body vw)
 
   respondText s hs = Wai.responseLBS s (contentType ContentText : hs)
   respondHtml s hs = Wai.responseLBS s (contentType ContentHtml : hs)
@@ -119,12 +127,11 @@ sendResponse addDoc req respond client res remotes = do
       ("Set-Cookie", Cookie.render req.path cookie)
 
 
-scriptMeta :: Metadata -> BL.ByteString
+scriptMeta :: Metadata -> View Metadata ()
 scriptMeta m =
-  renderLazyByteString $
-    script' @ type_ "application/hyp.metadata" . att "id" "hyp.metadata" $
-      cs $
-        "\n" <> renderMetadata m <> "\n"
+  script' @ type_ "application/hyp.metadata" . att "id" "hyp.metadata" $
+    cs $
+      "\n" <> renderMetadata m <> "\n"
 
 
 messageFromBody :: BL.ByteString -> Either MessageError Message

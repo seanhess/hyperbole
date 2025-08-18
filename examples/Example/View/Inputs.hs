@@ -11,6 +11,6 @@ toggleCheckbox clickAction isSelected = do
   big = width 32 . height 32
 
 progressBar :: Float -> View context () -> View context ()
-progressBar pct content = do
+progressBar pct contents = do
   row ~ bg Light $ do
-    row ~ bg PrimaryLight . width (Pct pct) . pad 5 $ content
+    row ~ bg PrimaryLight . width (Pct pct) . pad 5 $ contents

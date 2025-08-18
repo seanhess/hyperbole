@@ -108,7 +108,7 @@ run = do
 app :: AppConfig -> UserStore -> TVar Int -> Application
 app config users count = do
   liveApp
-    toDocument
+    documentHead
     (runApp . routeRequest $ router)
  where
   runApp :: (Hyperbole :> es, IOE :> es) => Eff (OAuth2 : GenRandom : Concurrent : Debug : Users : Todos : Reader AppConfig : es) a -> Eff es a
@@ -165,20 +165,14 @@ app config users count = do
 
   -- Use the embedded version for real applications (see quickStartDocument).
   -- The link to /hyperbole.js here is just to make local development easier
-  toDocument :: BL.ByteString -> BL.ByteString
-  toDocument cnt =
-    [i|<html>
-      <head>
-        <title>Hyperbole Examples</title>
-        <meta httpEquiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script type="text/javascript" src="/hyperbole.js"></script>
-        <script type="text/javascript">#{scriptLiveReload}</script>
-        <style type="text/css">#{cssResetEmbed}</style>
-        <style type="text/css">body { background-color: \#d3dceb }</style>
-      </head>
-      <body>#{cnt}</body>
-    </html>|]
+  documentHead :: View DocumentHead ()
+  documentHead = do
+    title "Hyperbole Examples"
+    mobileFriendly
+    script "/hyperbole.js"
+    script' scriptLiveReload
+    style "body { background-color: #d3dceb }"
+    style $ cs cssResetEmbed
 
 {- | Made for local development
  -

@@ -25,12 +25,12 @@ menu = do
   route Counter "Link to /counter"
 
 exampleLayout :: View c () -> View c ()
-exampleLayout content = do
+exampleLayout contents = do
   col ~ grow $ do
     el ~ border 1 $ "My Website Header"
     row $ do
       menu
-      content
+      contents
 
 examplePage :: Page es '[]
 examplePage = do

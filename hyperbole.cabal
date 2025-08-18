@@ -39,6 +39,7 @@ library
       Web.Hyperbole.Data.Param
       Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Data.URI
+      Web.Hyperbole.Document
       Web.Hyperbole.Effect.Client
       Web.Hyperbole.Effect.GenRandom
       Web.Hyperbole.Effect.Hyperbole

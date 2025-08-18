@@ -9,12 +9,13 @@ import Data.Text (Text)
 import Web.Atomic
 import Web.Hyperbole.Data.Encoded (Encoded)
 import Web.Hyperbole.Data.URI (URI)
+import Web.Hyperbole.Document
 import Web.Hyperbole.Types.Event (Event, TargetViewId)
 import Web.Hyperbole.View (View)
 
 
 data Response
-  = Response TargetViewId (View () ())
+  = Response TargetViewId (View Body ())
   | NotFound
   | Redirect URI
   | Err ResponseError
@@ -25,7 +26,7 @@ data ResponseError
   | ErrQuery Text
   | ErrSession Text Text
   | ErrServer Text
-  | ErrCustom Text (View () ())
+  | ErrCustom Text (View Body ())
   | ErrInternal
   | ErrNotHandled (Event TargetViewId Encoded)
   | ErrAuth Text

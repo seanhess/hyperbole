@@ -56,6 +56,8 @@ module Web.Hyperbole
   , Warp.run
   , Page
   , runPage
+  , DocumentHead
+  , mobileFriendly
   , quickStartDocument
 
     -- ** Type-Safe Routes
@@ -214,6 +216,7 @@ import Web.Hyperbole.Application
 import Web.Hyperbole.Data.Encoded ()
 import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.QueryData
+import Web.Hyperbole.Document
 import Web.Hyperbole.Effect.Client
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query

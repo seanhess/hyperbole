@@ -16,11 +16,12 @@ import Network.WebSockets qualified as WS
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.URI (URI, path)
+import Web.Hyperbole.Document (Body (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
-import Web.Hyperbole.View (View, renderLazyByteString)
+import Web.Hyperbole.View (View, addContext, renderLazyByteString)
 
 
 data SocketRequest = SocketRequest
@@ -71,7 +72,7 @@ handleRequestSocket wreq conn actions = do
   errMsg ErrInternal = "Internal Server Error"
   errMsg e = pack (drop 3 $ show e)
 
-  serializeError (ErrCustom m b) = SerializedError m (renderLazyByteString b)
+  serializeError (ErrCustom m b) = SerializedError m (renderLazyByteString $ addContext Body b)
   serializeError err = serverError $ errMsg err
 
   receiveMessage :: (IOE :> es) => Eff es Message
@@ -123,9 +124,9 @@ handleRequestSocket wreq conn actions = do
       maybe (Left $ MissingMeta (cs key)) pure $ lookupMetadata key m
 
 
-sendUpdateView :: (IOE :> es) => Connection -> Metadata -> View () () -> Eff es ()
+sendUpdateView :: (IOE :> es) => Connection -> Metadata -> View Body () -> Eff es ()
 sendUpdateView conn meta vw = do
-  sendMessage conn meta (RenderedHtml $ renderLazyByteString vw)
+  sendMessage conn meta (RenderedHtml $ renderLazyByteString $ addContext Body vw)
 
 
 sendRedirect :: (IOE :> es) => Connection -> Metadata -> URI -> Eff es ()

@@ -3,6 +3,8 @@
 module Web.Hyperbole.View.Tag where
 
 import Control.Monad (forM_)
+import Data.ByteString (ByteString)
+import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import Effectful
@@ -81,6 +83,26 @@ autofocus = att "autofocus" ""
 -- * Document Metadata
 
 
+meta :: View c ()
+meta = tag "meta" none
+
+
+title :: Text -> View c ()
+title = tag "title" . text
+
+
+content :: (Attributable h) => Text -> Attributes h -> Attributes h
+content = att "content"
+
+
+httpEquiv :: (Attributable h) => Text -> Attributes h -> Attributes h
+httpEquiv = att "httpEquiv"
+
+
+charset :: (Attributable h) => Text -> Attributes h -> Attributes h
+charset = att "charset"
+
+
 type_ :: (Attributable h) => Text -> Attributes h -> Attributes h
 type_ = att "type"
 
@@ -93,13 +115,13 @@ script :: Text -> View c ()
 script s = tag "script" none @ src s
 
 
--- | Embed raw script
-script' :: Text -> View c ()
-script' dat = tag' True "script" $ raw $ T.replace "</" "\\u003C/" $ dat
+-- | Embed raw script, escape '</script>'
+script' :: ByteString -> View c ()
+script' dat = tag' True "script" $ raw $ T.replace "</" "\\u003C/" $ cs dat
 
 
 style :: Text -> View c ()
-style cnt = tag "style" (text $ "\n" <> cnt <> "\n") @ type_ "text/css"
+style cnt = tag "style" (raw cnt) @ type_ "text/css"
 
 
 stylesheet :: Text -> View c ()
