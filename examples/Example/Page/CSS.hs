@@ -14,10 +14,11 @@ import Example.View.Layout (embed, example, exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types (Root (..))
+import Web.Hyperbole.Page (subPage)
 
-page :: (Hyperbole :> es) => Eff es (Page '[Transitions, External.Items, Boxes])
+page :: (Hyperbole :> es) => Page es '[Transitions, External.Items, Boxes]
 page = do
-  ext <- External.page
+  ext <- subPage External.page
   pure $ exampleLayout CSS $ do
     example "Atomic CSS" "Example/Page/CSS.hs" $ do
       el $ do

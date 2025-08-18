@@ -5,7 +5,7 @@ import Data.Text (Text)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: (Hyperbole :> es) => Eff es (Page '[Message])
+page :: (Hyperbole :> es) => Page es '[Message]
 page = do
   prm <- lookupParam "msg"
   let msg = fromMaybe "hello" prm

@@ -11,7 +11,7 @@ main = do
   run 3000 $ do
     liveApp quickStartDocument (runPage page)
 
-page :: Eff es (Page '[])
+page :: Page es '[]
 page = do
   pure $ do
     col ~ pad 10 $ do
@@ -25,7 +25,7 @@ helloWorld :: View context ()
 helloWorld =
   el ~ bold $ "Hello World"
 
-page' :: Eff es (Page '[])
+page' :: Page es '[]
 page' = do
   pure $ do
     col ~ pad 10 $ do

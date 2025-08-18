@@ -16,7 +16,7 @@ import Prelude hiding (even, odd)
 -- DataTable -> do
 --   el "Complex reusable View Functions allow us to "
 
-page :: (Hyperbole :> es) => Eff es (Page '[Languages])
+page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   pure $ exampleLayout (Data SortableTable) $ do
     example "Data Table" "Example/Page/DataTable.hs" $ do

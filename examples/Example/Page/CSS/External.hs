@@ -8,7 +8,7 @@ main = do
   run 3000 $ do
     liveApp quickStartDocument (runPage page)
 
-page :: (Hyperbole :> es) => Eff es (Page '[Items])
+page :: (Hyperbole :> es) => Page es '[Items]
 page = do
   pure $ do
     -- you can choose to include a stylesheet only on the page that uses it

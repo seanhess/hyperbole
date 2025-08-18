@@ -17,7 +17,7 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
 
-page :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
+page :: (Todos :> es) => Page es '[AllTodos, TodoView]
 page = do
   todos <- Todos.loadAll
   pure $ exampleLayout (Route.Examples Route.Todos) $ do
@@ -25,7 +25,7 @@ page = do
       col ~ embed $ hyper AllTodos $ todosView FilterAll todos
 
 -- Keep this, it's used for documentation (+ usable via the REPL, see main below)
-simplePage :: (Todos :> es) => Eff es (Page '[AllTodos, TodoView])
+simplePage :: (Todos :> es) => Page es '[AllTodos, TodoView]
 simplePage = do
   todos <- Todos.loadAll
   pure $ do

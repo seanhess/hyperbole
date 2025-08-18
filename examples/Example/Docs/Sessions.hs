@@ -21,7 +21,7 @@ data Preferences = Preferences
 instance Default Preferences where
   def = Preferences White
 
-page :: (Hyperbole :> es) => Eff es (Page '[Content])
+page :: (Hyperbole :> es) => Page es '[Content]
 page = do
   prefs <- session @Preferences
   pure $ el ~ bg prefs.color $ "Custom Background"

@@ -21,7 +21,7 @@ data Preferences = Preferences
 instance Default Preferences where
   def = Preferences mempty def
 
-page :: (Hyperbole :> es) => Eff es (Page '[Contents])
+page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
   prefs <- query @Preferences
   pure $ exampleLayout (State Query) $ do

@@ -20,7 +20,7 @@ data Preferences = Preferences
 instance Default Preferences where
   def = Preferences "_" White
 
-page :: (Hyperbole :> es) => Eff es (Page '[Contents])
+page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
   prefs <- session @Preferences
   pure $ exampleLayout (State Sessions) $ do

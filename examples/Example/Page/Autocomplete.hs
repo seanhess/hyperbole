@@ -16,7 +16,7 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
-page :: (Hyperbole :> es) => Eff es (Page '[LiveSearch])
+page :: (Hyperbole :> es) => Page es '[LiveSearch]
 page = do
   pure $ exampleLayout (Data Autocomplete) $ do
     example "Autocomplete" "Example/Page/Autocomplete.hs" $ do

@@ -49,7 +49,7 @@ findUser uid = do
   mu <- send (LoadUser uid)
   maybe notFound pure mu
 
-userPage :: (Hyperbole :> es, Users :> es) => Eff es (Page '[])
+userPage :: (Hyperbole :> es, Users :> es) => Page es '[]
 userPage = do
   user <- findUser 100
 

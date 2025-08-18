@@ -15,7 +15,7 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Effect.GenRandom
 
-page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Polling, LazyData, Progress])
+page :: (Hyperbole :> es, Debug :> es) => Page es '[Polling, LazyData, Progress]
 page = do
   pure $ exampleLayout Concurrency $ do
     example "Concurrency" source $ do

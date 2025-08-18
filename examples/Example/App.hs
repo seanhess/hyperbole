@@ -154,7 +154,7 @@ app config users count = do
     redirect (routeUri Intro)
 
   -- Nested Router
-  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Eff es (Page '[])
+  hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es '[]
   hello (Greet who) = do
     pure $ exampleLayout (Hello $ Greet who) $ do
       row ~ gap 6 . pad 10 $ do

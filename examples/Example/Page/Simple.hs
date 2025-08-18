@@ -13,7 +13,7 @@ main = do
   run 3000 $ do
     liveApp quickStartDocument (runPage page)
 
-page :: (Hyperbole :> es) => Eff es (Page '[Message])
+page :: (Hyperbole :> es) => Page es '[Message]
 page = do
   pure $ do
     hyper Message1 $ messageView "Hello"

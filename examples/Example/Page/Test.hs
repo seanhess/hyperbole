@@ -13,8 +13,9 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: (Hyperbole :> es, Debug :> es) => Eff es (Page '[Message, Other])
+page :: (Hyperbole :> es, Debug :> es) => Page es '[Message, Other, Fake]
 page = do
+  -- trigger Fake Noop
   pure $ exampleLayout Test $ do
     script "test.js"
     example "Test" "Example/Page/Test.hs" $ do
@@ -49,7 +50,7 @@ data Other = Other
   deriving (Generic, ViewId)
 
 instance (Debug :> es) => HyperView Other es where
-  type Require Other = '[Message]
+  type Require Other = '[Message, Fake]
 
   data Action Other
     = GoTrigger
@@ -57,8 +58,8 @@ instance (Debug :> es) => HyperView Other es where
     deriving (Generic, ViewAction)
 
   update GoTrigger = do
+    trigger Fake Noop
     trigger Message2 (Louder "remote")
-    -- trigger Fake Noop
     pushEvent "hello" (String "woot")
     pure "OK"
   update Sneaky = do

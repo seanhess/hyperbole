@@ -7,7 +7,7 @@ import Example.Docs.Interactive (Message (..), messageView)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: Eff es (Page [Message, Count])
+page :: Page es [Message, Count]
 page = do
   pure $ do
     row $ do

@@ -12,11 +12,12 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types
+import Web.Hyperbole.Page (subPage)
 
-page :: (Hyperbole :> es) => Eff es (Page '[Message, Counter])
+page :: (Hyperbole :> es) => Page es '[Message, Counter]
 page = do
-  simple <- Simple.page
-  counter <- Counter.page
+  simple <- subPage Simple.page
+  counter <- subPage Counter.page
 
   pure $ exampleLayout Intro $ do
     example "Simple" "Example/Page/Simple.hs" $ do

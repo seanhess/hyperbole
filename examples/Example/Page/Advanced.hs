@@ -7,7 +7,7 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: (Hyperbole :> es) => Eff es (Page '[Message, Controls])
+page :: (Hyperbole :> es) => Page es '[Message, Controls]
 page = do
   pure $ exampleLayout Route.Advanced $ do
     example "Trigger" "Example/Page/Advanced.hs" $ do

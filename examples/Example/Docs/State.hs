@@ -11,7 +11,7 @@ messageView m = do
   button (Louder m) ~ border 1 $ "Louder"
   el ~ bold $ text m
 
-page :: Eff es (Page '[Message])
+page :: Page es '[Message]
 page = do
   pure $ do
     hyper Message $ messageView "Hello"

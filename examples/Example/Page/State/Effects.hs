@@ -12,7 +12,7 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
 
-page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Eff es (Page '[Counter])
+page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es '[Counter]
 page = do
   n <- getCount
   pure $ do

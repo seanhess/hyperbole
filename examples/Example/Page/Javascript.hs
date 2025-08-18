@@ -8,7 +8,7 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: (Hyperbole :> es) => Eff es (Page '[Boxes, Message])
+page :: (Hyperbole :> es) => Page es '[Boxes, Message]
 page = do
   pure $ exampleLayout Route.Javascript $ do
     -- NOTE: include custom javascript only on this page

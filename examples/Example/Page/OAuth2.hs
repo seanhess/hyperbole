@@ -80,7 +80,7 @@ fetchUserInfo (Token accessTok) = do
 
 page
   :: (Hyperbole :> es, OAuth2 :> es, Reader AppConfig :> es)
-  => Eff es (Page '[Contents])
+  => Page es '[Contents]
 page = do
   muser <- lookupSession @UserSession
   pure $ exampleLayout Route.OAuth2 $ do

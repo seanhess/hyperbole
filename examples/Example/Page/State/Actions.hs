@@ -14,7 +14,7 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types
 
-page :: (Hyperbole :> es) => Eff es (Page '[Counter])
+page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   counter <- Counter.page
   pure $ exampleLayout (State Actions) $ do

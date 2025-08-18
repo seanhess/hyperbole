@@ -28,7 +28,7 @@ only need to add one manual rule to the footer, to override the CSS reset
 
 -}
 
-page :: (Todos :> es) => Eff es (Page '[CSSTodos, CSSTodo])
+page :: (Todos :> es) => Page es '[CSSTodos, CSSTodo]
 page = do
   todos <- Todos.loadAll
   pure $ do

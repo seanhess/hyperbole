@@ -15,7 +15,7 @@ import Text.Read (readMaybe)
 import Web.Atomic.CSS
 import Web.Hyperbole hiding (link)
 
-page :: (Hyperbole :> es) => Eff es (Page '[Defaults, Users])
+page :: (Hyperbole :> es) => Page es '[Defaults, Users]
 page = do
   pure $ exampleLayout Route.Errors $ do
     example "Exceptions" "Example/Page/Errors.hs" $ do

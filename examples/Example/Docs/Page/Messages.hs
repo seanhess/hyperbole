@@ -2,5 +2,5 @@ module Example.Docs.Page.Messages where
 
 import Web.Hyperbole
 
-page :: Eff es (Page '[])
+page :: Page es '[]
 page = pure $ el "Messages page"

@@ -23,7 +23,6 @@ pushEvent nm a = do
   send $ TriggerEvent nm (toJSON a)
 
 
--- | Set the document title
 pageTitle :: (Hyperbole :> es) => Text -> Eff es ()
 pageTitle t = do
   send $ ModClient $ clientSetPageTitle t

@@ -4,7 +4,7 @@ import Control.Monad (forM_)
 import Data.Text (Text)
 import Web.Hyperbole
 
-page :: (Hyperbole :> es) => Eff es (Page '[AllTodos, TodoItem])
+page :: (Hyperbole :> es) => Page es '[AllTodos, TodoItem]
 page = do
   pure $ do
     hyper AllTodos $ todosView allTodos

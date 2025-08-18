@@ -4,7 +4,7 @@ import Data.Text (Text)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: Eff es (Page '[Message])
+page :: Page es '[Message]
 page = do
   pure $ do
     col ~ pad 10 . gap 10 $ do

@@ -6,7 +6,7 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: (Hyperbole :> es) => Eff es (Page '[Boxes])
+page :: (Hyperbole :> es) => Page es '[Boxes]
 page = do
   pure $ exampleLayout Interactivity $ do
     example "Events" "Example/Page/Interactivity/Events.hs" $ do

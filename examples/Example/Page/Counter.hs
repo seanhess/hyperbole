@@ -8,7 +8,7 @@ import Example.Style as Style
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
 
-page :: (Hyperbole :> es) => Eff es (Page '[Counter])
+page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   pure $ hyper Counter (viewCount 0)
 

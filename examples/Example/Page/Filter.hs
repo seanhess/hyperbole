@@ -17,7 +17,7 @@ import Prelude hiding (even, odd)
 
 -- Filter ->
 --   el "Easily serialize a datatype to the querystring, preserving faceted search in the url"
-page :: (Hyperbole :> es) => Eff es (Page '[Languages])
+page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   filters <- query
   pure $ exampleLayout (Data Filter) $ do

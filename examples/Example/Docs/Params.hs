@@ -9,7 +9,7 @@ data Filters = Filters
   }
   deriving (ToQuery, FromQuery, Generic)
 
-page :: (Hyperbole :> es) => Eff es (Page '[Todos])
+page :: (Hyperbole :> es) => Page es '[Todos]
 page = do
   filters <- query @Filters
   todos <- loadTodos filters
@@ -40,7 +40,7 @@ loadTodos _ = pure []
 todosView :: [Todo] -> View Todos ()
 todosView _ = none
 
-page' :: (Hyperbole :> es) => Eff es (Page '[Message])
+page' :: (Hyperbole :> es) => Page es '[Message]
 page' = do
   msg <- param "message"
   pure $ do

@@ -11,7 +11,7 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI
 
-page :: (Hyperbole :> es) => Eff es (Page '[CheckRequest, ControlResponse, ControlClient])
+page :: (Hyperbole :> es) => Page es '[CheckRequest, ControlResponse, ControlClient]
 page = do
   r <- request
   pure $ exampleLayout Route.Requests $ do

@@ -32,7 +32,7 @@ exampleLayout content = do
       menu
       content
 
-examplePage :: Eff es (Page '[])
+examplePage :: Page es '[]
 examplePage = do
   pure $ exampleLayout $ do
     el "page contents"
