@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Web.Hyperbole.View.Embed
-  ( Atomic.cssResetEmbed
+  ( cssEmbed
   , scriptEmbed
   , scriptLiveReload
   )
@@ -18,3 +18,12 @@ scriptEmbed = $(embedFile "client/dist/hyperbole.js")
 
 scriptLiveReload :: ByteString
 scriptLiveReload = $(embedFile "client/util/live-reload.js")
+
+
+cssEmbed :: ByteString
+cssEmbed =
+  Atomic.cssResetEmbed
+    <> "\n"
+    <> intercalate
+      "\n"
+      ["form, label { display: flex; flex-direction: column } "]

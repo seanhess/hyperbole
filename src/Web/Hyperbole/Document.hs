@@ -25,7 +25,7 @@ quickStartDocument :: View DocumentHead ()
 quickStartDocument = do
   title "Hyperbole"
   mobileFriendly
-  style $ cs cssResetEmbed
+  style $ cs cssEmbed
   script' scriptEmbed
   script' scriptLiveReload
 

@@ -172,7 +172,7 @@ app config users count = do
     script "/hyperbole.js"
     script' scriptLiveReload
     style "body { background-color: #d3dceb }"
-    style $ cs cssResetEmbed
+    style $ cs cssEmbed
 
 {- | Made for local development
  -

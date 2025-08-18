@@ -72,7 +72,7 @@ validatePass p1 p2 =
 formView :: UserForm Validated -> View Signup ()
 formView val = do
   let f = fieldNames @UserForm
-  form Submit ~ gap 10 . pad 10 $ do
+  form Submit ~ gap 15 . pad 10 $ do
     el ~ Style.h1 $ "Sign Up"
 
     field f.user ~ valStyle val.user $ do

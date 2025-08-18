@@ -28,7 +28,7 @@ data ContactForm = ContactForm
 -- and a view that displays an input for each field
 formView :: View AddContact ()
 formView = do
-  form Submit ~ gap 15 . pad 10 $ do
+  form Submit ~ gap 15 . pad 10 . flexCol $ do
     el ~ Style.h1 $ "Add Contact"
 
     -- Make sure these names match the field names used by FormParse / formData

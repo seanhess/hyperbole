@@ -4,7 +4,6 @@ module Web.Hyperbole.HyperView.Handled where
 
 import Data.Kind (Constraint, Type)
 import GHC.TypeLits hiding (Mod)
-import Web.Atomic.CSS
 import Web.Atomic.Types
 import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.HyperView.Types
@@ -30,7 +29,7 @@ hyper = hyperUnsafe
 
 hyperUnsafe :: (ViewId id) => id -> View id () -> View ctx ()
 hyperUnsafe vid vw = do
-  tag "div" @ att "id" (encodedToText $ toViewId vid) ~ flexCol $
+  tag "div" @ att "id" (encodedToText $ toViewId vid) $
     addContext vid vw
 
 

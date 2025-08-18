@@ -28,7 +28,7 @@ page = do
         hyper (Progress 5 500) $ viewProgress 0
 
     example "Lazy Loading" source $ do
-      row ~ gap 5 $ do
+      el $ do
         text "Instead of preloading everything in our Page, a HyperView can load itself using "
         code "onLoad"
       el ~ flexRow . embed . flexWrap Wrap $ do
@@ -37,7 +37,7 @@ page = do
             hyper (LazyData taskId) viewTaskLoad
 
     example "Polling" source $ do
-      row ~ gap 5 $ do
+      el $ do
         text "By including an "
         code "onLoad"
         text "in every view update, we can poll the server after a given delay"

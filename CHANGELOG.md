@@ -12,6 +12,8 @@
 * Live reload
 * quickStartDocument
 * View DocumentHead ()
+* ping keepalive
+* refactor Page type to support trigger type-checking
 
 ## 0.4.3 -- 2024-01-31
 

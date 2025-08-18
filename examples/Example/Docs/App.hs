@@ -17,7 +17,7 @@ customDocument contents =
     <head>
       <title>My Website</title>
       <script type="text/javascript">#{scriptEmbed}</script>
-      <style type="text/css">#{cssResetEmbed}</style>
+      <style type="text/css">#{cssEmbed}</style>
       <script type="text/javascript" src="custom.js"></script>
     </head>
     <body>#{contents}</body>

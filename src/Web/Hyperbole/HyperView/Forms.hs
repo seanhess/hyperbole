@@ -44,7 +44,6 @@ import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
 import Text.Casing (kebab)
-import Web.Atomic.CSS
 import Web.Atomic.Types hiding (Selector)
 import Web.FormUrlEncoded (Form (..), FormOptions (..))
 import Web.FormUrlEncoded qualified as FE
@@ -158,7 +157,7 @@ data FormFields id = FormFields id
 form :: (ViewAction (Action id)) => Action id -> View (FormFields id) () -> View id ()
 form a cnt = do
   vid <- context
-  tag "form" @ onSubmit a ~ flexCol $ do
+  tag "form" @ onSubmit a $ do
     addContext (FormFields vid) cnt
 
 
@@ -179,7 +178,7 @@ field
   -> View (Input id a) ()
   -> View (FormFields id) ()
 field fn inputs = do
-  tag "label" ~ flexCol $ do
+  tag "label" $ do
     addContext (Input fn) inputs
 
 
