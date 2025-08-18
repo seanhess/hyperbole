@@ -7,6 +7,10 @@
 * Web.Hyperbole.Effect.OAuth2
 * Web.Hyperbole.Effect.GenRandom
 * OAuth2 example
+* trigger
+* Javascript pushEvent
+* Live reload
+* quickStartDocument
 
 ## 0.4.3 -- 2024-01-31
 

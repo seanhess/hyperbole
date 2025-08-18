@@ -21,7 +21,7 @@ page = do
       col ~ embed $ hyper ControlClient viewClient
 
     example "Response" source $ do
-      el "It also allows us to directly affect the response"
+      el "It also allows us to directly affect the response and the javascript client"
       col ~ embed $ hyper ControlResponse responseView
  where
   source = "Example/Page/Requests.hs"
@@ -87,12 +87,18 @@ data ControlResponse = ControlResponse
 instance HyperView ControlResponse es where
   data Action ControlResponse
     = RedirectAsAction
+    | SetPageTitle
     | RespondNotFound
     | -- \| RespondEarlyView
       RespondWithError
     deriving (Generic, ViewAction)
   update RedirectAsAction = do
     redirect $ pathUri "/hello/redirected"
+  update SetPageTitle = do
+    pageTitle "Hello World!"
+    pure $ col ~ gap 10 $ do
+      el ~ bold $ "Set page title!"
+      responseView
   update RespondNotFound = do
     _ <- notFound
     pure "This will not be rendered"
@@ -105,8 +111,8 @@ instance HyperView ControlResponse es where
 
 responseView :: View ControlResponse ()
 responseView = do
-  row ~ gap 10 $ do
+  row ~ gap 10 . flexWrap Wrap $ do
     button RedirectAsAction ~ Style.btn $ "Redirect Me"
-    -- button RespondEarlyView ~ Style.btn $ "Respond Early"
+    button SetPageTitle ~ Style.btn $ "Set Page Title"
     button RespondNotFound ~ Style.btn' Danger $ "Respond Not Found"
     button RespondWithError ~ Style.btn' Danger $ "Respond Error"

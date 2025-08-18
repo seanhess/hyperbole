@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Web.Hyperbole.Effect.Handler where
+module Web.Hyperbole.Server.Handler where
 
 import Data.Kind (Type)
 import Effectful
@@ -56,29 +56,21 @@ runLoad
    . (Hyperbole :> es, RunHandlers views es)
   => Eff es (View (Root views) ())
   -> Eff es Response
-runLoad loadPage = do
+runLoad page = do
   ev <- (.event) <$> send GetRequest
   case ev of
     Just rawEvent -> do
       res <- runHandlers @views rawEvent
       case res of
-        -- we expect it to be handled by one of the views
+        -- if we found an event, it should have been handled by one of the views
         Nothing -> respondError $ ErrNotHandled rawEvent
         Just r -> pure r
     Nothing -> do
-      loadToResponse loadPage
+      loadPageResponse page
 
 
--- guardNoEvent :: (Hyperbole :> es) => Eff es ()
--- guardNoEvent = do
---   q <- (.query) <$> request
---   case lookupEvent q of
---     -- Are id and action set to something?
---     Just e -> send $ RespondNow $ Err $ ErrNotHandled e
---     Nothing -> pure ()
-
-loadToResponse :: Eff es (View (Root total) ()) -> Eff es Response
-loadToResponse run = do
+loadPageResponse :: Eff es (View (Root total) ()) -> Eff es Response
+loadPageResponse run = do
   vw <- run
   let vid = TargetViewId (encodedToText $ toViewId Root)
   let res = Response vid $ addContext Root vw

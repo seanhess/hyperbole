@@ -182,8 +182,13 @@ responseMetadata reqPath client remotes =
 
 clientMetadata :: Path -> Client -> Metadata
 clientMetadata reqPath client =
-  metaSession client.session <> metaQuery client.query
+  metaSession client.session <> metaQuery client.query <> metaPageTitle client.pageTitle
  where
+  metaPageTitle :: Maybe Text -> Metadata
+  metaPageTitle = \case
+    Nothing -> mempty
+    Just pt -> metadata "PageTitle" pt
+
   metaQuery :: Maybe QueryData -> Metadata
   metaQuery Nothing = mempty
   metaQuery (Just q) =

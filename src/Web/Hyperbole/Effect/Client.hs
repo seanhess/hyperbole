@@ -1,12 +1,13 @@
-module Web.Hyperbole.Effect.Trigger where
+module Web.Hyperbole.Effect.Client where
 
 import Data.Aeson
 import Data.Text (Text)
 import Effectful
-import Effectful.Reader.Dynamic
 import Effectful.Dispatch.Dynamic
+import Effectful.Reader.Dynamic
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.HyperView
+import Web.Hyperbole.Types.Client (clientSetPageTitle)
 import Web.Hyperbole.Types.Event
 
 
@@ -20,3 +21,9 @@ trigger vid act = do
 pushEvent :: (ToJSON a, Hyperbole :> es) => Text -> a -> Eff es ()
 pushEvent nm a = do
   send $ TriggerEvent nm (toJSON a)
+
+
+-- | Set the document title
+pageTitle :: (Hyperbole :> es) => Text -> Eff es ()
+pageTitle t = do
+  send $ ModClient $ clientSetPageTitle t

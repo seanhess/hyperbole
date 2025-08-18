@@ -11,7 +11,7 @@ import Web.Hyperbole.Data.QueryData (FromQuery (..), QueryData (..), ToQuery (..
 import Web.Hyperbole.Data.QueryData qualified as QueryData
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.Effect.Request (request)
-import Web.Hyperbole.Types.Client (Client (..))
+import Web.Hyperbole.Types.Client (Client (..), clientSetQuery)
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 import Prelude
@@ -110,5 +110,4 @@ queryParams = do
 modifyQueryData :: (Hyperbole :> es) => (QueryData -> QueryData) -> Eff es ()
 modifyQueryData f = do
   q <- queryParams
-  send $ ModClient $ \Client{session, requestId} ->
-    Client{query = Just $ f q, session, requestId}
+  send $ ModClient $ clientSetQuery (f q)

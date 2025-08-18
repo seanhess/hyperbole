@@ -68,6 +68,7 @@ module Web.Hyperbole
   , Hyperbole
   , trigger
   , pushEvent
+  , pageTitle
 
     -- ** Response
 
@@ -213,12 +214,12 @@ import Web.Hyperbole.Application
 import Web.Hyperbole.Data.Encoded ()
 import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.QueryData
+import Web.Hyperbole.Effect.Client
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response
 import Web.Hyperbole.Effect.Session
-import Web.Hyperbole.Effect.Trigger
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.HyperView.Forms
 import Web.Hyperbole.Page (Page, runPage)

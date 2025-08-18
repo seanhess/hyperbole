@@ -57,6 +57,14 @@ runHyperbole req = reinterpret runLocal $ \_ -> \case
  where
   runLocal :: Eff (Error Response : State Client : Writer [Remote] : es) Response -> Eff es (Response, Client, [Remote])
   runLocal eff = do
-    let client = Client req.requestId mempty mempty
-    ((eresp, client'), rmts) <- runWriter @[Remote] . runState client . runErrorNoCallStack @Response $ eff
+    ((eresp, client'), rmts) <- runWriter @[Remote] . runState (emptyClient req.requestId) . runErrorNoCallStack @Response $ eff
     pure (either id id eresp, client', rmts)
+
+  emptyClient :: RequestId -> Client
+  emptyClient requestId =
+    Client
+      { requestId
+      , session = mempty
+      , query = mempty
+      , pageTitle = Nothing
+      }

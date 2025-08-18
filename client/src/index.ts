@@ -71,7 +71,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
       delete target.dataset.requestId
     }
 
-    runMetadataRedirect(res.meta)
+    runMetadataImmediate(res.meta)
 
     let update: LiveUpdate = parseResponse(res.body)
 
@@ -96,6 +96,9 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     dispatchContent(newTarget)
 
     if (newTarget) {
+      // execute the metadata, anything that doesn't interrupt the dom update
+      runMetadataDOM(res.meta, newTarget)
+
       // now way for these to bubble)
       listenLoad(newTarget)
       listenMouseEnter(newTarget)
@@ -107,7 +110,6 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
       console.warn("Target Missing: ", target.id)
     }
 
-    runMetadataDeferred(res.meta, newTarget)
   }
   catch (err) {
     console.error("Caught Error in HyperView (" + target.id + "):\n", err)
@@ -123,36 +125,36 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   target.classList.remove("hyp-loading")
 }
 
-function runMetadataRedirect(meta: Metadata) {
+function runMetadataImmediate(meta: Metadata) {
   if (meta.redirect) {
     // perform a redirect immediately
     window.location.href = meta.redirect
   }
+
+  if (meta.query != null) {
+    setQuery(meta.query)
+  }
+
+  if (meta.pageTitle != null) {
+    document.title = meta.pageTitle
+  }
 }
 
-function runMetadataDeferred(meta: Metadata, target?: HTMLElement) {
-  // defer the rest of the actions
-  setTimeout(() => {
-    if (meta.query != null) {
-      setQuery(meta.query)
-    }
+function runMetadataDOM(meta: Metadata, target?: HTMLElement) {
+  for (var remoteEvent of meta.events) {
+    // console.log("dipsatching custom event", remoteEvent)
+    let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
+    let eventTarget = target || document
+    eventTarget.dispatchEvent(event)
+  }
 
-    for (var remoteEvent of meta.events) {
-      // console.log("dipsatching custom event", remoteEvent)
-      let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
-      let eventTarget = target || document
-      eventTarget.dispatchEvent(event)
+  for (var [viewId, action] of meta.actions) {
+    // console.log("FOUND TRIGGER", viewId, action)
+    let view = window.Hyperbole.hyperView(viewId)
+    if (view) {
+      runAction(view, action)
     }
-
-    for (var [viewId, action] of meta.actions) {
-      // console.log("FOUND TRIGGER", viewId, action)
-      let view = window.Hyperbole.hyperView(viewId)
-      if (view) {
-        runAction(view, action)
-      }
-    }
-  }, 0)
-
+  }
 }
 
 
@@ -191,7 +193,9 @@ function addCSS(src: HTMLStyleElement | null) {
 
 function init() {
   // metadata attached to initial page loads need to be executed
-  runInitMetadata(document.getElementById("hyp.metadata").innerText)
+  let meta = parseMetadata(document.getElementById("hyp.metadata").innerText)
+  runMetadataImmediate(meta)
+  runMetadataDOM(meta)
 
   rootStyles = document.querySelector('style')
 
@@ -240,14 +244,6 @@ function init() {
   })
 }
 
-function runInitMetadata(input: string) {
-  let meta = parseMetadata(input)
-  runMetadataRedirect(meta)
-
-  window.addEventListener("load", function() {
-    runMetadataDeferred(meta)
-  })
-}
 
 
 function enrichHyperViews(node: HTMLElement): void {

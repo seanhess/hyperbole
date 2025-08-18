@@ -79,6 +79,7 @@ export type Metadata = {
   query?: string
   events?: RemoteEvent[]
   actions?: [ViewId, string][],
+  pageTitle?: string
 }
 
 
@@ -102,6 +103,7 @@ export function parseMetas(meta: Meta[]): Metadata {
     query: meta.find(m => m.key == "Query")?.value,
     events: meta.filter(m => m.key == "Event").map((m) => parseRemoteEvent(m.value)),
     actions: meta.filter(m => m.key == "Trigger").map((m) => parseAction(m.value)),
+    pageTitle: meta.find(m => m.key == "PageTitle")?.value,
     requestId
   }
 }

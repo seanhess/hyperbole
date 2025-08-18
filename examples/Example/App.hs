@@ -81,7 +81,6 @@ import System.IO (BufferMode (LineBuffering), hSetBuffering, stdout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Effect.GenRandom
-import Web.Hyperbole.Effect.Handler (RunHandlers)
 import Web.Hyperbole.Effect.OAuth2 (OAuth2, runOAuth2)
 import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
 

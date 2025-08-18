@@ -1,11 +1,11 @@
 module Example.Page.Advanced where
 
 import Data.Text (Text)
+import Example.AppRoute qualified as Route
+import Example.Style
+import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Example.AppRoute qualified as Route
-import Example.View.Layout
-import Example.Style
 
 page :: (Hyperbole :> es) => Eff es (Page '[Message, Controls])
 page = do
@@ -38,7 +38,6 @@ messageView :: Text -> View Message ()
 messageView msg = do
   el ~ pad 10 . border 1 $ do
     text msg
-
 
 data Controls = Controls
   deriving (Generic, ViewId)

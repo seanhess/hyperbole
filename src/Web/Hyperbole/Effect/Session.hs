@@ -17,7 +17,7 @@ import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.URI (Path)
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.Effect.Request (request)
-import Web.Hyperbole.Types.Client (Client (..))
+import Web.Hyperbole.Types.Client (Client (..), clientModCookies)
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 
@@ -134,8 +134,7 @@ setCookie ck = do
 -- | Modify the client cookies
 modifyCookies :: (Hyperbole :> es) => (Cookies -> Cookies) -> Eff es ()
 modifyCookies f =
-  send $ ModClient $ \client ->
-    Client{session = f client.session, query = client.query, requestId = client.requestId}
+  send $ ModClient $ clientModCookies f
 
 
 -- | Return all the cookies, both those sent in the request and others added by the page

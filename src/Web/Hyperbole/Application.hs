@@ -16,13 +16,13 @@ import Data.ByteString.Lazy qualified as BL
 import Data.String.Interpolate (i)
 import Effectful
 import Effectful.Concurrent.Async
-import Effectful.Dispatch.Dynamic
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets (PendingConnection, defaultConnectionOptions)
 import Network.WebSockets qualified as WS
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (reqPath)
+import Web.Hyperbole.Effect.Response (notFound)
 import Web.Hyperbole.Route
 import Web.Hyperbole.Server.Socket (handleRequestSocket)
 import Web.Hyperbole.Server.Wai (handleRequestWai)
@@ -102,6 +102,4 @@ quickStartDocument cnt =
 routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
 routeRequest actions = do
   pth <- reqPath
-  case findRoute pth.segments of
-    Nothing -> send $ RespondNow NotFound
-    Just rt -> actions rt
+  maybe notFound actions $ findRoute pth.segments

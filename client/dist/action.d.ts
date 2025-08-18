@@ -29,6 +29,7 @@ export type Metadata = {
     query?: string;
     events?: RemoteEvent[];
     actions?: [ViewId, string][];
+    pageTitle?: string;
 };
 export type ParsedResponse = {
     metadata: Metadata;
