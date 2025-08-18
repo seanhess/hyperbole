@@ -108,10 +108,12 @@ instance HyperView Users es where
     mu <- findUser uid
     case mu of
       Nothing -> notFound
-      Just u -> pure $ viewUserDetails u
+      Just u -> pure $ do
+        viewWithDetails (viewUserDetails u) viewKnownUsers
   update (SearchUser term) = do
     mu <- searchUser term
-    pure $ viewSearchResults mu
+    pure $ do
+      viewWithDetails (viewSearchResults mu) viewSearchUsers
 
 viewKnownUsers :: View Users ()
 viewKnownUsers = do
@@ -124,14 +126,21 @@ viewKnownUsers = do
     el "If a user were deleted between when they were rendered and loaded, the error would look like this:"
     button (UserDetails 4) ~ Style.btn $ "Attempt to load non-existing User 4"
 
+viewWithDetails :: View c () -> View c () -> View c ()
+viewWithDetails details cnt = do
+  col ~ gap 10 $ do
+    details
+    cnt
+
 viewUserDetails :: User -> View c ()
 viewUserDetails u = do
-  el $ do
-    text "ID: "
-    text $ pack $ show u.id
-  el $ do
-    text "Name: "
-    text u.username
+  col ~ gap 10 . pad 10 . border 1 $ do
+    el $ do
+      text "ID: "
+      text $ pack $ show u.id
+    el $ do
+      text "Name: "
+      text u.username
 
 -- SearchUsers ------------------------------------------------
 
@@ -159,18 +168,3 @@ viewSearchResults mu = do
 data SomeServerError
   = SomeServerError String
   deriving (Show, Eq, Exception)
-
-data Refresher = Refresher
-  deriving (Generic, ViewId)
-
-instance HyperView Refresher es where
-  data Action Refresher
-    = Refresh Int
-    deriving (Generic, ViewAction)
-
-  update (Refresh n) =
-    pure $ viewRefresh (n + 1)
-
-viewRefresh :: Int -> View Refresher ()
-viewRefresh n = do
-  el @ onLoad (Refresh n) 500 $ text $ "Refreshing: " <> pack (show n)

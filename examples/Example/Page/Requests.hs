@@ -42,7 +42,7 @@ instance HyperView CheckRequest es where
 
 viewRequest :: Request -> View CheckRequest ()
 viewRequest r = do
-  col ~ gap 10 @ onLoad Refresh 1000 $ do
+  col ~ gap 10 $ do
     el $ do
       text "Host: "
       text $ cs $ show r.host
@@ -67,12 +67,15 @@ data ControlClient = ControlClient
   deriving (Generic, ViewId)
 
 instance HyperView ControlClient es where
+  type Require ControlClient = '[CheckRequest]
+
   data Action ControlClient
     = SetQuery
     deriving (Generic, ViewAction)
 
   update SetQuery = do
     setQuery $ Message "hello"
+    trigger CheckRequest Refresh
     pure "Updated Query String"
 
 viewClient :: View ControlClient ()

@@ -155,9 +155,9 @@ fromWaiRequest wr body = do
   pure $
     Request
       { body = body
-      , event
       , path = pth
-      , query = queryRemoveSystem query
+      , event
+      , query
       , method
       , cookies
       , host

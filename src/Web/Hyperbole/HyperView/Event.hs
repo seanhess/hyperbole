@@ -117,11 +117,6 @@ toActionInput act =
         else Encoded con (init vals)
 
 
--- case toAction (con mempty) of
---
--- let marker = "%HYP-INP%"
---  in T.replace " \"%HYP-INP%\"" "" $ toAction $ con marker
-
 -- | Internal
 dataTarget :: (ViewId id, ViewContext a ~ id, Attributable a) => id -> Attributes a -> Attributes a
 dataTarget = att "data-target" . encodedToText . toViewId
