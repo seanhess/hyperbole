@@ -29,6 +29,7 @@ async function sendAction(msg: ActionMessage): Promise<Response> {
 
 
 async function runAction(target: HyperView, action: string, form?: FormData) {
+  // console.log("runAction", target.id, action)
 
   if (target === undefined) {
     console.error("Undefined HyperView!")
@@ -142,19 +143,22 @@ function runMetadataImmediate(meta: Metadata) {
 
 function runMetadataDOM(meta: Metadata, target?: HTMLElement) {
   for (var remoteEvent of meta.events) {
-    // console.log("dipsatching custom event", remoteEvent)
-    let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
-    let eventTarget = target || document
-    eventTarget.dispatchEvent(event)
+    setTimeout(() => {
+      // console.log("dipsatching custom event", remoteEvent)
+      let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
+      let eventTarget = target || document
+      eventTarget.dispatchEvent(event)
+    }, 10)
   }
 
-  for (var [viewId, action] of meta.actions) {
-    // console.log("FOUND TRIGGER", viewId, action)
-    let view = window.Hyperbole.hyperView(viewId)
-    if (view) {
-      runAction(view, action)
-    }
-  }
+  meta.actions.forEach(([viewId, action]) => {
+    setTimeout(() => {
+      let view = window.Hyperbole.hyperView(viewId)
+      if (view) {
+        runAction(view, action)
+      }
+    }, 10)
+  })
 }
 
 
