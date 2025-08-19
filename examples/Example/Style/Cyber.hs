@@ -43,8 +43,16 @@ btn' clr =
  where
   txtClr _ = White
 
-btnLight :: Styleable h => CSS h -> CSS h
-btnLight = _
+btnLight :: (Styleable h) => CSS h -> CSS h
+btnLight =
+  base
+    . border 2
+    . borderColor Secondary
+    . font
+    . color Secondary
+    . hover (borderColor SecondaryLight . color SecondaryLight)
+ where
+  base = pad (XY 15 8)
 
 bgAnimated :: (Styleable h) => CSS h -> CSS h
 bgAnimated =

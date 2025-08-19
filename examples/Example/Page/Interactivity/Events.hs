@@ -28,7 +28,10 @@ viewBoxes' :: Maybe Int -> (Int -> View c ()) -> View c ()
 viewBoxes' mn boxView = do
   let ns = [0 .. 50] :: [Int]
   el ~ grid . gap 10 . pad 10 $ do
-    el ~ double . border 2 . bold . fontSize 24 . pad 15 $ text $ pack $ maybe "" show mn
+    col ~ double . border 2 . bold . fontSize 48 $ do
+      space
+      el ~ textAlign AlignCenter $ text $ pack $ maybe "" show mn
+      space
     mapM_ boxView ns
 
 box :: (Styleable h) => CSS h -> CSS h

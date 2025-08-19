@@ -3,7 +3,7 @@ module Example.Page.Javascript where
 import Data.Text (Text, pack)
 import Example.AppRoute qualified as Route
 import Example.Page.Interactivity.Events (box, viewBoxes')
-import Example.Style.Cyber (btn)
+import Example.Style.Cyber (btn, font)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -22,7 +22,7 @@ page = do
         code "window.Hyperbole"
         text ". Here we re-implement mouseover boxes from the Interactivity example using Javascript"
 
-      col ~ embed $ do
+      col ~ embed . font $ do
         hyper Boxes $ viewBoxes Nothing
 
     example "Javascript - pushEvent" "Example/Page/Javascript.hs" $ do
