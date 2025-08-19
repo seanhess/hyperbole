@@ -1,6 +1,6 @@
 module Example.Page.CSS.Transitions where
 
-import Example.Style (btn)
+import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 

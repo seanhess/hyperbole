@@ -171,7 +171,7 @@ app config users count = do
   documentHead = do
     title "Hyperbole Examples"
     mobileFriendly
-    stylesheet "cyber.css"
+    stylesheet "/cyber.css"
     script "/hyperbole.js"
     script' scriptLiveReload
     style "body { background-color: #d3dceb }, button { font-family: 'Share Tech Mono'}"
@@ -184,7 +184,7 @@ app config users count = do
     let msg = defaultErrorMessage err
      in ServerError
           { message = msg
-          , body = Cyber.cyberError (text msg)
+          , body = Cyber.cyberError $ Cyber.glitch msg
           }
 
 {- | Made for local development

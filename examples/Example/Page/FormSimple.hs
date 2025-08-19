@@ -2,6 +2,7 @@ module Example.Page.FormSimple where
 
 import Data.Text (Text, pack)
 import Example.Style qualified as Style
+import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
@@ -45,7 +46,7 @@ formView = do
         checkbox False ~ width 32
         label "Favorite?"
 
-    submit "Submit" ~ Style.btn
+    submit "Submit" ~ btn
 
 -- Alternatively, use Higher Kinded Types, and Hyperbole can guarantee the field names are the same
 --
@@ -90,7 +91,7 @@ formView' = do
         checkbox False ~ width 32
         label "Favorite?"
 
-    submit "Submit" ~ Style.btn
+    submit "Submit" ~ btn
 
 contactView :: ContactForm -> View AddContact ()
 contactView u = do

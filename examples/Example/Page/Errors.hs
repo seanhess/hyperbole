@@ -11,6 +11,7 @@ import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Style as Style hiding (link)
 import Example.Style.Cyber qualified as Cyber
+import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Text.Read (readMaybe)
 import Web.Atomic.CSS
@@ -65,13 +66,13 @@ instance HyperView Defaults es where
 viewExceptions :: View Defaults ()
 viewExceptions = do
   row ~ gap 10 $ do
-    button CauseServerside ~ Cyber.btn $ "Cause Exception"
+    button CauseServerside ~ btn $ "Cause Exception"
 
 viewCustom :: View Defaults ()
 viewCustom = do
   row ~ gap 10 $ do
-    button CauseUserFacing ~ Style.btn $ "Custom Error Message"
-    button CauseCustom ~ Style.btn $ "Custom Error View"
+    button CauseUserFacing ~ btn $ "Custom Error Message"
+    button CauseCustom ~ btn $ "Custom Error View"
 
 -- Users ------------------------------------------------
 
@@ -122,10 +123,10 @@ viewKnownUsers = do
     el "We know all these users exist when the view was rendered, so one going missing is unlikely"
     row ~ gap 10 $ do
       forM_ fakeDatabase $ \u -> do
-        button (UserDetails u.id) ~ Style.btn $ text $ "User: " <> pack (show u.id)
+        button (UserDetails u.id) ~ btn $ text $ "User: " <> pack (show u.id)
 
     el "If a user were deleted between when they were rendered and loaded, the error would look like this:"
-    button (UserDetails 4) ~ Style.btn $ "Attempt to load non-existing User 4"
+    button (UserDetails 4) ~ btn $ "Attempt to load non-existing User 4"
 
 viewWithDetails :: View c () -> View c () -> View c ()
 viewWithDetails details cnt = do

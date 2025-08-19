@@ -2,7 +2,7 @@ module Example.Page.Advanced where
 
 import Data.Text (Text)
 import Example.AppRoute qualified as Route
-import Example.Style
+import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole

@@ -3,7 +3,7 @@ module Example.Page.Javascript where
 import Data.Text (Text, pack)
 import Example.AppRoute qualified as Route
 import Example.Page.Interactivity.Events (box, viewBoxes')
-import Example.Style
+import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole

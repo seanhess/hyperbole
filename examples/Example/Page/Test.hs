@@ -8,7 +8,7 @@ import Debug.Trace
 import Example.AppRoute
 import Example.Colors
 import Example.Effects.Debug
-import Example.Style
+import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole

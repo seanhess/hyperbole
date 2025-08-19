@@ -7,7 +7,8 @@ import Data.Text (Text)
 import Effectful
 import Example.AppRoute as Route
 import Example.Colors
-import Example.Style as Style
+import Example.Style qualified as Style
+import Example.Style.Cyber (btn', btnLight)
 import Example.View.Layout (embed, example, exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -59,15 +60,15 @@ viewColorPicker clr = do
   col ~ gap 10 . pad 20 . bg clr . border 1 $ do
     el ~ fontSize 18 . bold $ "Session Background"
     row ~ gap 10 $ do
-      button (SaveColor Success) ~ (Style.btn' Success . border 1) $ "Successs"
-      button (SaveColor Warning) ~ (Style.btn' Warning . border 1) $ "Warning"
-      button (SaveColor Danger) ~ (Style.btn' Danger . border 1) $ "Danger"
+      button (SaveColor Success) ~ (btn' Success . border 1) $ "Successs"
+      button (SaveColor Warning) ~ (btn' Warning . border 1) $ "Warning"
+      button (SaveColor Danger) ~ (btn' Danger . border 1) $ "Danger"
 
 viewMessage :: Text -> View Contents ()
 viewMessage msg = do
   col ~ gap 10 . pad 20 . border 1 $ do
     el ~ fontSize 18 . bold $ "Session Message"
     el $ text msg
-    row ~ (gap 10) $ do
-      button (SaveMessage "Hello") ~ Style.btnLight $ "Msg: Hello"
-      button (SaveMessage "Goodbye") ~ Style.btnLight $ "Msg: Goodbye"
+    row ~ gap 10 $ do
+      button (SaveMessage "Hello") ~ btnLight $ "Msg: Hello"
+      button (SaveMessage "Goodbye") ~ btnLight $ "Msg: Goodbye"

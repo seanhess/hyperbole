@@ -13,6 +13,7 @@ import Example.Effects.Users qualified as Users
 import Example.Page.Contact (contactForm, contactLoading, contactView', parseUser)
 import Example.Page.Contact qualified as Contact
 import Example.Style qualified as Style
+import Example.Style.Cyber (btn, btn', btnLight)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -117,7 +118,7 @@ instance (Users :> es) => HyperView NewContact es where
 
 newContactButton :: View NewContact ()
 newContactButton = do
-  button ShowForm ~ Style.btn $ "Add Contact"
+  button ShowForm ~ btn $ "Add Contact"
 
 newContactForm :: View NewContact ()
 newContactForm = do
@@ -126,7 +127,7 @@ newContactForm = do
       contactForm AddUser genFields
     col $ do
       space
-      button CloseForm ~ Style.btnLight $ "Cancel"
+      button CloseForm ~ btnLight $ "Cancel"
 
 -- Reuse Contact View ----------------------------------
 -- We want to use the same view as Example.Contact, but customize the edit view to have a delete button
@@ -169,4 +170,4 @@ contactEdit u = do
   el ~ (display None . whenLoading flexCol) $ contactLoading
   col ~ (whenLoading (display None) . gap 10) $ do
     Contact.contactEdit View Save u
-    target Contacts $ button (DeleteUser u.id) ~ Style.btn' Danger . pad (XY 10 0) $ text "Delete"
+    target Contacts $ button (DeleteUser u.id) ~ btn' Danger . pad (XY 10 0) $ text "Delete"

@@ -3,6 +3,7 @@ module Example.Page.FormValidation where
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import Example.Style qualified as Style
+import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
@@ -98,7 +99,7 @@ formView val = do
       label "Repeat Password"
       input NewPassword @ placeholder "repeat password" ~ Style.input
 
-    submit "Submit" ~ Style.btn
+    submit "Submit" ~ btn
  where
   valStyle (Invalid _) = Style.invalid
   valStyle Valid = Style.success

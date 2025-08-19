@@ -4,11 +4,12 @@
 
 module Example.Page.State.Actions where
 
+import Data.String.Interpolate (i)
+import Data.Text (Text)
 import Example.AppRoute
 import Example.Page.Counter (Counter)
-import Data.String.Interpolate (i)
 import Example.Page.Counter qualified as Counter
-import Data.Text (Text)
+import Example.Style.Cyber (font)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -21,13 +22,13 @@ page = do
     example "Action Context" "Example/Page/Counter.hs" $ do
       el "As shown in the intro, for very simple state, we can include it as a parameter on the Action"
       col ~ embed $ do
-        pre countExample
+        pre countExample ~ font
       el "The state is only recorded in the rendered html, so if the user refreshes it will reset"
       col ~ embed $ do
         addContext Root counter
 
 countExample :: Text
-countExample = 
+countExample =
   [i|data Action Counter
   = Increment Int
   ...

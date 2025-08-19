@@ -13,6 +13,7 @@ import Example.Effects.Debug
 import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
+import Example.Style.Cyber (btn, btnLight)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -100,14 +101,14 @@ contactView' edit u = do
       el (text "Active:")
       text (cs $ show u.isActive)
 
-    button edit "Edit" ~ Style.btn
+    button edit "Edit" ~ btn
  where
   fld = gap 10
 
 contactEditView :: User -> View Contact ()
 contactEditView u = do
   el contactLoading ~ display None . whenLoading flexCol
-  el (contactEdit View Save u) ~ (whenLoading (display None))
+  el (contactEdit View Save u) ~ whenLoading (display None)
 
 contactEdit :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
 contactEdit onView onSave u = do
@@ -144,7 +145,7 @@ contactForm onSubmit c = do
       label "Age:"
       input Number @ value (fromMaybe "" $ pack . show <$> c.age) ~ inp
 
-    submit "Submit" ~ Style.btn
+    submit "Submit" ~ btn
  where
   fld :: (Styleable a) => CSS a -> CSS a
   fld = flexRow . gap 10

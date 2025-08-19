@@ -7,7 +7,7 @@ import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
 import Example.AppRoute hiding (Counter)
-import Example.Style as Style
+import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
@@ -48,8 +48,8 @@ viewCount n = col ~ gap 10 $ do
   row $ do
     el ~ bold . fontSize 48 . border 1 . pad (XY 20 0) $ text $ pack $ show n
   row ~ gap 10 $ do
-    button Decrement "Decrement" ~ Style.btn
-    button Increment "Increment" ~ Style.btn
+    button Decrement "Decrement" ~ btn
+    button Increment "Increment" ~ btn
 
 modify :: (Concurrent :> es, Reader (TVar Int) :> es) => (Int -> Int) -> Eff es Int
 modify f = do

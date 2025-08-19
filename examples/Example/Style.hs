@@ -3,21 +3,21 @@ module Example.Style where
 import Example.Colors
 import Web.Atomic.CSS
 
-btn :: (Styleable h) => CSS h -> CSS h
-btn = btn' Primary
-
-btn' :: (Styleable h) => AppColor -> CSS h -> CSS h
-btn' clr =
-  bg clr
-    . hover (bg (hovClr clr))
-    . color (txtClr clr)
-    . pad 10
-    . shadow ()
-    . rounded 3
- where
-  hovClr Primary = PrimaryLight
-  hovClr c = c
-  txtClr _ = White
+-- btn :: (Styleable h) => CSS h -> CSS h
+-- btn = btn' Primary
+--
+-- btn' :: (Styleable h) => AppColor -> CSS h -> CSS h
+-- btn' clr =
+--   bg clr
+--     . hover (bg (hovClr clr))
+--     . color (txtClr clr)
+--     . pad 10
+--     . shadow ()
+--     . rounded 3
+--  where
+--   hovClr Primary = PrimaryLight
+--   hovClr c = c
+--   txtClr _ = White
 
 btnLight :: (Styleable h) => CSS h -> CSS h
 btnLight =
@@ -50,3 +50,6 @@ input = border 1 . pad 8
 strikethrough :: (Styleable h) => CSS h -> CSS h
 strikethrough =
   utility "strike" ["text-decoration" :. "line-through"]
+
+uppercase :: (Styleable h) => CSS h -> CSS h
+uppercase = utility "upper" ["text-transform" :. "uppercase"]

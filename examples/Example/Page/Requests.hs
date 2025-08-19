@@ -5,7 +5,7 @@ import Data.Text (Text)
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
-import Example.Style as Style
+import Example.Style.Cyber (btn, btn')
 import Example.View.Layout (embed, example, exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -80,7 +80,7 @@ instance HyperView ControlClient es where
 
 viewClient :: View ControlClient ()
 viewClient = do
-  button SetQuery ~ Style.btn $ "Set Query String from another HyperView"
+  button SetQuery ~ btn $ "Set Query String from another HyperView"
 
 -- RESPONSE -------------------------------------------------
 
@@ -115,7 +115,7 @@ instance HyperView ControlResponse es where
 responseView :: View ControlResponse ()
 responseView = do
   row ~ gap 10 . flexWrap Wrap $ do
-    button RedirectAsAction ~ Style.btn $ "Redirect Me"
-    button SetPageTitle ~ Style.btn $ "Set Page Title"
-    button RespondNotFound ~ Style.btn' Danger $ "Respond Not Found"
-    button RespondWithError ~ Style.btn' Danger $ "Respond Error"
+    button RedirectAsAction ~ btn $ "Redirect Me"
+    button SetPageTitle ~ btn $ "Set Page Title"
+    button RespondNotFound ~ btn' Danger $ "Respond Not Found"
+    button RespondWithError ~ btn' Danger $ "Respond Error"

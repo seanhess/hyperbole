@@ -11,7 +11,7 @@ import Effectful
 import Effectful.Reader.Dynamic
 import Example.AppRoute qualified as Route
 import Example.Config (AppConfig (..))
-import Example.Style qualified as Style
+import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Network.HTTP.Client qualified as HTTP
 import Web.Atomic.CSS
@@ -115,7 +115,7 @@ viewUnauthorized :: View Contents ()
 viewUnauthorized = do
   message "Logged Out!"
   col ~ gap 5 $ do
-    button Login "Login" ~ Style.btn
+    button Login "Login" ~ btn
 
 viewAuthorized :: UserSession -> View Contents ()
 viewAuthorized user = do
@@ -128,7 +128,7 @@ viewAuthorized user = do
     dataItem "Expires In" $ pack $ show auth.expiresIn
     dataItem "Refresh Token" $ pack $ show auth.refreshToken
     dataItem "Scope" $ pack $ show auth.scope
-  button Logout "Logout" ~ Style.btn
+  button Logout "Logout" ~ btn
  where
   dataItem :: Text -> Text -> View c ()
   dataItem lbl cnt = do

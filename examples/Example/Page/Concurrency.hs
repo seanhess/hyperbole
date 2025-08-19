@@ -8,7 +8,7 @@ import Effectful
 import Example.AppRoute
 import Example.Colors
 import Example.Effects.Debug
-import Example.Style as Style
+import Example.Style.Cyber (btn, font)
 import Example.View.Inputs (progressBar)
 import Example.View.Layout (embed, example, exampleLayout)
 import Web.Atomic.CSS
@@ -31,7 +31,7 @@ page = do
       el $ do
         text "Instead of preloading everything in our Page, a HyperView can load itself using "
         code "onLoad"
-      el ~ flexRow . embed . flexWrap Wrap $ do
+      el ~ flexRow . embed . flexWrap Wrap . font $ do
         forM_ pretendTasks $ \taskId -> do
           el ~ border 1 . width 120 . pad 5 $ do
             hyper (LazyData taskId) viewTaskLoad
@@ -141,7 +141,7 @@ pretendLoadTask taskId = do
   randomDelay <- genRandom (100, 1000)
   delay randomDelay
 
-  pure $ Task taskId $ "Details for " <> pack (show taskId)
+  pure $ Task taskId $ "Details " <> pack (show taskId)
 
 pretendTasks :: [TaskId]
 pretendTasks = [1 .. 30]

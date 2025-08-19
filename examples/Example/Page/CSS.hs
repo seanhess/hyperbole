@@ -10,6 +10,7 @@ import Example.Page.CSS.Tooltips
 import Example.Page.CSS.Transitions
 import Example.Page.Interactivity.Events as Events
 import Example.Style qualified as Style
+import Example.Style.Cyber qualified as Cyber
 import Example.View.Layout (embed, example, exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole

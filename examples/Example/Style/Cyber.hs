@@ -25,13 +25,7 @@ cyan = "#0FF"
 red :: HexColor
 red = HexColor "#EC6458"
 
--- toError :: Text -> View Body ()
--- toError msg = do
---   el ~ clip 10 . bg red . color (HexColor "#FFF") . uppercase . pad 10 $ do
---     text msg
 
-uppercase :: (Styleable h) => CSS h -> CSS h
-uppercase = utility "upper" ["text-transform" :. "uppercase"]
 
 btn :: (Styleable h) => CSS h -> CSS h
 btn = btn' Primary
@@ -46,9 +40,11 @@ btn' clr =
     . pad 10
     . clip 10
     . shadow ()
-    . uppercase
  where
   txtClr _ = White
+
+btnLight :: Styleable h => CSS h -> CSS h
+btnLight = _
 
 bgAnimated :: (Styleable h) => CSS h -> CSS h
 bgAnimated =
@@ -69,6 +65,7 @@ bgGradient clr =
     ("bg-grad" -. pack (show clr))
     ["background-image" :. ("linear-gradient(90deg, " <> style (colorValue (hovClr clr)) <> " 0 50%, " <> style (colorValue clr) <> " 50% 100%)")]
 
+hovClr :: AppColor -> AppColor
 hovClr Primary = PrimaryLight
 hovClr c = c
 
@@ -76,4 +73,16 @@ font :: (Styleable h) => CSS h -> CSS h
 font = utility ("share-tech") ["font-family" :. "'Share Tech Mono'"]
 
 cyberError :: View Body () -> View Body ()
-cyberError inner = el ~ bg red . clip 10 . pad 10 . color White $ inner
+cyberError inner =
+  el ~ wipeIn $ do
+    el ~ bg red . clip 10 . pad 10 . color White $
+      inner
+  where
+    -- requires @keyframes wipeIn
+    wipeIn :: Styleable h => CSS h -> CSS h
+    wipeIn = utility "wipe-in" ["animation" :. "wipeIn 0.5s steps(20, end) forwards"]
+
+
+glitch :: Text -> View Body ()
+glitch msg = 
+  el ~ cls "glitch" @ att "data-text" msg $ text msg
