@@ -1,0 +1,10 @@
+@font-face {
+  font-family: 'Share Tech Mono';
+  src: url('/ShareTechMono-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.hyp-error {
+
+}

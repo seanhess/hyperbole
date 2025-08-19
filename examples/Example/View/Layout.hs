@@ -9,6 +9,7 @@ import Data.Version (showVersion)
 import Example.AppRoute
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
+import Example.Style.Cyber (clip)
 import Example.View.Icon as Icon (hamburger)
 import Paths_examples (version)
 import Text.Casing (fromHumps, toWords)
@@ -69,7 +70,7 @@ sourceLink p =
 
 embed :: (Styleable h) => CSS h -> CSS h
 embed =
-  pad 20 . gap 10 . bg White . flexCol
+  pad 20 . gap 10 . bg White . flexCol . clip 10
 
 example :: Text -> Path -> View c () -> View c ()
 example t p cnt =

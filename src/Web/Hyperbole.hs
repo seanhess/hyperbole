@@ -53,12 +53,16 @@ module Web.Hyperbole
 
     -- * Application
     liveApp
+  , liveAppWith
+  , ServerOptions (..)
   , Warp.run
   , Page
   , runPage
   , DocumentHead
-  , mobileFriendly
   , quickStartDocument
+  , quickStart
+  , mobileFriendly
+  , document
 
     -- ** Type-Safe Routes
   , routeRequest -- maybe belongs in an application section

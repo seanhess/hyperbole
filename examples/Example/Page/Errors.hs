@@ -10,6 +10,7 @@ import Effectful.Exception
 import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Style as Style hiding (link)
+import Example.Style.Cyber qualified as Cyber
 import Example.View.Layout
 import Text.Read (readMaybe)
 import Web.Atomic.CSS
@@ -64,7 +65,7 @@ instance HyperView Defaults es where
 viewExceptions :: View Defaults ()
 viewExceptions = do
   row ~ gap 10 $ do
-    button CauseServerside ~ Style.btn $ "Cause Exception"
+    button CauseServerside ~ Cyber.btn $ "Cause Exception"
 
 viewCustom :: View Defaults ()
 viewCustom = do

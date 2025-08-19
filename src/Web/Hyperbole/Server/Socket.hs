@@ -16,9 +16,9 @@ import Network.WebSockets qualified as WS
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.URI (URI, path)
-import Web.Hyperbole.Document (Body (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
+import Web.Hyperbole.Server.Options
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View (View, addContext, renderLazyByteString)
@@ -31,11 +31,12 @@ data SocketRequest = SocketRequest
 
 handleRequestSocket
   :: (IOE :> es, Concurrent :> es)
-  => Wai.Request
+  => ServerOptions
+  -> Wai.Request
   -> Connection
   -> Eff (Hyperbole : es) Response
   -> Eff es ()
-handleRequestSocket wreq conn actions = do
+handleRequestSocket opts wreq conn actions = do
   flip catch onMessageError $ do
     msg <- receiveMessage
     req <- parseMessageRequest msg
@@ -48,7 +49,7 @@ handleRequestSocket wreq conn actions = do
           -- It's not safe to send any exception over the wire
           -- log it to the console and send the error to the client
           liftIO $ print ex
-          res2 <- trySync $ sendError conn (requestMetadata req) (serverError "Internal Server Error")
+          res2 <- trySync $ sendError conn (requestMetadata req) (opts.serverError ErrInternal)
           case res2 of
             Left e -> liftIO $ putStrLn $ "Socket Error while sending previous error to client: " <> show e
             Right _ -> pure ()
@@ -57,9 +58,8 @@ handleRequestSocket wreq conn actions = do
           case resp of
             (Response _ vw) -> do
               sendUpdateView conn meta vw
-            (Err (ErrServer m)) -> sendError conn meta (serverError m)
-            (Err err) -> sendError conn meta (serializeError err)
-            NotFound -> sendError conn meta (serverError "Not Found")
+            -- (Err (ErrServer m)) -> sendError conn meta (opts.serverError m)
+            (Err err) -> sendError conn meta (opts.serverError err)
             (Redirect url) -> sendRedirect conn meta url
  where
   onMessageError :: (IOE :> es) => MessageError -> Eff es a
@@ -67,13 +67,6 @@ handleRequestSocket wreq conn actions = do
     liftIO $ do
       putStrLn "Socket Message Error"
     throwIO e
-
-  errMsg (ErrServer m) = m
-  errMsg ErrInternal = "Internal Server Error"
-  errMsg e = pack (drop 3 $ show e)
-
-  serializeError (ErrCustom m b) = SerializedError m (renderLazyByteString $ addContext Body b)
-  serializeError err = serverError $ errMsg err
 
   receiveMessage :: (IOE :> es) => Eff es Message
   receiveMessage = do
@@ -134,9 +127,9 @@ sendRedirect conn meta u = do
   sendMessage conn (metaRedirect u <> meta) mempty
 
 
-sendError :: (IOE :> es) => Connection -> Metadata -> SerializedError -> Eff es ()
-sendError conn meta (SerializedError err body) = do
-  sendMessage conn (metadata "Error" err <> meta) (RenderedHtml body)
+sendError :: (IOE :> es) => Connection -> Metadata -> ServerError -> Eff es ()
+sendError conn meta (ServerError err body) = do
+  sendMessage conn (metadata "Error" err <> meta) (RenderedHtml $ renderLazyByteString $ addContext Body body)
 
 
 -- low level message. Use sendResponse

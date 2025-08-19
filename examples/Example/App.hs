@@ -1,6 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module Example.App where
@@ -62,6 +60,7 @@ import Example.Page.Test qualified as Test
 import Example.Page.Todos.Todo qualified as Todo
 import Example.Page.Todos.TodoCSS qualified as TodoCSS
 import Example.Style qualified as Style
+import Example.Style.Cyber qualified as Cyber
 import Example.View.Layout as Layout (example, exampleLayout, sourceLink)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
 import GHC.Generics (Generic)
@@ -80,9 +79,12 @@ import System.Environment qualified as SE
 import System.IO (BufferMode (LineBuffering), hSetBuffering, stdout)
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Web.Hyperbole.Application
 import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.OAuth2 (OAuth2, runOAuth2)
 import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
+import Web.Hyperbole.Server.Options (defaultError)
+import Web.Hyperbole.Types.Response
 
 run :: IO ()
 run = do
@@ -107,8 +109,8 @@ run = do
 
 app :: AppConfig -> UserStore -> TVar Int -> Application
 app config users count = do
-  liveApp
-    documentHead
+  liveAppWith
+    (ServerOptions (document documentHead) serverError)
     (runApp . routeRequest $ router)
  where
   runApp :: (Hyperbole :> es, IOE :> es) => Eff (OAuth2 : GenRandom : Concurrent : Debug : Users : Todos : Reader AppConfig : es) a -> Eff es a
@@ -169,10 +171,21 @@ app config users count = do
   documentHead = do
     title "Hyperbole Examples"
     mobileFriendly
+    stylesheet "cyber.css"
     script "/hyperbole.js"
     script' scriptLiveReload
-    style "body { background-color: #d3dceb }"
+    style "body { background-color: #d3dceb }, button { font-family: 'Share Tech Mono'}"
     style $ cs cssEmbed
+
+  serverError :: ResponseError -> ServerError
+  -- serverError NotFound = ServerError "NotFound" $ Cyber.cyberError "Custom Not Found!"
+  serverError (ErrCustom s) = s
+  serverError err =
+    let msg = defaultErrorMessage err
+     in ServerError
+          { message = msg
+          , body = Cyber.cyberError (text msg)
+          }
 
 {- | Made for local development
  -

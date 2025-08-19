@@ -79,6 +79,7 @@ executable examples
       Example.Page.Todos.Todo
       Example.Page.Todos.TodoCSS
       Example.Style
+      Example.Style.Cyber
       Example.View.Icon
       Example.View.Inputs
       Example.View.Layout

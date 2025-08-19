@@ -4,7 +4,7 @@ module Example.Page.Counter where
 
 import Data.Text (pack)
 import Effectful
-import Example.Style as Style
+import Example.Style.Cyber as Style
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
 
@@ -27,8 +27,9 @@ instance HyperView Counter es where
     pure $ viewCount (n - 1)
 
 viewCount :: Int -> View Counter ()
-viewCount n = col ~ gap 10 $ do
-  row $ el ~ bold . fontSize 48 . border 1 . pad (XY 20 0) $ text $ pack $ show n
-  row ~ gap 10 $ do
-    button (Decrement n) "Decrement" ~ Style.btn
-    button (Increment n) "Increment" ~ Style.btn
+viewCount n = row $ do
+  col ~ gap 10 $ do
+    el ~ bold . fontSize 48 . border 1 . pad (XY 20 0) . Style.font . textAlign AlignCenter $ text $ pack $ show n
+    row ~ gap 10 $ do
+      button (Decrement n) "Decrement" ~ Style.btn
+      button (Increment n) "Increment" ~ Style.btn

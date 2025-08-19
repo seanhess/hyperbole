@@ -1,11 +1,15 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Web.Hyperbole.Document where
 
+import Data.ByteString.Lazy qualified as BL
 import Data.String.Conversions (cs)
+import Data.String.Interpolate (i)
 import Web.Hyperbole.View
 
 
 data DocumentHead = DocumentHead
-data Body = Body
+data Document = Document
 
 
 {- | wrap HTML fragments in a simple document with a custom title and include required embeds
@@ -21,9 +25,12 @@ You must pass a function to Application that renders the entire document documen
 >
 > #EMBED Example/Docs/App.hs customDocument
 -}
-quickStartDocument :: View DocumentHead ()
-quickStartDocument = do
-  title "Hyperbole"
+quickStartDocument :: BL.ByteString -> BL.ByteString
+quickStartDocument = document (mobileFriendly >> quickStart)
+
+
+quickStart :: View DocumentHead ()
+quickStart = do
   mobileFriendly
   style $ cs cssEmbed
   script' scriptEmbed
@@ -34,3 +41,16 @@ mobileFriendly :: View DocumentHead ()
 mobileFriendly = do
   meta @ httpEquiv "Content-Type" . content "text/html" . charset "UTF-8"
   meta @ name "viewport" . content "width=device-width, initial-scale=1.0"
+
+
+-- | Create a document from a document head and a body
+document :: View DocumentHead () -> BL.ByteString -> BL.ByteString
+document docHead cnt =
+  [i|<html>
+  <head>
+    #{renderLazyByteString $ addContext DocumentHead docHead}
+  </head>
+  <body>
+    #{cnt}
+  </body>
+</html>|]

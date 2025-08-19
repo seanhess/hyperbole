@@ -19,11 +19,11 @@ import Web.Atomic (att, (@))
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
-import Web.Hyperbole.Data.Encoded (Encoded, encodedParseText, encodedToText)
+import Web.Hyperbole.Data.Encoded (Encoded, encodedParseText)
 import Web.Hyperbole.Data.URI (path, uriToText)
-import Web.Hyperbole.Document (Body (..), DocumentHead (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
+import Web.Hyperbole.Server.Options
 import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
@@ -33,58 +33,32 @@ import Web.Hyperbole.View (View, addContext, el, renderLazyByteString, script', 
 
 handleRequestWai
   :: (IOE :> es)
-  => View DocumentHead ()
+  => ServerOptions
   -> Wai.Request
   -> (Wai.Response -> IO ResponseReceived)
   -> Eff (Hyperbole : es) Response
   -> Eff es Wai.ResponseReceived
-handleRequestWai doc req respond actions = do
+handleRequestWai options req respond actions = do
   -- NOTE: Remember, this is called for both updates AND for page loads
   body <- liftIO $ Wai.consumeRequestBodyLazy req
   rq <- either throwIO pure $ do
     fromWaiRequest req body
   (res, client, rmts) <- runHyperbole rq actions
-  liftIO $ sendResponse addDocument rq respond client res rmts
- where
-  -- convert to document if full page request. Subsequent POST requests will only include html fragments for updates
-  addDocument :: BL.ByteString -> BL.ByteString
-  addDocument body =
-    case Wai.requestMethod req of
-      "GET" -> document body
-      _ -> body
-
-  document :: BL.ByteString -> BL.ByteString
-  document body =
-    [i|<html>
-  <head>
-    #{renderLazyByteString $ addContext DocumentHead doc}
-  </head>
-  <body>
-    #{body}
-  </body>
-</html>|]
+  liftIO $ sendResponse options rq client res rmts respond
 
 
-sendResponse :: (BL.ByteString -> BL.ByteString) -> Request -> (Wai.Response -> IO ResponseReceived) -> Client -> Response -> [Remote] -> IO Wai.ResponseReceived
-sendResponse addDocument req respond client res remotes = do
+-- TODO: if you can't manually specify the response code, then you need to be able to control the 404 response
+-- right now it's not customizable at all!
+-- I'm pretty sure you can customize it via nginx, but that's not what I want
+sendResponse :: ServerOptions -> Request -> Client -> Response -> [Remote] -> (Wai.Response -> IO ResponseReceived) -> IO Wai.ResponseReceived
+sendResponse options req client res remotes respond = do
   let metas = requestMetadata req <> responseMetadata req.path client remotes
   respond $ response metas res
  where
   response :: Metadata -> Response -> Wai.Response
   response metas = \case
-    NotFound -> respondText status404 [] "Not Found"
     (Err err) ->
-      case err of
-        ErrParse e -> respondText status400 [] ("Parse Error: " <> cs e)
-        ErrQuery e -> respondText status400 [] $ "ErrQuery: " <> cs e
-        ErrSession param e -> respondText status400 [] $ "ErrSession: " <> cs (show param) <> " " <> cs e
-        ErrServer msg -> do
-          respondText status500 [] $ "Server Error: " <> cs msg
-        ErrCustom _ body -> do
-          respondHtml status500 [] $ renderViewResponse mempty body
-        ErrInternal -> respondText status500 [] "Internal Server Error"
-        ErrAuth m -> respondText status401 [] $ "Unauthorized: " <> cs m
-        ErrNotHandled e -> respondText status400 [] $ cs $ errNotHandled e
+      respondError (errStatus err) [] $ options.serverError err
     (Response _ vw) -> do
       respondHtml status200 (clientHeaders client) $ renderViewResponse metas vw
     (Redirect u) -> do
@@ -108,12 +82,28 @@ sendResponse addDocument req respond client res remotes = do
             }
           |]
 
+  errStatus = \case
+    NotFound -> status404
+    ErrParse _ -> status400
+    ErrQuery _ -> status400
+    ErrSession _ _ -> status400
+    ErrAuth _ -> status401
+    _ -> status500
+
+  -- convert to document if full page request. Subsequent POST requests will only include html fragments for updates
+  addDocument :: BL.ByteString -> BL.ByteString
+  addDocument body =
+    case req.method of
+      "GET" -> options.toDocument body
+      _ -> body
+
   renderViewResponse :: Metadata -> View Body () -> BL.ByteString
   renderViewResponse metas vw =
     addDocument $ renderLazyByteString (addContext metas $ scriptMeta metas) <> "\n\n" <> renderLazyByteString (addContext Body vw)
 
-  respondText s hs = Wai.responseLBS s (contentType ContentText : hs)
+  respondError s hs serr = respondHtml s hs $ renderViewResponse (metaError serr.message) serr.body
   respondHtml s hs = Wai.responseLBS s (contentType ContentHtml : hs)
+  -- respondText s hs = Wai.responseLBS s (contentType ContentText : hs)
 
   -- via HTTP, we want to manually set some headers rather than just rely on the client
   clientHeaders :: Client -> [Header]
@@ -179,22 +169,6 @@ fromCookieHeader h =
   case Cookie.parse (Web.Cookie.parseCookies h) of
     Left err -> Left $ InvalidCookie h err
     Right a -> pure a
-
-
-errNotHandled :: Event TargetViewId Encoded -> String
-errNotHandled ev =
-  L.intercalate
-    "\n"
-    [ "No Handler for Event viewId: " <> cs ev.viewId.text <> " action: " <> cs (encodedToText ev.action)
-    , "<p>Remember to add a `hyper` handler in your page function</p>"
-    , "<pre>"
-    , "page :: (Hyperbole :> es) => Page es Response"
-    , "page = do"
-    , "  handle contentsHandler"
-    , "  load $ do"
-    , "    pure $ hyper Contents contentsView"
-    , "</pre>"
-    ]
 
 
 contentType :: ContentType -> (HeaderName, BS.ByteString)
