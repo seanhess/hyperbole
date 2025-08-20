@@ -11,7 +11,7 @@ page :: (Hyperbole :> es) => Page es '[Message, Controls]
 page = do
   pure $ exampleLayout Route.Advanced $ do
     example "Trigger" "Example/Page/Advanced.hs" $ do
-      el "Tell other HyperViews to run an action. This will be ignored if an action is already being processed"
+      el "Tell other HyperViews to run an action"
       col ~ embed $ do
         hyper Message $ messageView "..."
 

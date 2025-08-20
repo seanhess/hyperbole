@@ -37,15 +37,16 @@ import Example.Effects.Debug as Debug
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
 import Example.Page.Advanced qualified as Advanced
-import Example.Page.Autocomplete qualified as Autocomplete
 import Example.Page.CSS qualified as CSS
 import Example.Page.Concurrency qualified as Concurrency
 import Example.Page.Contact qualified as Contact
 import Example.Page.Contacts qualified as Contacts
 import Example.Page.Counter qualified as Counter
-import Example.Page.DataTable qualified as DataTable
+import Example.Page.DataLists.Autocomplete qualified as Autocomplete
+import Example.Page.DataLists.DataTable qualified as DataTable
+import Example.Page.DataLists.Filter qualified as Filter
+import Example.Page.DataLists.LoadMore qualified as LoadMore
 import Example.Page.Errors qualified as Errors
-import Example.Page.Filter qualified as Filter
 import Example.Page.Forms qualified as Forms
 import Example.Page.Interactivity qualified as Interactivity
 import Example.Page.Intro qualified as Intro
@@ -127,6 +128,7 @@ app config users count = do
       SortableTable -> runPage DataTable.page
       Autocomplete -> runPage Autocomplete.page
       Filter -> runPage Filter.page
+      LoadMore -> runPage LoadMore.page
   router Errors = runPage Errors.page
   router Forms = runPage Forms.page
   -- router RedirectNow = do

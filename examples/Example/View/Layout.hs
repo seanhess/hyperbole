@@ -101,12 +101,14 @@ exampleMenu current = do
       exampleLink (Data SortableTable) ~ sub
       exampleLink (Data Autocomplete) ~ sub
       exampleLink (Data Filter) ~ sub
+      exampleLink (Data LoadMore) ~ sub
     _ -> none
   exampleLink Forms
   exampleLink Interactivity
-  exampleLink Javascript
   exampleLink Errors
   exampleLink OAuth2
+  exampleLink Javascript
+  exampleLink Advanced
   exampleLink (Examples BigExamples)
   case current of
     Examples _ ->
@@ -114,7 +116,6 @@ exampleMenu current = do
     (Contacts _) ->
       completeExamples
     _ -> none
-  exampleLink Advanced
  where
   completeExamples = do
     exampleLink (Examples Todos) ~ sub
@@ -141,16 +142,16 @@ routeTitle (State StateRoot) = "State"
 routeTitle (State Actions) = "Action Context"
 routeTitle (State Query) = "Query"
 routeTitle (State Sessions) = "Sessions"
-routeTitle (Data DataLists) = "Data Lists"
-routeTitle (Data SortableTable) = "Sortable Table"
-routeTitle (Data Filter) = "Filters"
-routeTitle (Data Autocomplete) = "Autocomplete"
+routeTitle (Data d) = defaultTitle d
 routeTitle Errors = "Error Handling"
 routeTitle (Examples Todos) = "TodoMVC"
 routeTitle (Examples TodosCSS) = "TodoMVC (CSS version)"
 routeTitle (Examples BigExamples) = "Large Examples"
 routeTitle OAuth2 = "OAuth2"
-routeTitle r = cs $ toWords $ fromHumps $ show r
+routeTitle r = defaultTitle r
+
+defaultTitle :: (Show r) => r -> Text
+defaultTitle = cs . toWords . fromHumps . show
 
 navigation :: AppRoute -> View c ()
 navigation rt = do

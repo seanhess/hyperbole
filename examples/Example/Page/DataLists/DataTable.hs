@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Example.Page.DataTable where
+module Example.Page.DataLists.DataTable where
 
 import Data.List (sortOn)
 import Data.Text (pack)
@@ -19,7 +19,7 @@ import Prelude hiding (even, odd)
 page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   pure $ exampleLayout (Data SortableTable) $ do
-    example "Data Table" "Example/Page/DataTable.hs" $ do
+    example "Data Table" "Example/Page/DataLists/DataTable.hs" $ do
       el "We can write view Functions that work in any view, like a dataTable"
       col ~ embed $ hyper Languages $ languagesView Nothing allLanguages
 

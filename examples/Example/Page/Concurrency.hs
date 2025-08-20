@@ -124,7 +124,7 @@ viewTaskLoad = do
 
 viewTaskDetails :: Task -> View LazyData ()
 viewTaskDetails task = do
-  row ~ color Success $ do
+  el ~ color Success . textAlign AlignCenter $ do
     text task.details
 
 -- Fake Tasks Effect ----------------------------------------
@@ -141,7 +141,7 @@ pretendLoadTask taskId = do
   randomDelay <- genRandom (100, 1000)
   delay randomDelay
 
-  pure $ Task taskId $ "Details " <> pack (show taskId)
+  pure $ Task taskId $ pack (show taskId)
 
 pretendTasks :: [TaskId]
 pretendTasks = [1 .. 30]

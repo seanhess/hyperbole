@@ -49,7 +49,6 @@ executable examples
       Example.Effects.Todos
       Example.Effects.Users
       Example.Page.Advanced
-      Example.Page.Autocomplete
       Example.Page.Concurrency
       Example.Page.Contact
       Example.Page.Contacts
@@ -58,9 +57,11 @@ executable examples
       Example.Page.CSS.External
       Example.Page.CSS.Tooltips
       Example.Page.CSS.Transitions
-      Example.Page.DataTable
+      Example.Page.DataLists.Autocomplete
+      Example.Page.DataLists.DataTable
+      Example.Page.DataLists.Filter
+      Example.Page.DataLists.LoadMore
       Example.Page.Errors
-      Example.Page.Filter
       Example.Page.Forms
       Example.Page.FormSimple
       Example.Page.FormValidation

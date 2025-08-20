@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Page.Filter where
+module Example.Page.DataLists.Filter where
 
 import Data.Text (Text, pack)
 import Effectful hiding (Dynamic)
@@ -21,7 +21,7 @@ page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   filters <- query
   pure $ exampleLayout (Data Filter) $ do
-    example "Filters" "Example/Page/Filter.hs" $ do
+    example "Filters" "Example/Page/DataLists/Filter.hs" $ do
       el "Incrementally search a list of data, storing parameters in the query string"
       el ~ embed $ hyper Languages $ languagesView filters
 
@@ -155,13 +155,16 @@ resultsTable onSelect langs = do
         space
         button (onSelect lang) ~ pad (XY 10 2) . border 1 . hover (bg GrayLight) . rows $ "Select"
 
-      row $ do
-        el ~ bg Light . pad (XY 10 2) . fontSize 16 . textAlign AlignCenter $ family lang.family
+      row $ viewFamily lang.family
 
       row ~ gap 5 $ do
         el $ text lang.description
 
+  rows = textAlign AlignCenter . border 1 . borderColor GrayLight
+
+viewFamily :: LanguageFamily -> View c ()
+viewFamily fam = do
+  el ~ bg Light . pad (XY 10 2) . fontSize 16 . textAlign AlignCenter $ family fam
+ where
   family Functional = "Functional"
   family ObjectOriented = "Object Oriented"
-
-  rows = textAlign AlignCenter . border 1 . borderColor GrayLight

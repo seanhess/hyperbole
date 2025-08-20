@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Example.Page.Autocomplete where
+module Example.Page.DataLists.Autocomplete where
 
 import Control.Monad (forM_)
 import Data.Text (Text)
@@ -9,7 +9,7 @@ import Effectful
 import Example.AppRoute as Route
 import Example.Colors
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages, isMatchLanguage)
-import Example.Page.Filter as Filter (chosenView, clearButton, resultsTable)
+import Example.Page.DataLists.Filter as Filter (chosenView, clearButton, resultsTable)
 import Example.View.Layout
 import Safe (atMay)
 import Web.Atomic.CSS
@@ -19,7 +19,7 @@ import Prelude hiding (even, odd)
 page :: (Hyperbole :> es) => Page es '[LiveSearch]
 page = do
   pure $ exampleLayout (Data Autocomplete) $ do
-    example "Autocomplete" "Example/Page/Autocomplete.hs" $ do
+    example "Autocomplete" "Example/Page/DataLists/Autocomplete.hs" $ do
       el "Create a serverside autocomplete with a combination of onInput and onKeyDown"
       col ~ embed $ hyper LiveSearch $ liveSearchView allLanguages 0 ""
 

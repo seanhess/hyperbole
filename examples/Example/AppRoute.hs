@@ -35,6 +35,7 @@ data DataRoute
   | SortableTable
   | Autocomplete
   | Filter
+  | LoadMore
   deriving (Eq, Generic, Show)
 instance Route DataRoute where
   baseRoute = Just DataLists

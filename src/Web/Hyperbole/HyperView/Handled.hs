@@ -102,7 +102,7 @@ type NotInPage x total =
 
 type HyperViewHandled id ctx =
   ( -- the id must be found in the children of the context
-    ElemOr id (Require ctx) (NotHandled id ctx (Require ctx))
+    ElemOr id (ctx : Require ctx) (NotHandled id ctx (Require ctx))
   , -- Make sure the descendents of id are in the context for the root page
     CheckDescendents id ctx
   )
