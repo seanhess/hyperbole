@@ -125,13 +125,13 @@ exampleMenu current = do
   sub = pad (TRBL 10 10 10 40)
 
   exampleLink rt =
-    route rt ~ menuItem . selected rt $
+    route rt ~ selected rt . menuItem $
       text $
         routeTitle rt
   menuItem =
     pad (XY 20 10) . color White . hover (bg DarkHighlight)
   selected rt =
-    if rt == current then bg DarkHighlight else id
+    if rt == current then bg DarkHighlight . border (L 2) . pad (L 18) else id
 
 routeTitle :: AppRoute -> Text
 routeTitle (Hello _) = "Hello World"
@@ -159,7 +159,7 @@ navigation rt = do
       link [uri|https://github.com/seanhess/hyperbole|] "HYPERBOLE" ~ bold . pad 20 . logo . width 220
       space
       menuButton
-    col ~ cls "menu" . onMobile (display None) $ do
+    col ~ cls "menu" . onMobile (display None) . Cyber.font . Style.uppercase $ do
       exampleMenu rt
       space
       el ~ pad 10 . fontSize 12 $ do

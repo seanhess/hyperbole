@@ -13,7 +13,7 @@ import Example.Effects.Debug
 import Example.Effects.Users (User (..), UserId, Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
-import Example.Style.Cyber (btn, btnLight)
+import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -143,7 +143,7 @@ contactForm onSubmit c = do
 
     field f.age ~ fld $ do
       label "Age:"
-      input Number @ value (fromMaybe "" $ pack . show <$> c.age) ~ inp
+      input Number @ value (maybe "" (pack . show) c.age) ~ inp
 
     submit "Submit" ~ btn
  where

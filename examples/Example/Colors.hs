@@ -36,5 +36,17 @@ instance ToColor AppColor where
   colorValue SecondaryLight = "#9D999C"
   -- colorValue Success = "67C837"
   colorValue Success = "#149e5a"
-  colorValue Danger = "#ef1509"
+  colorValue Danger = lightRed
   colorValue Warning = "#e1c915"
+
+lightRed :: HexColor
+lightRed = HexColor "#EC6458"
+
+darkRed :: HexColor
+darkRed = HexColor "#722C2A"
+
+midRed :: HexColor
+midRed = HexColor "#A03F38"
+
+cyan :: HexColor
+cyan = "#0FF"

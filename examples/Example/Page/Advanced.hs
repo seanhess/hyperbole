@@ -2,7 +2,7 @@ module Example.Page.Advanced where
 
 import Data.Text (Text)
 import Example.AppRoute qualified as Route
-import Example.Style.Cyber (btn)
+import Example.Style.Cyber as Cyber (btn, font)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -36,7 +36,7 @@ instance HyperView Message es where
 
 messageView :: Text -> View Message ()
 messageView msg = do
-  el ~ pad 10 . border 1 $ do
+  el ~ pad 10 . border 1 . Cyber.font $ do
     text msg
 
 data Controls = Controls

@@ -61,9 +61,11 @@ viewColorPicker clr = do
   col ~ gap 10 . pad 20 . bg clr . border 1 $ do
     el ~ fontSize 18 . bold $ "Query Background"
     row ~ gap 10 $ do
-      button (SaveColor Success) ~ (btn' Success . border 1) $ "Successs"
-      button (SaveColor Warning) ~ (btn' Warning . border 1) $ "Warning"
-      button (SaveColor Danger) ~ (btn' Danger . border 1) $ "Danger"
+      button (SaveColor Success) ~ (btn' Success . brd) $ "Successs"
+      button (SaveColor Warning) ~ (btn' Warning . brd) $ "Warning"
+      button (SaveColor Danger) ~ (btn' Danger . brd) $ "Danger"
+ where
+  brd = border $ TRBL 1 0 0 1
 
 viewMessage :: Text -> View Contents ()
 viewMessage msg = do

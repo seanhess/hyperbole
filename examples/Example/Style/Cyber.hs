@@ -3,7 +3,7 @@ module Example.Style.Cyber where
 import Data.Text (Text, pack)
 import Example.Colors
 import Web.Atomic.CSS
-import Web.Atomic.Types (Declaration (..), Property (..), style, (-.))
+import Web.Atomic.Types (style, (-.))
 import Web.Hyperbole hiding (style)
 import Web.Hyperbole.Types.Response
 
@@ -19,11 +19,9 @@ textShadow =
     "text-shadow"
     ["text-shadow" :. "0 0 4px #0ff, 0 0 8px #0ff"]
 
-cyan :: HexColor
-cyan = "#0FF"
 
-red :: HexColor
-red = HexColor "#EC6458"
+
+
 
 
 
@@ -82,8 +80,8 @@ font = utility ("share-tech") ["font-family" :. "'Share Tech Mono'"]
 
 cyberError :: View Body () -> View Body ()
 cyberError inner =
-  el ~ wipeIn $ do
-    el ~ bg red . clip 10 . pad 10 . color White $
+  el ~ wipeIn . border (T 4) . borderColor lightRed $ do
+    el ~ bg midRed . clip 10 . pad 10 . color White $
       inner
   where
     -- requires @keyframes wipeIn

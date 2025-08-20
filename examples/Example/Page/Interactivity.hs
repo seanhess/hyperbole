@@ -2,6 +2,7 @@ module Example.Page.Interactivity where
 
 import Example.AppRoute
 import Example.Page.Interactivity.Events
+import Example.Style.Cyber (font)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -21,4 +22,4 @@ page = do
         code "onMouseLeave"
       el $ do
         text "Remember it is better to use Atomic CSS to provide immediate feedback whenever possible. If used improperly, too many mouse events could make the app unresponsive."
-      col ~ embed $ hyper Boxes (viewBoxes Nothing)
+      col ~ embed . font $ hyper Boxes (viewBoxes Nothing)

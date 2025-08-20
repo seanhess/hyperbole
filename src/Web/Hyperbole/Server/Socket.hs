@@ -5,7 +5,7 @@ import Data.Bifunctor (first)
 import Data.List qualified as L
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import Effectful
 import Effectful.Concurrent.Async
 import Effectful.Exception

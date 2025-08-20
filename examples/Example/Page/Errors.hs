@@ -9,8 +9,6 @@ import Effectful
 import Effectful.Exception
 import Example.AppRoute qualified as Route
 import Example.Colors
-import Example.Style as Style hiding (link)
-import Example.Style.Cyber qualified as Cyber
 import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Text.Read (readMaybe)
@@ -162,7 +160,7 @@ viewSearchUsers = do
 viewSearchResults :: Maybe User -> View c ()
 viewSearchResults mu = do
   case mu of
-    Nothing -> el "User not found. No big deal. Doesn't need to be an application error"
+    Nothing -> el ~ italic $ "User not found. No big deal. Doesn't need to be an application error"
     Just u -> viewUserDetails u
 
 -----------------------------------------------------------

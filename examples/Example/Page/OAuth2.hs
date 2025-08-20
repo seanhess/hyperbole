@@ -11,7 +11,7 @@ import Effectful
 import Effectful.Reader.Dynamic
 import Example.AppRoute qualified as Route
 import Example.Config (AppConfig (..))
-import Example.Style.Cyber (btn)
+import Example.Style.Cyber as Cyber (btn, font)
 import Example.View.Layout
 import Network.HTTP.Client qualified as HTTP
 import Web.Atomic.CSS
@@ -146,4 +146,4 @@ viewAuthorized user = do
       ]
 
 message :: View c () -> View c ()
-message x = el x ~ pad 10 . border 1
+message x = el x ~ pad 10 . Cyber.font . border 1

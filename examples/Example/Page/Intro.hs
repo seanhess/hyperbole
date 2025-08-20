@@ -8,6 +8,7 @@ import Example.Page.Counter (Counter)
 import Example.Page.Counter qualified as Counter
 import Example.Page.Simple (Message)
 import Example.Page.Simple qualified as Simple
+import Example.Style.Cyber as Cyber (font)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -23,7 +24,7 @@ page = do
     example "Simple" "Example/Page/Simple.hs" $ do
       el "HyperViews update independently. In this example, two Message HyperViews are embedded into the same page with different ids."
       el "Try inspecting the page in the Chrome dev tools and watching both the DOM and messages"
-      col ~ embed $ do
+      col ~ embed . Cyber.font $ do
         addContext Root simple
 
     example "Counter" "Example/Page/Counter.hs" $ do

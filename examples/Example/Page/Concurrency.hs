@@ -20,7 +20,7 @@ page = do
   pure $ exampleLayout Concurrency $ do
     example "Concurrency" source $ do
       el "While individual HyperViews can only have one update in progress at a time, multiple HyperViews can overlap updates without issue"
-      el ~ embed $ do
+      el ~ embed . font $ do
         hyper (Progress 1 100) $ viewProgress 0
         hyper (Progress 2 200) $ viewProgress 0
         hyper (Progress 3 300) $ viewProgress 0
