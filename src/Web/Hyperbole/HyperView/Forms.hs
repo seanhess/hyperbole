@@ -16,7 +16,10 @@ module Web.Hyperbole.HyperView.Forms
   , label
   , input
   , checkbox
+  , radioFields
+  , RadioInput (..)
   , radio
+  , radioLabel
   , form
   , textarea
   , submit
@@ -236,13 +239,34 @@ checkbox isChecked = do
   tag "input" @ att "type" "checkbox" . name nm $ none @ checked isChecked
 
 
+data RadioInput (id :: Type) (a :: Type) = RadioInput
+  { inputName :: FieldName a
+  , selected :: a
+  }
 
-radio :: ToParam a => a -> Bool -> View (Input id a) ()
-radio val isChecked = do
-  Input (FieldName nm) <- context
+
+radioFields
+  :: forall (id :: Type) (a :: Type)
+   . FieldName a
+  -> a
+  -> View (RadioInput id a) ()
+  -> View (FormFields id) ()
+radioFields fn def inputs = do
+  addContext (RadioInput fn def) inputs
+
+
+radioLabel :: View (RadioInput id a) () -> View (RadioInput id a) ()
+radioLabel =
+  tag "label"
+
+
+radio :: (Eq a, ToParam a) => a -> View (RadioInput id a) ()
+radio val = do
+  ctx <- context
+  let (FieldName nm) = ctx.inputName
   let (ParamValue valTxt) = toParam val
   tag "input"
-    @ att "type" "radio" . name nm . checked isChecked . value valTxt
+    @ att "type" "radio" . name nm . checked (ctx.selected == val) . value valTxt
     $ none
 
 

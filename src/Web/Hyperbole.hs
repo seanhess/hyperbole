@@ -150,7 +150,9 @@ module Web.Hyperbole
   , label
   , input
   , checkbox
+  , radioFields
   , radio
+  , radioLabel
   , checked
   , textarea
   , submit

@@ -23,7 +23,7 @@ data Planet
   | Venus
   | Earth
   | Mars
-  deriving (Generic, FromJSON, FromParam, Show, ToJSON, ToParam)
+  deriving (Generic, FromJSON, FromParam, Show, ToJSON, ToParam, Eq)
 
 -- Forms can be pretty simple. Just a type that can be parsed
 data ContactForm = ContactForm
@@ -56,20 +56,12 @@ formView = do
 
     col ~ gap 5 $ do
       el $ text "Planet"
-      mapM_ (field "planet")
-        [ row ~ gap 10 $ do
-            radio Mercury False ~ width 32
-            label "Mercury"
-        , row ~ gap 10 $ do
-            radio Venus False ~ width 32
-            label "Venus"
-        , row ~ gap 10 $ do
-            radio Earth True ~ width 32
-            label "Earth"
-        , row ~ gap 10 $ do
-            radio Mars False ~ width 32
-            label "Mars"
-        ]
+      radioFields "planet" Earth $ do
+        let wrapper = radioLabel ~ width 32 . flexRow . gap 10
+        wrapper $ radio Mercury >> text "Mercury"
+        wrapper $ radio Venus >> text "Venus"
+        wrapper $ radio Earth >> text "Earth"
+        wrapper $ radio Mars >> text "Mars"
 
     submit "Submit" ~ btn
 
@@ -119,20 +111,12 @@ formView' = do
 
     col ~ gap 5 $ do
       el $ text "Planet"
-      mapM_ (field f.planet)
-        [ row ~ gap 10 $ do
-            radio Mercury False ~ width 32
-            label "Mercury"
-        , row ~ gap 10 $ do
-            radio Venus False ~ width 32
-            label "Venus"
-        , row ~ gap 10 $ do
-            radio Earth True ~ width 32
-            label "Earth"
-        , row ~ gap 10 $ do
-            radio Mars False ~ width 32
-            label "Mars"
-        ]
+      radioFields f.planet Earth $ do
+        let wrapper = radioLabel ~ width 32 . flexRow . gap 10
+        wrapper $ radio Mercury >> text "Mercury"
+        wrapper $ radio Venus >> text "Venus"
+        wrapper $ radio Earth >> text "Earth"
+        wrapper $ radio Mars >> text "Mars"
 
     submit "Submit" ~ btn
 
