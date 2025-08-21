@@ -16,6 +16,7 @@ module Web.Hyperbole.HyperView.Forms
   , label
   , input
   , checkbox
+  , radio
   , form
   , textarea
   , submit
@@ -47,7 +48,7 @@ import Text.Casing (kebab)
 import Web.Atomic.Types hiding (Selector)
 import Web.FormUrlEncoded (Form (..), FormOptions (..))
 import Web.FormUrlEncoded qualified as FE
-import Web.Hyperbole.Data.Param (FromParam (..), ParamValue (..))
+import Web.Hyperbole.Data.Param (FromParam (..), ParamValue (..), ToParam (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
@@ -230,6 +231,12 @@ checkbox :: Bool -> View (Input id a) ()
 checkbox isChecked = do
   Input (FieldName nm) <- context
   tag "input" @ att "type" "checkbox" . name nm $ none @ checked isChecked
+
+
+radio :: Text -> View (Input id a) ()
+radio val = do
+  Input (FieldName nm) <- context
+  tag "input" @ att "type" "radio" . name nm . value val $ none
 
 
 -- | textarea for a 'field'

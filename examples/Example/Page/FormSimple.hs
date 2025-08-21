@@ -23,6 +23,7 @@ data ContactForm = ContactForm
   { name :: Text
   , age :: Int
   , isFavorite :: Bool
+  , planet :: Text
   }
   deriving (Generic, FromForm)
 
@@ -49,7 +50,23 @@ formView = do
           checkbox False ~ width 32
           text "Favorite?"
 
+    col ~ gap 5 $ do
+      el $ text "Planet"
+      field "planet" $ do
+        displayOption "Mercury" False
+        displayOption "Venus" False
+        displayOption "Earth" True
+        displayOption "Mars" False
+
     submit "Submit" ~ btn
+
+  where
+
+  displayOption val isChecked =
+    label ~ flexRow . gap 10 $ do
+      radio val ~ width 32 @ checked isChecked
+      text val
+
 
 -- Alternatively, use Higher Kinded Types, and Hyperbole can guarantee the field names are the same
 --
@@ -67,6 +84,7 @@ data ContactForm' f = ContactForm'
   { name :: Field f Text
   , age :: Field f Int
   , isFavorite :: Field f Bool
+  , planet :: Field f Text
   }
   deriving (Generic, FromFormF, GenFields FieldName)
 
@@ -97,7 +115,22 @@ formView' = do
           checkbox False ~ width 32
           text "Favorite?"
 
+    col ~ gap 5 $ do
+      el $ text "Planet"
+      field "planet" $ do
+        displayOption "Mercury" False
+        displayOption "Venus" False
+        displayOption "Earth" True
+        displayOption "Mars" False
+
     submit "Submit" ~ btn
+
+  where
+
+  displayOption val isChecked =
+    label ~ flexRow . gap 10 $ do
+      radio val ~ width 32 @ checked isChecked
+      text val
 
 contactView :: ContactForm -> View AddContact ()
 contactView u = do
@@ -113,3 +146,7 @@ contactView u = do
   row ~ gap 5 $ do
     el "Favorite:"
     el $ text $ pack (show u.isFavorite)
+
+  row ~ gap 5 $ do
+    el "Planet:"
+    el $ text $ pack (show u.planet)
