@@ -18,11 +18,19 @@ instance HyperView AddContact es where
     cf <- formData
     pure $ contactView cf
 
+data Planet
+  = Mercury
+  | Venus
+  | Earth
+  | Mars
+  deriving (Generic, FromJSON, FromParam, Show, ToJSON, ToParam)
+
 -- Forms can be pretty simple. Just a type that can be parsed
 data ContactForm = ContactForm
   { name :: Text
   , age :: Int
   , isFavorite :: Bool
+  , planet :: Planet
   }
   deriving (Generic, FromForm)
 
@@ -46,6 +54,23 @@ formView = do
         checkbox False ~ width 32
         label "Favorite?"
 
+    col ~ gap 5 $ do
+      el $ text "Planet"
+      mapM_ (field "planet")
+        [ row ~ gap 10 $ do
+            radio Mercury False ~ width 32
+            label "Mercury"
+        , row ~ gap 10 $ do
+            radio Venus False ~ width 32
+            label "Venus"
+        , row ~ gap 10 $ do
+            radio Earth True ~ width 32
+            label "Earth"
+        , row ~ gap 10 $ do
+            radio Mars False ~ width 32
+            label "Mars"
+        ]
+
     submit "Submit" ~ btn
 
 -- Alternatively, use Higher Kinded Types, and Hyperbole can guarantee the field names are the same
@@ -64,6 +89,7 @@ data ContactForm' f = ContactForm'
   { name :: Field f Text
   , age :: Field f Int
   , isFavorite :: Field f Bool
+  , planet :: Field f Planet
   }
   deriving (Generic, FromFormF, GenFields FieldName)
 
@@ -91,6 +117,23 @@ formView' = do
         checkbox False ~ width 32
         label "Favorite?"
 
+    col ~ gap 5 $ do
+      el $ text "Planet"
+      mapM_ (field f.planet)
+        [ row ~ gap 10 $ do
+            radio Mercury False ~ width 32
+            label "Mercury"
+        , row ~ gap 10 $ do
+            radio Venus False ~ width 32
+            label "Venus"
+        , row ~ gap 10 $ do
+            radio Earth True ~ width 32
+            label "Earth"
+        , row ~ gap 10 $ do
+            radio Mars False ~ width 32
+            label "Mars"
+        ]
+
     submit "Submit" ~ btn
 
 contactView :: ContactForm -> View AddContact ()
@@ -107,3 +150,7 @@ contactView u = do
   row ~ gap 5 $ do
     el "Favorite:"
     el $ text $ pack (show u.isFavorite)
+
+  row ~ gap 5 $ do
+    el "Planet:"
+    el $ text $ pack (show u.planet)
