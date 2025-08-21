@@ -87,8 +87,9 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 
 
     // Patch the node
-    const next: VNode = create(update.content)
     const old: VNode = create(target)
+    let next: VNode = create(update.content)
+    next.attributes = old.attributes
     patch(next, old)
 
 
