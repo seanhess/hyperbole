@@ -24,9 +24,9 @@ class ViewId a where
 {- | Access the 'viewId' in a 'View' or 'update'
 
 @
-#EMBED Example/Page/LazyLoading.hs data LazyData
+#EMBED Example/Page/Concurrency.hs data LazyData
 
-#EMBED Example/Page/LazyLoading.hs instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
+#EMBED Example/Page/Concurrency.hs instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
 @
 -}
 class HasViewId m view where

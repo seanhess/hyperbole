@@ -39,7 +39,8 @@ executable docgen
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes
   build-depends:
-      base
+      Cabal
+    , base
     , directory
     , filepath
     , string-conversions

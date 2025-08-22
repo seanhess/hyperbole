@@ -29,13 +29,7 @@ newtype ParamValue = ParamValue {text :: Text}
 This is equivalent to Web.HttpApiData, which is missing some instances and has some strange defaults
 
 @
-#EMBED Example/Effects/Todos.hs data Todo = Todo
-@
-
-@
-#EMBED Example/Docs/Encoding.hs data Tags
-
-#EMBED Example/Docs/Encoding.hs instance ToParam Tags
+#EMBED Example/Data/ProgrammingLanguage.hs data LanguageFamily
 @
 -}
 class ToParam a where
@@ -77,13 +71,7 @@ instance ToParam URI where
 {- | Decode data from a 'query', 'session', or 'form' parameter value
 
 @
-#EMBED Example/Effects/Todos.hs data Todo = Todo
-@
-
-@
-#EMBED Example/Docs/Encoding.hs data Tags
-
-#EMBED Example/Docs/Encoding.hs instance FromParam Tags
+#EMBED Example/Data/ProgrammingLanguage.hs data LanguageFamily
 @
 -}
 class FromParam a where

@@ -23,7 +23,7 @@ event eventName a = att ("data-on" <> eventName) (encodedToText $ toAction a)
 {- | Send the action after N milliseconds. Can be used to implement lazy loading or polling. See [Example.Page.Concurrent](https://docs.hyperbole.live/concurrent)
 
 @
-#EMBED Example/Page/LazyLoading.hs viewTaskLoad
+#EMBED Example/Page/Concurrency.hs viewTaskLoad
 @
 -}
 onLoad :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Action id -> DelayMs -> Attributes a -> Attributes a

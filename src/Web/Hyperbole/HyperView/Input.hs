@@ -34,7 +34,7 @@ button action cnt = do
 {- | Type-safe dropdown. Sends (opt -> Action id) when selected. The selection predicate (opt -> Bool) controls which option is selected. See [Example.Page.Filter](https://docs.hyperbole.live/filter)
 
 @
-#EMBED Example/Page/Filter.hs familyDropdown
+#EMBED Example/Page/DataLists/Filter.hs familyDropdown
 @
 -}
 dropdown

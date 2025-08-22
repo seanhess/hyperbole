@@ -4,8 +4,7 @@ set -e
 
 hpack examples
 hpack docs
-cabal run docgen
+cabal run docs
 
 cd /tmp/hyperbole
 cabal haddock
-

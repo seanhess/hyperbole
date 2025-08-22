@@ -443,12 +443,12 @@ Now we can embed multiple `Message` 'HyperView's into the same page. Each will u
 
 This is especially useful if we put identifying information in our 'ViewId', such as a database id. The 'viewId' function gives us access to that info. See the [Contacts Example](https://docs.hyperbole.live/contacts) and the [Lazy Loading Example](https://docs.hyperbole.live/lazyloading)
 
-From [Example.Page.LazyLoading](https://docs.hyperbole.live/lazyloading)
+From [Example.Page.Concurrency](https://docs.hyperbole.live/concurrency)
 
 @
-#EMBED Example/Page/LazyLoading.hs data LazyData
+#EMBED Example/Page/Concurrency.hs data LazyData
 
-#EMBED Example/Page/LazyLoading.hs instance (Debug :> es, GenRandom :> es) => HyperView
+#EMBED Example/Page/Concurrency.hs instance (Debug :> es, GenRandom :> es) => HyperView
 @
 -}
 
@@ -537,7 +537,7 @@ What if we want to reuse functionality too? We can pass an 'Action' into the vie
 We can create more complex view functions by passing state in as a parameter. Here's a button that toggles between a checked and unchecked state:
 
 @
-#EMBED Example/View/Inputs.hs toggleCheckBtn
+#EMBED Example/View/Inputs.hs toggleCheckbox
 @
 
 View functions can wrap other Views:
@@ -607,13 +607,13 @@ From [Example.Page.Counter](https://docs.hyperbole.live/counter)
 @
 {\-# LANGUAGE UndecidableInstances #-\}
 
-#EMBED Example/Page/Counter.hs instance (Reader
+#EMBED Example/Page/State/Effects.hs instance (Reader
 @
 
 Then run the effect in your application
 
 @
-#EMBED Example/Page/Counter.hs app
+#EMBED Example/Page/State/Effects.hs app
 @
 
 * Read more about [Effectful](https://hackage.haskell.org/package/effectful)
@@ -645,7 +645,7 @@ From [Example.Page.Todo](https://docs.hyperbole.live/todos):
 We run a custom effect in our Application just like any other. Here we implementing our custom effect using 'Hyperbole' 'sessions', but you could write a different runner that connects to a database instead.
 
 @
-#EMBED Example/Page/Todo.hs main
+#EMBED Example/Page/Todos/Todo.hs main
 @
 
 See [example/Main](https://github.com/seanhess/hyperbole/blob/0.4/examples/Main.hs) for a full example application with multiple effects

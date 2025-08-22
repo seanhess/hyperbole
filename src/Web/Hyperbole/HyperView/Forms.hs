@@ -74,7 +74,6 @@ From [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
 
 @
 #EMBED Example/Page/FormSimple.hs data ContactForm
-#EMBED Example/Page/FormSimple.hs instance Form ContactForm
 @
 -}
 class FromFormF (f :: (Type -> Type) -> Type) where
@@ -102,23 +101,21 @@ formData = do
 ------------------------------------------------------------------------------
 
 class GenFields f (form :: (Type -> Type) -> Type) where
-  -- {- | Generate a Higher Kinded Type (form f)
-  --
-  -- > #EMBED Example/Page/FormValidation.hs data UserForm
-  -- >
-  -- > #EMBED Example/Page/FormValidation.hs page
-  -- -}
+  {- | Generate a Higher Kinded Type (form f)
+
+  > #EMBED Example/Page/FormValidation.hs data UserForm
+  -}
   genFields :: form f
   default genFields :: (Generic (form f), GFieldsGen (Rep (form f))) => form f
   genFields = to gFieldsGen
 
 
--- {- | Generate FieldNames for a form. See [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
---
--- > #EMBED Example/Page/FormSimple.hs data ContactForm'
--- >
--- > #EMBED Example/Page/FormSimple.hs formView'
--- -}
+{- | Generate FieldNames for a form. See [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
+
+> #EMBED Example/Page/FormSimple.hs data ContactForm'
+>
+> #EMBED Example/Page/FormSimple.hs formView'
+-}
 fieldNames :: forall form. (GenFields FieldName form) => form FieldName
 fieldNames = genFields
 
@@ -250,7 +247,6 @@ textarea mDefaultText = do
 
 @
 #EMBED Example/Page/FormValidation.hs data UserForm
-#EMBED Example/Page/FormValidation.hs instance Form UserForm
 
 #EMBED Example/Page/FormValidation.hs validateForm
 

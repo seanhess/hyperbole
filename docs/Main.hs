@@ -6,6 +6,8 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
+import Distribution.Simple.Utils (copyDirectoryRecursive)
+import Distribution.Verbosity (normal, verbose)
 import System.Directory
 import System.FilePath
 
@@ -15,31 +17,37 @@ main = do
   let tmpDir = "/tmp/hyperbole"
   copyExtraFilesTo tmpDir
   expandSourcesTo tmpDir
+  putStrLn $ "COPY RECURSIVE: " <> (tmpDir <> "docs")
+  copyDirectoryRecursive verbose "./docs" (tmpDir </> "docs")
+  copyDirectoryRecursive verbose "./examples" (tmpDir </> "examples")
 
 
 test :: IO ()
 test = do
-  src <- readSource "../src/Web/Hyperbole.hs"
+  src <- readSource "./src/Web/Hyperbole.hs"
   SourceCode lns <- expandFile src
   mapM_ print lns
 
 
 expandSourcesTo :: FilePath -> IO ()
 expandSourcesTo tmpDir = do
-  allFiles <- relativeSourceFiles "../src"
-  print allFiles
+  allFiles <- relativeSourceFiles "./src"
+  -- mapM_ (putStrLn . ("SOURCE " <>)) allFiles
   mapM_ (expandAndCopyFileTo tmpDir) allFiles
 
 
 copyExtraFilesTo :: FilePath -> IO ()
 copyExtraFilesTo tmpDir = do
   createDirectoryIfMissing True tmpDir
-  copyFile "../hyperbole.cabal" (tmpDir </> "hyperbole.cabal")
-  copyFile "../README.md" (tmpDir </> "README.md")
-  copyFile "../CHANGELOG.md" (tmpDir </> "CHANGELOG.md")
-  copyFile "../LICENSE" (tmpDir </> "LICENSE")
+  copyFile "./cabal.project" (tmpDir </> "cabal.project")
+  copyFile "./hyperbole.cabal" (tmpDir </> "hyperbole.cabal")
+  copyFile "./README.md" (tmpDir </> "README.md")
+  copyFile "./CHANGELOG.md" (tmpDir </> "CHANGELOG.md")
+  copyFile "./LICENSE" (tmpDir </> "LICENSE")
   createDirectoryIfMissing True (tmpDir </> "client/dist")
-  copyFile "../client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
+  copyFile "./client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
+  createDirectoryIfMissing True (tmpDir </> "client/util")
+  copyFile "./client/util/live-reload.js" (tmpDir </> "client/util/live-reload.js")
 
 
 expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
@@ -69,7 +77,7 @@ writeSource tmpDir relPath src = do
 relativeSourceFiles :: FilePath -> IO [FilePath]
 relativeSourceFiles dir = do
   contents <- tryDirectory dir
-  putStrLn dir
+  -- putStrLn dir
   let folders = filter isFolder contents
   let files = filter isSourceFile contents
 
@@ -134,8 +142,7 @@ expandLine line = do
 
 expandEmbed :: Embed -> IO [Text]
 expandEmbed embed = do
-  print embed
-  source <- T.readFile embed.sourceFile
+  source <- T.readFile $ "./examples/" <> embed.sourceFile
   expanded <- requireTopLevel embed.definition (SourceCode $ T.lines source)
   pure $ fmap markupLine expanded
  where

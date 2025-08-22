@@ -27,7 +27,7 @@ import Web.Hyperbole.Types.Response
 @
 #EMBED Example/Docs/Sessions.hs data Preferences
 
-#EMBED Example/Docs/Sessions.hs instance DefaultParam Preferences
+#EMBED Example/Docs/Sessions.hs instance Default Preferences
 @
 -}
 class Session a where
@@ -56,12 +56,12 @@ class Session a where
     first cs $ A.eitherDecodeStrict bs
 
 
-{- | Persist datatypes in browser cookies. If the session doesn't exist, the 'DefaultParam' is used
+{- | Persist datatypes in browser cookies. If the session doesn't exist, the 'Default' instance is used
 
 @
 #EMBED Example/Docs/Sessions.hs data Preferences
 
-#EMBED Example/Docs/Sessions.hs instance DefaultParam Preferences
+#EMBED Example/Docs/Sessions.hs instance Default Preferences
 
 #EMBED Example/Docs/Sessions.hs page
 @
@@ -87,7 +87,7 @@ lookupSession = do
 @
 #EMBED Example/Docs/Sessions.hs data Preferences
 
-#EMBED Example/Docs/Sessions.hs instance DefaultParam Preferences
+#EMBED Example/Docs/Sessions.hs instance Default Preferences
 
 #EMBED Example/Docs/Sessions.hs instance HyperView Content
 @
