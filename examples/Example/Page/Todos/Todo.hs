@@ -121,7 +121,7 @@ todoForm filt = do
     el ~ pad 8 $ do
       button (ToggleAll filt) Icon.chevronDown ~ width 32 . hover (color Primary)
     form SubmitTodo ~ grow $ do
-      field f.task $ do
+      field f.task $ label $
         input TextInput ~ pad 12 @ placeholder "What needs to be done?" . value ""
 
 --- TodoView ----------------------------------------------------------------------------
@@ -165,7 +165,7 @@ todoEditView filt todo = do
   let f = fieldNames @TodoForm
   row ~ border (TRBL 0 0 1 0) . pad 10 $ do
     form (SubmitEdit filt todo) ~ pad (TRBL 0 0 0 46) $ do
-      field f.task $ do
+      field f.task $ label $ do
         input TextInput @ value todo.task . autofocus ~ pad 4
 
 pluralize :: Int -> Text -> Text -> Text

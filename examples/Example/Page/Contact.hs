@@ -129,20 +129,20 @@ contactForm :: (ViewId id, ViewAction (Action id)) => Action id -> ContactForm M
 contactForm onSubmit c = do
   let f = fieldNames @ContactForm
   form onSubmit ~ gap 10 $ do
-    field f.firstName ~ fld $ do
-      label "First Name:"
+    field f.firstName ~ fld $ label $ do
+      text "First Name:"
       input Name @ value (fromMaybe "" c.firstName) ~ Style.input
 
-    field f.lastName ~ fld $ do
-      label "Last Name:"
+    field f.lastName ~ fld $ label $ do
+      text "Last Name:"
       input Name @ value (fromMaybe "" c.lastName) ~ Style.input
 
-    field f.info ~ fld $ do
-      label "Info:"
+    field f.info ~ fld $ label $ do
+      text "Info:"
       textarea c.info @ value (fromMaybe "" c.info) ~ Style.input
 
-    field f.age ~ fld $ do
-      label "Age:"
+    field f.age ~ fld $ label $ do
+      text "Age:"
       input Number @ value (maybe "" (pack . show) c.age) ~ inp
 
     submit "Submit" ~ btn
