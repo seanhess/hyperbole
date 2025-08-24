@@ -14,6 +14,10 @@
 * View DocumentHead ()
 * ping keepalive
 * refactor Page type to support trigger type-checking
+* `field` no longer wraps its contents in a `<label>`. Use `label` for the
+  `<label>` tag instead.
+* `label` now wraps its contents in a `<label>`. Previously, it was an alias to
+  `text`.
 
 ## 0.4.3 -- 2024-01-31
 

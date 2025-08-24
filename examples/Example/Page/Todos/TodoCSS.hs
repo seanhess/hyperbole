@@ -118,7 +118,8 @@ todoForm :: View CSSTodos ()
 todoForm = do
   let f :: TodoForm FieldName = fieldNames
   form (MkTodosAction SubmitTodo) $ do
-    field f.task $ do
+    -- Q: Do we need the label tag here?
+    field f.task $ label $ do
       Input (FieldName nm) <- context
       input' -- we use a custom input field, because the Hyperbole one overrides autocomplete
         @ class_ "new-todo"
@@ -208,7 +209,8 @@ todoEditView :: FilterTodo -> Todo -> View CSSTodo ()
 todoEditView filt todo = do
   li' @ class_ "editing" $ do
     form (MkTodoAction $ SubmitEdit filt todo) $ do
-      field "task" $ do
+      -- Q: Do we need the label tag here?
+      field "task" $ label $ do
         input TextInput
           @ class_ "edit"
           . value todo.task

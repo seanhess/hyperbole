@@ -177,9 +177,8 @@ field
    . FieldName a
   -> View (Input id a) ()
   -> View (FormFields id) ()
-field fn inputs = do
-  tag "label" $ do
-    addContext (Input fn) inputs
+field fn inputs =
+  addContext (Input fn) inputs
 
 
 -- | Choose one for 'input's to give the browser autocomplete hints
@@ -208,8 +207,9 @@ data Input (id :: Type) (a :: Type) = Input
 
 
 -- | label for a 'field'
-label :: Text -> View (Input id a) ()
-label = text
+-- label :: Text -> View (Input id a) ()
+label :: View c () -> View c ()
+label = tag "label"
 
 
 -- | input for a 'field'
