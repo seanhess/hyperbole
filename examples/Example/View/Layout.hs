@@ -65,7 +65,7 @@ sourceLink :: Path -> View c ()
 sourceLink p =
   link sourceUrl "View Source" ~ Style.link
  where
-  sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/0.4/example/|]
+  sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/main/examples/|]
   sourceUrl = sourceUrlBase ./. p
 
 embed :: (Styleable h) => CSS h -> CSS h
