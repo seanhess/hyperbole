@@ -321,6 +321,7 @@ export interface HyperboleAPI {
   action(con: string, ...params: any[]): string
   hyperView(viewId: ViewId): HyperView | undefined
   parseMetadata(input: string): Metadata
+  socket: SocketConnection
 }
 
 
@@ -348,4 +349,5 @@ window.Hyperbole =
     }
     return element
   },
+  socket: sock
 }

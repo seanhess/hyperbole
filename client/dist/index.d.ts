@@ -1,3 +1,4 @@
+import { SocketConnection } from './sockets';
 import { ViewId, Metadata } from './action';
 declare global {
     interface Window {
@@ -9,6 +10,7 @@ export interface HyperboleAPI {
     action(con: string, ...params: any[]): string;
     hyperView(viewId: ViewId): HyperView | undefined;
     parseMetadata(input: string): Metadata;
+    socket: SocketConnection;
 }
 export interface HyperView extends HTMLElement {
     runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>;
