@@ -130,20 +130,24 @@ contactForm onSubmit c = do
   let f = fieldNames @ContactForm
   form onSubmit ~ gap 10 $ do
     field f.firstName ~ fld $ do
-      label "First Name:"
-      input Name @ value (fromMaybe "" c.firstName) ~ Style.input
+      label $ do
+        text "First Name:"
+        input Name @ value (fromMaybe "" c.firstName) ~ Style.input
 
     field f.lastName ~ fld $ do
-      label "Last Name:"
-      input Name @ value (fromMaybe "" c.lastName) ~ Style.input
+      label $ do
+        text "Last Name:"
+        input Name @ value (fromMaybe "" c.lastName) ~ Style.input
 
     field f.info ~ fld $ do
-      label "Info:"
-      textarea c.info @ value (fromMaybe "" c.info) ~ Style.input
+      label $ do
+        text "Info:"
+        textarea c.info @ value (fromMaybe "" c.info) ~ Style.input
 
     field f.age ~ fld $ do
-      label "Age:"
-      input Number @ value (maybe "" (pack . show) c.age) ~ inp
+      label $ do
+        text "Age:"
+        input Number @ value (maybe "" (pack . show) c.age) ~ inp
 
     submit "Submit" ~ btn
  where

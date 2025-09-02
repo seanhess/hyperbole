@@ -77,27 +77,31 @@ formView val = do
     el ~ Style.h1 $ "Sign Up"
 
     field f.user ~ valStyle val.user $ do
-      label "Username"
-      input Username @ placeholder "username" ~ Style.input
+      label $ do
+        text "Username"
+        input Username @ placeholder "username" ~ Style.input
 
-      case val.user of
-        Invalid t -> el (text t)
-        Valid -> el "Username is available"
-        _ -> none
+        case val.user of
+          Invalid t -> el (text t)
+          Valid -> el "Username is available"
+          _ -> none
 
     field f.age ~ valStyle val.age $ do
-      label "Age"
-      input Number @ placeholder "age" ~ Style.input
-      el $ invalidText val.age
+      label $ do
+        text "Age"
+        input Number @ placeholder "age" ~ Style.input
+        el $ invalidText val.age
 
     field f.pass1 ~ valStyle val.pass1 $ do
-      label "Password"
-      input NewPassword @ placeholder "password" ~ Style.input
-      el $ invalidText val.pass1
+      label $ do
+        text "Password"
+        input NewPassword @ placeholder "password" ~ Style.input
+        el $ invalidText val.pass1
 
     field f.pass2 $ do
-      label "Repeat Password"
-      input NewPassword @ placeholder "repeat password" ~ Style.input
+      label $ do
+        text "Repeat Password"
+        input NewPassword @ placeholder "repeat password" ~ Style.input
 
     submit "Submit" ~ btn
  where

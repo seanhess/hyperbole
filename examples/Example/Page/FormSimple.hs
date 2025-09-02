@@ -34,17 +34,20 @@ formView = do
 
     -- Make sure these names match the field names used by FormParse / formData
     field "name" $ do
-      label "Contact Name"
-      input Username @ placeholder "contact name" ~ Style.input
+      label $ do
+        text "Contact Name"
+        input Username @ placeholder "contact name" ~ Style.input
 
     field "age" $ do
-      label "Age"
-      input Number @ placeholder "age" . value "0" ~ Style.input
+      label $ do
+        text "Age"
+        input Number @ placeholder "age" . value "0" ~ Style.input
 
     field "isFavorite" $ do
-      row ~ gap 10 $ do
-        checkbox False ~ width 32
-        label "Favorite?"
+      label $ do
+        row ~ gap 10 $ do
+          checkbox False ~ width 32
+          text "Favorite?"
 
     submit "Submit" ~ btn
 
@@ -77,19 +80,22 @@ formView' = do
     -- f.name :: FieldName Text
     -- f.name = FieldName "name"
     field f.name $ do
-      label "Contact Name"
-      input Username @ placeholder "contact name" ~ Style.input
+      label $ do
+        text "Contact Name"
+        input Username @ placeholder "contact name" ~ Style.input
 
     -- f.age :: FieldName Int
     -- f.age = FieldName "age"
     field f.age $ do
-      label "Age"
-      input Number @ placeholder "age" . value "0" ~ Style.input
+      label $ do
+        text "Age"
+        input Number @ placeholder "age" . value "0" ~ Style.input
 
     field f.isFavorite $ do
-      row ~ gap 10 $ do
-        checkbox False ~ width 32
-        label "Favorite?"
+      label $ do
+        row ~ gap 10 $ do
+          checkbox False ~ width 32
+          text "Favorite?"
 
     submit "Submit" ~ btn
 
