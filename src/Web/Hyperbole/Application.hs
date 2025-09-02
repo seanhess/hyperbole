@@ -12,13 +12,14 @@ module Web.Hyperbole.Application
   , routeRequest
   ) where
 
+import Control.Exception
 import Control.Monad (forever)
 import Data.ByteString.Lazy qualified as BL
 import Effectful
 import Effectful.Concurrent.Async
 import Network.Wai qualified as Wai
 import Network.Wai.Handler.WebSockets (websocketsOr)
-import Network.WebSockets (PendingConnection, defaultConnectionOptions, withPingThread)
+import Network.WebSockets (ConnectionException (..), PendingConnection, defaultConnectionOptions, withPingThread)
 import Network.WebSockets qualified as WS
 import Web.Hyperbole.Document
 import Web.Hyperbole.Effect.Hyperbole
@@ -52,7 +53,7 @@ liveAppWith :: ServerOptions -> Eff '[Hyperbole, Concurrent, IOE] Response -> Wa
 liveAppWith opts app req =
   websocketsOr
     defaultConnectionOptions
-    (socketApp opts req app)
+    (\pend -> socketApp opts req app pend `catch` suppressMessages)
     (waiApp opts app)
     req
 
@@ -69,6 +70,20 @@ socketApp opts req actions pend = do
   withPingThread conn 25 (pure ()) $ do
     forever $ do
       runEff $ runConcurrent $ handleRequestSocket opts req conn actions
+
+
+suppressMessages :: ConnectionException -> IO a
+suppressMessages ex = do
+  -- The default version of Network.Websockets prints out CloseRequest and ConnectionClosed errors
+  -- it's like they're using these as events instead of exceptions
+  case ex of
+    ConnectionClosed -> do
+      -- putStrLn "CAUGHT ConnectionClosed"
+      pure undefined
+    CloseRequest _cd _msg -> do
+      -- putStrLn "CAUGHT CloseRequest"
+      pure undefined
+    other -> throwIO other
 
 
 {- | Route URL patterns to different pages
