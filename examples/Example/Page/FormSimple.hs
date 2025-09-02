@@ -33,18 +33,21 @@ formView = do
     el ~ Style.h1 $ "Add Contact"
 
     -- Make sure these names match the field names used by FormParse / formData
-    field "name" $ label $ do
-      text "Contact Name"
-      input Username @ placeholder "contact name" ~ Style.input
+    field "name" $ do
+      label $ do
+        text "Contact Name"
+        input Username @ placeholder "contact name" ~ Style.input
 
-    field "age" $ label $ do
-      text "Age"
-      input Number @ placeholder "age" . value "0" ~ Style.input
+    field "age" $ do
+      label $ do
+        text "Age"
+        input Number @ placeholder "age" . value "0" ~ Style.input
 
-    field "isFavorite" $ label $ do
-      row ~ gap 10 $ do
-        checkbox False ~ width 32
-        text "Favorite?"
+    field "isFavorite" $ do
+      label $ do
+        row ~ gap 10 $ do
+          checkbox False ~ width 32
+          text "Favorite?"
 
     submit "Submit" ~ btn
 
@@ -76,20 +79,23 @@ formView' = do
 
     -- f.name :: FieldName Text
     -- f.name = FieldName "name"
-    field f.name $ label $ do
-      text "Contact Name"
-      input Username @ placeholder "contact name" ~ Style.input
+    field f.name $ do
+      label $ do
+        text "Contact Name"
+        input Username @ placeholder "contact name" ~ Style.input
 
     -- f.age :: FieldName Int
     -- f.age = FieldName "age"
-    field f.age $ label $ do
-      text "Age"
-      input Number @ placeholder "age" . value "0" ~ Style.input
+    field f.age $ do
+      label $ do
+        text "Age"
+        input Number @ placeholder "age" . value "0" ~ Style.input
 
-    field f.isFavorite $ label $ do
-      row ~ gap 10 $ do
-        checkbox False ~ width 32
-        text "Favorite?"
+    field f.isFavorite $ do
+      label $ do
+        row ~ gap 10 $ do
+          checkbox False ~ width 32
+          text "Favorite?"
 
     submit "Submit" ~ btn
 
