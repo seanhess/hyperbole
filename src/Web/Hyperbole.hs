@@ -185,8 +185,6 @@ module Web.Hyperbole
 
     -- * Exports
 
-    -- ** Web.View
-
     -- | Hyperbole is tightly integrated with [atomic-css](https://hackage.haskell.org/package/atomic-css) for HTML generation
   , module Web.Hyperbole.View
 
@@ -238,7 +236,6 @@ import Web.Hyperbole.View qualified as View
 import Web.Hyperbole.View.Embed
 
 
--- import Web.View.Types.Url (Segment)
 
 {- $use
 
@@ -263,7 +260,7 @@ Like [Elm](https://elm-lang.org/), it uses an update function to process actions
 Hyperbole depends heavily on the following frameworks
 
 * [Effectful](https://hackage.haskell.org/package/effectful-core)
-* [Web View](https://hackage.haskell.org/package/web-view)
+* [Atomic CSS](https://hackage.haskell.org/package/atomic-css)
 -}
 
 
@@ -274,10 +271,7 @@ Hyperbole applications run via [Warp](https://hackage.haskell.org/package/warp) 
 They are divided into top-level 'Page's, which run side effects (such as loading data from a database), then respond with an HTML 'View'. The following application has a single 'Page' that displays a static "Hello World"
 
 @
-{\-# LANGUAGE DeriveAnyClass #-\}
 {\-# LANGUAGE OverloadedStrings #-\}
-{\-# LANGUAGE TypeFamilies #-\}
-{\-# LANGUAGE DataKinds #-\}
 
 module Main where
 
@@ -333,7 +327,7 @@ If the user clicks the button, the contents of `hyper` will be replaced with the
 #EMBED Example/Docs/BasicPage.hs helloWorld
 @
 
->>> Web.View.renderText $ el bold "Hello World"
+>>> Web.Atomic.renderText $ el bold "Hello World"
 <style type='text/css'>.bold { font-weight:bold }</style>
 <div class='bold'>Hello World</div>
 
@@ -357,7 +351,7 @@ example = col page $ do
   el h1 "My Page"
 @
 
-See [Web.View](https://hackage.haskell.org/package/web-view) for more details
+See [atomic-css](https://hackage.haskell.org/package/atomic-css) for more details
 -}
 
 
@@ -428,7 +422,7 @@ We can use both 'Message' and 'Count' 'HyperView's in our page, and they will up
 
 We can embed multiple copies of the same 'HyperView' as long as the value of 'ViewId' is unique. Let's update `Message` to allow for more than one value:
 
-See [Example.Page.Simple](https://docs.hyperbole.live/simple)
+See [Example.Page.Simple](https://docs.hyperbole.live/intro)
 
 @
 #EMBED Example/Docs/MultiCopies.hs data Message

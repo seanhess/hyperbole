@@ -209,6 +209,7 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
     , "lookupParam"
     , "setParam"
     , "DefaultParam"
+    , "Client"
     ]
 
 
