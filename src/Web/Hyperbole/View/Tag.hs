@@ -83,17 +83,14 @@ autofocus = att "autofocus" ""
 -- * Document Metadata
 
 
-html :: View c () -> View c ()
-html = tag "html"
+-- html :: View c () -> View c ()
+-- html = tag "html"
 
+-- head :: View c () -> View c ()
+-- head = tag "head"
 
-head :: View c () -> View c ()
-head = tag "head"
-
-
-body :: View c () -> View c ()
-body = tag "body"
-
+-- body :: View c () -> View c ()
+-- body = tag "body"
 
 meta :: View c ()
 meta = tag "meta" none

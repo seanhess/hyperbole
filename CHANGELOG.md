@@ -7,13 +7,13 @@
 * Web.Hyperbole.Effect.OAuth2
 * Web.Hyperbole.Effect.GenRandom
 * OAuth2 example
-* trigger
+* `trigger` actions in other views
+  * required refactor of `Page` type alias to support type-checking: `Eff es (Page '[])` is now `Page es '[]`
 * Javascript pushEvent
 * Live reload
 * quickStartDocument
 * View DocumentHead ()
 * ping keepalive
-* refactor Page type to support trigger type-checking
 
 ## 0.4.3 -- 2024-01-31
 
