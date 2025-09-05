@@ -72,14 +72,17 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
       delete target.dataset.requestId
     }
 
-    runMetadataImmediate(res.meta)
+    let shouldStop = runMetadataImmediate(res.meta)
+
+    if (shouldStop) {
+      return
+    }
 
     let update: LiveUpdate = parseResponse(res.body)
 
     if (!update.content) {
-      let err = new Error("Empty Response")
-      err.message = res.toString()
-      throw err
+      console.error("Empty Response!", res.body)
+      return
     }
 
     // First, update the stylesheet
@@ -127,10 +130,11 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   target.classList.remove("hyp-loading")
 }
 
-function runMetadataImmediate(meta: Metadata) {
+function runMetadataImmediate(meta: Metadata): boolean {
   if (meta.redirect) {
     // perform a redirect immediately
     window.location.href = meta.redirect
+    return true
   }
 
   if (meta.query != null) {
