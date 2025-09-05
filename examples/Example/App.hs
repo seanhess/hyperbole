@@ -131,8 +131,6 @@ app config users count = do
       LoadMore -> runPage LoadMore.page
   router Errors = runPage Errors.page
   router Forms = runPage Forms.page
-  -- router RedirectNow = do
-  --   redirect (routeUri $ Hello Redirected)
   router Requests = runPage Requests.page
   router (State r) =
     case r of
@@ -159,6 +157,8 @@ app config users count = do
 
   -- Nested Router
   hello :: (Hyperbole :> es, Debug :> es) => Hello -> Page es '[]
+  hello RedirectNow = do
+    redirect (routeUri $ Hello Redirected)
   hello (Greet who) = do
     pure $ exampleLayout (Hello $ Greet who) $ do
       row ~ gap 6 . pad 10 $ do

@@ -90,11 +90,11 @@ sendResponse options req client res remotes respond = do
     ErrAuth _ -> status401
     _ -> status500
 
-  -- convert to document if full page request. Subsequent POST requests will only include html fragments for updates
+  -- convert to document if full page request
   addDocument :: BL.ByteString -> BL.ByteString
   addDocument body =
-    case req.method of
-      "GET" -> options.toDocument body
+    case req.event of
+      Nothing -> options.toDocument body
       _ -> body
 
   renderViewResponse :: Metadata -> View Body () -> BL.ByteString

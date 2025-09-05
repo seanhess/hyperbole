@@ -78,4 +78,5 @@ instance Route ExamplesRoute where
 data Hello
   = Greet Text
   | Redirected
+  | RedirectNow
   deriving (Eq, Generic, Route, Show)
