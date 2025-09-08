@@ -150,6 +150,7 @@ module Web.Hyperbole
   , label
   , input
   , checkbox
+  , selGroup
   , radio
   , checked
   , textarea

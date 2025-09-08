@@ -12,5 +12,4 @@ import Web.Hyperbole.View.CSS
 import Web.Hyperbole.View.Embed
 import Web.Hyperbole.View.Render
 import Web.Hyperbole.View.Tag hiding (form, input, label)
-import Web.Hyperbole.View.Types (View, addContext, context, none, raw, tag, text)
-
+import Web.Hyperbole.View.Types (View, addContext, modifyContext, context, none, raw, tag, text)

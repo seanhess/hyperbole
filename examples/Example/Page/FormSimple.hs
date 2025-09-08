@@ -18,12 +18,19 @@ instance HyperView AddContact es where
     cf <- formData
     pure $ contactView cf
 
+data Planet
+  = Mercury
+  | Venus
+  | Earth
+  | Mars
+  deriving (Generic, FromJSON, ToJSON, FromParam, ToParam, Eq, Show)
+
 -- Forms can be pretty simple. Just a type that can be parsed
 data ContactForm = ContactForm
   { name :: Text
   , age :: Int
   , isFavorite :: Bool
-  , planet :: Text
+  , planet :: Planet
   }
   deriving (Generic, FromForm)
 
@@ -53,19 +60,20 @@ formView = do
     col ~ gap 5 $ do
       el $ text "Planet"
       field "planet" $ do
-        displayOption "Mercury" False
-        displayOption "Venus" False
-        displayOption "Earth" True
-        displayOption "Mars" False
+        selGroup Earth $ do
+          displayOption Mercury
+          displayOption Venus
+          displayOption Earth
+          displayOption Mars
 
     submit "Submit" ~ btn
 
   where
 
-  displayOption val isChecked =
+  displayOption val =
     label ~ flexRow . gap 10 $ do
-      radio val ~ width 32 @ checked isChecked
-      text val
+      radio val ~ width 32
+      text (pack (show val))
 
 
 -- Alternatively, use Higher Kinded Types, and Hyperbole can guarantee the field names are the same
@@ -84,7 +92,7 @@ data ContactForm' f = ContactForm'
   { name :: Field f Text
   , age :: Field f Int
   , isFavorite :: Field f Bool
-  , planet :: Field f Text
+  , planet :: Field f Planet
   }
   deriving (Generic, FromFormF, GenFields FieldName)
 
@@ -118,19 +126,20 @@ formView' = do
     col ~ gap 5 $ do
       el $ text "Planet"
       field "planet" $ do
-        displayOption "Mercury" False
-        displayOption "Venus" False
-        displayOption "Earth" True
-        displayOption "Mars" False
+        selGroup Earth $ do
+          displayOption Mercury
+          displayOption Venus
+          displayOption Earth
+          displayOption Mars
 
     submit "Submit" ~ btn
 
   where
 
-  displayOption val isChecked =
+  displayOption val =
     label ~ flexRow . gap 10 $ do
-      radio val ~ width 32 @ checked isChecked
-      text val
+      radio val ~ width 32
+      text (pack (show val))
 
 contactView :: ContactForm -> View AddContact ()
 contactView u = do
