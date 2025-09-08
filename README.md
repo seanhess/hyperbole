@@ -103,6 +103,9 @@ Learn More
     </div>
 </a>
 
+* [Using NIX](./docs/nix.md)
+* [Local Development](./docs/dev.md)
+* [Comparison with Similar Frameworks](./docs/comparison.md)
 
 In the Wild
 ---------------------
