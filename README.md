@@ -2,10 +2,9 @@
 
 [![Hackage Version](https://img.shields.io/hackage/v/hyperbole?color=success)](https://hackage.haskell.org/package/hyperbole)
 
-Create interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/), [Elm](https://elm-lang.org/), and [Phoenix LiveView](https://www.phoenixframework.org/)
+Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView.
 
 
-[hyperbole.live/simple](https://hyperbole.live/simple)
 
 ```haskell
 {-# LANGUAGE DeriveAnyClass #-}
@@ -44,7 +43,6 @@ messageView :: Text -> View Message ()
 messageView msg = do
   button (Louder msg) ~ border 1 $ text msg
 ```
-
 
 
 
@@ -113,7 +111,7 @@ In the Wild
   <img alt="National Solar Observatory" src="https://nso1.b-cdn.net/wp-content/uploads/2020/03/NSO-logo-orange-text.png" width="400"/>
 </a>
 
-The NSO uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). This production application contains complex interfaces, workers, databases, and more.
+The NSO uses Hyperbole to manage Level 2 Data pipelines for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It uses complex user interfaces, workers, databases, and more. [The entire codebase is open source](https://github.com/DKISTDC/level2/). 
 
 
 
