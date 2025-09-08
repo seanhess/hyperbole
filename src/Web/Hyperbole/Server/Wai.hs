@@ -47,9 +47,6 @@ handleRequestWai options req respond actions = do
   liftIO $ sendResponse options rq client res rmts respond
 
 
--- TODO: if you can't manually specify the response code, then you need to be able to control the 404 response
--- right now it's not customizable at all!
--- I'm pretty sure you can customize it via nginx, but that's not what I want
 sendResponse :: ServerOptions -> Request -> Client -> Response -> [Remote] -> (Wai.Response -> IO ResponseReceived) -> IO Wai.ResponseReceived
 sendResponse options req client res remotes respond = do
   let metas = requestMetadata req <> responseMetadata req.path client remotes

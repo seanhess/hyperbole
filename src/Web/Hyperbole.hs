@@ -236,7 +236,6 @@ import Web.Hyperbole.View qualified as View
 import Web.Hyperbole.View.Embed
 
 
-
 {- $use
 
 Single Page Applications (SPAs) require the programmer to write two programs: a Javascript client and a Server, which both must conform to a common API

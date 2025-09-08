@@ -7,7 +7,7 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Distribution.Simple.Utils (copyDirectoryRecursive)
-import Distribution.Verbosity (normal, verbose)
+import Distribution.Verbosity (verbose)
 import System.Directory
 import System.FilePath
 
