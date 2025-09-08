@@ -89,10 +89,7 @@ Learn More
 ----------
 
 <a href="https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html" target="_blank" style="border-radius: 20px; Background-color:#f8f8f8; gap: 20px; display: flex; flex-direction: row; align-items: center">
-    <image src="https://github.com/seanhess/hyperbole/raw/main/docs/hackage.svg">
-    <div style="font-size:28px; color:#333; font-weight: bold;">
-      View Documentation on Hackage
-    </div>
+    <image src="./docs/hackage.svg">
 </a>
 
 * [Using NIX](./docs/nix.md)
