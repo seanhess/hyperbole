@@ -130,6 +130,7 @@ test-suite test
       Test.QuerySpec
       Test.RouteSpec
       Test.SessionSpec
+      Test.URISpec
       Test.ViewActionSpec
       Test.ViewIdSpec
       Paths_hyperbole

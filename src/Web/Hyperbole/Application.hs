@@ -101,4 +101,4 @@ suppressMessages ex = do
 routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
 routeRequest actions = do
   pth <- reqPath
-  maybe notFound actions $ findRoute pth.segments
+  maybe notFound actions $ matchRoute pth

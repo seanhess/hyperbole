@@ -169,7 +169,7 @@ expandExample p prefix = do
  where
   appRoute :: IO AppRoute
   appRoute = do
-    case findRoute @AppRoute p.segments of
+    case matchRoute @AppRoute p of
       Nothing -> fail $ "Could not find example: " <> cs (pathToText p)
       Just r -> pure r
 

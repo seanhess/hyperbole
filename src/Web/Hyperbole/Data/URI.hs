@@ -37,7 +37,7 @@ import Network.HTTP.Types (Query, QueryItem, parseQuery, renderQuery)
 import Network.URI (URI (..), URIAuth (..), parseURIReference, uriToString)
 import Network.URI qualified as Network
 import Network.URI.Static (uri)
-import System.FilePath ((</>))
+import System.FilePath (normalise, (</>))
 
 
 -- Constructors ------------------------------------------
@@ -45,10 +45,19 @@ import System.FilePath ((</>))
 
 -- Operators -----------------------------------------------
 
+-- maybe lets not care about leading slashes at all until rendering
 (./.) :: URI -> Path -> URI
 u ./. p =
-  let newPath = cs $ pathToText p
-   in u{Network.uriPath = if p.isRoot then newPath else u.uriPath </> newPath}
+  u{Network.uriPath = addLeadingSlash $ normalise (u.uriPath </> newPath)}
+ where
+  newPath = cs $ pathToText False p
+
+  addLeadingSlash pth =
+    case take 1 pth of
+      "/" -> pth
+      _ -> '/' : pth
+
+
 infixl 5 ./.
 
 
@@ -72,14 +81,11 @@ queryString = cs . renderQuery True
 
 -- Path -----------------------------------------------------
 
-data Path = Path
-  { isRoot :: Bool
-  , segments :: [Segment]
-  }
+newtype Path = Path {segments :: [Segment]}
   deriving (Show, Eq)
 instance IsList Path where
   type Item Path = Segment
-  fromList = Path True
+  fromList = Path . filter (not . T.null)
   toList p = p.segments
 instance IsString Path where
   fromString = path . cs
@@ -94,15 +100,13 @@ cleanSegment = T.dropWhileEnd (== '/') . T.dropWhile (== '/')
 
 path :: Text -> Path
 path p =
-  let segments = filter (not . T.null) $ T.splitOn "/" $ T.dropWhile (== '/') p
-      isRoot = "/" `T.isPrefixOf` p
-   in Path{isRoot, segments}
+  fromList $ T.splitOn "/" $ T.dropWhile (== '/') p
 
 
 pathUri :: Path -> URI
 pathUri p =
   URI
-    { uriPath = cs $ pathToText p
+    { uriPath = cs $ pathToText True p
     , uriScheme = mempty
     , uriAuthority = Nothing
     , uriQuery = mempty
@@ -114,13 +118,13 @@ uriToText :: URI -> Text
 uriToText u = cs $ uriToString id u ""
 
 
-pathToText :: Path -> Text
-pathToText p =
-  pathPrefix p <> T.intercalate "/" (fmap cleanSegment p.segments)
+pathToText :: Bool -> Path -> Text
+pathToText isRoot p =
+  pathPrefix <> T.intercalate "/" (fmap cleanSegment p.segments)
  where
-  pathPrefix :: Path -> Text
-  pathPrefix p' =
-    if p'.isRoot then "/" else ""
+  pathPrefix :: Text
+  pathPrefix =
+    if isRoot then "/" else ""
 
 
 -- | A URI with a phantom type to distinguish different endpoints

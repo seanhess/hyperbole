@@ -6,7 +6,7 @@ module Example.Page.OAuth2 where
 
 import Data.Aeson (eitherDecode)
 import Data.String.Conversions (cs)
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text, pack)
 import Effectful
 import Effectful.Reader.Dynamic
 import Example.AppRoute qualified as Route
@@ -16,7 +16,7 @@ import Example.View.Layout
 import Network.HTTP.Client qualified as HTTP
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.Data.URI (Endpoint (..), Path (..), pathToText)
+import Web.Hyperbole.Data.URI (Endpoint (..), (./.))
 import Web.Hyperbole.Effect.OAuth2 (Access, OAuth2, Token (..))
 import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
 import Web.Hyperbole.Types.Response (ResponseError (ErrAuth))
@@ -40,7 +40,7 @@ instance Session UserSession where
 openLogin :: (Hyperbole :> es, OAuth2 :> es, Reader AppConfig :> es) => Eff es a
 openLogin = do
   Endpoint appRoot <- (.endpoint) <$> ask @AppConfig
-  let redirectUrl = appRoot{uriPath = unpack $ pathToText $ Path True $ routePath Route.OAuth2Authenticate}
+  let redirectUrl = appRoot ./. routePath Route.OAuth2Authenticate
   u <- OAuth2.authUrl redirectUrl "email"
   redirect u
 

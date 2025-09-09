@@ -18,7 +18,7 @@ import Web.Hyperbole.Effect.Session (sessionCookie)
 data Woot = Woot Text
   deriving (Generic, Show, ToJSON, FromJSON)
 instance Session Woot where
-  cookiePath = Just $ Path True ["somepage"]
+  cookiePath = Just $ Path ["somepage"]
 
 
 spec :: Spec

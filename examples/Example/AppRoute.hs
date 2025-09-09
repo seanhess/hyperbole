@@ -1,3 +1,6 @@
+{-# LANGUAGE OverloadedLists #-}
+
+
 module Example.AppRoute where
 
 import Data.String.Conversions (cs)

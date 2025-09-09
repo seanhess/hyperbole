@@ -1,8 +1,8 @@
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE OverloadedLists #-}
 
 module Web.Hyperbole.Route
   ( Route (..)
-  , findRoute
   , routeUri
   , GenRoute (..)
   , genMatchRoute
@@ -45,28 +45,21 @@ class Route a where
 
 
   -- | Try to match segments to a route
-  matchRoute :: [Segment] -> Maybe a
-  default matchRoute :: (Generic a, GenRoute (Rep a)) => [Segment] -> Maybe a
+  matchRoute :: Path -> Maybe a
+  default matchRoute :: (Generic a, GenRoute (Rep a)) => Path -> Maybe a
   -- this will match a trailing slash, but not if it is missing
-  matchRoute segs =
-    case (segs, baseRoute) of
-      ([""], Just b) -> pure b
+  matchRoute p =
+    case (p, baseRoute) of
       ([], Just b) -> pure b
-      (_, _) -> genMatchRoute segs
+      (_, _) -> genMatchRoute p.segments
 
 
   -- | Map a route to segments
-  routePath :: a -> [Segment]
-  default routePath :: (Generic a, Eq a, GenRoute (Rep a)) => a -> [Segment]
+  routePath :: a -> Path
+  default routePath :: (Generic a, Eq a, GenRoute (Rep a)) => a -> Path
   routePath p
     | Just p == baseRoute = []
-    | otherwise = genRoutePath p
-
-
--- | Try to match a route, use 'defRoute' if it's empty
-findRoute :: (Route a) => [Segment] -> Maybe a
-findRoute [] = baseRoute
-findRoute ps = matchRoute ps
+    | otherwise = Path (genRoutePath p)
 
 
 genMatchRoute :: (Generic a, GenRoute (Rep a)) => [Segment] -> Maybe a
@@ -83,7 +76,7 @@ genRoutePath = genPaths . from
 /user/100
 -}
 routeUri :: (Route a) => a -> URI
-routeUri = pathUri . Path True . routePath
+routeUri = pathUri . routePath
 
 
 -- | Automatically derive 'Route'
@@ -153,10 +146,8 @@ instance (GenRoute a, GenRoute b) => GenRoute (a :*: b) where
 
 
 instance (Route sub) => GenRoute (K1 R sub) where
-  genRoute ts = K1 <$> matchRoute ts
-
-
-  genPaths (K1 sub) = routePath sub
+  genRoute ts = K1 <$> matchRoute (Path ts)
+  genPaths (K1 sub) = (routePath sub).segments
 
 
 genRouteRead :: (Read x) => [Text] -> Maybe (K1 R x a)
@@ -199,10 +190,10 @@ instance (Route a) => Route (Maybe a) where
   baseRoute = Nothing
 
 
-matchRouteRead :: (Read a) => [Segment] -> Maybe a
+matchRouteRead :: (Read a) => Path -> Maybe a
 matchRouteRead [t] = readMaybe (unpack t)
 matchRouteRead _ = Nothing
 
 
-routePathShow :: (Show a) => a -> [Segment]
+routePathShow :: (Show a) => a -> Path
 routePathShow a = [pack (show a)]

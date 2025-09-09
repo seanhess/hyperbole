@@ -1,5 +1,5 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Web.Hyperbole.Effect.OAuth2
   ( OAuth2 (..)
@@ -158,6 +158,7 @@ instance FromJSON URIAuth
 instance ToJSON URIAuth
 #endif
 
+
 data AuthFlow = AuthFlow
   { redirect :: URI
   , state :: Token State
@@ -165,9 +166,9 @@ data AuthFlow = AuthFlow
   deriving (Generic, FromJSON, ToJSON)
 instance Session AuthFlow where
   sessionKey = "OAuth2AuthFlow"
-  cookiePath = Just $ Path True []
+  cookiePath = Just "/"
 instance Default AuthFlow where
-  def = AuthFlow (pathUri (Path False [])) (Token mempty)
+  def = AuthFlow (pathUri "/") (Token mempty)
 
 
 data Config = Config
@@ -202,7 +203,7 @@ instance ToJSON Authenticated where
   toJSON = genericToJSON defaultOptions{fieldLabelModifier = quietSnake}
 instance Session Authenticated where
   sessionKey = "OAuth2Authenticated"
-  cookiePath = Just $ Path True []
+  cookiePath = Just "/"
 
 
 data OAuth2Error

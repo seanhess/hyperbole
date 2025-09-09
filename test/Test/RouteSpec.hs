@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module Test.RouteSpec where
 
 import Data.Text (Text)
@@ -61,7 +63,7 @@ spec = do
 
     describe "matchRoute" $ do
       it "basic" $ matchRoute ["goodbye"] `shouldBe` Just Goodbye
-      it "default empty string" $ matchRoute [""] `shouldBe` Just MainPage
+      -- it "default empty string" $ matchRoute [""] `shouldBe` Just MainPage
       it "default empty" $ matchRoute [] `shouldBe` Just MainPage
       it "compound" $ matchRoute ["hello", "world"] `shouldBe` Just (Hello World)
       it "compound default" $ matchRoute ["hello"] `shouldBe` Just (Hello MainHello)

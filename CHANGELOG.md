@@ -6,6 +6,7 @@
 * error handling, custom errors
 * Web.Hyperbole.Effect.OAuth2
 * Web.Hyperbole.Effect.GenRandom
+* Web.Hyperbole.Data.URI
 * OAuth2 example
 * `trigger` actions in other views
   * required refactor of `Page` type alias to support type-checking: `Eff es (Page '[])` is now `Page es '[]`
@@ -15,11 +16,11 @@
 * View DocumentHead ()
 * ping keepalive
 
-## 0.4.3 -- 2024-01-31
+## 0.4.3 -- 2025-01-31
 
 * Bug fixes and improvements
 
-## 0.4.2 -- 2024-01-21
+## 0.4.2 -- 2025-01-21
 
 * Cleaner HyperView class [(@cgeorgii)](https://github.com/cgeorgii)
   * data family Action
