@@ -16,6 +16,9 @@ module Web.Hyperbole.HyperView.Forms
   , label
   , input
   , checkbox
+  , Selection(..)
+  , selGroup
+  , radio
   , form
   , textarea
   , submit
@@ -47,7 +50,7 @@ import Text.Casing (kebab)
 import Web.Atomic.Types hiding (Selector)
 import Web.FormUrlEncoded (Form (..), FormOptions (..))
 import Web.FormUrlEncoded qualified as FE
-import Web.Hyperbole.Data.Param (FromParam (..), ParamValue (..))
+import Web.Hyperbole.Data.Param (FromParam (..), ParamValue (..), ToParam (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
@@ -230,6 +233,31 @@ checkbox :: Bool -> View (Input id a) ()
 checkbox isChecked = do
   Input (FieldName nm) <- context
   tag "input" @ att "type" "checkbox" . name nm $ none @ checked isChecked
+
+
+data Selection (id :: Type) (a :: Type) (b :: Type) = Selection
+  { inputCtx :: Input id a
+  , defaultOption :: b
+  }
+
+
+-- NOTE: This can be used for radio, list input, and select
+selGroup :: b -> View (Selection id a b) () -> View (Input id a) ()
+selGroup defOpt inner = modifyContext f inner
+  where
+  f inpCtx = Selection inpCtx defOpt
+
+
+radio :: (Eq b, ToParam b) => b -> View (Selection id a b) ()
+radio val = do
+  Selection (Input (FieldName nm)) defOpt <- context
+  let (ParamValue valTxt) = toParam val
+  tag "input"
+    @ att "type" "radio"
+    . name nm
+    . value valTxt
+    . checked (defOpt == val)
+    $ none
 
 
 -- | textarea for a 'field'
