@@ -1,17 +1,21 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Main where
 
+import Control.Applicative ((<|>))
 import Control.Exception (SomeException, try)
 import Data.Char (isAlpha, isSpace)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
-import Debug.Trace
 import Distribution.Simple.Utils (copyDirectoryRecursive)
 import Distribution.Verbosity (verbose)
-import Example.Route.AppRoute
+import Example.AppRoute as Example
 import System.Directory
 import System.FilePath
+import Web.Hyperbole.Data.URI
+import Web.Hyperbole.Route
 
 
 main :: IO ()
@@ -53,24 +57,24 @@ copyExtraFilesTo tmpDir = do
 
 
 expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
-expandAndCopyFileTo tmpDir path = do
-  src <- readSource path
+expandAndCopyFileTo tmpDir pth = do
+  src <- readSource pth
   expanded <- expandFile src
-  writeSource tmpDir path expanded
+  writeSource tmpDir pth expanded
 
 
 readSource :: FilePath -> IO SourceCode
-readSource path = do
-  inp <- T.readFile path
+readSource pth = do
+  inp <- T.readFile pth
   pure $ SourceCode $ T.lines inp
 
 
 writeSource :: FilePath -> FilePath -> SourceCode -> IO ()
 writeSource tmpDir relPath src = do
-  let path = tmpDir </> cleanRelativeDir relPath
-  createDirectoryIfMissing True $ takeDirectory path
-  T.writeFile path $ T.unlines src.lines
-  putStrLn $ "WROTE to " <> path <> " " <> show (length src.lines)
+  let pth = tmpDir </> cleanRelativeDir relPath
+  createDirectoryIfMissing True $ takeDirectory pth
+  T.writeFile pth $ T.unlines src.lines
+  putStrLn $ "WROTE to " <> pth <> " " <> show (length src.lines)
  where
   cleanRelativeDir =
     dropWhile (== '/') . dropWhile (== '.')
@@ -79,7 +83,6 @@ writeSource tmpDir relPath src = do
 relativeSourceFiles :: FilePath -> IO [FilePath]
 relativeSourceFiles dir = do
   contents <- tryDirectory dir
-  -- putStrLn dir
   let folders = filter isFolder contents
   let files = filter isSourceFile contents
 
@@ -87,14 +90,14 @@ relativeSourceFiles dir = do
 
   pure $ fmap addDir files <> mconcat files'
  where
-  isSourceFile path = takeExtension path == ".hs"
-  isFolder path = takeExtension path == ""
+  isSourceFile pth = takeExtension pth == ".hs"
+  isFolder pth = takeExtension pth == ""
   addDir = (dir </>)
-  tryDirectory path = do
-    res <- try $ listDirectory path
+  tryDirectory pth = do
+    res <- try $ listDirectory pth
     case res of
       Left (_ :: SomeException) -> do
-        putStrLn $ "SKIPPED" <> path
+        putStrLn $ "SKIPPED" <> pth
         pure []
       Right files -> pure files
 
@@ -102,15 +105,14 @@ relativeSourceFiles dir = do
 data Macro
   = Embed
       { sourceFile :: FilePath
-      , prefix :: Text
       , definition :: TopLevelDefinition
       }
-  | Example FilePath
+  | Example Path
   deriving (Eq)
 newtype SourceCode = SourceCode {lines :: [Text]}
 instance Show Macro where
-  show (Embed src pfx def) = "Embed " <> src <> " " <> cs pfx <> " " <> show def
-  show (Example src) = "Example " <> src
+  show (Embed src def) = "Embed " <> src <> " " <> show def
+  show (Example src) = "Example " <> show src
 
 
 newtype TopLevelDefinition = TopLevelDefinition Text
@@ -122,28 +124,35 @@ expandFile (SourceCode lns) =
   SourceCode . mconcat <$> mapM expandLine lns
 
 
+-- * #EXAMPLE /simple
+
+
+-- > EMBED Example/Docs/BasicPage.hs page
 expandLine :: Text -> IO [Text]
 expandLine line = do
   case parseMacro line of
     Nothing -> do
       pure [line]
-    Just (Embed src pfx def) -> do
-      print (line, src, pfx, def)
-      expandEmbed src pfx def
-    Just (Example src) ->
-      expandExample src
+    Just (pre, Embed src def) -> do
+      expandEmbed src pre def
+    Just (pre, Example src) -> do
+      expandExample src pre
  where
+  parseMacro :: Text -> Maybe (Text, Macro)
   parseMacro inp = do
-    let (prefix, rest) = T.break (== '#') inp
-    splitMacro prefix rest
+    parseEmbed inp <|> parseExample inp
 
-  splitMacro prefix inp = do
-    case T.breakOn " " inp of
-      ("#EMBED", info) -> do
-        traceM (show (prefix, inp, info))
+  parseExample l = do
+    case T.splitOn "#EXAMPLE " l of
+      [prefix, src] -> do
+        pure (prefix, Example $ path src)
+      _ -> Nothing
+
+  parseEmbed l = do
+    case T.splitOn "#EMBED " l of
+      [prefix, info] -> do
         (sourceFile, definition) <- splitSrcDef $ T.dropWhile (== ' ') info
-        pure $ Embed sourceFile prefix definition
-      ("#EXAMPLE", info) -> pure $ Example (cs $ T.dropWhile (== ' ') info)
+        pure (prefix, Embed sourceFile definition)
       _ -> Nothing
 
   splitSrcDef inp =
@@ -152,10 +161,20 @@ expandLine line = do
 
 
 -- look it up as a URI...
-expandExample :: FilePath -> IO [Text]
-expandExample src = do
-  putStrLn "CHECKING EXAMPLE"
-  pure ["EXAMPLE GOES HERE"]
+expandExample :: Path -> Text -> IO [Text]
+expandExample p prefix = do
+  r <- appRoute
+  pure [prefix <> "[" <> Example.routeTitle r <> "](" <> uriToText (exampleBaseURI ./. p) <> ")"]
+ where
+  appRoute :: IO AppRoute
+  appRoute = do
+    case findRoute @AppRoute p.segments of
+      Nothing -> fail $ "Could not find example: " <> cs (pathToText p)
+      Just r -> pure r
+
+
+exampleBaseURI :: URI
+exampleBaseURI = [uri|https://hyperbole.live|]
 
 
 expandEmbed :: FilePath -> Text -> TopLevelDefinition -> IO [Text]
@@ -167,7 +186,7 @@ expandEmbed src pfx def = do
   requireTopLevel :: TopLevelDefinition -> SourceCode -> IO [Text]
   requireTopLevel tld sc =
     case findTopLevel tld sc of
-      [] -> fail $ "Could not find " <> show (Embed src pfx def)
+      [] -> fail $ "Could not find: " <> show (Embed src def)
       lns -> pure lns
 
   -- addPrefix line = embed.prefix <> line

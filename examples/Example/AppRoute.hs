@@ -1,9 +1,12 @@
 module Example.AppRoute where
 
+import Data.String.Conversions (cs)
 import Data.Text (Text, unpack)
-import Example.Effects.Users (UserId)
+import Text.Casing (fromHumps, toWords)
 import Text.Read (readMaybe)
 import Web.Hyperbole
+
+type UserId = Int
 
 data AppRoute
   = Main
@@ -80,3 +83,22 @@ data Hello
   | Redirected
   | RedirectNow
   deriving (Eq, Generic, Route, Show)
+
+routeTitle :: AppRoute -> Text
+routeTitle (Hello _) = "Hello World"
+routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
+routeTitle (State Effects) = "Effects"
+routeTitle (State StateRoot) = "State"
+routeTitle (State Actions) = "Action Context"
+routeTitle (State Query) = "Query"
+routeTitle (State Sessions) = "Sessions"
+routeTitle (Data d) = defaultTitle d
+routeTitle Errors = "Error Handling"
+routeTitle (Examples Todos) = "TodoMVC"
+routeTitle (Examples TodosCSS) = "TodoMVC (CSS version)"
+routeTitle (Examples BigExamples) = "Large Examples"
+routeTitle OAuth2 = "OAuth2"
+routeTitle r = defaultTitle r
+
+defaultTitle :: (Show r) => r -> Text
+defaultTitle = cs . toWords . fromHumps . show

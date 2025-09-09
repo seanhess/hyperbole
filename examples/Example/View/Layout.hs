@@ -12,7 +12,6 @@ import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Example.View.Icon as Icon (hamburger)
 import Paths_examples (version)
-import Text.Casing (fromHumps, toWords)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI
@@ -134,24 +133,6 @@ exampleMenu current = do
   selected rt =
     if rt == current then bg DarkHighlight . border (L 2) . pad (L 18) else id
 
-routeTitle :: AppRoute -> Text
-routeTitle (Hello _) = "Hello World"
-routeTitle (Contacts ContactsAll) = "Contacts (Advanced)"
-routeTitle (State Effects) = "Effects"
-routeTitle (State StateRoot) = "State"
-routeTitle (State Actions) = "Action Context"
-routeTitle (State Query) = "Query"
-routeTitle (State Sessions) = "Sessions"
-routeTitle (Data d) = defaultTitle d
-routeTitle Errors = "Error Handling"
-routeTitle (Examples Todos) = "TodoMVC"
-routeTitle (Examples TodosCSS) = "TodoMVC (CSS version)"
-routeTitle (Examples BigExamples) = "Large Examples"
-routeTitle OAuth2 = "OAuth2"
-routeTitle r = defaultTitle r
-
-defaultTitle :: (Show r) => r -> Text
-defaultTitle = cs . toWords . fromHumps . show
 
 navigation :: AppRoute -> View c ()
 navigation rt = do

@@ -7,7 +7,7 @@ cabal-version: 2.2
 name:           hyperbole
 version:        0.5.0
 synopsis:       Interactive HTML apps using type-safe serverside Haskell
-description:    Interactive serverside web framework Inspired by HTMX, Elm, and Phoenix LiveView
+description:    Interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView.
 category:       Web, Network
 homepage:       https://github.com/seanhess/hyperbole
 bug-reports:    https://github.com/seanhess/hyperbole/issues

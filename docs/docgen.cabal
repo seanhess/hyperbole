@@ -23,6 +23,7 @@ source-repository head
 executable docgen
   main-is: Main.hs
   other-modules:
+      Example.AppRoute
       Paths_docgen
   autogen-modules:
       Paths_docgen
@@ -41,8 +42,10 @@ executable docgen
   build-depends:
       Cabal
     , base
+    , casing
     , directory
     , filepath
+    , hyperbole
     , string-conversions
     , text
   default-language: GHC2021

@@ -32,6 +32,8 @@ dependencies:
   - text
   - string-conversions
   - Cabal
+  - hyperbole
+  - casing
 
 executables:
   docgen:

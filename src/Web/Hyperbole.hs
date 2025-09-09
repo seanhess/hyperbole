@@ -278,7 +278,7 @@ import Web.Hyperbole
 
 #EMBED Example/Docs/BasicPage.hs main
 
-#EMBED Example/Docs/BasicPage.hs page
+> wlkjasdflkj #{EMBED Example/Docs/BasicPage.hs page}
 @
 -}
 
@@ -567,8 +567,7 @@ The [National Solar Observatory](https://nso.edu) uses Hyperbole for the Level 2
 
 'HyperView's are stateless. They 'update' based entirely on the 'Action'. However, we can track simple state by passing it back and forth between the 'Action' and the 'View'
 
-From [Example.Page.Simple](https://hyperbole.live/simple)
-#EXAMPLE /simple
+Example: #EXAMPLE /simple
 
 @
 #EMBED Example/Docs/State.hs instance HyperView Message
@@ -582,9 +581,9 @@ From [Example.Page.Simple](https://hyperbole.live/simple)
 
 For any real application with more complex state and data persistence, we need side effects.
 
-Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use effects in a page or an 'update'. The 'Hyperbole' effect gives us access to the 'request' and 'Client' state, including 'session's and the 'query' 'param's. In this example the page keeps the message in the 'query' 'param's
+Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use effects in a 'Page' or an 'update'. The 'Hyperbole' effect gives us access to the 'request' and client state, including 'session's and the 'query' 'param's. In this example the page keeps the message in the 'query' 'param's
 
-From [Example.Docs.SideEffects](https://github.com/seanhess/hyperbole/blob/0.4/examples/Example/Docs/SideEffects.hs)
+See Example: #EXAMPLE /woot
 
 @
 #EMBED Example/Docs/SideEffects.hs page
