@@ -21,7 +21,7 @@ page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   filters <- query
   pure $ exampleLayout (Data Filter) $ do
-    example "Filters" "Example/Page/DataLists/Filter.hs" $ do
+    example (Data Filter) $ do
       el "Incrementally search a list of data, storing parameters in the query string"
       el ~ embed $ hyper Languages $ languagesView filters
 

@@ -7,7 +7,7 @@ import Data.List qualified as L
 import Data.Text (Text, pack, unpack)
 import Effectful
 import Effectful.Exception
-import Example.AppRoute qualified as Route
+import Example.AppRoute as Route hiding (UserId)
 import Example.Colors
 import Example.Style.Cyber (btn)
 import Example.View.Layout
@@ -17,23 +17,23 @@ import Web.Hyperbole hiding (link)
 
 page :: (Hyperbole :> es) => Page es '[Defaults, Users]
 page = do
-  pure $ exampleLayout Route.Errors $ do
-    example "Exceptions" "Example/Page/Errors.hs" $ do
+  pure $ exampleLayout Errors $ do
+    example' "Exceptions" (routeSource Errors) $ do
       el "Any uncaught exceptions thrown from a handler will be displayed in a bright red box inline in the corresponding HyperView"
       col ~ embed $ do
         hyper Exceptions viewExceptions
 
-    example "Edge Cases" "Example/Page/Errors.hs" $ do
+    example' "Edge Cases" (routeSource Errors) $ do
       el "You can use the same mechanism to exit execution early and display an application error to handle edge cases"
       col ~ embed $ do
         hyper KnownUsers viewKnownUsers
 
-    example "Handling in Views" "Example/Page/Errors.hs" $ do
+    example' "Handling in Views" (routeSource Errors) $ do
       el "Handle any expected errors in your view function, by making it accept a Maybe or Either"
       col ~ embed $ do
         hyper SearchUsers viewSearchUsers
 
-    example "Custom Error Views" "Example/Page/Errors.hs" $ do
+    example' "Custom Error Views" (routeSource Errors) $ do
       el "You can also exit execution early and display a custom view from application code or from caught execptions"
       col ~ embed $ do
         hyper Customs viewCustom

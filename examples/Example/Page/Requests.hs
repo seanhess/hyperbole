@@ -3,10 +3,10 @@ module Example.Page.Requests where
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Effectful
-import Example.AppRoute qualified as Route
+import Example.AppRoute as Route
 import Example.Colors
 import Example.Style.Cyber as Cyber (btn, btn', font)
-import Example.View.Layout (embed, example, exampleLayout)
+import Example.View.Layout (embed, example, example', exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI
@@ -14,17 +14,15 @@ import Web.Hyperbole.Data.URI
 page :: (Hyperbole :> es) => Page es '[CheckRequest, ControlResponse, ControlClient]
 page = do
   r <- request
-  pure $ exampleLayout Route.Requests $ do
-    example "Requests" source $ do
+  pure $ exampleLayout Requests $ do
+    example Requests $ do
       el "The Hyperbole Effect allows us to skip the normal update cycle to directly access the Request or manipulate the Client"
       col ~ embed . Cyber.font $ hyper CheckRequest $ viewRequest r
       col ~ embed . Cyber.font $ hyper ControlClient viewClient
 
-    example "Response" source $ do
+    example' "Response" (routeSource Requests) $ do
       el "It also allows us to directly affect the response and the javascript client"
       col ~ embed . Cyber.font $ hyper ControlResponse responseView
- where
-  source = "Example/Page/Requests.hs"
 
 -- REQUEst -------------------------------------------------
 

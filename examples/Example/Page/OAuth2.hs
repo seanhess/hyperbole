@@ -84,7 +84,7 @@ page
 page = do
   muser <- lookupSession @UserSession
   pure $ exampleLayout Route.OAuth2 $ do
-    example "OAuth2" "Example/Page/OAuth2.hs" $ do
+    example Route.OAuth2 $ do
       el "Hyperbole provides some helpers to make OAuth2 easier. This is done in 2 steps:"
       el "1. Initiate the login via the OAuth provider given a redirect url"
       el "2. After the redirect, the library validates the response and fetches an access token from the oauth provider."

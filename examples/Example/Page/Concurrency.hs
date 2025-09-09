@@ -10,7 +10,7 @@ import Example.Colors
 import Example.Effects.Debug
 import Example.Style.Cyber (btn, font)
 import Example.View.Inputs (progressBar)
-import Example.View.Layout (embed, example, exampleLayout)
+import Example.View.Layout (embed, example', exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Effect.GenRandom
@@ -18,7 +18,7 @@ import Web.Hyperbole.Effect.GenRandom
 page :: (Hyperbole :> es, Debug :> es) => Page es '[Polling, LazyData, Progress]
 page = do
   pure $ exampleLayout Concurrency $ do
-    example "Concurrency" source $ do
+    example' "Concurrency" source $ do
       el "While individual HyperViews can only have one update in progress at a time, multiple HyperViews can overlap updates without issue"
       el ~ embed . font $ do
         hyper (Progress 1 100) $ viewProgress 0
@@ -27,7 +27,7 @@ page = do
         hyper (Progress 4 400) $ viewProgress 0
         hyper (Progress 5 500) $ viewProgress 0
 
-    example "Lazy Loading" source $ do
+    example' "Lazy Loading" source $ do
       el $ do
         text "Instead of preloading everything in our Page, a HyperView can load itself using "
         code "onLoad"
@@ -36,14 +36,14 @@ page = do
           el ~ border 1 . width 120 . pad 5 $ do
             hyper (LazyData taskId) viewTaskLoad
 
-    example "Polling" source $ do
+    example' "Polling" source $ do
       el $ do
         text "By including an "
         code "onLoad"
         text "in every view update, we can poll the server after a given delay"
       col ~ embed $ hyper Polling viewInit
  where
-  source = "Example/Page/Concurrency.hs"
+  source = routeSource Concurrency
 
 -----------------------------------------------------------
 -- Simple Polling

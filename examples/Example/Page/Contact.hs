@@ -7,10 +7,11 @@ import Data.String.Conversions
 import Data.Text (Text, pack)
 import Effectful
 import Effectful.Reader.Dynamic
+import Example.AppRoute (UserId, routeSource)
 import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Effects.Debug
-import Example.Effects.Users (User (..), UserId, Users)
+import Example.Effects.Users (User (..), Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn)
@@ -31,7 +32,7 @@ page = do
   uid <- ask
   u <- Users.find uid
   pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
-    example "Contact" "Example/Page/Contact.hs" $ do
+    example' "Contact" (routeSource $ Route.Contacts (Route.Contact 1)) $ do
       col ~ embed $ do
         hyper (Contact uid) $ contactView u
 

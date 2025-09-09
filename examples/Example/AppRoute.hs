@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedLists #-}
 
-
 module Example.AppRoute where
 
 import Data.String.Conversions (cs)
@@ -8,6 +7,8 @@ import Data.Text (Text, unpack)
 import Text.Casing (fromHumps, toWords)
 import Text.Read (readMaybe)
 import Web.Hyperbole
+import Web.Hyperbole.Data.URI
+import Web.Hyperbole.Route
 
 type UserId = Int
 
@@ -17,12 +18,13 @@ data AppRoute
   | Simple
   | Hello Hello
   | Contacts ContactRoute
-  | CSS
+  | CSS CSSRoute
   | Interactivity
   | State StateRoute
   | Counter
-  | Forms
+  | Forms FormRoute
   | Requests
+  | Response
   | Concurrency
   | Data DataRoute
   | Examples ExamplesRoute
@@ -35,6 +37,22 @@ data AppRoute
   deriving (Eq, Generic, Show)
 instance Route AppRoute where
   baseRoute = Just Main
+
+data FormRoute
+  = FormSimple
+  | FormValidation
+  deriving (Eq, Generic, Show)
+instance Route FormRoute where
+  baseRoute = Just FormSimple
+
+data CSSRoute
+  = CSSAll
+  | Transitions
+  | Tooltips
+  | External
+  deriving (Eq, Generic, Show)
+instance Route CSSRoute where
+  baseRoute = Just CSSAll
 
 data DataRoute
   = DataLists
@@ -63,12 +81,11 @@ data ContactRoute
 instance Route ContactRoute where
   baseRoute = Just ContactsAll
 
-  matchRoute [] = pure ContactsAll
-  matchRoute [""] = pure ContactsAll
   matchRoute [contactId] = do
     cid <- readMaybe $ unpack contactId
     pure $ Contact cid
-  matchRoute _ = Nothing
+  matchRoute [] = pure ContactsAll
+  matchRoute other = genMatchRoute other.segments
 
   routePath (Contact uid) = routePath uid
   routePath ContactsAll = []
@@ -95,13 +112,27 @@ routeTitle (State StateRoot) = "State"
 routeTitle (State Actions) = "Action Context"
 routeTitle (State Query) = "Query"
 routeTitle (State Sessions) = "Sessions"
+routeTitle (Forms FormSimple) = "Forms"
+routeTitle (Forms FormValidation) = "Form Validation"
 routeTitle (Data d) = defaultTitle d
 routeTitle Errors = "Error Handling"
 routeTitle (Examples Todos) = "TodoMVC"
 routeTitle (Examples TodosCSS) = "TodoMVC (CSS version)"
 routeTitle (Examples BigExamples) = "Large Examples"
+routeTitle (CSS _) = "CSS"
 routeTitle OAuth2 = "OAuth2"
 routeTitle r = defaultTitle r
+
+routeSource :: AppRoute -> Path
+routeSource (State s) = ["Example", "Page", "State", cs (show s) <> ".hs"]
+routeSource (Contacts (Contact _)) = "Example/Page/Contact.hs"
+routeSource (Contacts ContactsAll) = "Example/Page/Contacts.hs"
+routeSource (CSS CSSAll) = ["Example", "Page", "CSS.hs"]
+routeSource (CSS c) = ["Example", "Page", "CSS", cs (show c) <> ".hs"]
+routeSource (Data SortableTable) = "Example/Page/DataLists/DataTable.hs"
+routeSource (Data d) = ["Example", "Page", "DataLists", cs (show d) <> ".hs"]
+routeSource (Forms f) = ["Example", "Page", "Forms", cs (show f) <> ".hs"]
+routeSource r = ["Example", "Page", cs (show r) <> ".hs"]
 
 defaultTitle :: (Show r) => r -> Text
 defaultTitle = cs . toWords . fromHumps . show

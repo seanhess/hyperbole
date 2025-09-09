@@ -19,7 +19,7 @@ page = do
   -- trigger Fake Noop
   pure $ exampleLayout Test $ do
     script "test.js"
-    example "Test" "Example/Page/Test.hs" $ do
+    example Test $ do
       col ~ embed $ do
         hyper Message1 $ messageView "Hello"
         hyper Message2 $ messageView "World!"

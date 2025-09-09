@@ -17,7 +17,7 @@ page = do
   n <- getCount
   pure $ do
     exampleLayout (State Effects) $ do
-      example "Counter" "Example/Page/State/Effects.hs" $ do
+      example (State Effects) $ do
         el "For all but the simplest cases, we will want to use some sort of Effect to manage our state"
         el $ do
           text "Pages and update functions can run side effects before rendering. Here we add a "

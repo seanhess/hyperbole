@@ -19,7 +19,7 @@ page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   counter <- Counter.page
   pure $ exampleLayout (State Actions) $ do
-    example "Action Context" "Example/Page/Counter.hs" $ do
+    example' (routeTitle (State Actions)) (routeSource Counter) $ do
       el "As shown in the intro, for very simple state, we can include it as a parameter on the Action"
       col ~ embed $ do
         pre countExample ~ font

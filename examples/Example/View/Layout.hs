@@ -16,34 +16,6 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI
 
--- where
---  routeSource :: AppRoute -> Path
---  routeSource = \case
---    Simple -> "Example/Page/Simple.hs"
---    Contacts ContactsAll -> "Example/Page/Contacts.hs"
---    Contacts (Contact _) -> "Example/Page/Contact.hs"
---    Counter -> "Example/Page/Counter.hs"
---    Transitions -> "Example/Page/Transitions.hs"
---    FormSimple -> "Example/Page/FormSimple.hs"
---    FormValidation -> "Example/Page/FormValidation.hs"
---    Sessions -> "Example/Page/Sessions.hs"
---    LazyLoading -> "Example/Page/LazyLoading.hs"
---    Concurrent -> "Example/Page/Concurrent.hs"
---    Redirects -> "Example/Page/Redirects.hs"
---    Requests -> "Example/Page/Requests.hs"
---    Filter -> "Example/Page/Filter.hs"
---    Autocomplete -> "Example/Page/Autocomplete.hs"
---    Errors -> "Example/Page/Errors.hs"
---    RedirectNow -> "Main.hs"
---    Query -> "Main.hs"
---    Hello _ -> "Main.hs"
---    Main -> "Main.hs"
---    Examples -> "Example/View/Layout.hs"
---    Todos -> "Example/Page/Todo.hs"
---    DataTable -> "Example/Page/DataTable.hs"
---    Javascript -> "Example/Page/Javascript.hs"
---    ExternalCSS -> "Example/Page/ExternalCSS.hs"
-
 exampleLayout :: AppRoute -> View c () -> View c ()
 exampleLayout rt contents =
   el ~ grow $ do
@@ -71,8 +43,11 @@ embed :: (Styleable h) => CSS h -> CSS h
 embed =
   pad 20 . gap 10 . bg White . flexCol . Cyber.clip 10
 
-example :: Text -> Path -> View c () -> View c ()
-example t p cnt =
+example :: AppRoute -> View c () -> View c ()
+example r = example' (routeTitle r) (routeSource r)
+
+example' :: Text -> Path -> View c () -> View c ()
+example' t p cnt =
   col ~ gap 10 $ do
     row $ do
       el ~ bold . fontSize 28 . Cyber.font . Style.uppercase $ text t
@@ -83,7 +58,7 @@ example t p cnt =
 exampleMenu :: AppRoute -> View c ()
 exampleMenu current = do
   exampleLink Intro
-  exampleLink CSS
+  exampleLink (CSS CSSAll)
   exampleLink Concurrency
   exampleLink (State StateRoot)
   case current of
@@ -102,7 +77,7 @@ exampleMenu current = do
       exampleLink (Data Filter) ~ sub
       exampleLink (Data LoadMore) ~ sub
     _ -> none
-  exampleLink Forms
+  exampleLink (Forms FormSimple)
   exampleLink Interactivity
   exampleLink Errors
   exampleLink OAuth2
@@ -132,7 +107,6 @@ exampleMenu current = do
     pad (XY 20 10) . color White . hover (bg DarkHighlight)
   selected rt =
     if rt == current then bg DarkHighlight . border (L 2) . pad (L 18) else id
-
 
 navigation :: AppRoute -> View c ()
 navigation rt = do

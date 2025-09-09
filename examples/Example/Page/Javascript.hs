@@ -1,7 +1,7 @@
 module Example.Page.Javascript where
 
 import Data.Text (Text, pack)
-import Example.AppRoute qualified as Route
+import Example.AppRoute as Route
 import Example.Page.Interactivity.Events (box, viewBoxes')
 import Example.Style.Cyber (btn, font)
 import Example.View.Layout
@@ -16,7 +16,7 @@ page = do
 
     el "Include custom js on a page with the script tag on only the page where it is needed, or globally via your toDocument function"
 
-    example "Javascript - runAction" "Example/Page/Javascript.hs" $ do
+    example' "Javascript - runAction" (routeSource Javascript) $ do
       el $ do
         text "JS can call the server via an API attached to "
         code "window.Hyperbole"
@@ -25,7 +25,7 @@ page = do
       col ~ embed . font $ do
         hyper Boxes $ viewBoxes Nothing
 
-    example "Javascript - pushEvent" "Example/Page/Javascript.hs" $ do
+    example' "Javascript - pushEvent" (routeSource Javascript) $ do
       el "The server can push an event to be dispatched on a HyperView"
 
       col ~ embed $ do

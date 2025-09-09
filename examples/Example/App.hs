@@ -29,7 +29,7 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Environment (runEnvironment)
 import Effectful.Reader.Dynamic
 import Effectful.State.Static.Local
-import Example.AppRoute
+import Example.AppRoute as Route
 import Example.Cache (clientCache)
 import Example.Colors
 import Example.Config
@@ -130,8 +130,9 @@ app config users count = do
       Filter -> runPage Filter.page
       LoadMore -> runPage LoadMore.page
   router Errors = runPage Errors.page
-  router Forms = runPage Forms.page
+  router (Forms _) = runPage Forms.page
   router Requests = runPage Requests.page
+  router Route.Response = redirect (routeUri Requests)
   router (State r) =
     case r of
       StateRoot -> redirect $ routeUri (State Actions)
@@ -140,7 +141,7 @@ app config users count = do
       Sessions -> runPage Sessions.page
       Query -> runPage Query.page
   router Intro = runPage Intro.page
-  router CSS = runPage CSS.page
+  router (CSS _) = runPage CSS.page
   router Interactivity = runPage Interactivity.page
   router (Examples BigExamples) = redirect $ routeUri (Examples Todos)
   router (Examples Todos) = runPage Todo.page

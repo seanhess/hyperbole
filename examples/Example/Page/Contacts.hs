@@ -5,10 +5,11 @@ module Example.Page.Contacts where
 
 import Control.Monad (forM_)
 import Effectful
+import Example.AppRoute (UserId)
 import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Effects.Debug
-import Example.Effects.Users (User (..), UserId, Users)
+import Example.Effects.Users (User (..), Users)
 import Example.Effects.Users qualified as Users
 import Example.Page.Contact (contactForm, contactLoading, contactView', parseUser)
 import Example.Page.Contact qualified as Contact
@@ -25,7 +26,7 @@ page
 page = do
   us <- Users.all
   pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
-    example "Contacts" "Example/Page/Contacts.hs" $ do
+    example (Route.Contacts Route.ContactsAll) $ do
       el "This example combines various features"
       col ~ embed $ do
         hyper Contacts $ allContactsView Nothing us

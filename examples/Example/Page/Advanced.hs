@@ -1,7 +1,7 @@
 module Example.Page.Advanced where
 
 import Data.Text (Text)
-import Example.AppRoute qualified as Route
+import Example.AppRoute as Route
 import Example.Style.Cyber as Cyber (btn, font)
 import Example.View.Layout
 import Web.Atomic.CSS
@@ -10,7 +10,7 @@ import Web.Hyperbole
 page :: (Hyperbole :> es) => Page es '[Message, Controls]
 page = do
   pure $ exampleLayout Route.Advanced $ do
-    example "Trigger" "Example/Page/Advanced.hs" $ do
+    example' "Trigger" (routeSource Advanced) $ do
       el "Tell other HyperViews to run an action"
       col ~ embed $ do
         hyper Message $ messageView "..."
@@ -18,7 +18,7 @@ page = do
       col ~ embed $ do
         hyper Controls controlView
 
-    example "Target" "Example/Page/Advanced.hs" $ do
+    example' "Target" (routeSource Advanced) $ do
       el "Alternatively, you can switch contexts to another view to embed its actions"
 
       col ~ embed $ do

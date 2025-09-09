@@ -10,7 +10,7 @@ import Web.Hyperbole
 page :: (Hyperbole :> es) => Page es '[Boxes]
 page = do
   pure $ exampleLayout Interactivity $ do
-    example "Events" "Example/Page/Interactivity/Events.hs" $ do
+    example' "Events" "Example/Page/Interactivity/Events.hs" $ do
       el $ do
         text "Hyperbole provides various events that can be tied to specific actions. Up to this point, we've only used them via the higher-level views like "
         code "button"

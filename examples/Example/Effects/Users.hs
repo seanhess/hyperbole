@@ -8,9 +8,8 @@ import Data.Map.Strict qualified as M
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
+import Example.AppRoute (UserId)
 import Web.Hyperbole (Hyperbole, notFound)
-
-type UserId = Int
 
 data User = User
   { id :: UserId

@@ -14,7 +14,7 @@ page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   ls <- loadNextLanguages 0
   pure $ exampleLayout (Data LoadMore) $ do
-    example "Load More" "Example/Page/DataLists/LoadMore.hs" $ do
+    example (Data LoadMore) $ do
       el "Progressively load more data"
       col ~ embed $ hyper (Languages 0) $ languagesView ls
 
