@@ -41,8 +41,8 @@ default-extensions:
 dependencies:
   - base >=4.16 && <5
   - aeson >= 2.1.2.1
-  - attoparsec
-  - attoparsec-aeson
+  - attoparsec >= 0.14 && < 0.15
+  - attoparsec-aeson >= 2.2 && < 2.3
   - bytestring >= 0.11 && <0.13
   - containers >= 0.6 && <1
   - casing > 0.1 && <0.2
@@ -50,7 +50,7 @@ dependencies:
   - effectful >= 2.4 && <3
   - text >= 1.2 && <3
   - time >= 1.12 && <2
-  - random
+  - random >= 1.2 && < 2
   - string-interpolate >= 0.3 && <0.4
   - file-embed >= 0.0.10 && <0.1
   - http-api-data >= 0.6 && <0.7
@@ -64,9 +64,9 @@ dependencies:
   - network >= 3.1 && <4
   - websockets >= 0.12 && <0.14
   - cookie >=0.4 && <0.6
-  - filepath
-  - http-client
-  - http-client-tls
+  - filepath >= 1.5 && < 2
+  - http-client >= 0.7 && < 0.8
+  - http-client-tls >= 0.3 && < 0.4
 
 library:
   source-dirs:
