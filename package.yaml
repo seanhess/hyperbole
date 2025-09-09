@@ -58,7 +58,7 @@ dependencies:
   - network-uri >=2.6.4.1 && <2.7
   - wai >= 3.2 && <4
   - warp >= 3.3 && <4
-  - atomic-css >= 0.1 && < 0.2
+  - atomic-css >= 0.2 && < 0.3
   - string-conversions >= 0.4 && <0.5
   - wai-websockets >= 3.0 && <4
   - network >= 3.1 && <4

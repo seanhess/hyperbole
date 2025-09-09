@@ -92,7 +92,7 @@ library
   ghc-options: -Wall -fdefer-typed-holes
   build-depends:
       aeson >=2.1.2.1
-    , atomic-css ==0.1.*
+    , atomic-css ==0.2.*
     , attoparsec
     , attoparsec-aeson
     , base >=4.16 && <5
@@ -151,7 +151,7 @@ test-suite test
       skeletest:skeletest-preprocessor
   build-depends:
       aeson >=2.1.2.1
-    , atomic-css ==0.1.*
+    , atomic-css ==0.2.*
     , attoparsec
     , attoparsec-aeson
     , base >=4.16 && <5

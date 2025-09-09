@@ -39,7 +39,7 @@ RUN hpack examples
 RUN hpack docs
 RUN cabal build examples
 RUN mkdir bin
-RUN cd examples && export EXEC=$(cabal list-bin examples); cp $EXEC /opt/build/bin/examples
+RUN cd examples && export EXEC=$(cabal list-bin examples | tail -n1); cp "$EXEC" /opt/build/bin/examples
 
 
 FROM debian:10 AS app

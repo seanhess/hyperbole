@@ -1,11 +1,5 @@
 tests: True
-multi-repl: True
 packages:
   .
   ./examples/
   ./docs/
-
-source-repository-package
-  type: git
-  location: https://github.com/seanhess/atomic-css
-  tag: bfc1f9cd15be
