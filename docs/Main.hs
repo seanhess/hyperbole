@@ -6,8 +6,10 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
+import Debug.Trace
 import Distribution.Simple.Utils (copyDirectoryRecursive)
 import Distribution.Verbosity (verbose)
+import Example.Route.AppRoute
 import System.Directory
 import System.FilePath
 
@@ -97,15 +99,18 @@ relativeSourceFiles dir = do
       Right files -> pure files
 
 
-data Embed = Embed
-  { definition :: TopLevelDefinition
-  , prefix :: Text
-  , sourceFile :: FilePath
-  }
+data Macro
+  = Embed
+      { sourceFile :: FilePath
+      , prefix :: Text
+      , definition :: TopLevelDefinition
+      }
+  | Example FilePath
   deriving (Eq)
 newtype SourceCode = SourceCode {lines :: [Text]}
-instance Show Embed where
-  show e = "Embed " <> e.sourceFile <> " " <> show e.prefix <> " " <> show e.definition
+instance Show Macro where
+  show (Embed src pfx def) = "Embed " <> src <> " " <> cs pfx <> " " <> show def
+  show (Example src) = "Example " <> src
 
 
 newtype TopLevelDefinition = TopLevelDefinition Text
@@ -119,20 +124,26 @@ expandFile (SourceCode lns) =
 
 expandLine :: Text -> IO [Text]
 expandLine line = do
-  case parseEmbed line of
+  case parseMacro line of
     Nothing -> do
       pure [line]
-    Just emb -> expandEmbed emb
+    Just (Embed src pfx def) -> do
+      print (line, src, pfx, def)
+      expandEmbed src pfx def
+    Just (Example src) ->
+      expandExample src
  where
-  parseEmbed inp = do
+  parseMacro inp = do
     let (prefix, rest) = T.break (== '#') inp
-    info <- splitMacro rest
-    (sourceFile, definition) <- splitSrcDef info
-    pure $ Embed{sourceFile, definition, prefix}
+    splitMacro prefix rest
 
-  splitMacro inp =
-    case T.splitAt 7 inp of
-      ("#EMBED ", info) -> pure info
+  splitMacro prefix inp = do
+    case T.breakOn " " inp of
+      ("#EMBED", info) -> do
+        traceM (show (prefix, inp, info))
+        (sourceFile, definition) <- splitSrcDef $ T.dropWhile (== ' ') info
+        pure $ Embed sourceFile prefix definition
+      ("#EXAMPLE", info) -> pure $ Example (cs $ T.dropWhile (== ' ') info)
       _ -> Nothing
 
   splitSrcDef inp =
@@ -140,28 +151,35 @@ expandLine line = do
      in pure (cs src, TopLevelDefinition $ T.drop 1 def)
 
 
-expandEmbed :: Embed -> IO [Text]
-expandEmbed embed = do
-  source <- T.readFile $ "./examples/" <> embed.sourceFile
-  expanded <- requireTopLevel embed.definition (SourceCode $ T.lines source)
+-- look it up as a URI...
+expandExample :: FilePath -> IO [Text]
+expandExample src = do
+  putStrLn "CHECKING EXAMPLE"
+  pure ["EXAMPLE GOES HERE"]
+
+
+expandEmbed :: FilePath -> Text -> TopLevelDefinition -> IO [Text]
+expandEmbed src pfx def = do
+  source <- T.readFile $ "./examples/" <> src
+  expanded <- requireTopLevel def (SourceCode $ T.lines source)
   pure $ fmap markupLine expanded
  where
   requireTopLevel :: TopLevelDefinition -> SourceCode -> IO [Text]
-  requireTopLevel tld src =
-    case findTopLevel tld src of
-      [] -> fail $ "Could not find " <> show embed
+  requireTopLevel tld sc =
+    case findTopLevel tld sc of
+      [] -> fail $ "Could not find " <> show (Embed src pfx def)
       lns -> pure lns
 
   -- addPrefix line = embed.prefix <> line
   markupLine :: Text -> Text
   markupLine line =
-    case embed.prefix of
+    case pfx of
       "" -> markupLineAt line
       _ -> markupLinePrefix line
   markupLineAt =
     T.replace "\"" "\\\"" . highlightTermsLine
   markupLinePrefix line =
-    embed.prefix <> line
+    pfx <> line
 highlightTermsLine :: Text -> Text
 highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
  where

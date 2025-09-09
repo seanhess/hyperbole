@@ -7,9 +7,8 @@ import Web.Hyperbole
 page :: Page es '[Message]
 page = do
   pure $ do
-    col $ do
-      el "Unchanging Header"
-      hyper Message $ messageView "Hello World"
+    el "Unchanging Header"
+    hyper Message $ messageView "Hello World"
 
 messageView :: Text -> View Message ()
 messageView msg = do

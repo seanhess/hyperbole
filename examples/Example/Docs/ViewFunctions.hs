@@ -33,6 +33,6 @@ messageButton :: Text -> View Message ()
 messageButton msg = do
   button (SetMessage msg) ~ border 1 $ text $ "Say " <> msg
 
-header :: Text -> View context ()
+header :: Text -> View c ()
 header txt = do
   el ~ bold $ text txt

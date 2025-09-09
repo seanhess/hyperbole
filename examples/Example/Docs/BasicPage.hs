@@ -3,7 +3,6 @@
 module Example.Docs.BasicPage where
 
 import Data.Text (Text)
-import Web.Atomic.CSS
 import Web.Hyperbole
 
 main :: IO ()
@@ -14,15 +13,15 @@ main = do
 page :: Page es '[]
 page = do
   pure $ do
-    el ~ bold $ "Hello World"
+    el "Hello World"
 
 messageView :: Text -> View context ()
 messageView msg =
-  el ~ bold $ text msg
+  el $ text msg
 
 helloWorld :: View context ()
 helloWorld =
-  el ~ bold $ "Hello World"
+  el "Hello World"
 
 page' :: Page es '[]
 page' = do

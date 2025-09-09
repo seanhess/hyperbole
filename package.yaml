@@ -8,7 +8,7 @@ license-file:       LICENSE
 author:             Sean Hess
 maintainer:         seanhess@gmail.com
 category:           Web, Network
-description:        Interactive serverside web framework Inspired by HTMX, Elm, and Phoenix LiveView
+description:        Interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView.
 
 extra-doc-files:
   - README.md
@@ -69,7 +69,8 @@ dependencies:
   - http-client-tls
 
 library:
-  source-dirs: src
+  source-dirs:
+    - src
 
 tests:
   test:

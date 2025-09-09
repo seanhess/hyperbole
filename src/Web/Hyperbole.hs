@@ -291,7 +291,7 @@ We can embed one or more 'HyperView's to add type-safe interactivity to live sub
 #EMBED Example/Docs/Interactive.hs data Message
 @
 
-Make our 'ViewId' an instance of 'HyperView' by:
+Make our 'ViewId' an instance of 'HyperView':
 
 * Create an 'Action' type with a constructor for every possible way that the user can interact with it
 * Write an 'update' for each 'Action'
@@ -320,15 +320,14 @@ If the user clicks the button, the contents of `hyper` will be replaced with the
 
 {- $view-functions-intro
 
-'View's are HTML fragments with embedded CSS
+'View's are HTML fragments with a 'context'
 
 @
 #EMBED Example/Docs/BasicPage.hs helloWorld
 @
 
->>> Web.Atomic.renderText $ el bold "Hello World"
-<style type='text/css'>.bold { font-weight:bold }</style>
-<div class='bold'>Hello World</div>
+>>> renderText helloWorld
+<div>Hello World</div>
 
 We can factor 'View's into reusable functions:
 
@@ -338,9 +337,11 @@ We can factor 'View's into reusable functions:
 #EMBED Example/Docs/BasicPage.hs page'
 @
 
-We use plain functions to maintain a consistent look and feel rather than stylesheets:
+We can also use functions to reuse look and feel using [atomic-css](https://hackage.haskell.org/package/atomic-css)
 
 @
+import Web.Atomic.CSS
+
 header = bold
 h1 = header . fontSize 32
 h2 = header . fontSize 24
@@ -349,18 +350,16 @@ page = gap 10
 example = col page $ do
   el h1 "My Page"
 @
-
-See [atomic-css](https://hackage.haskell.org/package/atomic-css) for more details
 -}
 
 
 {- $view-functions
 
-We showed above how we can factor 'View's into functions. It's best-practice to have a __main__ 'View' for each 'HyperView'. These take the form:
+We showed above how we can factor 'View's into functions. It's best-practice to have a main 'View' function for each 'HyperView'. These take the form:
 
 > state -> View viewId ()
 
-There's nothing special about `state` or 'View' functions. They're just functions that take parameters and return a view.
+There's nothing special about `state` or 'View' functions. They're just functions that take input data and return a view.
 
 We can write multiple view functions with our 'HyperView' as the 'context', and factor them however is most convenient:
 
@@ -568,7 +567,8 @@ The [National Solar Observatory](https://nso.edu) uses Hyperbole for the Level 2
 
 'HyperView's are stateless. They 'update' based entirely on the 'Action'. However, we can track simple state by passing it back and forth between the 'Action' and the 'View'
 
-From [Example.Page.Simple](https://docs.hyperbole.live/simple)
+From [Example.Page.Simple](https://hyperbole.live/simple)
+#EXAMPLE /simple
 
 @
 #EMBED Example/Docs/State.hs instance HyperView Message
