@@ -163,8 +163,9 @@ expandLine line = do
 -- look it up as a URI...
 expandExample :: Path -> Text -> IO [Text]
 expandExample p prefix = do
+  let pre = if T.null prefix then "▶️ " else prefix
   r <- appRoute
-  pure [prefix <> "[" <> Example.routeTitle r <> "](" <> uriToText (exampleBaseURI ./. p) <> ")"]
+  pure [pre <> "[" <> Example.routeTitle r <> "](" <> uriToText (exampleBaseURI ./. p) <> ")"]
  where
   appRoute :: IO AppRoute
   appRoute = do

@@ -9,13 +9,13 @@ Portability: portable
 Create fully interactive HTML applications with type-safe serverside Haskell. Inspired by [HTMX](https://htmx.org/), [Elm](https://elm-lang.org/), and [Phoenix LiveView](https://www.phoenixframework.org/)
 -}
 module Web.Hyperbole
-  ( -- * Introduction
+  ( -- * Introduction #intro#
     -- $use
 
-    -- * Getting started
+    -- * Getting started #start#
     -- $hello
 
-    -- ** HTML Views
+    -- ** HTML Views #views#
     -- $view-functions-intro
 
     -- ** Interactive HyperViews #hyperviews#
@@ -24,59 +24,61 @@ module Web.Hyperbole
     -- ** View Functions #viewfunctions#
     -- $view-functions
 
-    -- * Managing State
+    -- * Managing State #state#
     -- $state-parameters
 
-    -- ** Side Effects
+    -- ** Side Effects #side-effects#
     -- $state-effects
 
-    -- ** Databases and Custom Effects
+    -- ** Databases and Custom Effects #databases#
     -- $state-databases
 
-    -- * Multiple HyperViews
+    -- * Multiple HyperViews #hyperview-multi#
     -- $practices-multi
 
-    -- ** Copies
+    -- ** Same HyperView, Unique ViewId #hyperview-same#
     -- $practices-same
 
-    -- ** Nesting
+    -- ** Nesting HyperViews #hyperview-nested#
     -- $practices-nested
 
     -- * Functions, not Components #reusable#
     -- $reusable
 
-    -- * Pages #pages#
+    -- * Pages and Routes #pages#
     -- $practices-pages
 
-    -- * Examples
+    -- * Examples #examples#
     -- $examples
 
-    -- * Application
+    -- * Application #application#
     liveApp
-  , liveAppWith
-  , ServerOptions (..)
   , Warp.run
+
+    -- ** Page
   , Page
   , runPage
-  , DocumentHead
+
+    -- ** Document
+  , document
   , quickStartDocument
+  , DocumentHead
   , quickStart
   , mobileFriendly
-  , document
 
-    -- ** Type-Safe Routes
+    -- ** Type-Safe Routes #routes#
   , routeRequest -- maybe belongs in an application section
   , Route (..)
   , routeUri
   , route
 
-    -- * Hyperbole Effect
+    -- * Hyperbole Effect #hyperbole-effect#
   , Hyperbole
   , trigger
   , pushEvent
   , pageTitle
 
-    -- ** Response
+    -- ** Response #response#
 
   -- , respondView
   , respondError
@@ -84,7 +86,7 @@ module Web.Hyperbole
   , notFound
   , redirect
 
-    -- ** Request
+    -- ** Request #request#
   , request
   , Request (..)
 
@@ -106,12 +108,12 @@ module Web.Hyperbole
   , deleteSession
   , Session (..)
 
-    -- * HyperView
+    -- * HyperView #hyperview#
   , HyperView (..)
   , hyper
   , HasViewId (..)
 
-    -- * Interactive Elements
+    -- * Interactive Elements #interactive#
   , button
   , search
   , dropdown
@@ -130,7 +132,7 @@ module Web.Hyperbole
   , Key (..)
   , DelayMs
 
-    -- * Type-Safe Forms
+    -- * Type-Safe Forms #forms#
 
     -- | Painless forms with type-checked field names, and support for validation. See [Example.Forms](https://docs.hyperbole.live/formsimple)
   , FromForm (..)
@@ -164,7 +166,7 @@ module Web.Hyperbole
   , validate
   , invalidText
 
-    -- * Query Param Encoding
+    -- * Query Param Encoding #query#
   , ToQuery (..)
   , FromQuery (..)
   , QueryData
@@ -172,7 +174,7 @@ module Web.Hyperbole
   , ToParam (..)
   , FromParam (..)
 
-    -- * Advanced
+    -- * Advanced #advanced#
   , target
   , hyperView
   , parseError
@@ -185,7 +187,7 @@ module Web.Hyperbole
   , FromJSON
   , Root
 
-    -- * Exports
+    -- * Exports #exports#
 
     -- | Hyperbole is tightly integrated with [atomic-css](https://hackage.haskell.org/package/atomic-css) for HTML generation
   , module Web.Hyperbole.View
@@ -396,9 +398,9 @@ We've mentioned most of the Architecture of a hyperbole application, but let's g
 
 {- $practices-multi
 
-We can add as many 'HyperView's to a page as we want. Let's create another 'HyperView' for a simple counter
+We can add as many 'HyperView's to a page as we want. Let's add a 'HyperView' for a simple counter to our `Message` page
 
-From [Example.Docs.MultiView](https://github.com/seanhess/hyperbole/blob/0.4/examples/Example/Docs/MultiView.hs)
+▶️ #EXAMPLE /counter
 
 @
 #EMBED Example/Docs/MultiView.hs data Count
@@ -420,9 +422,9 @@ We can use both 'Message' and 'Count' 'HyperView's in our page, and they will up
 
 {- $practices-same
 
-We can embed multiple copies of the same 'HyperView' as long as the value of 'ViewId' is unique. Let's update `Message` to allow for more than one value:
+We can embed more than one of the same 'HyperView' as long as the value of 'ViewId' is unique. Let's update `Message` to allow for more than one value:
 
-See [Example.Page.Simple](https://docs.hyperbole.live/intro)
+▶️ #EXAMPLE /simple
 
 @
 #EMBED Example/Docs/MultiCopies.hs data Message
@@ -435,9 +437,9 @@ Now we can embed multiple `Message` 'HyperView's into the same page. Each will u
 @
 
 
-This is especially useful if we put identifying information in our 'ViewId', such as a database id. The 'viewId' function gives us access to that info. See the [Contacts Example](https://docs.hyperbole.live/contacts) and the [Lazy Loading Example](https://docs.hyperbole.live/lazyloading)
+This is especially useful if we put identifying information in our 'ViewId', such as a database id. The 'viewId' function gives us access to that info.
 
-From [Example.Page.Concurrency](https://docs.hyperbole.live/concurrency)
+See Example: #EXAMPLE /concurrency
 
 @
 #EMBED Example/Page/Concurrency.hs data LazyData
@@ -455,7 +457,7 @@ An app has multiple 'Page's with different 'Route's that each map to a unique ur
 #EMBED Example/Docs/MultiPage.hs data AppRoute
 @
 
-When we define our app, we define a function that maps a 'Route' to a 'Page'
+When we create our app, we can add a function which maps a 'Route' to a 'Page'
 
 @
 #EMBED Example/Docs/MultiPage.hs main
@@ -481,11 +483,11 @@ As shown above, each 'Page' can contain multiple interactive 'HyperView's to add
 
 {- $practices-nested
 
-We can nest smaller, specific 'HyperView's inside of a larger parent. You might need this technique to display a list of items which need to update themselves
+We can nest smaller, specific 'HyperView's inside of a larger parent. You might need this technique to display a list of items which also need to update themselves
 
 Let's imagine we want to display a list of Todos. The user can mark individual todos complete, and have them update independently. The specific 'HyperView' might look like this:
 
-From [Example.Docs.Nested](https://github.com/seanhess/hyperbole/blob/0.4/examples/Example/Docs/Nested.hs)
+#EXAMPLE /examples/todos
 
 @
 #EMBED Example/Docs/Nested.hs data TodoItem
@@ -508,7 +510,6 @@ Then we can embed the child 'HyperView' into the parent with 'hyper'
 @
 #EMBED Example/Docs/Nested.hs todosView
 @
-See this technique used in the [TodoMVC Example](https://docs.hyperbole.live/todos)
 -}
 
 
@@ -522,7 +523,7 @@ We showed earlier that we can write a [View Function](#g:view-functions) with a 
 #EMBED Example/Docs/ViewFunctions.hs header
 @
 
-What if we want to reuse functionality too? We can pass an 'Action' into the view function as a parameter:
+What if we want to reuse interactivity? We can pass an 'Action' into the view function as a parameter:
 
 @
 #EMBED Example/Docs/Component.hs styledButton
@@ -534,32 +535,30 @@ We can create more complex view functions by passing state in as a parameter. He
 #EMBED Example/View/Inputs.hs toggleCheckbox
 @
 
-View functions can wrap other Views:
+View functions can be containers which wrap other Views:
 
 @
 #EMBED Example/View/Inputs.hs progressBar
 @
 
 
-Don't leverage 'HyperView's for code reuse. Think about which subsections of a page ought to update independently. Those are 'HyperView's. If you need reusable functionality, use [view functions](#g:viewfunctions) instead.
+Don't use 'HyperView's to keep your code DRY. Think about which subsections of a page ought to update independently. Those are 'HyperView's. If you need reusable interactivity, use [view functions](#g:viewfunctions) instead.
 
-* See [Example.View.DataTable](https://docs.hyperbole.live/datatable) for a more complex example
+#EXAMPLE /data
 -}
 
 
 {- $examples
-https://docs.hyperbole.live is full of live examples demonstrating different features. Each example includes a link to the source code. Some highlights:
+[hyperbole.live](https://hyperbole.live) is full of live examples demonstrating different features. Each example includes a link to the source code. Some highlights:
 
-* [Simple](https://docs.hyperbole.live/simple)
-* [Counter](https://docs.hyperbole.live/counter)
-* [CSS Transitions](https://docs.hyperbole.live/transitions)
-* [Lazy Loading](https://docs.hyperbole.live/lazyloading)
-* [Forms](https://docs.hyperbole.live/formsimple)
-* [Data Table](https://docs.hyperbole.live/datatable)
-* [Sessions](https://docs.hyperbole.live/sessions)
-* [Filter Items](https://docs.hyperbole.live/filter)
-* [Autocomplete](https://docs.hyperbole.live/autocomplete)
-* [Todo MVC](https://docs.hyperbole.live/todos)
+* ▶️ #EXAMPLE /counter
+* ▶️ #EXAMPLE /concurrency
+* ▶️ #EXAMPLE /state
+* ▶️ #EXAMPLE /data
+* ▶️ #EXAMPLE /forms
+* ▶️ #EXAMPLE /interactivity
+* ▶️ #EXAMPLE /oauth2
+* ▶️ #EXAMPLE /javascript
 
 The [National Solar Observatory](https://nso.edu) uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). This production application contains complex interfaces, workers, databases, and more.
 -}
@@ -569,7 +568,7 @@ The [National Solar Observatory](https://nso.edu) uses Hyperbole for the Level 2
 
 'HyperView's are stateless. They 'update' based entirely on the 'Action'. However, we can track simple state by passing it back and forth between the 'Action' and the 'View'
 
-See Example: #EXAMPLE /simple
+#EXAMPLE /simple
 
 @
 #EMBED Example/Docs/State.hs instance HyperView Message
@@ -585,7 +584,7 @@ For any real application with more complex state and data persistence, we need s
 
 Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use effects in a 'Page' or an 'update'. The 'Hyperbole' effect gives us access to the 'request' and client state, including 'session's and the 'query' 'param's. In this example the page keeps the message in the 'query' 'param's
 
-See Example: #EXAMPLE /state/query
+#EXAMPLE /state/query
 
 @
 #EMBED Example/Docs/SideEffects.hs page
@@ -596,7 +595,7 @@ See Example: #EXAMPLE /state/query
 
 To use an 'Effect' other than 'Hyperbole', add it as a constraint to the 'Page' and any 'HyperView' instances that need it.
 
-See Example: #EXAMPLE /state/effects
+#EXAMPLE /state/effects
 
 @
 {\-# LANGUAGE UndecidableInstances #-\}
@@ -610,15 +609,15 @@ Then run the effect in your application
 #EMBED Example/Page/State/Effects.hs app
 @
 
-* Read more about [Effectful](https://hackage.haskell.org/package/effectful)
+See [Effectful](https://hackage.haskell.org/package/effectful) to read more about Effects
 -}
 
 
 {- $state-databases
 
-A database is no different from any other 'Effect'. We recommend you create a custom effect to describe high-level data operations.
+A database is no different from any other 'Effect'. It is recommended to create a custom effect to describe high-level data operations.
 
-From [Example.Effects.Todos](https://github.com/seanhess/hyperbole/blob/0.4/examples/Example/Effects/Todos.hs)
+#EXAMPLE /examples/todos
 
 @
 #EMBED Example/Effects/Todos.hs data Todos
@@ -627,8 +626,6 @@ From [Example.Effects.Todos](https://github.com/seanhess/hyperbole/blob/0.4/exam
 @
 
 Once you've created an 'Effect', you add it to any 'HyperView' or 'Page' as a constraint.
-
-From [Example.Page.Todo](https://docs.hyperbole.live/todos):
 
 @
 {\-# LANGUAGE UndecidableInstances #-\}
@@ -641,8 +638,6 @@ We run a custom effect in our Application just like any other. Here we implement
 @
 #EMBED Example/Page/Todos/Todo.hs main
 @
-
-See [example/Main](https://github.com/seanhess/hyperbole/blob/0.4/examples/Main.hs) for a full example application with multiple effects
 
 Implementing a database runner for a custom 'Effect' is beyond the scope of this documentation, but see the following:
 

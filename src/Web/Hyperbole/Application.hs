@@ -45,10 +45,7 @@ liveApp doc =
       }
 
 
-{- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
-
-> #EMBED Example/Docs/BasicPage.hs main
--}
+-- | Run a Hyperbole application, customizing both the document and the format of server errors
 liveAppWith :: ServerOptions -> Eff '[Hyperbole, Concurrent, IOE] Response -> Wai.Application
 liveAppWith opts app req =
   websocketsOr

@@ -10,9 +10,8 @@ import Web.Hyperbole
 page :: Page es [Message, Count]
 page = do
   pure $ do
-    row $ do
-      hyper Message $ messageView "Hello"
-      hyper Count $ countView 0
+    hyper Message $ messageView "Hello"
+    hyper Count $ countView 0
 
 data Count = Count
   deriving (Generic, ViewId)

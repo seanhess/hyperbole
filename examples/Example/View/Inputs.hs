@@ -5,8 +5,8 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 
 toggleCheckbox :: (ViewAction (Action id)) => (Bool -> Action id) -> Bool -> View id ()
-toggleCheckbox clickAction isSelected = do
-  tag "input" @ att "type" "checkbox" . onClick (clickAction (not isSelected)) . checked isSelected ~ big $ none
+toggleCheckbox setChecked isSelected = do
+  tag "input" @ att "type" "checkbox" . onClick (setChecked (not isSelected)) . checked isSelected ~ big $ none
  where
   big = width 32 . height 32
 

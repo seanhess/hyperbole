@@ -2,8 +2,7 @@
 
 module Example.Docs.App where
 
-import Data.ByteString (ByteString)
-import Data.String.Interpolate (i)
+import Data.String.Conversions (cs)
 import Effectful.Dispatch.Dynamic (send)
 import Example.Docs.Page.Messages qualified as Messages
 import Example.Docs.Page.Users qualified as Users
@@ -11,17 +10,12 @@ import Example.Effects.Users (User, Users (..))
 import Web.Hyperbole
 import Web.Hyperbole.Effect.Response (view)
 
-customDocument :: ByteString -> ByteString
-customDocument contents =
-  [i|<html>
-    <head>
-      <title>My Website</title>
-      <script type="text/javascript">#{scriptEmbed}</script>
-      <style type="text/css">#{cssEmbed}</style>
-      <script type="text/javascript" src="custom.js"></script>
-    </head>
-    <body>#{contents}</body>
-  </html>|]
+documentHead :: View DocumentHead ()
+documentHead = do
+  title "My Website"
+  script' scriptEmbed
+  style (cs cssEmbed)
+  script "custom.js"
 
 router :: (Hyperbole :> es) => AppRoute -> Eff es Response
 router Messages = runPage Messages.page
@@ -58,3 +52,6 @@ userPage = do
 
 userView :: User -> View c ()
 userView _ = none
+
+app :: Application
+app = liveApp (document documentHead) (routeRequest router)

@@ -65,7 +65,6 @@ sendResponse options req client res remotes respond = do
       -- see index.ts sendAction()
       let hs = ("Location", cs url) : clientHeaders client
       respondHtml status200 hs $ renderViewResponse (metaRedirect u <> metas) $ do
-        el "Redirecting"
         script'
           -- static script is safe to execute
           [i|

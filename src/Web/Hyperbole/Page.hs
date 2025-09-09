@@ -10,13 +10,12 @@ import Web.Hyperbole.Types.Response (Response)
 import Web.Hyperbole.View (View)
 
 
-{- | Conceptually, an application is dividied up into multiple [Pages](#g:pages). Each page module should have a function that returns a 'Page'. The 'Page' itself is a 'View' with a type-level list of 'HyperView's used on the page.
+{- | An application is divided into multiple [Pages](#g:pages). Each page module should have a 'Page' function, which returns a root 'View'
 
 @
 #EMBED Example/Docs/MultiView.hs page
 @
 -}
-
 type Page es (views :: [Type]) = Eff (Reader (Root views) : es) (View (Root views) ())
 
 

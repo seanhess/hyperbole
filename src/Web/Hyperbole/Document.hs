@@ -8,42 +8,13 @@ import Data.String.Interpolate (i)
 import Web.Hyperbole.View
 
 
-data DocumentHead = DocumentHead
 data Document = Document
 
 
-{- | wrap HTML fragments in a simple document with a custom title and include required embeds
+{- | 'liveApp' requires a function which turns an html fragment into an entire html document. Use this to import javascript, css, etc. Use 'quickStartDocument' to get going quickly
 
-@
-'liveApp' quickStartDocument ('routeRequest' router)
-@
-
-You must pass a function to Application that renders the entire document document function to import custom javascript, css, or add other information to the \<head\>
-
-> import Data.String.Interpolate (i)
-> import Web.Hyperbole (scriptEmbed, cssResetEmbed)
->
-> #EMBED Example/Docs/App.hs customDocument
+> #EMBED Example/Docs/App.hs app
 -}
-quickStartDocument :: BL.ByteString -> BL.ByteString
-quickStartDocument = document (mobileFriendly >> quickStart)
-
-
-quickStart :: View DocumentHead ()
-quickStart = do
-  mobileFriendly
-  style $ cs cssEmbed
-  script' scriptEmbed
-  script' scriptLiveReload
-
-
-mobileFriendly :: View DocumentHead ()
-mobileFriendly = do
-  meta @ httpEquiv "Content-Type" . content "text/html" . charset "UTF-8"
-  meta @ name "viewport" . content "width=device-width, initial-scale=1.0"
-
-
--- | Create a document from a document head and a body
 document :: View DocumentHead () -> BL.ByteString -> BL.ByteString
 document docHead cnt =
   [i|<html>
@@ -54,3 +25,38 @@ document docHead cnt =
     #{cnt}
   </body>
 </html>|]
+
+
+{- | Create a custom document `<head>` to use with 'document'
+
+> import Web.Hyperbole (scriptEmbed, cssEmbed)
+>
+> #EMBED Example/Docs/App.hs documentHead
+-}
+data DocumentHead = DocumentHead
+
+
+{- | A simple mobile-friendly document with all required embeds and live reload
+
+@
+'liveApp' quickStartDocument ('routeRequest' router)
+@
+-}
+quickStartDocument :: BL.ByteString -> BL.ByteString
+quickStartDocument = document (mobileFriendly >> quickStart)
+
+
+-- | A simple mobile-friendly header with all required embeds and live reload
+quickStart :: View DocumentHead ()
+quickStart = do
+  mobileFriendly
+  style $ cs cssEmbed
+  script' scriptEmbed
+  script' scriptLiveReload
+
+
+-- | Set the viewport to handle mobile zoom
+mobileFriendly :: View DocumentHead ()
+mobileFriendly = do
+  meta @ httpEquiv "Content-Type" . content "text/html" . charset "UTF-8"
+  meta @ name "viewport" . content "width=device-width, initial-scale=1.0"
