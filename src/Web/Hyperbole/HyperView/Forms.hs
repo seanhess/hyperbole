@@ -19,6 +19,7 @@ module Web.Hyperbole.HyperView.Forms
   , Selection(..)
   , selGroup
   , radio
+  , select
   , form
   , textarea
   , submit
@@ -55,7 +56,7 @@ import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView.Event (onSubmit)
-import Web.Hyperbole.HyperView.Input (checked)
+import Web.Hyperbole.HyperView.Input (checked, Option(..))
 import Web.Hyperbole.HyperView.Types
 import Web.Hyperbole.HyperView.ViewAction
 import Web.Hyperbole.View
@@ -235,13 +236,18 @@ checkbox isChecked = do
   tag "input" @ att "type" "checkbox" . name nm $ none @ checked isChecked
 
 
+-- NOTE: Radio is a special type of selection different from list type or
+-- select. select or list input can be thought of one wrapper and multiple
+-- options whereas radio is multiple wrappers with options. The context required
+-- for radio is more than that required for select.
+-- TODO: Rename this to Radio. This context is radio specific.
 data Selection (id :: Type) (a :: Type) (b :: Type) = Selection
   { inputCtx :: Input id a
   , defaultOption :: b
   }
 
 
--- NOTE: This can be used for radio, list input, and select
+-- TODO: Rename this to radioGroup.
 selGroup :: b -> View (Selection id a b) () -> View (Input id a) ()
 selGroup defOpt inner = modifyContext f inner
   where
@@ -258,6 +264,13 @@ radio val = do
     . value valTxt
     . checked (defOpt == val)
     $ none
+
+
+
+select :: Eq opt => opt -> View (Option opt id) () -> View (Input id a) ()
+select defOpt options = do
+  Input (FieldName nm) <- context
+  tag "select" @ name nm $ addContext (Option (== defOpt)) options
 
 
 -- | textarea for a 'field'

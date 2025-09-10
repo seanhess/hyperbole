@@ -25,12 +25,20 @@ data Planet
   | Mars
   deriving (Generic, FromJSON, ToJSON, FromParam, ToParam, Eq, Show)
 
+data Moon
+  = Titan
+  | Europa
+  | Callisto
+  | Mimas
+  deriving (Generic, FromJSON, ToJSON, FromParam, ToParam, Eq, Show)
+
 -- Forms can be pretty simple. Just a type that can be parsed
 data ContactForm = ContactForm
   { name :: Text
   , age :: Int
   , isFavorite :: Bool
   , planet :: Planet
+  , moon :: Moon
   }
   deriving (Generic, FromForm)
 
@@ -66,6 +74,15 @@ formView = do
           displayOption Earth
           displayOption Mars
 
+    field "moon" $ do
+      label $ do
+        text "Moon"
+        select Callisto ~ Style.input $ do
+          option Titan "Titan"
+          option Europa "Europa"
+          option Callisto "Callisto"
+          option Mimas "Mimas"
+
     submit "Submit" ~ btn
 
   where
@@ -93,6 +110,7 @@ data ContactForm' f = ContactForm'
   , age :: Field f Int
   , isFavorite :: Field f Bool
   , planet :: Field f Planet
+  , moon :: Field f Moon
   }
   deriving (Generic, FromFormF, GenFields FieldName)
 
@@ -125,12 +143,21 @@ formView' = do
 
     col ~ gap 5 $ do
       el $ text "Planet"
-      field "planet" $ do
+      field f.planet $ do
         selGroup Earth $ do
           displayOption Mercury
           displayOption Venus
           displayOption Earth
           displayOption Mars
+
+    field f.moon $ do
+      label $ do
+        text "Moon"
+        select Callisto ~ Style.input $ do
+          option Titan "Titan"
+          option Europa "Europa"
+          option Callisto "Callisto"
+          option Mimas "Mimas"
 
     submit "Submit" ~ btn
 
@@ -159,3 +186,7 @@ contactView u = do
   row ~ gap 5 $ do
     el "Planet:"
     el $ text $ pack (show u.planet)
+
+  row ~ gap 5 $ do
+    el "Moon:"
+    el $ text $ pack (show u.moon)

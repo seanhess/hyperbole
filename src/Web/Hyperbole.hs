@@ -154,6 +154,7 @@ module Web.Hyperbole
   , checkbox
   , selGroup
   , radio
+  , select
   , checked
   , textarea
   , submit
