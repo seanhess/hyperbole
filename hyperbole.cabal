@@ -94,7 +94,7 @@ library
       aeson >=2.1.2.1
     , atomic-css ==0.2.*
     , attoparsec ==0.14.*
-    , attoparsec-aeson ==2.2.*
+    , attoparsec-aeson >=2.1 && <2.3
     , base >=4.16 && <5
     , bytestring >=0.11 && <0.13
     , casing >0.1 && <0.2
@@ -154,7 +154,7 @@ test-suite test
       aeson >=2.1.2.1
     , atomic-css ==0.2.*
     , attoparsec ==0.14.*
-    , attoparsec-aeson ==2.2.*
+    , attoparsec-aeson >=2.1 && <2.3
     , base >=4.16 && <5
     , bytestring >=0.11 && <0.13
     , casing >0.1 && <0.2
