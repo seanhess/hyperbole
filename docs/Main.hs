@@ -170,7 +170,7 @@ expandExample p prefix = do
   appRoute :: IO AppRoute
   appRoute = do
     case matchRoute @AppRoute p of
-      Nothing -> fail $ "Could not find example: " <> cs (pathToText p)
+      Nothing -> fail $ "Could not find example: " <> cs (pathToText False p)
       Just r -> pure r
 
 
