@@ -1,16 +1,14 @@
 module Web.Hyperbole.HyperView.Input where
 
-import Data.Aeson (ToJSON)
-import Data.Aeson qualified as A
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Web.Atomic.Types
+import Web.Hyperbole.Data.Param (ParamValue (..), ToParam (..))
 import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..))
 import Web.Hyperbole.HyperView.ViewAction (ViewAction (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
 import Web.Hyperbole.View
-
 
 {- | \<button\> HTML tag which sends the action when pressed
 
@@ -48,15 +46,18 @@ dropdown act isSel options = do
     addContext (Option isSel) options
 
 
+-- NOTE: The value of an option should always be text. We can force the type of
+-- cnt be Text.
 -- | An option for a 'dropdown'. First argument is passed to (opt -> Action id) in the 'dropdown', and to the selected predicate
 option
-  :: (ViewAction (Action id), Eq opt, ToJSON opt)
+  :: (ViewAction (Action id), Eq opt, ToParam opt)
   => opt
   -> View (Option opt id) ()
   -> View (Option opt id) ()
 option opt cnt = do
+  let (ParamValue valTxt) = toParam opt
   os <- context
-  tag "option" @ att "value" (cs $ A.encode opt) @ selected (os.selected opt) $ cnt
+  tag "option" @ att "value" valTxt @ selected (os.selected opt) $ cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
@@ -64,6 +65,9 @@ selected :: (Attributable h) => Bool -> Attributes h -> Attributes h
 selected b = if b then att "selected" "true" else id
 
 
+-- NOTE: Is there a reason for selected to be of form "opt -> Bool"? Why not
+-- just have the default option instead? A default option forces the fact that
+-- there can only be 1 option selected.
 -- | The view context for an 'option'
 data Option opt id = Option
   { selected :: opt -> Bool
