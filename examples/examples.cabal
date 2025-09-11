@@ -31,6 +31,7 @@ executable examples
       Example.Data.ProgrammingLanguage
       Example.Docs.App
       Example.Docs.BasicPage
+      Example.Docs.Client
       Example.Docs.Component
       Example.Docs.Encoding
       Example.Docs.Interactive

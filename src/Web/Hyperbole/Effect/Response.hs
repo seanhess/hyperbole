@@ -19,17 +19,19 @@ hyperView i vw = do
   pure $ Response vid $ hyperUnsafe i vw
 
 
+-- | Abort execution and respond with an error
 respondError :: (Hyperbole :> es) => ResponseError -> Eff es a
 respondError err = do
   send $ RespondNow $ Err err
 
 
+-- | Abort execution and respond with an error view
 respondErrorView :: (Hyperbole :> es) => Text -> View Body () -> Eff es a
 respondErrorView msg vw = do
   send $ RespondNow $ Err $ ErrCustom $ ServerError msg vw
 
 
-{- | Respond immediately with 404 Not Found
+{- | Abort execution and respond with 404 Not Found
 
 @
 #EMBED Example/Docs/App.hs findUser
@@ -41,17 +43,17 @@ notFound :: (Hyperbole :> es) => Eff es a
 notFound = send $ RespondNow $ Err NotFound
 
 
--- | Respond immediately with a parse error
+-- | Abort execution and respond with a parse error
 parseError :: (Hyperbole :> es) => Text -> Eff es a
 parseError = respondError . ErrParse
 
 
--- | Redirect immediately to the 'Url'
+-- | Abort execution and redirect to a 'URI'
 redirect :: (Hyperbole :> es) => URI -> Eff es a
 redirect = send . RespondNow . Redirect
 
 
--- | Create a response from a given view. This is rarely used. Normally you will return a view from a handler instead
+-- | Respond with a generic view. Normally you will return a view from the page or handler instead of using this function
 view :: View Body () -> Response
 view =
   Response (TargetViewId "")

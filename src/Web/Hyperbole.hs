@@ -67,30 +67,28 @@ module Web.Hyperbole
   , mobileFriendly
 
     -- ** Type-Safe Routes #routes#
-  , routeRequest -- maybe belongs in an application section
   , Route (..)
+  , routeRequest -- maybe belongs in an application section
   , routeUri
   , route
 
     -- * Hyperbole Effect #hyperbole-effect#
   , Hyperbole
-  , trigger
-  , pushEvent
-  , pageTitle
-
-    -- ** Response #response#
-
-  -- , respondView
-  , respondError
-  , respondErrorView
-  , notFound
-  , redirect
 
     -- ** Request #request#
   , request
   , Request (..)
 
-    -- ** Query Params #query#
+    -- ** Response #response#
+  , respondError
+  , respondErrorView
+  , notFound
+  , redirect
+
+    -- ** Query #query#
+    -- $query
+  , ToQuery (..)
+  , FromQuery (..)
   , query
   , setQuery
   , param
@@ -100,13 +98,19 @@ module Web.Hyperbole
   , queryParams
 
     -- ** Sessions #sessions#
+    -- $sessions
+  , Session (..)
   , session
   , saveSession
   , lookupSession
   , modifySession
   , modifySession_
   , deleteSession
-  , Session (..)
+
+  -- ** Control Client #client#
+  , trigger
+  , pushEvent
+  , pageTitle
 
     -- * HyperView #hyperview#
   , HyperView (..)
@@ -126,15 +130,14 @@ module Web.Hyperbole
   , onMouseEnter
   , onMouseLeave
   , onInput
+  , onLoad
+  , DelayMs
   , onKeyDown
   , onKeyUp
-  , onLoad
   , Key (..)
-  , DelayMs
 
     -- * Type-Safe Forms #forms#
-
-    -- | Painless forms with type-checked field names, and support for validation. See [Example.Forms](https://docs.hyperbole.live/formsimple)
+    -- $forms
   , FromForm (..)
   , FromFormF (..)
   , formData
@@ -166,9 +169,7 @@ module Web.Hyperbole
   , validate
   , invalidText
 
-    -- * Query Param Encoding #query#
-  , ToQuery (..)
-  , FromQuery (..)
+    -- * Query Param Encoding #query-param#
   , QueryData
   , Default (..)
   , ToParam (..)
@@ -176,19 +177,17 @@ module Web.Hyperbole
 
     -- * Advanced #advanced#
   , target
-  , hyperView
   , parseError
   , Response
   , ViewId
   , ViewAction
-  , ToHttpApiData
-  , FromHttpApiData
   , ToJSON
   , FromJSON
   , Root
 
     -- * Exports #exports#
-
+    -- ** View
+    --
     -- | Hyperbole is tightly integrated with [atomic-css](https://hackage.haskell.org/package/atomic-css) for HTML generation
   , module Web.Hyperbole.View
 
@@ -203,8 +202,7 @@ module Web.Hyperbole
 
     -- ** Other
   , Application
-  , Generic
-  , Rep
+  , module GHC.Generics
   , URI (..)
   , uri
   ) where
@@ -212,12 +210,11 @@ module Web.Hyperbole
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Default
 import Effectful (Eff, (:>))
-import GHC.Generics (Rep)
+import GHC.Generics (Rep, Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Atomic.CSS ()
 import Web.Atomic.Types ()
-import Web.HttpApiData (FromHttpApiData, ToHttpApiData)
 import Web.Hyperbole.Application
 import Web.Hyperbole.Data.Encoded ()
 import Web.Hyperbole.Data.Param
@@ -560,7 +557,7 @@ Don't use 'HyperView's to keep your code DRY. Think about which subsections of a
 * ▶️ #EXAMPLE /oauth2
 * ▶️ #EXAMPLE /javascript
 
-The [National Solar Observatory](https://nso.edu) uses Hyperbole for the Level 2 Data creation tool for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It is completely [open source](https://github.com/DKISTDC/level2/). This production application contains complex interfaces, workers, databases, and more.
+The [National Solar Observatory](https://nso.edu) uses Hyperbole to manage Level 2 Data pipelines for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It uses complex user interfaces, workers, databases, and more. [The entire codebase is open source](https://github.com/DKISTDC/level2/).
 -}
 
 
@@ -644,4 +641,19 @@ Implementing a database runner for a custom 'Effect' is beyond the scope of this
 * [Effectful.Dynamic.Dispatch](https://hackage.haskell.org/package/effectful-core/docs/Effectful-Dispatch-Dynamic.html) - Introduction to Effects
 * [NSO.Data.Datasets](https://github.com/DKISTDC/level2/blob/main/src/NSO/Data/Datasets.hs) - Production Data Effect with a database runner
 * [Effectful.Rel8](https://github.com/DKISTDC/level2/blob/main/types/src/Effectful/Rel8.hs) - Effect for the [Rel8](https://hackage.haskell.org/package/rel8) Postgres Library
+-}
+
+{- $query
+#EXAMPLE /state/query
+-}
+
+{- $sessions
+#EXAMPLE /state/sessions
+-}
+
+{- $forms
+
+Painless forms with type-checked field names, and support for validation.
+
+#EXAMPLE /forms
 -}

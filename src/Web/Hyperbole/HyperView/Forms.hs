@@ -16,7 +16,7 @@ module Web.Hyperbole.HyperView.Forms
   , label
   , input
   , checkbox
-  , Selection(..)
+  , Selection (..)
   , selGroup
   , radio
   , form
@@ -65,6 +65,12 @@ import Web.Hyperbole.View
 -- FORM PARSING
 ------------------------------------------------------------------------------
 
+{- | Simple types that be decoded from form data
+
+@
+#EMBED Example/Page/FormSimple.hs data ContactForm
+@
+-}
 class FromForm (form :: Type) where
   fromForm :: FE.Form -> Either Text form
   default fromForm :: (Generic form, GFormParse (Rep form)) => FE.Form -> Either Text form
@@ -73,10 +79,8 @@ class FromForm (form :: Type) where
 
 {- | A Higher-Kinded type that can be parsed from a 'Web.FormUrlEncoded.Form'
 
-From [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
-
 @
-#EMBED Example/Page/FormSimple.hs data ContactForm
+#EMBED Example/Page/FormValidation.hs data UserForm
 @
 -}
 class FromFormF (f :: (Type -> Type) -> Type) where
@@ -103,11 +107,17 @@ formData = do
 -- GEN FIELDS: Generate a type from selector names
 ------------------------------------------------------------------------------
 
-class GenFields f (form :: (Type -> Type) -> Type) where
-  {- | Generate a Higher Kinded Type (form f)
+{- | Generate a Higher Kinded Type (form f)
 
-  > #EMBED Example/Page/FormValidation.hs data UserForm
-  -}
+@
+#EMBED Example/Page/FormValidation.hs data UserForm
+@
+
+@
+#EMBED Example/Page/Contacts.hs newContactForm
+@
+-}
+class GenFields f (form :: (Type -> Type) -> Type) where
   genFields :: form f
   default genFields :: (Generic (form f), GFieldsGen (Rep (form f))) => form f
   genFields = to gFieldsGen
@@ -206,8 +216,9 @@ data Input (id :: Type) (a :: Type) = Input
   }
 
 
--- | label for a 'field'
--- label :: Text -> View (Input id a) ()
+{- | label for a 'field'
+label :: Text -> View (Input id a) ()
+-}
 label :: View c () -> View c ()
 label = tag "label"
 
@@ -244,7 +255,7 @@ data Selection (id :: Type) (a :: Type) (b :: Type) = Selection
 -- NOTE: This can be used for radio, list input, and select
 selGroup :: b -> View (Selection id a b) () -> View (Input id a) ()
 selGroup defOpt inner = modifyContext f inner
-  where
+ where
   f inpCtx = Selection inpCtx defOpt
 
 

@@ -14,7 +14,9 @@ import Web.Hyperbole.View
 
 {- | \<button\> HTML tag which sends the action when pressed
 
-> button SomeAction (border 1) "Click Me"
+@
+#EMBED  Example/Page/Simple.hs messageView
+@
 -}
 button :: (ViewAction (Action id)) => Action id -> View id () -> View id ()
 button action cnt = do
@@ -48,7 +50,7 @@ dropdown act isSel options = do
     addContext (Option isSel) options
 
 
--- | An option for a 'dropdown'. First argument is passed to (opt -> Action id) in the 'dropdown', and to the selected predicate
+-- | An option for a 'dropdown' or 'select'
 option
   :: (ViewAction (Action id), Eq opt, ToJSON opt)
   => opt
@@ -70,7 +72,12 @@ data Option opt id = Option
   }
 
 
--- | A live search field
+{- | A live search field. Set a DelayMs to avoid hitting the server on every keystroke
+
+@
+#EMBED Example/Page/Errors.hs viewSearchUsers
+@
+-}
 search :: (ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> View id ()
 search go delay = do
   tag "input" none @ onInput go delay

@@ -17,7 +17,7 @@ instance ToColor AppColor where
 data Preferences = Preferences
   { color :: AppColor
   }
-  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam, Session)
+  deriving (Generic, ToJSON, FromJSON, Session)
 instance Default Preferences where
   def = Preferences White
 

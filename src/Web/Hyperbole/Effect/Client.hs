@@ -11,19 +11,42 @@ import Web.Hyperbole.Types.Client (clientSetPageTitle)
 import Web.Hyperbole.Types.Event
 
 
--- | Trigger an action for an arbitrary hyper biew
+{- | Trigger an action for an arbitrary 'HyperView'
+
+#EXAMPLE /advanced
+
+@
+#EMBED Example/Page/Advanced.hs instance HyperView Controls
+@
+-}
 trigger :: (HyperView id es, HyperViewHandled id view, Hyperbole :> es) => id -> Action id -> Eff (Reader view : es) ()
 trigger vid act = do
   send $ TriggerAction (TargetViewId $ encodeViewId vid) (toAction act)
 
 
--- | Dispatch a custom javascript event on the current hyper view (or document)
+{- | Dispatch a custom javascript event. This is emitted on the current hyper view and bubbles up to the document
+
+#EXAMPLE /javascript
+
+@
+#EMBED Example/Page/Javascript.hs instance HyperView Message
+@
+
+@
+#EMBED static/custom.js function listenServerEvents
+@
+-}
 pushEvent :: (ToJSON a, Hyperbole :> es) => Text -> a -> Eff es ()
 pushEvent nm a = do
   send $ TriggerEvent nm (toJSON a)
 
 
--- | Set the document title
+{- | Set the document title
+
+@
+#EMBED Example/Docs/Client.hs page
+@
+-}
 pageTitle :: (Hyperbole :> es) => Text -> Eff es ()
 pageTitle t = do
   send $ ModClient $ clientSetPageTitle t

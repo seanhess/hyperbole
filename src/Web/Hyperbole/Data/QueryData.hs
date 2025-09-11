@@ -117,10 +117,10 @@ toList (QueryData m) = M.toList m
 #EMBED Example/Docs/Encoding.hs data Filters
 @
 
->>> parseQuery $ parse "active=true&search=asdf"
+>>> parseQuery $ QueryData.parse "active=true&search=asdf"
 Right (Filters True "asdf")
 
->>> parseQuery $ parse "search=asdf"
+>>> parseQuery $ QueryData.parse "search=asdf"
 Right (Filters False "asdf")
 -}
 class FromQuery a where
@@ -139,15 +139,15 @@ instance FromQuery QueryData where
 #EMBED Example/Docs/Encoding.hs data Filters
 @
 
->>> render $ toQuery $ Filter True "asdf"
+>>> QueryData.render $ toQuery $ Filter True "asdf"
 "active=true&search=asdf"
 
-If the value of a field is the same as 'DefaultParam', it will be omitted from the query string
+If the value of a field is the same as 'Default', it will be omitted from the query string
 
->>> render $ toQuery $ Filter True ""
+>>> QueryData.render $ toQuery $ Filter True ""
 "active=true"
 
->>> render $ toQuery $ Filter False ""
+>>> QueryData.render $ toQuery $ Filter False ""
 ""
 -}
 class ToQuery a where
