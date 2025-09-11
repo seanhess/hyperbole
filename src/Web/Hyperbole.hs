@@ -266,6 +266,8 @@ Hyperbole depends heavily on the following frameworks
 
 {- $hello
 
+#EXAMPLE /intro
+
 Hyperbole applications run via [Warp](https://hackage.haskell.org/package/warp) and [WAI](https://hackage.haskell.org/package/wai)
 
 They are divided into top-level 'Page's, which run side effects (such as loading data from a database), then respond with an HTML 'View'. The following application has a single 'Page' that displays a static "Hello World"
@@ -278,13 +280,13 @@ module Main where
 import Web.Hyperbole
 
 #EMBED Example/Docs/BasicPage.hs main
-
-> wlkjasdflkj #{EMBED Example/Docs/BasicPage.hs page}
 @
 -}
 
 
 {- $interactive
+
+#EXAMPLE /simple
 
 We can embed one or more 'HyperView's to add type-safe interactivity to live subsections of our 'Page'. To start, first define a data type (a 'ViewId') that uniquely identifies that subsection of the page:
 
@@ -332,6 +334,8 @@ If the user clicks the button, the contents of `hyper` will be replaced with the
 
 We can factor 'View's into reusable functions:
 
+#EXAMPLE /simple
+
 @
 #EMBED Example/Docs/BasicPage.hs messageView
 
@@ -339,6 +343,8 @@ We can factor 'View's into reusable functions:
 @
 
 We can also use functions to reuse look and feel using [atomic-css](https://hackage.haskell.org/package/atomic-css)
+
+#EXAMPLE /css
 
 @
 import Web.Atomic.CSS
@@ -436,7 +442,7 @@ Now we can embed multiple `Message` 'HyperView's into the same page. Each will u
 
 This is especially useful if we put identifying information in our 'ViewId', such as a database id. The 'viewId' function gives us access to that info.
 
-See Example: #EXAMPLE /concurrency
+#EXAMPLE /concurrency
 
 @
 #EMBED Example/Page/Concurrency.hs data LazyData
@@ -565,12 +571,12 @@ The [National Solar Observatory](https://nso.edu) uses Hyperbole to manage Level
 
 'HyperView's are stateless. They 'update' based entirely on the 'Action'. However, we can track simple state by passing it back and forth between the 'Action' and the 'View'
 
-#EXAMPLE /simple
+#EXAMPLE /counter
 
 @
-#EMBED Example/Docs/State.hs instance HyperView Message
+#EMBED Example/Page/Counter.hs instance HyperView Counter
 
-#EMBED Example/Docs/State.hs messageView
+#EMBED Example/Page/Counter.hs viewCount
 @
 -}
 

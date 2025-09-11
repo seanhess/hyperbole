@@ -29,7 +29,7 @@ instance HyperView Counter es where
 viewCount :: Int -> View Counter ()
 viewCount n = row $ do
   col ~ gap 10 $ do
-    el ~ bold . fontSize 48 . border 1 . pad (XY 20 0) . Style.font . textAlign AlignCenter $ text $ pack $ show n
+    el ~ dataFeature $ text $ pack $ show n
     row ~ gap 10 $ do
       button (Decrement n) "Decrement" ~ Style.btn
       button (Increment n) "Increment" ~ Style.btn
