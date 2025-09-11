@@ -46,18 +46,16 @@ dropdown act isSel options = do
     addContext (Option isSel) options
 
 
--- NOTE: The value of an option should always be text. We can force the type of
--- cnt be Text.
 -- | An option for a 'dropdown'. First argument is passed to (opt -> Action id) in the 'dropdown', and to the selected predicate
 option
   :: (ViewAction (Action id), Eq opt, ToParam opt)
   => opt
-  -> View (Option opt id) ()
+  -> Text
   -> View (Option opt id) ()
 option opt cnt = do
   let (ParamValue valTxt) = toParam opt
   os <- context
-  tag "option" @ att "value" valTxt @ selected (os.selected opt) $ cnt
+  tag "option" @ att "value" valTxt @ selected (os.selected opt) $ text cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
