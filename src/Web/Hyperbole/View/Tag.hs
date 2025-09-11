@@ -121,7 +121,7 @@ src = att "src"
 
 
 script :: Text -> View c ()
-script s = tag "script" none @ src s
+script sc = tag "script" none @ src sc
 
 
 -- | Embed raw script, escape '</script>'
@@ -129,8 +129,8 @@ script' :: ByteString -> View c ()
 script' dat = tag' True "script" $ raw $ T.replace "</" "\\u003C/" $ cs dat
 
 
-style :: Text -> View c ()
-style cnt = tag "style" (raw cnt) @ type_ "text/css"
+style :: ByteString -> View c ()
+style cnt = tag "style" (raw $ cs cnt) @ type_ "text/css"
 
 
 stylesheet :: Text -> View c ()

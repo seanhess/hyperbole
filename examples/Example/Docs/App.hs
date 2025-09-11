@@ -2,7 +2,6 @@
 
 module Example.Docs.App where
 
-import Data.String.Conversions (cs)
 import Effectful.Dispatch.Dynamic (send)
 import Example.Docs.Page.Messages qualified as Messages
 import Example.Docs.Page.Users qualified as Users
@@ -14,7 +13,7 @@ documentHead :: View DocumentHead ()
 documentHead = do
   title "My Website"
   script' scriptEmbed
-  style (cs cssEmbed)
+  style cssEmbed
   script "custom.js"
 
 router :: (Hyperbole :> es) => AppRoute -> Eff es Response
