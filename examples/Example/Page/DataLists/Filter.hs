@@ -121,7 +121,7 @@ filtersView filters = do
 
 familyDropdown :: Filters -> View Languages ()
 familyDropdown filters =
-  dropdown SetFamily (== filters.family) ~ border 1 . pad 10 $ do
+  dropdown SetFamily filters.family ~ border 1 . pad 10 $ do
     option Nothing "Any"
     option (Just ObjectOriented) "Object Oriented"
     option (Just Functional) "Functional"

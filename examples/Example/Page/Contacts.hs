@@ -71,7 +71,7 @@ allContactsView :: Maybe Filter -> [User] -> View Contacts ()
 allContactsView fil us = col ~ gap 20 $ do
   row ~ gap 10 $ do
     el ~ pad 10 $ "Filter: "
-    dropdown Reload (== fil) $ do
+    dropdown Reload fil $ do
       option Nothing ""
       option (Just Active) "Active!"
       option (Just Inactive) "Inactive"

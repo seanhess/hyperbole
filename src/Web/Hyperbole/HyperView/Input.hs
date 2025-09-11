@@ -38,12 +38,12 @@ button action cnt = do
 dropdown
   :: (ViewAction (Action id))
   => (opt -> Action id)
-  -> (opt -> Bool) -- check if selec
+  -> opt -- default option
   -> View (Option opt id) ()
   -> View id ()
-dropdown act isSel options = do
+dropdown act defOpt options = do
   tag "select" @ onChange act $ do
-    addContext (Option isSel) options
+    addContext (Option defOpt) options
 
 
 -- | An option for a 'dropdown'. First argument is passed to (opt -> Action id) in the 'dropdown', and to the selected predicate
@@ -55,7 +55,7 @@ option
 option opt cnt = do
   let (ParamValue valTxt) = toParam opt
   os <- context
-  tag "option" @ att "value" valTxt @ selected (os.selected opt) $ text cnt
+  tag "option" @ att "value" valTxt @ selected (os.defaultOption == opt) $ text cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
@@ -63,12 +63,9 @@ selected :: (Attributable h) => Bool -> Attributes h -> Attributes h
 selected b = if b then att "selected" "true" else id
 
 
--- NOTE: Is there a reason for selected to be of form "opt -> Bool"? Why not
--- just have the default option instead? A default option forces the fact that
--- there can only be 1 option selected.
 -- | The view context for an 'option'
 data Option opt id = Option
-  { selected :: opt -> Bool
+  { defaultOption :: opt
   }
 
 

@@ -270,7 +270,7 @@ radio val = do
 select :: Eq opt => opt -> View (Option opt id) () -> View (Input id a) ()
 select defOpt options = do
   Input (FieldName nm) <- context
-  tag "select" @ name nm $ addContext (Option (== defOpt)) options
+  tag "select" @ name nm $ addContext (Option defOpt) options
 
 
 -- | textarea for a 'field'
