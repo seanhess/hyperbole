@@ -3,6 +3,7 @@
 module Web.Hyperbole.View.Embed
   ( cssEmbed
   , scriptEmbed
+  , scriptEmbedSourceMap
   , scriptLiveReload
   )
 where
@@ -14,6 +15,10 @@ import Web.Atomic.CSS.Reset qualified as Atomic
 
 scriptEmbed :: ByteString
 scriptEmbed = $(embedFile "client/dist/hyperbole.js")
+
+
+scriptEmbedSourceMap :: ByteString
+scriptEmbedSourceMap = $(embedFile "client/dist/hyperbole.js.map")
 
 
 scriptLiveReload :: ByteString
