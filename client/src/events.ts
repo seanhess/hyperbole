@@ -206,7 +206,7 @@ function nearestTarget(node: HTMLElement): HTMLElement {
   let target = document.getElementById(targetId)
 
   if (!target) {
-    console.error("Cannot find target: ", node)
+    console.error("Cannot find target: ", targetId, node)
     return
   }
 

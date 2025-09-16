@@ -16,6 +16,7 @@ extra-doc-files:
 
 extra-source-files:
   - client/dist/hyperbole.js
+  - client/dist/hyperbole.js.map
   - client/util/live-reload.js
 
 language: GHC2021

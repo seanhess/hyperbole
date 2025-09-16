@@ -36,13 +36,13 @@ class Session a where
   sessionKey = gDatatypeName $ from (undefined :: a)
 
 
-  -- | By default Sessions are persisted only to the current page. Set this to `Just []` to make an application-wide Session
+  -- | By default Sessions are persisted only to the current page. Set to `Just "/"` to make an instance available application-wide
   cookiePath :: Maybe Path
   default cookiePath :: Maybe Path
   cookiePath = Nothing
 
 
-  -- | Encode type to a a cookie value. Defaults to ToJSON
+  -- | Encode type to a a cookie value
   toCookie :: a -> CookieValue
   default toCookie :: (ToEncoded a) => a -> CookieValue
   toCookie = CookieValue . cs . Encoded.encode
@@ -55,7 +55,7 @@ class Session a where
     Encoded.decodeEither (cs bs)
 
 
-{- | Persist datatypes in browser cookies. If the session doesn't exist, the 'Default' instance is used
+{- | Load data from a browser cookie. If it doesn't exist, the 'Default' instance is used
 
 @
 #EMBED Example/Docs/Sessions.hs data Preferences

@@ -19,11 +19,9 @@ textShadow =
     "text-shadow"
     ["text-shadow" :. "0 0 4px #0ff, 0 0 8px #0ff"]
 
-
-
-
-
-
+dataFeature :: (Styleable h) => CSS h -> CSS h
+dataFeature =
+  bold . fontSize 48 . border 1 . pad (XY 20 0) . font . textAlign AlignCenter
 
 btn :: (Styleable h) => CSS h -> CSS h
 btn = btn' Primary
@@ -83,12 +81,11 @@ cyberError inner =
   el ~ wipeIn . border (T 4) . borderColor lightRed $ do
     el ~ bg midRed . clip 10 . pad 10 . color White $
       inner
-  where
-    -- requires @keyframes wipeIn
-    wipeIn :: Styleable h => CSS h -> CSS h
-    wipeIn = utility "wipe-in" ["animation" :. "wipeIn 0.5s steps(20, end) forwards"]
-
+ where
+  -- requires @keyframes wipeIn
+  wipeIn :: (Styleable h) => CSS h -> CSS h
+  wipeIn = utility "wipe-in" ["animation" :. "wipeIn 0.5s steps(20, end) forwards"]
 
 glitch :: Text -> View Body ()
-glitch msg = 
+glitch msg =
   el ~ cls "glitch" @ att "data-text" msg $ text msg

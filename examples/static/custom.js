@@ -16,7 +16,11 @@ window.onload = function() {
     }
   })
 
-  // you can listen on docuemnt instead, the event will bubble
+  listenServerEvents()
+}
+
+function listenServerEvents() {
+  // you can listen on document instead, the event will bubble
   Hyperbole.hyperView("Message").addEventListener("server-message", function(e) {
     alert("Server Message: " + e.detail)
   })

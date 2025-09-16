@@ -178,7 +178,7 @@ app config users count = do
     script "/hyperbole.js"
     script' scriptLiveReload
     style "body { background-color: #d3dceb }, button { font-family: 'Share Tech Mono'}"
-    style $ cs cssEmbed
+    style cssEmbed
 
   serverError :: ResponseError -> ServerError
   -- serverError NotFound = ServerError "NotFound" $ Cyber.cyberError "Custom Not Found!"

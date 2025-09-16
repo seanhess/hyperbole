@@ -12,8 +12,7 @@ main = do
 
 page :: Page es '[]
 page = do
-  pure $ do
-    el "Hello World"
+  pure $ el "Hello World"
 
 messageView :: Text -> View context ()
 messageView msg =
@@ -25,5 +24,4 @@ helloWorld =
 
 page' :: Page es '[]
 page' = do
-  pure $ do
-    messageView "Hello World"
+  pure $ messageView "Hello World"

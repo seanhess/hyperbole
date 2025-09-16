@@ -3,7 +3,6 @@
 module Web.Hyperbole.Document where
 
 import Data.ByteString.Lazy qualified as BL
-import Data.String.Conversions (cs)
 import Data.String.Interpolate (i)
 import Web.Hyperbole.View
 
@@ -27,11 +26,13 @@ document docHead cnt =
 </html>|]
 
 
-{- | Create a custom document `<head>` to use with 'document'
+{- | Create a custom \<head\> to use with 'document'
 
 > import Web.Hyperbole (scriptEmbed, cssEmbed)
 >
 > #EMBED Example/Docs/App.hs documentHead
+>
+> #EMBED Example/Docs/App.hs app
 -}
 data DocumentHead = DocumentHead
 
@@ -50,7 +51,7 @@ quickStartDocument = document (mobileFriendly >> quickStart)
 quickStart :: View DocumentHead ()
 quickStart = do
   mobileFriendly
-  style $ cs cssEmbed
+  style cssEmbed
   script' scriptEmbed
   script' scriptLiveReload
 

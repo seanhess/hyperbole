@@ -11,7 +11,7 @@ import Example.Colors
 import Example.Effects.Debug
 import Example.Effects.Users (User (..), Users)
 import Example.Effects.Users qualified as Users
-import Example.Page.Contact (contactForm, contactLoading, contactView', parseUser)
+import Example.Page.Contact (ContactForm, contactForm, contactLoading, contactView', parseUser)
 import Example.Page.Contact qualified as Contact
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn, btn', btnLight)
@@ -125,7 +125,7 @@ newContactForm :: View NewContact ()
 newContactForm = do
   row ~ pad 10 . gap 10 . border 1 $ do
     target Contacts $ do
-      contactForm AddUser genFields
+      contactForm AddUser (genFields :: ContactForm Maybe)
     col $ do
       space
       button CloseForm ~ btnLight $ "Cancel"

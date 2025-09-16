@@ -31,20 +31,20 @@ import Prelude hiding (dropWhile)
 #EMBED Example/Docs/App.hs instance Route
 @
 
->>> routeUrl Main
+>>> routeUri Main
 /
 
->>> routeUrl (User 9)
+>>> routeUri (User 9)
 /user/9
 -}
 class Route a where
-  -- | The route to use if attempting to match on empty segments
+  -- | The route to use if attempting to match an empty path
   baseRoute :: Maybe a
   default baseRoute :: (Generic a, GenRoute (Rep a)) => Maybe a
   baseRoute = Nothing
 
 
-  -- | Try to match segments to a route
+  -- | Try to match a path to a route
   matchRoute :: Path -> Maybe a
   default matchRoute :: (Generic a, GenRoute (Rep a)) => Path -> Maybe a
   -- this will match a trailing slash, but not if it is missing
@@ -54,7 +54,7 @@ class Route a where
       (_, _) -> genMatchRoute p.segments
 
 
-  -- | Map a route to segments
+  -- | Map a route to a path
   routePath :: a -> Path
   default routePath :: (Generic a, Eq a, GenRoute (Rep a)) => a -> Path
   routePath p
@@ -70,9 +70,9 @@ genRoutePath :: (Generic a, GenRoute (Rep a)) => a -> [Segment]
 genRoutePath = genPaths . from
 
 
-{- | Convert a 'Route' to a 'Url'
+{- | Convert a 'Route' to a 'URI'
 
->>> routeUrl (User 100)
+>>> routeUri (User 100)
 /user/100
 -}
 routeUri :: (Route a) => a -> URI

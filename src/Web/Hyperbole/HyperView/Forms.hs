@@ -68,6 +68,12 @@ import Web.Hyperbole.View
 -- FORM PARSING
 ------------------------------------------------------------------------------
 
+{- | Simple types that be decoded from form data
+
+@
+#EMBED Example/Page/FormSimple.hs data ContactForm
+@
+-}
 class FromForm (form :: Type) where
   fromForm :: FE.Form -> Either String form
   default fromForm :: (Generic form, GFormParse (Rep form)) => FE.Form -> Either String form
@@ -76,10 +82,8 @@ class FromForm (form :: Type) where
 
 {- | A Higher-Kinded type that can be parsed from a 'Web.FormUrlEncoded.Form'
 
-From [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
-
 @
-#EMBED Example/Page/FormSimple.hs data ContactForm
+#EMBED Example/Page/FormValidation.hs data UserForm
 @
 -}
 class FromFormF (f :: (Type -> Type) -> Type) where
@@ -106,10 +110,17 @@ formData = do
 -- GEN FIELDS: Generate a type from selector names
 ------------------------------------------------------------------------------
 
+{- | Generate a Higher Kinded Type (form f)
+
+@
+#EMBED Example/Page/FormValidation.hs data UserForm
+@
+
+@
+#EMBED Example/Page/Contacts.hs newContactForm
+@
+-}
 class GenFields f (form :: (Type -> Type) -> Type) where
-  -- | Generate a Higher Kinded Type (form f)
-  --
-  --   > #EMBED Example/Page/FormValidation.hs data UserForm
   genFields :: form f
   default genFields :: (Generic (form f), GFieldsGen (Rep (form f))) => form f
   genFields = to gFieldsGen

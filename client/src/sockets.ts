@@ -37,7 +37,7 @@ export class SocketConnection {
 
       this.isConnected = true
       this.hasEverConnected = true
-      this.reconnectDelay = 0
+      this.reconnectDelay = 1000
       this.socket.removeEventListener('error', onConnectError)
       document.dispatchEvent(new Event("hyp-socket-connect"))
     })
@@ -51,7 +51,6 @@ export class SocketConnection {
 
       // attempt to reconnect in 1s
       if (this.hasEverConnected) {
-        this.reconnectDelay += 1000
         console.log("Reconnecting in " + (this.reconnectDelay / 1000) + "s")
         setTimeout(() => this.connect(addr), this.reconnectDelay)
       }

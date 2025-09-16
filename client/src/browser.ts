@@ -3,7 +3,7 @@ export function setQuery(query: string) {
   if (query != currentQuery()) {
     if (query != "") query = "?" + query
     let url = location.pathname + query
-    console.log("history.replaceState(", url, ")")
+    // console.log("history.replaceState(", url, ")")
     window.history.replaceState({}, "", url)
   }
 }
