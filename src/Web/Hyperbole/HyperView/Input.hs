@@ -10,6 +10,7 @@ import Web.Hyperbole.HyperView.ViewAction (ViewAction (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
 import Web.Hyperbole.View
 
+
 {- | \<button\> HTML tag which sends the action when pressed
 
 > button SomeAction (border 1) "Click Me"
@@ -53,9 +54,8 @@ option
   -> Text
   -> View (Option opt id) ()
 option opt cnt = do
-  let (ParamValue valTxt) = toParam opt
   os <- context
-  tag "option" @ att "value" valTxt @ selected (os.defaultOption == opt) $ text cnt
+  tag "option" @ att "value" (toParam opt).value @ selected (os.defaultOption == opt) $ text cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True

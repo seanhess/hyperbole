@@ -16,8 +16,8 @@ module Web.Hyperbole.HyperView.Forms
   , label
   , input
   , checkbox
-  , Selection(..)
-  , selGroup
+  , Radio (..)
+  , radioGroup
   , radio
   , select
   , form
@@ -40,10 +40,12 @@ module Web.Hyperbole.HyperView.Forms
   )
 where
 
+import Data.Bifunctor (first)
 import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
 import Data.Maybe (fromMaybe)
 import Data.String (IsString (..))
+import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Effectful
 import GHC.Generics
@@ -51,12 +53,12 @@ import Text.Casing (kebab)
 import Web.Atomic.Types hiding (Selector)
 import Web.FormUrlEncoded (Form (..), FormOptions (..))
 import Web.FormUrlEncoded qualified as FE
-import Web.Hyperbole.Data.Param (FromParam (..), ParamValue (..), ToParam (..))
+import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView.Event (onSubmit)
-import Web.Hyperbole.HyperView.Input (checked, Option(..))
+import Web.Hyperbole.HyperView.Input (Option (..), checked)
 import Web.Hyperbole.HyperView.Types
 import Web.Hyperbole.HyperView.ViewAction
 import Web.Hyperbole.View
@@ -67,8 +69,8 @@ import Web.Hyperbole.View
 ------------------------------------------------------------------------------
 
 class FromForm (form :: Type) where
-  fromForm :: FE.Form -> Either Text form
-  default fromForm :: (Generic form, GFormParse (Rep form)) => FE.Form -> Either Text form
+  fromForm :: FE.Form -> Either String form
+  default fromForm :: (Generic form, GFormParse (Rep form)) => FE.Form -> Either String form
   fromForm f = to <$> gFormParse f
 
 
@@ -81,8 +83,8 @@ From [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
 @
 -}
 class FromFormF (f :: (Type -> Type) -> Type) where
-  fromFormF :: FE.Form -> Either Text (f Identity)
-  default fromFormF :: (Generic (f Identity), GFormParse (Rep (f Identity))) => FE.Form -> Either Text (f Identity)
+  fromFormF :: FE.Form -> Either String (f Identity)
+  default fromFormF :: (Generic (f Identity), GFormParse (Rep (f Identity))) => FE.Form -> Either String (f Identity)
   fromFormF f = to <$> gFormParse f
 
 
@@ -96,7 +98,7 @@ instance (FromFormF form) => FromForm (form Identity) where
 formData :: forall form es. (FromForm form, Hyperbole :> es) => Eff es form
 formData = do
   f <- formBody
-  let ef = fromForm @form f :: Either Text form
+  let ef = fromForm @form f :: Either String form
   either parseError pure ef
 
 
@@ -105,10 +107,9 @@ formData = do
 ------------------------------------------------------------------------------
 
 class GenFields f (form :: (Type -> Type) -> Type) where
-  {- | Generate a Higher Kinded Type (form f)
-
-  > #EMBED Example/Page/FormValidation.hs data UserForm
-  -}
+  -- | Generate a Higher Kinded Type (form f)
+  --
+  --   > #EMBED Example/Page/FormValidation.hs data UserForm
   genFields :: form f
   default genFields :: (Generic (form f), GFieldsGen (Rep (form f))) => form f
   genFields = to gFieldsGen
@@ -178,8 +179,8 @@ field
    . FieldName a
   -> View (Input id a) ()
   -> View (FormFields id) ()
-field fn inputs =
-  addContext (Input fn) inputs
+field fn =
+  addContext (Input fn)
 
 
 -- | Choose one for 'input's to give the browser autocomplete hints
@@ -207,8 +208,9 @@ data Input (id :: Type) (a :: Type) = Input
   }
 
 
--- | label for a 'field'
--- label :: Text -> View (Input id a) ()
+{- | label for a 'field'
+label :: Text -> View (Input id a) ()
+-}
 label :: View c () -> View c ()
 label = tag "label"
 
@@ -240,34 +242,28 @@ checkbox isChecked = do
 -- select. select or list input can be thought of one wrapper and multiple
 -- options whereas radio is multiple wrappers with options. The context required
 -- for radio is more than that required for select.
--- TODO: Rename this to Radio. This context is radio specific.
-data Selection (id :: Type) (a :: Type) (b :: Type) = Selection
+data Radio (id :: Type) (a :: Type) (b :: Type) = Selection
   { inputCtx :: Input id a
   , defaultOption :: b
   }
 
 
--- TODO: Rename this to radioGroup.
-selGroup :: b -> View (Selection id a b) () -> View (Input id a) ()
-selGroup defOpt inner = modifyContext f inner
-  where
-  f inpCtx = Selection inpCtx defOpt
+radioGroup :: b -> View (Radio id a b) () -> View (Input id a) ()
+radioGroup defOpt = modifyContext $ \inp -> Selection inp defOpt
 
 
-radio :: (Eq b, ToParam b) => b -> View (Selection id a b) ()
+radio :: (Eq b, ToParam b) => b -> View (Radio id a b) ()
 radio val = do
   Selection (Input (FieldName nm)) defOpt <- context
-  let (ParamValue valTxt) = toParam val
   tag "input"
     @ att "type" "radio"
     . name nm
-    . value valTxt
+    . value (toParam val).value
     . checked (defOpt == val)
     $ none
 
 
-
-select :: Eq opt => opt -> View (Option opt id) () -> View (Input id a) ()
+select :: (Eq opt) => opt -> View (Option opt id) () -> View (Input id a) ()
 select defOpt options = do
   Input (FieldName nm) <- context
   tag "select" @ name nm $ addContext (Option defOpt) options
@@ -380,7 +376,7 @@ type instance Field (Either String) a = Either String a
 ------------------------------------------------------------------------------
 
 class GFormParse f where
-  gFormParse :: FE.Form -> Either Text (f p)
+  gFormParse :: FE.Form -> Either String (f p)
 
 
 instance (GFormParse f, GFormParse g) => GFormParse (f :*: g) where
@@ -398,26 +394,23 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
   gFormParse f = M1 <$> gFormParse f
 
 
-instance {-# OVERLAPPABLE #-} (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
+-- TODO: need a bool instance?
+-- TODO: need a Maybe a instance?
+instance (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
+  -- these CANNOT be json encoded, they are encoded by the browser
   gFormParse f = do
-    let s = selName (undefined :: M1 S s (K1 R (f a)) p)
-    t <- FE.parseUnique @Text (pack s) f
-    M1 . K1 <$> parseParam (ParamValue t)
+    let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
+    mt :: Maybe Text <- first cs $ FE.lookupMaybe (cs sel) f
+    a <- first (\err -> sel <> ": " <> err) $ decodeFormValue mt
+    pure $ M1 . K1 $ a
 
 
-instance {-# OVERLAPPING #-} (Selector s) => GFormParse (M1 S s (K1 R Bool)) where
-  gFormParse f = do
-    let s = selName (undefined :: M1 S s (K1 R (f a)) p)
-    mt <- FE.parseMaybe @Text (pack s) f
-    M1 . K1 <$> do
-      case mt of
-        -- HTML forms submit checkboxes strangely
-        -- TODO: move to FromParam instance once encoding refactor is merged?
-        Nothing -> pure False
-        Just "on" -> pure True
-        Just "off" -> pure False
-        Just t -> parseParam (ParamValue t)
-
+-- instance {-# OVERLAPPING #-} (Selector s, FromParam a) => GFormParse (M1 S s (K1 R (Maybe a))) where
+--   gFormParse f = do
+--     let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
+--     mt :: Maybe Text <- first cs $ FE.lookupMaybe (cs sel) f
+--     ma :: Maybe a <- maybe (pure Nothing) (parseParam . decodeParam) mt
+--     pure $ M1 . K1 $ ma
 
 ------------------------------------------------------------------------------
 -- GENERIC GENERATE FIELDS

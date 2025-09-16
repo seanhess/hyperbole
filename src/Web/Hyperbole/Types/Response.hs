@@ -22,9 +22,9 @@ data Response
 
 data ResponseError
   = NotFound
-  | ErrParse Text
-  | ErrQuery Text
-  | ErrSession Text Text
+  | ErrParse String
+  | ErrQuery String
+  | ErrSession Text String
   | ErrServer Text
   | ErrCustom ServerError
   | ErrInternal

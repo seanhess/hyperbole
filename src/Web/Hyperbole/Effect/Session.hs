@@ -3,8 +3,6 @@
 
 module Web.Hyperbole.Effect.Session where
 
-import Data.Aeson as A (FromJSON, ToJSON, eitherDecodeStrict, encode)
-import Data.Bifunctor (first)
 import Data.Default (Default (..))
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
@@ -13,6 +11,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import GHC.Generics
 import Web.Hyperbole.Data.Cookie as Cookie
+import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.URI (Path)
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
@@ -45,15 +44,15 @@ class Session a where
 
   -- | Encode type to a a cookie value. Defaults to ToJSON
   toCookie :: a -> CookieValue
-  default toCookie :: (ToJSON a) => a -> CookieValue
-  toCookie = CookieValue . cs . A.encode
+  default toCookie :: (ToEncoded a) => a -> CookieValue
+  toCookie = CookieValue . cs . Encoded.encode
 
 
   -- | Decode from a cookie value. Defaults to FromJSON
-  parseCookie :: CookieValue -> Either Text a
-  default parseCookie :: (FromJSON a) => CookieValue -> Either Text a
+  parseCookie :: CookieValue -> Either String a
+  default parseCookie :: (FromEncoded a) => CookieValue -> Either String a
   parseCookie (CookieValue bs) = do
-    first cs $ A.eitherDecodeStrict bs
+    Encoded.decodeEither (cs bs)
 
 
 {- | Persist datatypes in browser cookies. If the session doesn't exist, the 'Default' instance is used

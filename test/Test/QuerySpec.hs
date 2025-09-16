@@ -1,4 +1,5 @@
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Test.QuerySpec where
@@ -6,14 +7,15 @@ module Test.QuerySpec where
 import Data.Function ((&))
 import Data.Text (Text)
 import Skeletest
-import Web.Hyperbole
+import Skeletest.Predicate qualified as P
+import Web.Hyperbole hiding (Number)
 import Web.Hyperbole.Data.QueryData as QueryData
 
 
 spec :: Spec
-spec = do
-  describe "param" paramSpec
+spec = withMarkers ["param"] $ do
   describe "render" renderSpec
+  describe "class" classSpec
   describe "multi" multiSpec
 
 
@@ -21,37 +23,34 @@ data Woot = Woot Text
   deriving (Generic, Show)
 
 
-paramSpec :: Spec
-paramSpec = do
-  describe "ToParam" $ do
-    it "should encode basics" $ do
-      toParam @Text "hello" `shouldBe` "hello"
-      toParam @Int 23 `shouldBe` "23"
-
-    it "should encode Maybe" $ do
-      toParam @(Maybe Int) Nothing `shouldBe` ""
-      toParam @(Maybe Int) (Just 23) `shouldBe` "23"
-
-    -- it "should encode lists with spaces = plusses" $ do
-    --   toParam @[Int] [1, 2, 3] `shouldBe` ParamValue ("1+2+3")
-    --   toParam @[Text] ["one", "two"] `shouldBe` ParamValue ("one+two")
-    --   toParam @[Text] ["hello world", "friend"] `shouldBe` ParamValue ("hello%20world+friend")
-
-    it "should not escape text" $ do
-      toParam @Text "hello world" `shouldBe` "hello world"
-
-  describe "FromParam" $ do
-    it "should parse basics" $ do
-      parseParam @Text "hello" `shouldBe` Right "hello"
-      parseParam @Int "3" `shouldBe` Right 3
+data Record = Record
+  { age :: Int
+  , msg :: Text
+  }
+  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam, Eq, FromQuery, ToQuery)
 
 
--- it "should decode lists with plusses" $ do
---   parseParam @[Int] "1+2+3" `shouldBe` Right [1, 2, 3]
---
--- it "should decode lists with escapes" $ do
---   let vals = ["hello world", "friend"] :: [Text]
---   parseParam (toParam @[Text] vals) `shouldBe` Right vals
+classSpec :: Spec
+classSpec = do
+  describe "FromQuery" $ do
+    it "decodes record" $ do
+      let qd = QueryData.parse "age=20&msg=hello_world"
+      parseQuery @Record qd `shouldSatisfy` P.right P.anything
+
+    it "decodes numbers as text if needed" $ do
+      let qd = QueryData.parse "age=20&msg=30"
+      parseQuery @Record qd `shouldBe` Right (Record 20 "30")
+
+  describe "ToQuery" $ do
+    it "encodes record" $ do
+      let r = Record 20 "hello world"
+      QueryData.render (toQuery r) `shouldBe` "age=20&msg=hello_world"
+
+  describe "roundtrip" $ do
+    it "round trips" $ do
+      let r = Record 20 "hello world"
+      parseQuery (toQuery r) `shouldBe` Right r
+
 
 renderSpec :: Spec
 renderSpec = do
@@ -70,6 +69,10 @@ renderSpec = do
   it "should escape special characters in strings" $ do
     let q = mempty & QueryData.insert @Text "msg" "bob&henry=fast"
     QueryData.render q `shouldBe` "msg=bob%26henry%3Dfast"
+
+  -- it "handles underscores" $ do
+  --   QueryData.render [(Param "msg", ParamValue "hello_world" $ String "hello_world")] `shouldBe` "msg=hello%5C_world"
+  --   QueryData.render [(Param "msg", ParamValue "hello world" $ String "hello world")] `shouldBe` "msg=hello_world"
 
   it "should roundtrip special characters" $ do
     let msg = "bob&henry=fast"
@@ -134,22 +137,15 @@ data Nested = Nested
 
 multiSpec :: Spec
 multiSpec = do
-  it "should convert to querydata" $ do
-    let f = Filters "woot" False Nothing
-    QueryData.render (toQuery f) `shouldBe` "another=&isActive=false&term=woot"
+  describe "Roundtrip" $ do
+    it "should parse from querydata" $ do
+      let f = Filters "hello world" False Nothing
+      let out = QueryData.render (toQuery f)
+      let q = QueryData.parse out
+      parseQuery q `shouldBe` Right f
 
-  it "should convert to querydata 2" $ do
-    let f = Filters "woot" False (Just "ok")
-    QueryData.render (toQuery f) `shouldBe` "another=ok&isActive=false&term=woot"
-
-  it "should parse from querydata" $ do
-    let f = Filters "woot" False Nothing
-    let out = QueryData.render (toQuery f)
-    let q = QueryData.parse out
-    parseQuery q `shouldBe` Right f
-
-  it "should work with Just" $ do
-    let f = Filters "woot" False (Just "hello")
-    let out = QueryData.render (toQuery f)
-    let q = QueryData.parse out
-    parseQuery q `shouldBe` Right f
+    it "should work with Just" $ do
+      let f = Filters "hello_world" False (Just "hello")
+      let out = QueryData.render (toQuery f)
+      let q = QueryData.parse out
+      parseQuery q `shouldBe` Right f

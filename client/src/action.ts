@@ -165,18 +165,14 @@ export function parseMeta(line: string): Meta | undefined {
 
 // Sanitized Encoding ------------------------------------
 
-export function encodedTextInput(action: string, value: string): string {
-  return action + ' "' + sanitizeInput(value) + '"'
+export function encodedParam(action: string, param: string): string {
+  return action + ' ' + sanitizeParam(param)
 }
 
-export function encodedJSONInput(action: string, value: string): string {
-  return action + " " + value
-}
+function sanitizeParam(param: string): string {
+  if (param == "") {
+    return "|"
+  }
 
-
-// WARNING: security flaw, unescaped output. no closing quotes allowed?
-function sanitizeInput(input: string): string {
-  // replace any escape characters: '/' etc
-  // replace any quotes with escaped quotes
-  return input.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
+  return param.replace(/_/g, "\\_").replace(/\s+/g, "_")
 }

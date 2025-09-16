@@ -42,6 +42,5 @@ export declare function splitMetadata(lines: string[]): ParsedResponse;
 export declare function parseRemoteEvent(input: string): RemoteEvent;
 export declare function parseAction(input: string): [ViewId, string];
 export declare function parseMeta(line: string): Meta | undefined;
-export declare function encodedTextInput(action: string, value: string): string;
-export declare function encodedJSONInput(action: string, value: string): string;
+export declare function encodedParam(action: string, param: string): string;
 export {};

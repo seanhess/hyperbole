@@ -152,7 +152,7 @@ module Web.Hyperbole
   , label
   , input
   , checkbox
-  , selGroup
+  , radioGroup
   , radio
   , select
   , checked
@@ -174,6 +174,8 @@ module Web.Hyperbole
   , Default (..)
   , ToParam (..)
   , FromParam (..)
+  , ToEncoded
+  , FromEncoded
 
     -- * Advanced #advanced#
   , target
@@ -220,7 +222,7 @@ import Web.Atomic.CSS ()
 import Web.Atomic.Types ()
 import Web.HttpApiData (FromHttpApiData, ToHttpApiData)
 import Web.Hyperbole.Application
-import Web.Hyperbole.Data.Encoded ()
+import Web.Hyperbole.Data.Encoded (FromEncoded, ToEncoded)
 import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.QueryData
 import Web.Hyperbole.Document

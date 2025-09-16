@@ -42,7 +42,7 @@ notFound = send $ RespondNow $ Err NotFound
 
 
 -- | Respond immediately with a parse error
-parseError :: (Hyperbole :> es) => Text -> Eff es a
+parseError :: (Hyperbole :> es) => String -> Eff es a
 parseError = respondError . ErrParse
 
 

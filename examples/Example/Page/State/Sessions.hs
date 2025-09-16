@@ -17,7 +17,7 @@ data Preferences = Preferences
   { message :: Text
   , color :: AppColor
   }
-  deriving (Generic, Show, ToJSON, FromJSON, FromParam, ToParam, Session)
+  deriving (Generic, Show, ToEncoded, FromEncoded, Session)
 instance Default Preferences where
   def = Preferences "_" White
 

@@ -68,11 +68,11 @@ formView = do
     col ~ gap 5 $ do
       el $ text "Planet"
       field "planet" $ do
-        selGroup Earth $ do
-          displayOption Mercury
-          displayOption Venus
-          displayOption Earth
-          displayOption Mars
+        radioGroup Earth $ do
+          radioOption Mercury
+          radioOption Venus
+          radioOption Earth
+          radioOption Mars
 
     field "moon" $ do
       label $ do
@@ -84,14 +84,11 @@ formView = do
           option Mimas "Mimas"
 
     submit "Submit" ~ btn
-
-  where
-
-  displayOption val =
+ where
+  radioOption val =
     label ~ flexRow . gap 10 $ do
       radio val ~ width 32
       text (pack (show val))
-
 
 -- Alternatively, use Higher Kinded Types, and Hyperbole can guarantee the field names are the same
 --
@@ -144,11 +141,11 @@ formView' = do
     col ~ gap 5 $ do
       el $ text "Planet"
       field f.planet $ do
-        selGroup Earth $ do
-          displayOption Mercury
-          displayOption Venus
-          displayOption Earth
-          displayOption Mars
+        radioGroup Earth $ do
+          radioOption Mercury
+          radioOption Venus
+          radioOption Earth
+          radioOption Mars
 
     field f.moon $ do
       label $ do
@@ -160,10 +157,8 @@ formView' = do
           option Mimas "Mimas"
 
     submit "Submit" ~ btn
-
-  where
-
-  displayOption val =
+ where
+  radioOption val =
     label ~ flexRow . gap 10 $ do
       radio val ~ width 32
       text (pack (show val))

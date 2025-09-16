@@ -12,11 +12,13 @@ page = do
   allTodos = [todo "One", todo "Two", todo " Three"]
   todo t = Todo t False
 
+-- what's the default encoding for these guys?
+-- maybe ToJSON generically?
 data Todo = Todo
   { task :: Text
   , completed :: Bool
   }
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
+  deriving (Generic, Show, Read, ToParam, FromParam)
 
 data AllTodos = AllTodos
   deriving (Generic, ViewId)

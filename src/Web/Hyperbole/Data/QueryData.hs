@@ -3,6 +3,7 @@
 
 module Web.Hyperbole.Data.QueryData where
 
+import Data.Aeson (Value (Null))
 import Data.ByteString (ByteString)
 import Data.Default (Default (..))
 import Data.Map.Strict (Map)
@@ -10,9 +11,11 @@ import Data.Map.Strict qualified as M
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
+import GHC.Exts (IsList (..))
 import GHC.Generics
-import Network.HTTP.Types (Query, renderQuery)
+import Network.HTTP.Types (Query, QueryItem, renderQuery)
 import Network.HTTP.Types qualified as HTTP
+import Web.Hyperbole.Data.Encoded (decodeParam, encodeParam)
 import Web.Hyperbole.Data.Param
 import Prelude hiding (lookup)
 
@@ -21,6 +24,12 @@ import Prelude hiding (lookup)
 newtype QueryData = QueryData (Map Param ParamValue)
   deriving (Show)
   deriving newtype (Monoid, Semigroup)
+
+
+instance IsList QueryData where
+  type Item QueryData = (Param, ParamValue)
+  fromList = QueryData . fromList
+  toList (QueryData m) = toList m
 
 
 singleton :: (ToParam a) => Param -> a -> QueryData
@@ -49,10 +58,10 @@ lookup k (QueryData m) = do
   either (const Nothing) pure $ parseParam t
 
 
-require :: (FromParam a) => Param -> QueryData -> Either Text a
+require :: (FromParam a) => Param -> QueryData -> Either String a
 require p (QueryData m) = do
   case M.lookup p m of
-    Nothing -> Left $ "Missing Key: " <> p.text
+    Nothing -> Left $ "Missing Key: " <> cs p.text
     Just val -> parseParam val
 
 
@@ -70,10 +79,8 @@ elems (QueryData m) = M.elems m
 
 
 render :: QueryData -> ByteString
-render (QueryData m) =
-  renderQuery False (HTTP.toQuery $ fmap queryItem $ M.toList m)
- where
-  queryItem (Param k, ParamValue val) = (k, val)
+render qd =
+  renderQuery False (HTTP.toQuery $ fromQueryData qd)
 
 
 parse :: ByteString -> QueryData
@@ -82,33 +89,29 @@ parse =
   queryData . HTTP.parseQuery
 
 
--- we used to be able to automatically convert to querydata, but it may not parse into Encoded?
 queryData :: Query -> QueryData
 queryData q =
   fromList $ fmap fromQueryItem q
  where
+  fromQueryItem :: QueryItem -> (Param, ParamValue)
   fromQueryItem (key, mval) =
-    (Param (cs key), ParamValue $ value mval)
+    (Param (cs key), fromParam mval)
 
-  -- empty / missing values are encoded as empty strings
-  value Nothing = ""
-  value (Just bs) = cs bs
+  fromParam :: Maybe ByteString -> ParamValue
+  fromParam Nothing = jsonParam Null
+  fromParam (Just t) = decodeParam (cs t)
 
 
 fromQueryData :: QueryData -> Query
 fromQueryData q =
   fmap toQueryItem $ toList q
  where
-  toQueryItem (Param prm, ParamValue val) =
-    (cs prm, Just $ cs val)
+  toQueryItem :: (Param, ParamValue) -> QueryItem
+  toQueryItem (Param prm, pval) =
+    (cs prm, Just $ toQueryValue pval)
 
-
-fromList :: [(Param, ParamValue)] -> QueryData
-fromList = QueryData . M.fromList
-
-
-toList :: QueryData -> [(Param, ParamValue)]
-toList (QueryData m) = M.toList m
+  toQueryValue :: ParamValue -> ByteString
+  toQueryValue = cs . encodeParam
 
 
 {- | Decode a type from a 'QueryData'. Missing fields are set to 'Data.Default.def'
@@ -124,8 +127,8 @@ Right (Filters True "asdf")
 Right (Filters False "asdf")
 -}
 class FromQuery a where
-  parseQuery :: QueryData -> Either Text a
-  default parseQuery :: (Generic a, GFromQuery (Rep a)) => QueryData -> Either Text a
+  parseQuery :: QueryData -> Either String a
+  default parseQuery :: (Generic a, GFromQuery (Rep a)) => QueryData -> Either String a
   parseQuery q = to <$> gParseQuery q
 
 
@@ -166,7 +169,7 @@ instance ToQuery Query where
 
 -- | Generic decoding of records from a Query
 class GFromQuery f where
-  gParseQuery :: QueryData -> Either Text (f p)
+  gParseQuery :: QueryData -> Either String (f p)
 
 
 instance (GFromQuery f, GFromQuery g) => GFromQuery (f :*: g) where

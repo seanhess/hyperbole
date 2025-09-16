@@ -16,8 +16,8 @@ class ViewId a where
   toViewId = genericToEncoded
 
 
-  parseViewId :: Encoded -> Either Text a
-  default parseViewId :: (Generic a, GFromEncoded (Rep a)) => Encoded -> Either Text a
+  parseViewId :: Encoded -> Either String a
+  default parseViewId :: (Generic a, GFromEncoded (Rep a)) => Encoded -> Either String a
   parseViewId = genericParseEncoded
 
 

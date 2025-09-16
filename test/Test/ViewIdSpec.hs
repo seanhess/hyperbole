@@ -12,7 +12,7 @@ import Web.Hyperbole.HyperView
 
 
 data Thing = Thing
-  deriving (Generic, Show, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded, ViewId)
+  deriving (Generic, Show, ToJSON, FromJSON, Eq, ToEncoded, FromEncoded, ViewId, ToParam, FromParam)
 
 
 data Custom = Custom
@@ -28,7 +28,7 @@ data Compound
   | Two Thing
   | WithId (Id Thing)
   | Compound Text Compound
-  deriving (Generic, Show, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded, ViewId)
+  deriving (Generic, Show, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded, ViewId, ToParam, FromParam)
 
 
 data Product4 = Product4 Text Text Text Text
@@ -36,7 +36,7 @@ data Product4 = Product4 Text Text Text Text
 
 
 newtype Id a = Id {fromId :: Text}
-  deriving newtype (Eq, Ord, Show, ToJSON, FromJSON)
+  deriving newtype (Eq, Ord, Show, ToJSON, FromJSON, ToParam, FromParam)
   deriving (Generic)
 
 
@@ -47,7 +47,7 @@ instance ViewId Custom where
 
 
 spec :: Spec
-spec = do
+spec = withMarkers ["encoded"] $ do
   describe "ViewId Encoded" $ do
     describe "toViewId" $ do
       it "basic" $ encodeViewId Thing `shouldBe` "Thing"
@@ -61,7 +61,7 @@ spec = do
 
     describe "has-string" $ do
       it "should not contain single quotes" $ do
-        encodeViewId (HasString "woot") `shouldBe` "HasString \"woot\""
+        encodeViewId (HasString "woot") `shouldBe` "HasString woot"
         containsSingleQuotes (encodeViewId (HasString "woot")) `shouldBe` False
 
       it "should roundtrip" $ do

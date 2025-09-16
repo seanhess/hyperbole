@@ -32,7 +32,7 @@ data UserSession = UserSession
   { auth :: OAuth2.Authenticated
   , email :: Text
   }
-  deriving (Generic, ToJSON, FromJSON)
+  deriving (Generic, ToEncoded, FromEncoded)
 instance Session UserSession where
   -- we want it to work on any page, not just this one
   cookiePath = Just []
