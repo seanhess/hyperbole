@@ -83,7 +83,7 @@ instance ToParam Value where
 {- | Decode data from a 'query', 'session', or 'form' parameter value
 
 @
-#EMBED Example/Data/ProgrammingLanguage.hs data LanguageFamily
+#EMBED Example/Docs/Sessions.hs data AppColor
 @
 -}
 class FromParam a where

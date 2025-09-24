@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Web.Hyperbole.Effect.Request where
 
 import Data.String.Conversions (cs)

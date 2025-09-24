@@ -12,13 +12,11 @@ page = do
   allTodos = [todo "One", todo "Two", todo " Three"]
   todo t = Todo t False
 
--- what's the default encoding for these guys?
--- maybe ToJSON generically?
 data Todo = Todo
   { task :: Text
   , completed :: Bool
   }
-  deriving (Generic, Show, Read, ToParam, FromParam)
+  deriving (Generic, ToParam, FromParam)
 
 data AllTodos = AllTodos
   deriving (Generic, ViewId)
@@ -38,7 +36,7 @@ todosView :: [Todo] -> View AllTodos ()
 todosView todos = do
   forM_ todos $ \todo -> do
     hyper TodoItem $ todoView todo
-  button (AddTodo "Shopping" todos) "Add Shopping"
+  button (AddTodo "Shopping" todos) "Add Todo: Shopping"
 
 data TodoItem = TodoItem
   deriving (Generic, ViewId)

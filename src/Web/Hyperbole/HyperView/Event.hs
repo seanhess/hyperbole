@@ -122,7 +122,12 @@ dataTarget :: (ViewId id, ViewContext a ~ id, Attributable a) => id -> Attribute
 dataTarget = att "data-target" . encodedToText . toViewId
 
 
--- | Allow inputs to trigger actions for a different view
+{- | Allow inputs to trigger actions for a different view
+
+@
+#EMBED Example/Page/Advanced.hs targetView
+@
+-}
 target :: forall id ctx. (HyperViewHandled id ctx, ViewId id) => id -> View id () -> View ctx ()
 target newId view = do
   addContext newId $ do

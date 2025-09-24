@@ -98,7 +98,7 @@ instance (FromFormF form) => FromForm (form Identity) where
   fromForm = fromFormF
 
 
--- | Parse a full type from the form data
+-- | Parse a full type from a submitted form body
 formData :: forall form es. (FromForm form, Hyperbole :> es) => Eff es form
 formData = do
   f <- formBody
@@ -110,7 +110,7 @@ formData = do
 -- GEN FIELDS: Generate a type from selector names
 ------------------------------------------------------------------------------
 
-{- | Generate a Higher Kinded Type (form f)
+{- | Generate a Higher Kinded record with all selectors filled with default values. See 'GenField'
 
 @
 #EMBED Example/Page/FormValidation.hs data UserForm
@@ -126,11 +126,13 @@ class GenFields f (form :: (Type -> Type) -> Type) where
   genFields = to gFieldsGen
 
 
-{- | Generate FieldNames for a form. See [Example.Page.FormSimple](https://docs.hyperbole.live/formsimple)
+{- | Generate FieldNames for a form
 
-> #EMBED Example/Page/FormSimple.hs data ContactForm'
+#EXAMPLE /forms
+
+> #EMBED Example/Page/Todos/Todo.hs data TodoForm
 >
-> #EMBED Example/Page/FormSimple.hs formView'
+> #EMBED Example/Page/Todos/Todo.hs todoForm
 -}
 fieldNames :: forall form. (GenFields FieldName form) => form FieldName
 fieldNames = genFields
@@ -457,7 +459,6 @@ instance (GFieldsGen f) => GFieldsGen (M1 D d f) where
 instance (GFieldsGen f) => GFieldsGen (M1 C c f) where
   gFieldsGen = M1 gFieldsGen
 
-
 ------------------------------------------------------------------------------
 -- GMerge - combine two records with the same structure
 ------------------------------------------------------------------------------
@@ -556,16 +557,16 @@ instance (GFieldsGen f) => GFieldsGen (M1 C c f) where
 
 ------------------------------------------------------------------------------
 
-newtype User = User Text
-  deriving newtype (FromParam)
-
-
-data TestForm f = TestForm
-  { name :: Field f Text
-  , age :: Field f Int
-  , user :: Field f User
-  }
-  deriving (Generic, FromFormF, GenFields Maybe, GenFields Validated)
+-- newtype User = User Text
+--   deriving newtype (FromParam)
+--
+--
+-- data TestForm f = TestForm
+--   { name :: Field f Text
+--   , age :: Field f Int
+--   , user :: Field f User
+--   }
+--   deriving (Generic, FromFormF, GenFields Maybe, GenFields Validated)
 
 -- test :: (Hyperbole :> es) => Eff es (TestForm Identity)
 -- test = do

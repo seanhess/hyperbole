@@ -14,6 +14,12 @@ import Web.Atomic.Types
 
 -- View ------------------------------------------------------------
 
+{- | 'View's are HTML fragments with a 'context'
+
+@
+#EMBED Example/Docs/BasicPage.hs helloWorld
+@
+-}
 newtype View c a = View {html :: Eff '[Reader c] (Html a)}
 
 
@@ -71,8 +77,8 @@ addContext c (View eff) = View $ do
   pure $ runPureEff $ runReader c eff
 
 
-modifyContext ::
-  forall ctx0 ctx1. (ctx0 -> ctx1) -> View ctx1 () -> View ctx0 ()
+modifyContext
+  :: forall ctx0 ctx1. (ctx0 -> ctx1) -> View ctx1 () -> View ctx0 ()
 modifyContext f (View eff) = View $ do
   ctx0 <- ask @ctx0
   pure $ runPureEff $ runReader (f ctx0) eff

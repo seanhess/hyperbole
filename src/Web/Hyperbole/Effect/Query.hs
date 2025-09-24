@@ -66,7 +66,13 @@ param p = do
     Right a -> pure a
 
 
--- | Parse a single parameter from the query string if available
+{- | Parse a single parameter from the query string if available
+
+
+@
+#EMBED Example/Docs/SideEffects.hs page
+@
+-}
 lookupParam :: (FromParam a, Hyperbole :> es) => Param -> Eff es (Maybe a)
 lookupParam p = do
   QueryData.lookup p <$> queryParams
@@ -89,7 +95,7 @@ deleteParam key = do
   modifyQueryData (QueryData.delete key)
 
 
--- | Return the query from 'Request' as a 'QueryData'
+-- | Return the querystring from 'Request' as a 'QueryData'
 queryParams :: (Hyperbole :> es) => Eff es QueryData
 queryParams = do
   cq <- clientQuery

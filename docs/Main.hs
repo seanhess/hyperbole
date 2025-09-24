@@ -52,6 +52,7 @@ copyExtraFilesTo tmpDir = do
   copyFile "./LICENSE" (tmpDir </> "LICENSE")
   createDirectoryIfMissing True (tmpDir </> "client/dist")
   copyFile "./client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
+  copyFile "./client/dist/hyperbole.js.map" (tmpDir </> "client/dist/hyperbole.js.map")
   createDirectoryIfMissing True (tmpDir </> "client/util")
   copyFile "./client/util/live-reload.js" (tmpDir </> "client/util/live-reload.js")
 

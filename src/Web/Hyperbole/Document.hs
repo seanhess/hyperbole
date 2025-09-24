@@ -26,7 +26,7 @@ document docHead cnt =
 </html>|]
 
 
-{- | Create a custom \<head\> to use with 'document'
+{- | Create a custom \<head\> to use with 'document'. Remember to include at least `scriptEmbed`!
 
 > import Web.Hyperbole (scriptEmbed, cssEmbed)
 >

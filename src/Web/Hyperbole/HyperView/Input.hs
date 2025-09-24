@@ -32,7 +32,9 @@ button action cnt = do
 -- toggle isSelected clickAction f = do
 --   tag "input" (att "type" "checkbox" . checked isSelected . onClick (clickAction (not isSelected)) . f) none
 
-{- | Type-safe dropdown. Sends (opt -> Action id) when selected. The selection predicate (opt -> Bool) controls which option is selected. See [Example.Page.Filter](https://docs.hyperbole.live/filter)
+{- | Type-safe dropdown. Sends (opt -> Action id) when selected. The default will be selected.
+
+#EXAMPLE /data/filter
 
 @
 #EMBED Example/Page/DataLists/Filter.hs familyDropdown

@@ -7,7 +7,8 @@ data AppColor
   = White
   | Red
   | Green
-  deriving (Show, Eq, Generic, ToParam, FromParam)
+  deriving (Show, Generic, ToParam, FromParam)
+
 instance Default AppColor where
   def = White
 

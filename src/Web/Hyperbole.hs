@@ -39,6 +39,9 @@ module Web.Hyperbole
     -- ** Same HyperView, Unique ViewId #hyperview-same#
     -- $practices-same
 
+    -- ** Different HyperViews
+    -- $practices-diff
+
     -- ** Nesting HyperViews #hyperview-nested#
     -- $practices-nested
 
@@ -107,10 +110,10 @@ module Web.Hyperbole
   , modifySession_
   , deleteSession
 
-  -- ** Control Client #client#
+    -- ** Control Client #client#
+  , pageTitle
   , trigger
   , pushEvent
-  , pageTitle
 
     -- * HyperView #hyperview#
   , HyperView (..)
@@ -180,18 +183,14 @@ module Web.Hyperbole
 
     -- * Advanced #advanced#
   , target
-  , parseError
   , Response
   , ViewId
   , ViewAction
-  , ToJSON
-  , FromJSON
   , Root
 
     -- * Exports #exports#
+
     -- ** View
-    --
-    -- | Hyperbole is tightly integrated with [atomic-css](https://hackage.haskell.org/package/atomic-css) for HTML generation
   , module Web.Hyperbole.View
 
     -- ** Embeds
@@ -210,10 +209,9 @@ module Web.Hyperbole
   , uri
   ) where
 
-import Data.Aeson (FromJSON, ToJSON)
 import Data.Default
 import Effectful (Eff, (:>))
-import GHC.Generics (Rep, Generic)
+import GHC.Generics (Generic, Rep)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp as Warp (run)
 import Web.Atomic.CSS ()
@@ -283,6 +281,8 @@ module Main where
 import Web.Hyperbole
 
 #EMBED Example/Docs/BasicPage.hs main
+
+#EMBED Example/Docs/BasicPage.hs page
 @
 -}
 
@@ -306,15 +306,15 @@ Make our 'ViewId' an instance of 'HyperView':
 #EMBED Example/Docs/Interactive.hs instance HyperView Message
 @
 
-If an 'Action' occurs, the contents of our 'HyperView' will be replaced with 'update'.
+If an 'Action' occurs, the contents of our 'HyperView' will be replaced with the result of 'update'.
 
-To embed our new 'HyperView', add the 'ViewId' to the type-level list of 'Page', and then wrap the view in 'hyper'.
+To use our new 'HyperView', add the 'ViewId' to the type-level list of 'Page', and then place it in the page view with 'hyper'.
 
 @
 #EMBED Example/Docs/Interactive.hs page
 @
 
-Now let's add a button to trigger the 'Action'. Note that we must update the 'View'\'s 'context' to match our 'ViewId'. The compiler will tell us if we try to trigger actions that don't belong to our 'HyperView'
+Now let's add a button to trigger the 'Action'. Note that we must now update the 'View'\'s 'context' to match our 'ViewId'. The compiler will tell us if we try to trigger actions that don't belong to our 'HyperView'
 
 @
 #EMBED Example/Docs/Interactive.hs messageView
@@ -345,7 +345,7 @@ We can factor 'View's into reusable functions:
 #EMBED Example/Docs/BasicPage.hs page'
 @
 
-We can also use functions to reuse look and feel using [atomic-css](https://hackage.haskell.org/package/atomic-css)
+Using [atomic-css](https://hackage.haskell.org/package/atomic-css) we can use functions to factor styles as well
 
 #EXAMPLE /css
 
@@ -377,13 +377,13 @@ We can write multiple view functions with our 'HyperView' as the 'context', and 
 #EMBED Example/Docs/ViewFunctions.hs messageButton
 @
 
-We can also create 'View' functions that work in any 'context':
+Some 'View' functions can be used in any 'context':
 
 @
 #EMBED Example/Docs/ViewFunctions.hs header
 @
 
-Then we can refactor our main 'View' to use view functions to avoid repeating ourselves
+With those two functions defined, we can refactor our main 'View' to use them and avoid repeating ourselves
 
 @
 #EMBED Example/Docs/ViewFunctions.hs messageView
@@ -404,21 +404,13 @@ We've mentioned most of the Architecture of a hyperbole application, but let's g
 
 {- $practices-multi
 
-We can add as many 'HyperView's to a page as we want. Let's add a 'HyperView' for a simple counter to our `Message` page
-
-▶️ #EXAMPLE /counter
-
-@
-#EMBED Example/Docs/MultiView.hs data Count
+We can add as many 'HyperView's to a page as we want. These can be muliple copies of the same 'HyperView' with unique 'ViewId' values, or completely different 'HyperView's.
+-}
 
 
-#EMBED Example/Docs/MultiView.hs instance HyperView Count
+{- $practices-diff
 
-
-#EMBED Example/Docs/MultiView.hs countView
-@
-
-We can use both 'Message' and 'Count' 'HyperView's in our page, and they will update independently:
+Let's add both 'Count' and 'Message' 'HyperView's to the same page. Each will update independently:
 
 @
 #EMBED Example/Docs/MultiView.hs page
@@ -443,33 +435,33 @@ Now we can embed multiple `Message` 'HyperView's into the same page. Each will u
 @
 
 
-This is especially useful if we put identifying information in our 'ViewId', such as a database id. The 'viewId' function gives us access to that info.
+This is especially useful if we put identifying information in our 'ViewId', such as a database id. The 'viewId' function can give us access to that info:
 
-#EXAMPLE /concurrency
+#EXAMPLE /data/loadmore
 
 @
-#EMBED Example/Page/Concurrency.hs data LazyData
+#EMBED Example/Page/DataLists/LoadMore.hs data Languages
 
-#EMBED Example/Page/Concurrency.hs instance (Debug :> es, GenRandom :> es) => HyperView
+#EMBED Example/Page/DataLists/LoadMore.hs instance HyperView Languages
 @
 -}
 
 
 {- $practices-pages
 
-An app has multiple 'Page's with different 'Route's that each map to a unique url path:
+An app will usually have multiple 'Page's with different 'Route's that each map to a unique url path:
 
 @
 #EMBED Example/Docs/MultiPage.hs data AppRoute
 @
 
-When we create our app, we can add a function which maps a 'Route' to a 'Page'
+When we create our app, we can add a router function which maps a 'Route' to a 'Page' with 'routeRequest'. The web page is completely reloaded each time you switch routes. Each 'Page' is completely isolated.
 
 @
 #EMBED Example/Docs/MultiPage.hs main
 @
 
-Each 'Page' is completely independent. The web page is freshly reloaded each time you switch routes. We can add type-safe links to other pages using 'route'
+We can add type-safe links to other pages using 'route'
 
 @
 #EMBED Example/Docs/MultiPage.hs menu
@@ -489,9 +481,9 @@ As shown above, each 'Page' can contain multiple interactive 'HyperView's to add
 
 {- $practices-nested
 
-We can nest smaller, specific 'HyperView's inside of a larger parent. You might need this technique to display a list of items which also need to update themselves
+We can nest smaller, more specific 'HyperView's inside of a larger parent. You might need this technique to display a list of items which might also need to update themselves individually
 
-Let's imagine we want to display a list of Todos. The user can mark individual todos complete, and have them update independently. The specific 'HyperView' might look like this:
+Let's imagine we want to display a list of Todos. The user can mark individual todos complete, and have them update independently. The more specific 'HyperView' for each item might look like this:
 
 #EXAMPLE /examples/todos
 
@@ -503,7 +495,7 @@ Let's imagine we want to display a list of Todos. The user can mark individual t
 
 But we also want the entire list to refresh when a user adds a new todo. We need to create a parent 'HyperView' for the whole list.
 
-List all allowed nested views by adding them to 'Require'
+Add any nested 'HyperView's to 'Require' to make sure they are handled. The compiler will let you know if you forget
 
 @
 #EMBED Example/Docs/Nested.hs data AllTodos
@@ -511,7 +503,7 @@ List all allowed nested views by adding them to 'Require'
 #EMBED Example/Docs/Nested.hs instance HyperView AllTodos
 @
 
-Then we can embed the child 'HyperView' into the parent with 'hyper'
+Then we can embed the child 'HyperView' into the parent 'View' just like we do on a 'Page', by using 'hyper'
 
 @
 #EMBED Example/Docs/Nested.hs todosView
@@ -523,19 +515,19 @@ Then we can embed the child 'HyperView' into the parent with 'hyper'
 
 You may be tempted to use 'HyperView's to create reusable \"Components\". This leads to object-oriented designs that don't compose well. We are using a functional language, so our main unit of reuse should be functions!
 
-We showed earlier that we can write a [View Function](#g:view-functions) with a generic 'context' that we can reuse in any view.  A function like this might help us reuse styles:
+We showed earlier that we can write a [View Function](#g:view-functions) with a generic 'context' that we can reuse in any view.  A function like this might help us reuse styles or layout:
 
 @
 #EMBED Example/Docs/ViewFunctions.hs header
 @
 
-What if we want to reuse interactivity? We can pass an 'Action' into the view function as a parameter:
+But what if we want to reuse interactivity? We can pass an 'Action' into the view function as a parameter:
 
 @
 #EMBED Example/Docs/Component.hs styledButton
 @
 
-We can create more complex view functions by passing state in as a parameter. Here's a button that toggles between a checked and unchecked state:
+We can create more complex view functions by passing state in as a parameter. Here's a button that toggles between a checked and unchecked state for any 'HyperView':
 
 @
 #EMBED Example/View/Inputs.hs toggleCheckbox
@@ -548,23 +540,27 @@ View functions can be containers which wrap other Views:
 @
 
 
-Don't use 'HyperView's to keep your code DRY. Think about which subsections of a page ought to update independently. Those are 'HyperView's. If you need reusable interactivity, use [view functions](#g:viewfunctions) instead.
+Don't use 'HyperView's to keep your code DRY. Think about which subsections of a page ought to update independently. Those are 'HyperView's. If you need reusable interactivity, use [view functions](#g:viewfunctions) whenever possible. See the following example for a more complicated example.
 
-#EXAMPLE /data
+#EXAMPLE /data/sortabletable
 -}
 
 
 {- $examples
 [hyperbole.live](https://hyperbole.live) is full of live examples demonstrating different features. Each example includes a link to the source code. Some highlights:
 
+* ▶️ #EXAMPLE /simple
 * ▶️ #EXAMPLE /counter
 * ▶️ #EXAMPLE /concurrency
 * ▶️ #EXAMPLE /state
+* ▶️ #EXAMPLE /requests
 * ▶️ #EXAMPLE /data
 * ▶️ #EXAMPLE /forms
 * ▶️ #EXAMPLE /interactivity
+* ▶️ #EXAMPLE /errors
 * ▶️ #EXAMPLE /oauth2
 * ▶️ #EXAMPLE /javascript
+* ▶️ #EXAMPLE /advanced
 
 The [National Solar Observatory](https://nso.edu) uses Hyperbole to manage Level 2 Data pipelines for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It uses complex user interfaces, workers, databases, and more. [The entire codebase is open source](https://github.com/DKISTDC/level2/).
 -}
@@ -631,7 +627,7 @@ A database is no different from any other 'Effect'. It is recommended to create 
 #EMBED Example/Effects/Todos.hs loadAll
 @
 
-Once you've created an 'Effect', you add it to any 'HyperView' or 'Page' as a constraint.
+Just like any effect, to use our custom 'Effect', we add it to any 'HyperView' or 'Page' as a constraint.
 
 @
 {\-# LANGUAGE UndecidableInstances #-\}
@@ -639,7 +635,7 @@ Once you've created an 'Effect', you add it to any 'HyperView' or 'Page' as a co
 #EMBED Example/Page/Todos/Todo.hs simplePage
 @
 
-We run a custom effect in our Application just like any other. Here we implementing our custom effect using 'Hyperbole' 'sessions', but you could write a different runner that connects to a database instead.
+We run a custom effect in our Application just like any other. The TodoMVC example implements the Todos 'Effect' using 'Hyperbole' 'sessions', but you could write a different runner that connects to a database instead.
 
 @
 #EMBED Example/Page/Todos/Todo.hs main
@@ -652,13 +648,16 @@ Implementing a database runner for a custom 'Effect' is beyond the scope of this
 * [Effectful.Rel8](https://github.com/DKISTDC/level2/blob/main/types/src/Effectful/Rel8.hs) - Effect for the [Rel8](https://hackage.haskell.org/package/rel8) Postgres Library
 -}
 
+
 {- $query
 #EXAMPLE /state/query
 -}
 
+
 {- $sessions
 #EXAMPLE /state/sessions
 -}
+
 
 {- $forms
 
