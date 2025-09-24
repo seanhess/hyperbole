@@ -149,7 +149,7 @@ instance FromParam Bool where
       "" -> pure False
       "false" -> pure False
       "true" -> pure True
-      other -> Left $ "Could not parse bool param : " <> show other
+      other -> Left $ "Could not parse bool param: " <> cs other
 
 
   decodeFormValue Nothing = pure False

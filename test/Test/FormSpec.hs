@@ -56,8 +56,10 @@ spec = withMarkers ["param"] $ do
       let res = fromForm @(Example Identity) [("message", "30"), ("age", "0"), ("maybeMessage", "")]
       res `shouldBe` Right (Example "30" 0 Nothing (Just ""))
 
-    it "parses bools" $ do
-      fromForm @Flags [("a", "true"), ("b", "false")] `shouldBe` Right (Flags True False)
+    it "parses weird" $ do
+      fromForm @Flags [("a", "true"), ("b", "off")] `shouldBe` Right (Flags True False)
+      fromForm @Flags [("a", "on"), ("b", "false")] `shouldBe` Right (Flags True False)
+      fromForm @Flags [("a", "on")] `shouldBe` Right (Flags True False)
 
     it "parses missing bools as false" $ do
       fromForm @Flags [("a", "true")] `shouldBe` Right (Flags True False)
