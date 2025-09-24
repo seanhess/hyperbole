@@ -1,10 +1,9 @@
 module Web.Hyperbole.HyperView.Input where
 
-import Data.Aeson (ToJSON)
-import Data.Aeson qualified as A
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Web.Atomic.Types
+import Web.Hyperbole.Data.Param (ParamValue (..), ToParam (..))
 import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..))
 import Web.Hyperbole.HyperView.ViewAction (ViewAction (..))
@@ -42,23 +41,23 @@ button action cnt = do
 dropdown
   :: (ViewAction (Action id))
   => (opt -> Action id)
-  -> (opt -> Bool) -- check if selec
+  -> opt -- default option
   -> View (Option opt id) ()
   -> View id ()
-dropdown act isSel options = do
+dropdown act defOpt options = do
   tag "select" @ onChange act $ do
-    addContext (Option isSel) options
+    addContext (Option defOpt) options
 
 
 -- | An option for a 'dropdown' or 'select'
 option
-  :: (ViewAction (Action id), Eq opt, ToJSON opt)
+  :: (ViewAction (Action id), Eq opt, ToParam opt)
   => opt
-  -> View (Option opt id) ()
+  -> Text
   -> View (Option opt id) ()
 option opt cnt = do
   os <- context
-  tag "option" @ att "value" (cs $ A.encode opt) @ selected (os.selected opt) $ cnt
+  tag "option" @ att "value" (toParam opt).value @ selected (os.defaultOption == opt) $ text cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
@@ -68,7 +67,7 @@ selected b = if b then att "selected" "true" else id
 
 -- | The view context for an 'option'
 data Option opt id = Option
-  { selected :: opt -> Bool
+  { defaultOption :: opt
   }
 
 

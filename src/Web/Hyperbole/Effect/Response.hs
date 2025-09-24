@@ -43,8 +43,8 @@ notFound :: (Hyperbole :> es) => Eff es a
 notFound = send $ RespondNow $ Err NotFound
 
 
--- | Abort execution and respond with a parse error
-parseError :: (Hyperbole :> es) => Text -> Eff es a
+-- | Respond immediately with a parse error
+parseError :: (Hyperbole :> es) => String -> Eff es a
 parseError = respondError . ErrParse
 
 

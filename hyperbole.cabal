@@ -37,6 +37,7 @@ library
       Web.Hyperbole.Application
       Web.Hyperbole.Data.Cookie
       Web.Hyperbole.Data.Encoded
+      Web.Hyperbole.Data.JSON
       Web.Hyperbole.Data.Param
       Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Data.URI
@@ -128,6 +129,7 @@ test-suite test
   other-modules:
       Test.EncodedSpec
       Test.FormSpec
+      Test.ParamSpec
       Test.QuerySpec
       Test.RouteSpec
       Test.SessionSpec

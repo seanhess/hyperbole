@@ -66,13 +66,13 @@ render requestPath cookie =
   value (Just (CookieValue val)) = urlEncode True $ cs val
 
 
-parse :: [(ByteString, ByteString)] -> Either Text Cookies
+parse :: [(ByteString, ByteString)] -> Either String Cookies
 parse kvs = do
   cks <- mapM (uncurry parseValue) kvs
   pure $ fromList cks
 
 
-parseValue :: ByteString -> ByteString -> Either Text Cookie
+parseValue :: ByteString -> ByteString -> Either String Cookie
 parseValue k val = do
   let cval = CookieValue $ cs $ urlDecode True val
   pure $ Cookie (cs k) Nothing (Just $ cval)

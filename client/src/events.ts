@@ -1,6 +1,6 @@
 
 import * as debounce from 'debounce'
-import { encodedTextInput, encodedJSONInput } from './action'
+import { encodedParam } from './action'
 
 export type UrlFragment = string
 
@@ -130,13 +130,13 @@ export function listenChange(cb: (target: HTMLElement, action: string) => void):
     if (!source) return
     e.preventDefault()
 
-    if (!source.value) {
+    if (source.value == null) {
       console.error("Missing input value:", source)
       return
     }
 
     let target = nearestTarget(source)
-    let action = encodedJSONInput(source.dataset.onchange, source.value)
+    let action = encodedParam(source.dataset.onchange, source.value)
     cb(target, action)
   })
 }
@@ -168,7 +168,7 @@ export function listenInput(cb: (target: HTMLElement, action: string) => void): 
 
     if (!source.debouncedCallback) {
       source.debouncedCallback = debounce(() => {
-        let action = encodedTextInput(source.dataset.oninput, source.value)
+        let action = encodedParam(source.dataset.oninput, source.value)
         cb(target, action)
       }, delay)
     }

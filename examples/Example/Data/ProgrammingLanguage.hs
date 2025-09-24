@@ -11,14 +11,14 @@ data ProgrammingLanguage = ProgrammingLanguage
   , features :: [TypeFeature]
   , description :: Text
   }
-  deriving (Generic, ToJSON, FromJSON)
+  deriving (Generic, ToParam, FromParam)
 instance Eq ProgrammingLanguage where
   p1 == p2 = p1.name == p2.name
 
 data LanguageFamily
   = Functional
   | ObjectOriented
-  deriving (Eq, Show, Ord, Generic, ToJSON, FromJSON, FromParam, ToParam)
+  deriving (Eq, Show, ToJSON, FromJSON, Ord, Generic, ToParam, FromParam)
 
 data TypeFeature
   = Dynamic
@@ -26,7 +26,7 @@ data TypeFeature
   | Generics
   | TypeClasses
   | TypeFamilies
-  deriving (Eq, Show, Generic, ToJSON, FromJSON, ToParam, FromParam)
+  deriving (Eq, Show, ToJSON, FromJSON, Generic, ToParam, FromParam)
 
 isMatchLanguage :: Text -> ProgrammingLanguage -> Bool
 isMatchLanguage term p =

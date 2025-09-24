@@ -244,7 +244,7 @@ function init() {
   })
 
   listenChange(async function(target: HyperView, action: string) {
-    // console.log("CHANGE", target.id, action)
+    console.log("CHANGE", target.id, "(" + action + ")")
     runAction(target, action)
   })
 

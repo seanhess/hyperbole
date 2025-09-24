@@ -13,8 +13,8 @@ class ViewAction a where
   toAction = genericToEncoded
 
 
-  parseAction :: Encoded -> Either Text a
-  default parseAction :: (Generic a, GFromEncoded (Rep a)) => Encoded -> Either Text a
+  parseAction :: Encoded -> Either String a
+  default parseAction :: (Generic a, GFromEncoded (Rep a)) => Encoded -> Either String a
   parseAction = genericParseEncoded
 
 

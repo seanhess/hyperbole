@@ -15,11 +15,10 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
--- Filter ->
---   el "Easily serialize a datatype to the querystring, preserving faceted search in the url"
-page :: (Hyperbole :> es) => Page es '[Languages]
+page :: (Hyperbole :> es, IOE :> es) => Page es '[Languages]
 page = do
   filters <- query
+  liftIO $ print filters
   pure $ exampleLayout (Data Filter) $ do
     example (Data Filter) $ do
       el "Incrementally search a list of data, storing parameters in the query string"
@@ -35,9 +34,9 @@ data Filters = Filters
   , family :: Maybe LanguageFamily
   , term :: Text
   }
-  deriving (Generic, FromQuery, ToQuery)
+  deriving (Generic, Show, FromQuery, ToQuery)
 
-instance HyperView Languages es where
+instance (IOE :> es) => HyperView Languages es where
   data Action Languages
     = SearchTerm Text
     | Select ProgrammingLanguage
@@ -121,7 +120,7 @@ filtersView filters = do
 
 familyDropdown :: Filters -> View Languages ()
 familyDropdown filters =
-  dropdown SetFamily (== filters.family) ~ border 1 . pad 10 $ do
+  dropdown SetFamily filters.family ~ border 1 . pad 10 $ do
     option Nothing "Any"
     option (Just ObjectOriented) "Object Oriented"
     option (Just Functional) "Functional"

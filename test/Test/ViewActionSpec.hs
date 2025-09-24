@@ -1,22 +1,22 @@
 module Test.ViewActionSpec where
 
-import Data.Aeson qualified as A
 import Data.Text (Text)
 import GHC.Generics
 import Skeletest
 import Skeletest.Predicate qualified as P
 import Web.Hyperbole (FromJSON, ToJSON)
 import Web.Hyperbole.Data.Encoded
+import Web.Hyperbole.Data.Param
 import Web.Hyperbole.HyperView (ViewAction (..))
 import Web.Hyperbole.HyperView.Event (toActionInput)
 
 
 data Simple = Simple
-  deriving (Generic, Eq, Show, Read, ViewAction, ToJSON, FromJSON)
+  deriving (Generic, Eq, Show, Read, ViewAction, ToJSON, FromJSON, ToParam, FromParam)
 
 
 data Product = Product String Int
-  deriving (Generic, Show, Eq, ViewAction, Read, ToJSON, FromJSON, ToEncoded, FromEncoded)
+  deriving (Generic, Show, Eq, ViewAction, Read, ToJSON, FromJSON, ToEncoded, FromEncoded, ToParam, FromParam)
 
 
 data Product' = Product' HasText Int
@@ -38,24 +38,24 @@ data Compound = Compound Product
 
 
 data HasText = HasText Text
-  deriving (Generic, Show, Eq, Read, ViewAction, ToJSON, FromJSON, FromEncoded, ToEncoded)
+  deriving (Generic, Show, Eq, Read, ViewAction, ToJSON, FromJSON, FromEncoded, ToEncoded, ToParam, FromParam)
 
 
 newtype Term = Term Text
-  deriving newtype (Eq, Show, ToJSON, FromJSON, Read)
+  deriving newtype (Eq, Show, ToJSON, FromJSON, Read, ToParam, FromParam)
 
 
 spec :: Spec
-spec = do
+spec = withMarkers ["encoded"] $ do
   describe "ViewAction" $ do
     describe "toAction" $ do
       it "simple" $ toAction Simple `shouldBe` Encoded "Simple" []
       it "has text" $ toAction (HasText "hello world") `shouldBe` Encoded "HasText" ["hello world"]
-      it "product" $ toAction (Product "hello world" 123) `shouldBe` Encoded "Product" ["hello world", A.Number 123]
-      it "sum" $ toAction (SumB 123) `shouldBe` Encoded "SumB" [A.Number 123]
+      it "product" $ toAction (Product "hello world" 123) `shouldBe` Encoded "Product" ["hello world", toParam @Int 123]
+      it "sum" $ toAction (SumB 123) `shouldBe` Encoded "SumB" [toParam @Int 123]
       it "compound" $ do
         let p = Product "hello world" 123
-        toAction (Compound p) `shouldBe` Encoded "Compound" [A.toJSON p]
+        toAction (Compound p) `shouldBe` Encoded "Compound" [toParam p]
 
     describe "toActionInput" $ do
       it "Constructor Text" $ do
@@ -74,10 +74,10 @@ spec = do
       it "simple" $ parseAction (Encoded "Simple" []) `shouldBe` pure Simple
 
       it "parse product" $ do
-        parseAction @Product (Encoded "Product" ["woot", A.Number 1234]) `shouldSatisfy` P.right P.anything
+        parseAction @Product (Encoded "Product" ["woot", toParam @Int 1234]) `shouldSatisfy` P.right P.anything
 
       it "parse product with spaces" $ do
-        parseAction @Product (Encoded "Product" ["hello world", A.Number 1234]) `shouldSatisfy` P.right P.anything
+        parseAction @Product (Encoded "Product" ["hello world", toParam @Int 1234]) `shouldSatisfy` P.right P.anything
 
     describe "roundTrip" $ do
       it "simple" $ do

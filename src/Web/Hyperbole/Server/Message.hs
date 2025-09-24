@@ -50,7 +50,7 @@ newtype MessageBody = MessageBody {value :: BL.ByteString}
 
 data MessageError
   = InvalidMessage String Text
-  | InvalidCookie BS.ByteString Text
+  | InvalidCookie BS.ByteString String
   | MissingMeta String
   deriving (Show, Exception)
 

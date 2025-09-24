@@ -155,8 +155,9 @@ module Web.Hyperbole
   , label
   , input
   , checkbox
-  , selGroup
+  , radioGroup
   , radio
+  , select
   , checked
   , textarea
   , submit
@@ -174,6 +175,8 @@ module Web.Hyperbole
   , Default (..)
   , ToParam (..)
   , FromParam (..)
+  , ToEncoded
+  , FromEncoded
 
     -- * Advanced #advanced#
   , target
@@ -216,7 +219,7 @@ import Network.Wai.Handler.Warp as Warp (run)
 import Web.Atomic.CSS ()
 import Web.Atomic.Types ()
 import Web.Hyperbole.Application
-import Web.Hyperbole.Data.Encoded ()
+import Web.Hyperbole.Data.Encoded (FromEncoded, ToEncoded)
 import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.QueryData
 import Web.Hyperbole.Document

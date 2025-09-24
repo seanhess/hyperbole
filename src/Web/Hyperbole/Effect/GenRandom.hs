@@ -53,4 +53,4 @@ genRandomList as = send $ GenRandomList as
 
 
 newtype Token a = Token {value :: Text}
-  deriving newtype (FromJSON, ToJSON, FromParam, ToParam, Eq, Show)
+  deriving newtype (FromJSON, ToJSON, FromParam, ToParam, Eq, Show, Read)
