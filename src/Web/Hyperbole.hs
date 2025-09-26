@@ -117,6 +117,8 @@ module Web.Hyperbole
 
     -- * HyperView #hyperview#
   , HyperView (..)
+  , ViewId
+  , ViewAction
   , hyper
   , HasViewId (..)
 
@@ -175,7 +177,6 @@ module Web.Hyperbole
 
     -- * Query Param Encoding #query-param#
   , QueryData
-  , Default (..)
   , ToParam (..)
   , FromParam (..)
   , ToEncoded
@@ -184,14 +185,13 @@ module Web.Hyperbole
     -- * Advanced #advanced#
   , target
   , Response
-  , ViewId
-  , ViewAction
   , Root
 
     -- * Exports #exports#
 
     -- ** View
-  , module Web.Hyperbole.View
+  , View (..)
+  , module View
 
     -- ** Embeds
 
@@ -203,10 +203,11 @@ module Web.Hyperbole
   , module Effectful
 
     -- ** Other
-  , Application
-  , module GHC.Generics
   , URI (..)
   , uri
+  , Application
+  , module GHC.Generics
+  , Default (..)
   ) where
 
 import Data.Default
@@ -234,7 +235,7 @@ import Web.Hyperbole.Route
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View hiding (placeholder)
-import Web.Hyperbole.View qualified as View
+import Web.Hyperbole.View qualified as View hiding (Attributable, Attributes, View)
 import Web.Hyperbole.View.Embed
 
 

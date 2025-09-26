@@ -7,6 +7,12 @@ import GHC.Generics
 import Web.Hyperbole.Data.Encoded as Encoded
 
 
+{- | Define every action possible for a given 'HyperView'
+
+@
+#EMBED Example/Page/Simple.hs instance HyperView Message
+@
+-}
 class ViewAction a where
   toAction :: a -> Encoded
   default toAction :: (Generic a, GToEncoded (Rep a)) => a -> Encoded

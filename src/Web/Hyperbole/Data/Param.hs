@@ -37,7 +37,7 @@ instance IsString ParamValue where
 This is equivalent to Web.HttpApiData, which is missing some instances and has some strange defaults
 
 @
-#EMBED Example/Data/ProgrammingLanguage.hs data LanguageFamily
+#EMBED Example/Docs/Sessions.hs data AppColor
 @
 -}
 class ToParam a where

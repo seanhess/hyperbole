@@ -12,7 +12,7 @@ import Web.Hyperbole.TypeList
 import Web.Hyperbole.View (View, addContext, tag)
 
 
-{- | Embed a 'HyperView' into another 'View'
+{- | Embed a 'HyperView' into a page or another 'View'
 
 @
 #EMBED Example/Docs/Interactive.hs page

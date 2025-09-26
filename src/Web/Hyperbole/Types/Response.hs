@@ -14,6 +14,7 @@ import Web.Hyperbole.View
 data Body = Body
 
 
+-- | A processed response for the client, which might be a 'ResponseError'
 data Response
   = Response TargetViewId (View Body ())
   | Redirect URI

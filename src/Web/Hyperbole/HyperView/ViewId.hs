@@ -10,6 +10,12 @@ import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.View (View, context)
 
 
+{- | A unique identifier for a 'HyperView'
+
+@
+#EMBED Example/Page/Simple.hs data Message
+@
+-}
 class ViewId a where
   toViewId :: a -> Encoded
   default toViewId :: (Generic a, GToEncoded (Rep a)) => a -> Encoded

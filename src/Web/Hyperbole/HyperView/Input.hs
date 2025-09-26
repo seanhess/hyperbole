@@ -84,9 +84,7 @@ search go delay = do
   tag "input" none @ onInput go delay
 
 
-{- | Set checkbox = checked via the client (VDOM doesn't work)
-designed for input, which has no children
--}
+-- | Set checkbox = checked via the client (VDOM doesn't work)
 checked :: (Attributable a) => Bool -> Attributes a -> Attributes a
 checked c =
   att "data-checked" (cs $ show c)

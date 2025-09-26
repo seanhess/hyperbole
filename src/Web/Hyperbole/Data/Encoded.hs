@@ -103,6 +103,7 @@ genericDecode t = either (const Nothing) Just $ do
   genericParseEncoded enc
 
 
+-- | Custom Encoding for embedding into web documents. Noteably used for 'ViewId' and 'ViewAction'
 class ToEncoded a where
   toEncoded :: a -> Encoded
   default toEncoded :: (Generic a, GToEncoded (Rep a)) => a -> Encoded
@@ -113,6 +114,7 @@ instance ToEncoded Encoded where
   toEncoded = id
 
 
+-- | Custom Encoding for embedding into web documents. Noteably used for 'ViewId' and 'ViewAction'
 class FromEncoded a where
   parseEncoded :: Encoded -> Either String a
   default parseEncoded :: (Generic a, GFromEncoded (Rep a)) => Encoded -> Either String a
@@ -134,23 +136,16 @@ fromResult (A.Error e) = Left (cs e)
 -- Params need to be sanitized and escaped, because we want to use spaces to separate our params
 -- Data.Param by default does not sanitize spaces
 
--- escape underscores and replace spaces with underscores
--- TODO: should I be using pluses instead? it's more standard
-
 paramParser :: Atto.Parser ParamValue
 paramParser = do
   t <- takeWhile1 (not . isSpace)
   pure $ decodeParam $ cs t
 
 
--- TODO: Nothing     -> "~"
--- TODO: Just ""     -> "|"
--- TODO: Just " "    -> "_"
 decodeParam :: Text -> ParamValue
 decodeParam = \case
   "|" -> ParamValue ""
   t -> ParamValue $ desanitizeParamText t
-
 
 
 -- replace all underscores that are NOT "\\_" with spaces
@@ -158,6 +153,8 @@ decodeParam = \case
 desanitizeParamText :: Text -> Text
 desanitizeParamText =
   T.replace "\\ " "_" . T.replace "_" " "
+
+
 --   | T.isSuffixOf "\\" seg = T.dropEnd 1 seg <> "_" <> txt
 --   | otherwise = seg <> " " <> txt
 
@@ -170,8 +167,6 @@ desanitizeParamText =
 -- join seg txt
 --   | T.isSuffixOf "\\" seg = T.dropEnd 1 seg <> "_" <> txt
 --   | otherwise = seg <> " " <> txt
-
-
 
 encodeParam :: ParamValue -> Text
 encodeParam (ParamValue t) =
