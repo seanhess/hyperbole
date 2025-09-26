@@ -1,4 +1,4 @@
-module Web.Hyperbole.Data.JSON where
+module Web.Hyperbole.Data.JSON (JSON (..), ToJSON, FromJSON) where
 
 import Data.Aeson as A
 import Data.String.Conversions (cs)

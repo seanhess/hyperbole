@@ -208,8 +208,11 @@ module Web.Hyperbole
   , Application
   , module GHC.Generics
   , Default (..)
+  , ToJSON
+  , FromJSON
   ) where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Default
 import Effectful (Eff, (:>))
 import GHC.Generics (Generic, Rep)

@@ -12,7 +12,7 @@ import Web.Hyperbole.HyperView
 
 
 data Thing = Thing
-  deriving (Generic, Show, ToJSON, FromJSON, Eq, ToEncoded, FromEncoded, ViewId, ToParam, FromParam)
+  deriving (Generic, Show, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded, ViewId, ToParam, FromParam)
 
 
 data Custom = Custom
@@ -36,7 +36,7 @@ data Product4 = Product4 Text Text Text Text
 
 
 newtype Id a = Id {fromId :: Text}
-  deriving newtype (Eq, Ord, Show, ToJSON, FromJSON, ToParam, FromParam)
+  deriving newtype (Eq, ToJSON, FromJSON, Ord, Show, ToParam, FromParam)
   deriving (Generic)
 
 
