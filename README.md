@@ -4,7 +4,7 @@
 
 Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView.
 
-
+[▶️ Simple Example](https://hyperbole.live/simple)
 
 ```haskell
 {-# LANGUAGE DeriveAnyClass #-}
