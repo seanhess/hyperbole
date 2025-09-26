@@ -45,7 +45,7 @@ instance (Users :> es, Debug :> es) => HyperView Contact es where
   data Action Contact
     = Edit
     | Save
-    | View
+    | ViewContact
     deriving (Generic, ViewAction)
 
   update action = do
@@ -53,7 +53,7 @@ instance (Users :> es, Debug :> es) => HyperView Contact es where
     Contact uid <- viewId
     u <- Users.find uid
     case action of
-      View -> do
+      ViewContact -> do
         pure $ contactView u
       Edit -> do
         pure $ contactEditView u
@@ -109,7 +109,7 @@ contactView' edit u = do
 contactEditView :: User -> View Contact ()
 contactEditView u = do
   el contactLoading ~ display None . whenLoading flexCol
-  el (contactEdit View Save u) ~ whenLoading (display None)
+  el (contactEdit ViewContact Save u) ~ whenLoading (display None)
 
 contactEdit :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
 contactEdit onView onSave u = do

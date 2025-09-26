@@ -141,7 +141,7 @@ data InlineContact = InlineContact UserId
 instance (Users :> es, Debug :> es) => HyperView InlineContact es where
   data Action InlineContact
     = Edit
-    | View
+    | ViewContact
     | Save
     deriving (Generic, ViewAction)
 
@@ -151,7 +151,7 @@ instance (Users :> es, Debug :> es) => HyperView InlineContact es where
     InlineContact uid <- viewId
     u <- Users.find uid
     case a of
-      View ->
+      ViewContact ->
         pure $ contactView u
       Edit ->
         pure $ contactEdit u
@@ -170,5 +170,5 @@ contactEdit :: User -> View InlineContact ()
 contactEdit u = do
   el ~ (display None . whenLoading flexCol) $ contactLoading
   col ~ (whenLoading (display None) . gap 10) $ do
-    Contact.contactEdit View Save u
+    Contact.contactEdit ViewContact Save u
     target Contacts $ button (DeleteUser u.id) ~ btn' Danger . pad (XY 10 0) $ text "Delete"
