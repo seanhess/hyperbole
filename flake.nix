@@ -18,7 +18,7 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter/main";
-    web-view.url = "github:seanhess/web-view";
+    atomic-css.url = "github:seanhess/atomic-css";
   };
 
   outputs =
@@ -28,7 +28,7 @@
       nix-filter,
       flake-utils,
       pre-commit-hooks,
-      web-view,
+      atomic-css,
     }:
     let
       packageName = "hyperbole";
@@ -38,6 +38,7 @@
         include = [
           "src"
           "client/dist"
+          "client/util/live-reload.js"
           "test"
           ./${packageName}.cabal
           ./cabal.project
@@ -81,7 +82,7 @@
 
     in
     {
-      overlays.default = nixpkgs.lib.composeExtensions web-view.overlays.default overlay;
+      overlays.default = nixpkgs.lib.composeExtensions atomic-css.overlays.default overlay;
     }
     // flake-utils.lib.eachDefaultSystem (
       system:
@@ -92,11 +93,11 @@
         };
 
         example-src = nix-filter.lib {
-          root = ./example;
+          root = ./examples;
           include = [
             "Example"
             (nix-filter.lib.matchExt "hs")
-            ./example/${examplesName}.cabal
+            ./examples/examples.cabal
             "docgen"
           ];
         };
