@@ -17,7 +17,7 @@ main = do
 page :: (Hyperbole :> es) => Page es '[Message]
 page = do
   pure $ do
-    hyper Message1 ~ bold $ messageView "Hello"
+    hyper Message1 ~ bold $ messageView "Hello\nHi"
     hyper Message2 ~ bold $ messageView "World!"
 
 data Message = Message1 | Message2
