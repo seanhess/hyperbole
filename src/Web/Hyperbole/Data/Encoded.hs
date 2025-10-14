@@ -152,7 +152,7 @@ decodeParam = \case
 
 desanitizeParamText :: Text -> Text
 desanitizeParamText =
-  T.replace "\\ " "_" . T.replace "_" " "
+  T.replace "\\ " "_" . T.replace "_" " " . T.replace "\\n" "\n"
 
 
 --   | T.isSuffixOf "\\" seg = T.dropEnd 1 seg <> "_" <> txt
@@ -174,8 +174,10 @@ encodeParam (ParamValue t) =
     "" -> "|"
     _ -> sanitizeParamText t
  where
+  -- Q: Should we also sanitize \r\n?
   sanitizeParamText :: Text -> Text
-  sanitizeParamText = T.replace " " "_" . T.replace "_" "\\_"
+  sanitizeParamText =
+    T.replace " " "_" . T.replace "_" "\\_" . T.replace "\n" "\\n"
 
 
 -- decodeParamValue :: (FromParam a) => Text -> Either String a
