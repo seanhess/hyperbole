@@ -45,6 +45,8 @@ RUN cd examples && export EXEC=$(cabal list-bin examples | tail -n1); cp "$EXEC"
 FROM debian:10 AS app
 WORKDIR /opt/app
 
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && update-ca-certificates && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /opt/build/bin/examples ./bin/examples
 ADD ./client ./client
 ADD ./examples/static ./examples/static
