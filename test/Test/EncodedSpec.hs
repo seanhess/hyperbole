@@ -130,8 +130,10 @@ spec = withMarkers ["encoded"] $ do
       encode (Str " ") `shouldBe` "Str _"
       encode (Str "") `shouldBe` "Str |"
       encode (Str "_") `shouldBe` "Str \\_"
+      encode (Str "\n") `shouldBe` "Str \\n"
       encode (Str "hello_world") `shouldBe` "Str hello\\_world"
       encode (Str "hello+world") `shouldBe` "Str hello+world"
+      encode (Str "hello\nworld") `shouldBe` "Str hello\\nworld"
 
     it "should encode records`" $ do
       -- no field names for ourselves
@@ -175,11 +177,14 @@ spec = withMarkers ["encoded"] $ do
     it "sanitizeText" $ do
       encodeParam "hello world" `shouldBe` "hello_world"
       encodeParam "hello_world" `shouldBe` "hello\\_world"
+      encodeParam "hello\nworld" `shouldBe` "hello\\nworld"
 
     it "desanitizeText" $ do
       decodeParam "hello_world" `shouldBe` "hello world"
       decodeParam "hello\\_world" `shouldBe` "hello_world"
+      decodeParam "hello\\nworld" `shouldBe` "hello\nworld"
 
+    -- TODO: Add more edge cases to check if "\n" is escaped properly.
     it "edge cases" $ do
       encodeParam "" `shouldBe` "|"
       encodeParam " " `shouldBe` "_"
