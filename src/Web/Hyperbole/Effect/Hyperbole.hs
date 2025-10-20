@@ -15,12 +15,14 @@ import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
+import Web.Hyperbole.View (View)
 
 
 -- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', manually respond, and manipulate the Client 'session' and 'query'.
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondNow :: Response -> Hyperbole m a
+  PushUpdate :: View Body () -> Hyperbole m ()
   ModClient :: (Client -> Client) -> Hyperbole m ()
   GetClient :: Hyperbole m Client
   -- TODO: this should actually execute the other view, and send the response to the client
@@ -36,30 +38,12 @@ data Remote
   | RemoteEvent Text Value
 
 
--- | Run the 'Hyperbole' effect to get a response
-runHyperbole
-  :: Request
-  -> Eff (Hyperbole : es) Response
-  -> Eff es (Response, Client, [Remote])
-runHyperbole req = reinterpret runLocal $ \_ -> \case
-  GetRequest -> do
-    pure req
-  RespondNow r -> do
-    throwError_ r
-  GetClient -> do
-    get @Client
-  ModClient f -> do
-    modify @Client f
-  TriggerAction vid act -> do
-    tell [RemoteAction vid act]
-  TriggerEvent name dat -> do
-    tell [RemoteEvent name dat]
+-- this is really just running for wai, no?
+runHyperboleLocal :: Request -> Eff (Error Response : State Client : Writer [Remote] : es) Response -> Eff es (Response, Client, [Remote])
+runHyperboleLocal req eff = do
+  ((eresp, client'), rmts) <- runWriter @[Remote] . runState (emptyClient req.requestId) . runErrorNoCallStack @Response $ eff
+  pure (either id id eresp, client', rmts)
  where
-  runLocal :: Eff (Error Response : State Client : Writer [Remote] : es) Response -> Eff es (Response, Client, [Remote])
-  runLocal eff = do
-    ((eresp, client'), rmts) <- runWriter @[Remote] . runState (emptyClient req.requestId) . runErrorNoCallStack @Response $ eff
-    pure (either id id eresp, client', rmts)
-
   emptyClient :: RequestId -> Client
   emptyClient requestId =
     Client

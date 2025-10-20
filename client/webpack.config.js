@@ -4,7 +4,6 @@ const path = require('path');
 
 module.exports = {
   entry: "./src/index.ts",
-  mode: "development",
   target: "web",
   devtool: "source-map",
   mode: "production",

@@ -216,14 +216,14 @@ metaError :: Text -> Metadata
 metaError = metadata "Error"
 
 
-metaRedirect :: URI -> Metadata
-metaRedirect u = metadata "Redirect" (uriToText u)
-
+-- metaRedirect :: URI -> Metadata
+-- metaRedirect u = metadata "Redirect" (uriToText u)
 
 data ContentType
   = ContentHtml
   | ContentText
 
 
-newtype RenderedHtml = RenderedHtml BL.ByteString
-  deriving newtype (Semigroup, Monoid)
+data RenderedMessage
+  = MessageHtml BL.ByteString
+  | MessageText Text

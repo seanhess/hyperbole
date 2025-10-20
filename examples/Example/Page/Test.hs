@@ -2,94 +2,59 @@
 
 module Example.Page.Test where
 
+import Control.Monad (forM_)
 import Data.String.Conversions (cs)
-import Data.Text (Text)
-import Data.Text qualified as T
 import Example.AppRoute
+import Example.Colors
 import Example.Effects.Debug
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.Data.Param
 
 -- TEST: add a test for Page+trigger
-page :: (Hyperbole :> es, Debug :> es) => Page es '[Chooser]
+page :: (Hyperbole :> es, Debug :> es) => Page es '[Long]
 page = do
   -- trigger Fake Noop
   pure $ exampleLayout Test $ do
     -- script "test.js"
     example Test $ do
       col ~ embed $ do
-        hyper Chooser chooserView
+        hyper Long longView
 
-data Woot = Woot | Boot
-  deriving (Eq, Generic, Show, ToParam, FromParam)
-
-data Tag = A | Tag Text
-  deriving (Eq, Generic, Show, ToParam, FromParam)
-
-data Custom = C1 | C2 Text
-  deriving (Eq, Show)
-
-instance ToParam Custom where
-  toParam C1 = "c1"
-  toParam (C2 t) =
-    let out = "c2|" <> t
-     in ParamValue out
-
-instance FromParam Custom where
-  parseParam (ParamValue t)
-    | "c1" <- t = pure C1
-    | T.isPrefixOf "c2" t = pure $ C2 $ T.drop 3 t
-    | otherwise = Left $ "Could not parse" <> cs t
-
-data Chooser = Chooser
+data Long = Long
   deriving (Generic, ViewId)
 
-instance HyperView Chooser es where
-  data Action Chooser
-    = Choose (Maybe Woot)
-    | Choose2 Tag
-    | ChooseCustom Custom
-    | SetMessage Text
+instance (Debug :> es) => HyperView Long es where
+  data Action Long
+    = Start
+    | Interrupt
     deriving (Generic, ViewAction)
 
-  update (Choose mw) = do
+  update Start = do
+    forM_ [0 .. 10] $ \n -> do
+      pushUpdate Long $ activeView n
+      delay 1000
     pure $ do
-      el $ text $ cs $ show mw
-  update (Choose2 t) = do
-    pure $ do
-      el $ text $ cs $ show t
-  update (ChooseCustom t) = do
-    pure $ do
-      el $ text $ cs $ show t
-  update (SetMessage t) = do
-    pure $ messageView t
+      el "All Done"
+      button Interrupt ~ border 1 $ "Ok Go Now"
+  update Interrupt = do
+    -- the problem is, while you can have it do other things, the other request is still running!
+    -- so you really don't want to execute a request while one is currently happening...
+    -- per-user lock?
+    pure "Interrupted"
 
-chooserView :: View Chooser ()
-chooserView = do
+longView :: View Long ()
+longView = do
   col ~ gap 10 $ do
-    el "Chooser"
-    button (SetMessage "woo") ~ border 1 $ "woo"
-    button (SetMessage "") ~ border 1 $ "clear"
-    dropdown Choose (Just Woot) $ do
-      option Nothing "Choose One"
-      option (Just Woot) "Woot"
-      option (Just Boot) "Boot"
-    dropdown Choose2 (Tag "hello") $ do
-      option A "A"
-      option (Tag "hello") "hello"
-      option (Tag "world") "world"
-      option (Tag "hello world") "hello world"
-    dropdown ChooseCustom (C2 "hello") $ do
-      option C1 "C1"
-      option (C2 "hello") "hello"
-      option (C2 "world") "world"
-      option (C2 "hello world") "hello world"
+    el "LONG"
+    button Start ~ border 1 $ "woo"
 
-messageView :: Text -> View Chooser ()
-messageView t = do
-  el $ text $ "(" <> t <> ")"
+activeView :: Int -> View Long ()
+activeView n = do
+  col ~ gap 10 $ do
+    el "RUNNING"
+    el $ text $ cs $ show n
+    button Interrupt ~ border 1 . whenLoading (disabled . bg GrayLight) $ "Interrupt"
 
 -- data Message = Message1 | Message2
 --   deriving (Generic, ViewId, Show)

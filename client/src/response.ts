@@ -1,6 +1,5 @@
 
-import { ViewId } from './action'
-import { Metadata } from "./action"
+import { ViewId, Metadata } from './message'
 
 
 

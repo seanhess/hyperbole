@@ -1,5 +1,4 @@
-import { ViewId } from './action';
-import { Metadata } from "./action";
+import { ViewId, Metadata } from './message';
 export type Response = {
     meta: Metadata;
     body: ResponseBody;
