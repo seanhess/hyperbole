@@ -1,24 +1,32 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Web.Hyperbole.Server.Socket where
 
 import Control.Monad (void)
 import Data.Bifunctor (first)
 import Data.List qualified as L
 import Data.Maybe (fromMaybe)
+import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Effectful
 import Effectful.Concurrent.Async
+import Effectful.Dispatch.Dynamic
+import Effectful.Error.Static (throwError_)
 import Effectful.Exception
+import Effectful.State.Static.Local (get, modify)
+import Effectful.Writer.Static.Local (tell)
 import Network.HTTP.Types as HTTP (parseQuery)
 import Network.Wai qualified as Wai
 import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie qualified as Cookie
-import Web.Hyperbole.Data.URI (URI, path)
+import Web.Hyperbole.Data.URI (URI, path, uriToText)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Server.Options
+import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View (View, addContext, renderLazyByteString)
@@ -27,6 +35,36 @@ import Web.Hyperbole.View (View, addContext, renderLazyByteString)
 data SocketRequest = SocketRequest
   { request :: Maybe Request
   }
+
+
+-- | Run the 'Hyperbole' effect to get a response
+runHyperboleSocket
+  :: (IOE :> es)
+  => ServerOptions
+  -> Connection
+  -> Request
+  -> Eff (Hyperbole : es) Response
+  -> Eff es (Response, Client, [Remote])
+runHyperboleSocket opts conn req = reinterpret (runHyperboleLocal req) $ \_ -> \case
+  -- TODO: don't need to do it this way, can respond directly!
+  GetRequest -> do
+    pure req
+  RespondNow r -> do
+    throwError_ r
+  PushUpdate vw -> do
+    sendUpdate conn (requestMetadata req) vw
+  GetClient -> do
+    get @Client
+  ModClient f -> do
+    modify @Client f
+  TriggerAction vid act -> do
+    -- honestly I would love to remove the wai thing completely
+    -- but it does need to do almost all of the same things...
+    -- we don't have to allow the js client to send them
+    -- nor the server to accept them though
+    tell [RemoteAction vid act]
+  TriggerEvent name dat -> do
+    tell [RemoteEvent name dat]
 
 
 handleRequestSocket
@@ -42,7 +80,7 @@ handleRequestSocket opts wreq conn actions = do
     req <- parseMessageRequest msg
 
     void $ async $ do
-      res <- trySync $ runHyperbole req actions
+      res <- trySync $ runHyperboleSocket opts conn req actions
       case res of
         -- TODO: catch socket errors separately from SomeException?
         Left (ex :: SomeException) -> do
@@ -57,7 +95,7 @@ handleRequestSocket opts wreq conn actions = do
           let meta = requestMetadata req <> responseMetadata req.path clnt rmts
           case resp of
             (Response _ vw) -> do
-              sendUpdateView conn meta vw
+              sendResponse conn meta vw
             -- (Err (ErrServer m)) -> sendError conn meta (opts.serverError m)
             (Err err) -> sendError conn meta (opts.serverError err)
             (Redirect url) -> sendRedirect conn meta url
@@ -117,23 +155,38 @@ handleRequestSocket opts wreq conn actions = do
       maybe (Left $ MissingMeta (cs key)) pure $ lookupMetadata key m
 
 
-sendUpdateView :: (IOE :> es) => Connection -> Metadata -> View Body () -> Eff es ()
-sendUpdateView conn meta vw = do
-  sendMessage conn meta (RenderedHtml $ renderLazyByteString $ addContext Body vw)
+sendResponse :: (IOE :> es) => Connection -> Metadata -> View Body () -> Eff es ()
+sendResponse conn meta vw = do
+  sendMessage "RESPONSE" conn meta (MessageHtml $ renderLazyByteString $ addContext Body vw)
+
+
+sendUpdate :: (IOE :> es) => Connection -> Metadata -> View Body () -> Eff es ()
+sendUpdate conn meta vw = do
+  sendMessage "UPDATE" conn meta (MessageHtml $ renderLazyByteString $ addContext Body vw)
 
 
 sendRedirect :: (IOE :> es) => Connection -> Metadata -> URI -> Eff es ()
 sendRedirect conn meta u = do
-  sendMessage conn (metaRedirect u <> meta) mempty
+  sendMessage "REDIRECT" conn meta (MessageText $ uriToText u)
 
 
+-- TODO: this isn't an UPDATE?
 sendError :: (IOE :> es) => Connection -> Metadata -> ServerError -> Eff es ()
 sendError conn meta (ServerError err body) = do
-  sendMessage conn (metadata "Error" err <> meta) (RenderedHtml $ renderLazyByteString $ addContext Body body)
+  sendMessage "UPDATE" conn (metadata "Error" err <> meta) (MessageHtml $ renderLazyByteString $ addContext Body body)
+
+
+newtype Command = Command Text
+  deriving newtype (IsString)
 
 
 -- low level message. Use sendResponse
-sendMessage :: (MonadIO m) => Connection -> Metadata -> RenderedHtml -> m ()
-sendMessage conn meta' (RenderedHtml html) = do
-  let out = "|UPDATE|\n" <> cs (renderMetadata meta') <> "\n\n" <> html
-  liftIO $ WS.sendTextData conn out
+sendMessage :: (MonadIO m) => Command -> Connection -> Metadata -> RenderedMessage -> m ()
+sendMessage (Command cmd) conn meta' msg = do
+  let header = "|" <> cs cmd <> "|\n" <> cs (renderMetadata meta')
+
+  let body = case msg of
+        MessageHtml html -> html
+        MessageText t -> cs t
+
+  liftIO $ WS.sendTextData conn (header <> "\n\n" <> body)

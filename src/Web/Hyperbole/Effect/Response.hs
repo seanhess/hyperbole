@@ -19,6 +19,14 @@ hyperView i vw = do
   pure $ Response vid $ hyperUnsafe i vw
 
 
+-- TODO: can you push updates to other views?
+-- I'm sure that would be widely used, but maybe it isn't a good idea
+pushUpdate :: (Hyperbole :> es, ViewId id) => id -> View id () -> Eff es ()
+pushUpdate i vw = do
+  -- let vid = TargetViewId (encodedToText $ toViewId i)
+  send $ PushUpdate $ hyperUnsafe i vw
+
+
 -- | Abort execution and respond with an error
 respondError :: (Hyperbole :> es) => ResponseError -> Eff es a
 respondError err = do
