@@ -19,7 +19,7 @@ import Web.Hyperbole.Data.URI
 exampleLayout :: AppRoute -> View c () -> View c ()
 exampleLayout rt contents =
   el ~ grow $ do
-    navigation rt ~ position Fixed . onDesktop leftMenu . onMobile topMenu
+    navigation rt ~ position Fixed . zIndex 1 . onDesktop leftMenu . onMobile topMenu
     col ~ pad 25 . gap 30 . onDesktop horizontal . onMobile vertical $ do
       contents
  where
