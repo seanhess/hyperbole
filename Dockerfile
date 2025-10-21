@@ -42,10 +42,12 @@ RUN mkdir bin
 RUN cd examples && export EXEC=$(cabal list-bin examples | tail -n1); cp "$EXEC" /opt/build/bin/examples
 
 
-FROM debian:10 AS app
+FROM ubuntu:24.04 AS app
 WORKDIR /opt/app
 
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && update-ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends ca-certificates
+RUN update-ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /opt/build/bin/examples ./bin/examples
 ADD ./client ./client
