@@ -134,8 +134,7 @@ fromWaiRequest wr body = do
       host = Host $ fromMaybe "" $ L.lookup "Host" headers
       requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Hyp-RequestId" headers
       method = Wai.requestMethod wr
-      event = lookupEvent headers
-
+      event = Nothing
   cookies <- fromCookieHeader cookie
 
   pure $
@@ -149,15 +148,16 @@ fromWaiRequest wr body = do
       , host
       , requestId
       }
- where
-  lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded)
-  lookupEvent headers = do
-    viewId <- TargetViewId . cs <$> L.lookup "Hyp-ViewId" headers
-    actText <- cs <$> L.lookup "Hyp-Action" headers
-    case encodedParseText actText of
-      Left _ -> Nothing
-      Right a -> pure $ Event viewId a
 
+
+-- where
+--  lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded Encoded)
+--  lookupEvent headers = do
+--    viewId <- TargetViewId . cs <$> L.lookup "Hyp-ViewId" headers
+--    actText <- cs <$> L.lookup "Hyp-Action" headers
+--    case encodedParseText actText of
+--      Left _ -> Nothing
+--      Right a -> pure $ Event viewId a st
 
 -- Client only returns ONE Cookie header, with everything concatenated
 fromCookieHeader :: BS.ByteString -> Either MessageError Cookies
