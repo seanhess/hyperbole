@@ -4,33 +4,8 @@ module Web.Hyperbole.HyperView.Handled where
 
 import Data.Kind (Constraint, Type)
 import GHC.TypeLits hiding (Mod)
-import Web.Atomic.Types
-import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.HyperView.Types
-import Web.Hyperbole.HyperView.ViewId
 import Web.Hyperbole.TypeList
-import Web.Hyperbole.View (View, addContext, tag)
-
-
-{- | Embed a 'HyperView' into a page or another 'View'
-
-@
-#EMBED Example/Docs/Interactive.hs page
-@
--}
-hyper
-  :: forall id ctx
-   . (HyperViewHandled id ctx, ViewId id)
-  => id
-  -> View id ()
-  -> View ctx ()
-hyper = hyperUnsafe
-
-
-hyperUnsafe :: (ViewId id) => id -> View id () -> View ctx ()
-hyperUnsafe vid vw = do
-  tag "div" @ att "id" (encodedToText $ toViewId vid) $
-    addContext vid vw
 
 
 type family ValidDescendents x :: [Type] where

@@ -19,13 +19,11 @@ import Web.Atomic (att, (@))
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
-import Web.Hyperbole.Data.Encoded (Encoded, encodedParseText)
 import Web.Hyperbole.Data.URI (path, uriToText)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Server.Options
 import Web.Hyperbole.Types.Client
-import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View (View, addContext, renderLazyByteString, script', type_)

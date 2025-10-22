@@ -1,3 +1,5 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.HyperView.Types where
@@ -6,6 +8,7 @@ import Data.Kind (Type)
 import Effectful
 import Effectful.Reader.Dynamic
 import GHC.Generics
+import Web.Hyperbole.Data.Encoded (FromEncoded, ToEncoded (..))
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
 import Web.Hyperbole.HyperView.ViewAction
 import Web.Hyperbole.HyperView.ViewId
@@ -22,7 +25,7 @@ Create an instance with a unique view id type and a sum type describing the acti
 #EMBED Example/Docs/Interactive.hs instance HyperView Message es where
 @
 -}
-class (ViewId id, ViewAction (Action id)) => HyperView id es where
+class (ViewId id, ViewAction (Action id), ConcurrencyValue (Concurrency id)) => HyperView id es where
   -- | Outline all actions that are permitted in this HyperView
   --
   -- > data Action Message = SetMessage Text | ClearMessage
@@ -32,11 +35,20 @@ class (ViewId id, ViewAction (Action id)) => HyperView id es where
 
   -- | Include any child hyperviews here. The compiler will make sure that the page knows how to handle them
   --
-  -- > type Require = '[ChildView]
+  -- > type Require Messages = '[ChildView]
   type Require id :: [Type]
 
 
   type Require id = '[]
+
+
+  -- | Control how overlapping actions are handled. 'Drop' by default
+  --
+  -- > type Concurrency Autocomplete = Replace
+  type Concurrency id :: ConcurrencyMode
+
+
+  type Concurrency id = Drop
 
 
   -- | Specify how the view should be updated for each Action
@@ -44,6 +56,23 @@ class (ViewId id, ViewAction (Action id)) => HyperView id es where
   -- > update (SetMessage msg) = pure $ messageView msg
   -- > update ClearMessage = pure $ messageView ""
   update :: (Hyperbole :> es) => Action id -> Eff (Reader id : es) (View id ())
+
+
+-- convert the type to a value
+class ConcurrencyValue a where
+  concurrencyMode :: ConcurrencyMode
+instance ConcurrencyValue 'Drop where
+  concurrencyMode = Drop
+instance ConcurrencyValue 'Replace where
+  concurrencyMode = Replace
+
+
+data ConcurrencyMode
+  = -- | Do not send any actions that occur while one is active. Prevents double-submitting writes or expensive operations
+    Drop
+  | -- | Ignore the results of older actions in favor of new ones. Use for read-only views with fast-firing interactions, like autocomplete, sliders, etc
+    Replace
+  deriving (Generic, ToEncoded, FromEncoded)
 
 
 -- | The top-level view returned by a 'Page'. It carries a type-level list of every 'HyperView' used in our 'Page' so the compiler can check our work and wire everything together.

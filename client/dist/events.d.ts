@@ -10,5 +10,5 @@ export declare function listenLoad(node: HTMLElement): void;
 export declare function listenMouseEnter(node: HTMLElement): void;
 export declare function listenMouseLeave(node: HTMLElement): void;
 export declare function listenChange(cb: (target: HTMLElement, action: string) => void): void;
-export declare function listenInput(cb: (target: HTMLElement, action: string) => void): void;
+export declare function listenInput(startedTyping: (target: HTMLElement) => void, cb: (target: HTMLElement, action: string) => void): void;
 export declare function listenFormSubmit(cb: (target: HTMLElement, action: string, form: FormData) => void): void;

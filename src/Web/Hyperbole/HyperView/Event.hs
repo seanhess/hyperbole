@@ -17,7 +17,11 @@ type DelayMs = Int
 
 
 event :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Name -> Action id -> Attributes a -> Attributes a
-event eventName a = att ("data-on" <> eventName) (encodedToText $ toAction a)
+event nm a = att (eventName nm) (encodedToText $ toAction a)
+
+
+eventName :: Text -> Name
+eventName t = "data-on" <> t
 
 
 {- | Send the action after N milliseconds. Can be used to implement lazy loading or polling. See [Example.Page.Concurrent](https://docs.hyperbole.live/concurrent)
@@ -55,7 +59,7 @@ WARNING: a short delay can result in poor performance. It is not recommended to 
 -}
 onInput :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => (Text -> Action id) -> DelayMs -> Attributes a -> Attributes a
 onInput a delay = do
-  att "data-oninput" (encodedToText $ toActionInput a) . att "data-delay" (cs $ show delay)
+  att (eventName "input") (encodedToText $ toActionInput a) . att "data-delay" (cs $ show delay)
 
 
 -- WARNING: no way to do this generically right now, because toActionInput is specialized to Text
@@ -63,7 +67,7 @@ onInput a delay = do
 --   but, that doesn't let us implement dropdown
 onChange :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => (value -> Action id) -> Attributes a -> Attributes a
 onChange a = do
-  att "data-onchange" (encodedToText $ toActionInput a)
+  att (eventName "change") (encodedToText $ toActionInput a)
 
 
 onSubmit :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Action id -> Attributes a -> Attributes a
@@ -71,13 +75,13 @@ onSubmit = event "submit"
 
 
 onKeyDown :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Key -> Action id -> Attributes a -> Attributes a
-onKeyDown key act = do
-  att ("data-on-keydown-" <> keyDataAttribute key) (encodedToText $ toAction act)
+onKeyDown key = do
+  event ("keydown-" <> keyDataAttribute key)
 
 
 onKeyUp :: (ViewAction (Action id), ViewContext a ~ id, Attributable a) => Key -> Action id -> Attributes a -> Attributes a
-onKeyUp key act = do
-  att ("data-on-keyup-" <> keyDataAttribute key) (encodedToText $ toAction act)
+onKeyUp key = do
+  event ("keyup-" <> keyDataAttribute key)
 
 
 keyDataAttribute :: Key -> Text
