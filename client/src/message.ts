@@ -5,7 +5,7 @@ import { takeWhileMap, dropWhile } from "./lib"
 
 export type Meta = { key: string, value: string }
 export type ViewId = string
-export type RequestId = string
+export type RequestId = number
 export type EncodedAction = string
 
 type RemoteEvent = { name: string, detail: any }

@@ -13,8 +13,6 @@ export type ActionMessage = {
   form: URLSearchParams | undefined
 }
 
-export type ViewId = string
-export type RequestId = number
 
 
 

@@ -7,7 +7,6 @@ export declare class SocketConnection extends EventTarget {
     isConnected: Boolean;
     reconnectDelay: number;
     queue: ActionMessage[];
-    constructor();
     connect(addr?: string): void;
     sendAction(action: ActionMessage): Promise<void>;
     private runQueue;
