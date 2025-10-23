@@ -82,6 +82,7 @@ exampleMenu current = do
   exampleLink Errors
   exampleLink OAuth2
   exampleLink Javascript
+  exampleLink Chat
   exampleLink Advanced
   exampleLink (Examples BigExamples)
   case current of

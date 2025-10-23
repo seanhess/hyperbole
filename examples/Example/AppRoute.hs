@@ -34,6 +34,7 @@ data AppRoute
   | OAuth2Authenticate
   | OAuth2
   | Test
+  | Chat
   deriving (Eq, Generic, Show)
 instance Route AppRoute where
   baseRoute = Just Main
