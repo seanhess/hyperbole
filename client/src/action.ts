@@ -13,7 +13,7 @@ export type ActionMessage = {
 }
 
 export type ViewId = string
-export type RequestId = string
+export type RequestId = number
 
 
 
@@ -59,9 +59,16 @@ export function renderForm(form: URLSearchParams | undefined): string {
   return "\n\n" + form
 }
 
+let globalRequestId: RequestId = 0
 
-export function requestId(): RequestId {
-  return Math.random().toString(36).substring(2, 8)
+export type Request = {
+  requestId: RequestId
+  isCancelled: boolean
+}
+
+export function newRequest(): Request {
+  let requestId = ++globalRequestId
+  return { requestId, isCancelled: false }
 }
 
 
@@ -72,7 +79,7 @@ type Meta = { key: string, value: string }
 type RemoteEvent = { name: string, detail: any }
 
 export type Metadata = {
-  requestId: string
+  requestId: number
   cookies: string[]
   redirect?: string
   error?: string
@@ -94,7 +101,7 @@ export function renderMetadata(meta: Meta[]): string {
 
 export function parseMetas(meta: Meta[]): Metadata {
 
-  let requestId = meta.find(m => m.key == "RequestId")?.value
+  let requestId = parseInt(meta.find(m => m.key == "RequestId")?.value, 0)
 
   return {
     cookies: meta.filter(m => m.key == "Cookie").map(m => m.value),

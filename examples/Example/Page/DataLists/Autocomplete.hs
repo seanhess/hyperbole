@@ -32,6 +32,9 @@ instance (IOE :> es) => HyperView LiveSearch es where
     | Select (Maybe ProgrammingLanguage)
     deriving (Generic, ViewAction)
 
+  -- favor the latest thing typed
+  type Concurrency LiveSearch = Replace
+
   update (SearchTerm current term) = do
     pure $ liveSearchView allLanguages current term
   update (Select Nothing) = do

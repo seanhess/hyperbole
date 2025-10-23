@@ -1,7 +1,7 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
-import { actionMessage, ActionMessage, requestId, ViewId, parseMetadata, Metadata } from './action'
+import { actionMessage, ActionMessage, ViewId, parseMetadata, Metadata, newRequest, Request, RequestId } from './action'
 import { sendActionHttp } from './http'
 import { setQuery } from "./browser"
 import { parseResponse, Response, LiveUpdate } from './response'
@@ -17,6 +17,7 @@ let rootStyles: HTMLStyleElement;
 let addedRulesIndex = new Set();
 
 
+
 async function sendAction(msg: ActionMessage): Promise<Response> {
   if (sock.isConnected) {
     return sock.sendAction(msg)
@@ -29,7 +30,6 @@ async function sendAction(msg: ActionMessage): Promise<Response> {
 
 
 async function runAction(target: HyperView, action: string, form?: FormData) {
-  // console.log("runAction", target.id, action)
 
   if (target === undefined) {
     console.error("Undefined HyperView!")
@@ -41,35 +41,43 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     return
   }
 
+  if (target.activeRequest && !target.activeRequest?.isCancelled) {
+    // Active Request!
+    if (target.concurrency == "Drop") {
+      console.warn("Drop action overlapping with active request (" + target.activeRequest + ")", action)
+      return
+    }
+  }
+
   let timeout = setTimeout(() => {
     // add loading after 100ms, not right away
-    // if it runs shorter than that we probably don't want to add loading effects
+    // if it runs shorter than that we probably don't want to show the user any loading feedback
     target.classList.add("hyp-loading")
   }, 100)
 
-  let reqId = requestId()
-  let msg = actionMessage(target.id, action, reqId, form)
-
-  // Ignore any request if a requestId is active
-  if (target.dataset.requestId) {
-    console.warn("Action overlaps with active request (" + target.dataset.requestId + ")", action)
-    return
-  }
+  let req = newRequest()
+  let msg = actionMessage(target.id, action, req.requestId, form)
 
   // Set the requestId
-  target.dataset.requestId = reqId
+  target.activeRequest = req
 
   try {
     let res: Response = await sendAction(msg)
 
-    if (res.meta.requestId != target.dataset.requestId) {
-      let err = new Error()
-      err.name = "Concurrency Error"
-      err.message = "Stale Action (" + reqId + "):" + action
-      throw err
+
+    if (res.meta.requestId < target.activeRequest?.requestId) {
+      // this should only happen on Replace, since other requests should be dropped
+      // but it's safe to assume we never want to apply an old requestId
+      console.warn("Ignore Stale Action (" + res.meta.requestId + ") vs (" + target.activeRequest.requestId + "): " + action)
+      return
+    }
+    else if (target.activeRequest?.isCancelled) {
+      console.warn("Cancelled request", target.activeRequest?.requestId)
+      delete target.activeRequest
+      return
     }
     else {
-      delete target.dataset.requestId
+      delete target.activeRequest
     }
 
     let shouldStop = runMetadataImmediate(res.meta)
@@ -149,7 +157,6 @@ function runMetadataImmediate(meta: Metadata): boolean {
 function runMetadataDOM(meta: Metadata, target?: HTMLElement) {
   for (var remoteEvent of meta.events) {
     setTimeout(() => {
-      // console.log("dipsatching custom event", remoteEvent)
       let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
       let eventTarget = target || document
       eventTarget.dispatchEvent(event)
@@ -244,11 +251,16 @@ function init() {
   })
 
   listenChange(async function(target: HyperView, action: string) {
-    console.log("CHANGE", target.id, "(" + action + ")")
     runAction(target, action)
   })
 
-  listenInput(async function(target: HyperView, action: string) {
+  function onStartedTyping(target: HyperView) {
+    if (target.concurrency == "Replace") {
+      target.cancelActiveRequest()
+    }
+  }
+
+  listenInput(onStartedTyping, async function(target: HyperView, action: string) {
     runAction(target, action)
   })
 }
@@ -261,6 +273,14 @@ function enrichHyperViews(node: HTMLElement): void {
     element.runAction = function(action: string) {
       runAction(this, action)
     }.bind(element)
+
+    element.concurrency = element.dataset.concurrency || "Drop"
+
+    element.cancelActiveRequest = function() {
+      if (element.activeRequest && !element.activeRequest?.isCancelled) {
+        element.activeRequest.isCancelled = true
+      }
+    }
 
     dispatchContent(node)
   })
@@ -333,8 +353,12 @@ export interface HyperboleAPI {
 
 export interface HyperView extends HTMLElement {
   runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
+  activeRequest?: Request
+  cancelActiveRequest(): void
+  concurrency: ConcurrencyMode
 }
 
+type ConcurrencyMode = string
 
 
 window.Hyperbole =

@@ -14,6 +14,9 @@ instance HyperView Boxes es where
     | Clear
     deriving (Generic, ViewAction)
 
+  -- favaor the last action that happens
+  type Concurrency Boxes = Replace
+
   update (Selected n) = do
     pure $ viewBoxes (Just n)
   update Clear = do

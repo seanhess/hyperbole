@@ -186,6 +186,7 @@ module Web.Hyperbole
   , target
   , Response
   , Root
+  , ConcurrencyMode (..)
 
     -- * Exports #exports#
 

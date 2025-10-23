@@ -5,11 +5,11 @@ import { encodedParam } from './action'
 export type UrlFragment = string
 
 export function listenKeydown(cb: (target: HTMLElement, action: string) => void): void {
-  listenKeyEvent("Keydown", cb)
+  listenKeyEvent("keydown", cb)
 }
 
 export function listenKeyup(cb: (target: HTMLElement, action: string) => void): void {
-  listenKeyEvent("Keyup", cb)
+  listenKeyEvent("keyup", cb)
 }
 
 export function listenKeyEvent(event: string, cb: (target: HTMLElement, action: string) => void): void {
@@ -145,7 +145,7 @@ interface LiveInputElement extends HTMLInputElement {
   debouncedCallback?: Function;
 }
 
-export function listenInput(cb: (target: HTMLElement, action: string) => void): void {
+export function listenInput(startedTyping: (target: HTMLElement) => void, cb: (target: HTMLElement, action: string) => void): void {
   document.addEventListener("input", function(e) {
     let el = e.target as HTMLElement
     let source = el.closest("[data-oninput]") as LiveInputElement
@@ -165,6 +165,9 @@ export function listenInput(cb: (target: HTMLElement, action: string) => void): 
     e.preventDefault()
 
     let target = nearestTarget(source)
+
+    // I want to CANCEL the active request as soon as we start typing
+    startedTyping(target)
 
     if (!source.debouncedCallback) {
       source.debouncedCallback = debounce(() => {

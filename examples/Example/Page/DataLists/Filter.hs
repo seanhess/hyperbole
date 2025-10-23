@@ -18,7 +18,6 @@ import Prelude hiding (even, odd)
 page :: (Hyperbole :> es, IOE :> es) => Page es '[Languages]
 page = do
   filters <- query
-  liftIO $ print filters
   pure $ exampleLayout (Data Filter) $ do
     example (Data Filter) $ do
       el "Incrementally search a list of data, storing parameters in the query string"

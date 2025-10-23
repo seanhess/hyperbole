@@ -7,12 +7,16 @@ export type ActionMessage = {
     form: URLSearchParams | undefined;
 };
 export type ViewId = string;
-export type RequestId = string;
+export type RequestId = number;
 export declare function actionMessage(id: ViewId, action: EncodedAction, reqId: RequestId, form?: FormData): ActionMessage;
 export declare function toSearch(form?: FormData): URLSearchParams | undefined;
 export declare function renderActionMessage(msg: ActionMessage): string;
 export declare function renderForm(form: URLSearchParams | undefined): string;
-export declare function requestId(): RequestId;
+export type Request = {
+    requestId: RequestId;
+    isCancelled: boolean;
+};
+export declare function newRequest(): Request;
 type Meta = {
     key: string;
     value: string;
@@ -22,7 +26,7 @@ type RemoteEvent = {
     detail: any;
 };
 export type Metadata = {
-    requestId: string;
+    requestId: number;
     cookies: string[];
     redirect?: string;
     error?: string;

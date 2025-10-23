@@ -10,7 +10,7 @@ export async function sendActionHttp(msg: ActionMessage): Promise<Response> {
     {
       'Accept': 'text/html',
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Hyp-RequestId': msg.requestId,
+      'Hyp-RequestId': msg.requestId.toString(),
       'Hyp-ViewId': msg.viewId,
       'Hyp-Action': msg.action
     },
