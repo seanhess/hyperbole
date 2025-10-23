@@ -43,6 +43,9 @@ instance (IOE :> es) => HyperView Languages es where
     | SetFamily (Maybe LanguageFamily)
     deriving (Generic, ViewAction)
 
+  -- favor the latest thing entered / typed
+  type Concurrency Languages = Replace
+
   update = \case
     Select lang -> do
       pure $ chosenView lang
