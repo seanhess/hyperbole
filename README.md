@@ -7,10 +7,17 @@ Create interactive HTML applications with type-safe serverside Haskell. Inspired
 [▶️ Simple Example](https://hyperbole.live/simple)
 
 ```haskell
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+
+
 module Main where
 
 import Data.Text (Text)
@@ -24,10 +31,9 @@ main = do
     liveApp quickStartDocument (runPage page)
 
 page :: (Hyperbole :> es) => Page es '[Message]
-page = do
-  pure $ do
-    hyper Message1 ~ bold $ messageView "Hello"
-    hyper Message2 ~ bold $ messageView "World!"
+page = pure $ do
+    hyper Message1 $ messageView "Hello"
+    hyper Message2 $ messageView "World!"
 
 data Message = Message1 | Message2
   deriving (Generic, ViewId)
@@ -76,6 +82,7 @@ Add hyperbole and text as dependencies to the `.cabal` file:
     build-depends:
         base
       , hyperbole
+      , atomic-css
       , text
 ```
 
