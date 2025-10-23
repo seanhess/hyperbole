@@ -9,7 +9,6 @@ import Effectful
 import Example.AppRoute as Route
 import Example.Colors
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages, isMatchLanguage)
-import Example.Effects.Debug
 import Example.Page.DataLists.Filter as Filter (chosenView, clearButton, resultsTable)
 import Example.View.Layout
 import Safe (atMay)
@@ -27,7 +26,7 @@ page = do
 data LiveSearch = LiveSearch
   deriving (Generic, ViewId)
 
-instance (IOE :> es, Debug :> es) => HyperView LiveSearch es where
+instance (IOE :> es) => HyperView LiveSearch es where
   data Action LiveSearch
     = SearchTerm Int Text
     | Select (Maybe ProgrammingLanguage)

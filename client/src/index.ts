@@ -41,6 +41,14 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     return
   }
 
+  if (target.activeRequest && !target.activeRequest?.isCancelled) {
+    // Active Request!
+    if (target.concurrency == "Drop") {
+      console.warn("Drop action overlapping with active request (" + target.activeRequest + ")", action)
+      return
+    }
+  }
+
   let timeout = setTimeout(() => {
     // add loading after 100ms, not right away
     // if it runs shorter than that we probably don't want to show the user any loading feedback
@@ -49,15 +57,6 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 
   let req = newRequest()
   let msg = actionMessage(target.id, action, req.requestId, form)
-
-
-  if (target.activeRequest) {
-    // Active Request!
-    if (target.concurrency == "Drop") {
-      console.warn("Drop action overlapping with active request (" + target.activeRequest + ")", action)
-      return
-    }
-  }
 
   // Set the requestId
   target.activeRequest = req
@@ -69,7 +68,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     if (res.meta.requestId < target.activeRequest?.requestId) {
       // this should only happen on Replace, since other requests should be dropped
       // but it's safe to assume we never want to apply an old requestId
-      console.warn("Ignore Stale Action (" + res.meta.requestId + ") vs (" + target.activeRequest + "): " + action)
+      console.warn("Ignore Stale Action (" + res.meta.requestId + ") vs (" + target.activeRequest.requestId + "): " + action)
       return
     }
     else if (target.activeRequest?.isCancelled) {
@@ -256,7 +255,9 @@ function init() {
   })
 
   function onStartedTyping(target: HyperView) {
-    target.cancelActiveRequest()
+    if (target.concurrency == "Replace") {
+      target.cancelActiveRequest()
+    }
   }
 
   listenInput(onStartedTyping, async function(target: HyperView, action: string) {
