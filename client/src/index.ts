@@ -63,7 +63,7 @@ function handleRedirect(red: Redirect) {
 
 // in-process update
 function handleResponse(res: Update) {
-  console.log("Handle Response", res)
+  // console.log("Handle Response", res)
   let target = handleUpdate(res)
 
   // clean up the request

@@ -32,7 +32,7 @@ instance (Debug :> es) => HyperView Long es where
 
   update Start = do
     forM_ [0 .. 10] $ \n -> do
-      pushUpdate Long $ activeView n
+      pushUpdate $ activeView n
       delay 1000
     pure $ do
       el "All Done"

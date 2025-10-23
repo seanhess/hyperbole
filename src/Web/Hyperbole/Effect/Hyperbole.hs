@@ -6,7 +6,6 @@ module Web.Hyperbole.Effect.Hyperbole where
 import Data.Aeson (Value)
 import Data.Text (Text)
 import Effectful
-import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
 import Effectful.Writer.Static.Local
@@ -38,7 +37,6 @@ data Remote
   | RemoteEvent Text Value
 
 
--- this is really just running for wai, no?
 runHyperboleLocal :: Request -> Eff (Error Response : State Client : Writer [Remote] : es) Response -> Eff es (Response, Client, [Remote])
 runHyperboleLocal req eff = do
   ((eresp, client'), rmts) <- runWriter @[Remote] . runState (emptyClient req.requestId) . runErrorNoCallStack @Response $ eff

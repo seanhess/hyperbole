@@ -37,7 +37,7 @@ data SocketRequest = SocketRequest
   }
 
 
--- | Run the 'Hyperbole' effect to get a response
+-- the same as Wai, but it sends pushes immediately
 runHyperboleSocket
   :: (IOE :> es)
   => ServerOptions
@@ -45,8 +45,7 @@ runHyperboleSocket
   -> Request
   -> Eff (Hyperbole : es) Response
   -> Eff es (Response, Client, [Remote])
-runHyperboleSocket opts conn req = reinterpret (runHyperboleLocal req) $ \_ -> \case
-  -- TODO: don't need to do it this way, can respond directly!
+runHyperboleSocket _opts conn req = reinterpret (runHyperboleLocal req) $ \_ -> \case
   GetRequest -> do
     pure req
   RespondNow r -> do
@@ -58,10 +57,6 @@ runHyperboleSocket opts conn req = reinterpret (runHyperboleLocal req) $ \_ -> \
   ModClient f -> do
     modify @Client f
   TriggerAction vid act -> do
-    -- honestly I would love to remove the wai thing completely
-    -- but it does need to do almost all of the same things...
-    -- we don't have to allow the js client to send them
-    -- nor the server to accept them though
     tell [RemoteAction vid act]
   TriggerEvent name dat -> do
     tell [RemoteEvent name dat]

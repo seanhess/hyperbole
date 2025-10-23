@@ -15,7 +15,7 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Effect.GenRandom
 
-page :: (Hyperbole :> es, Debug :> es) => Page es '[Polling, LazyData, Progress]
+page :: (Hyperbole :> es, Debug :> es) => Page es '[Polling, LazyData, Progress, Tasks]
 page = do
   pure $ exampleLayout Concurrency $ do
     example' "Concurrency" source $ do
@@ -42,6 +42,13 @@ page = do
         code "onLoad"
         text "in every view update, we can poll the server after a given delay"
       col ~ embed $ hyper Polling viewInit
+
+    example' "Push Updates" source $ do
+      el $ do
+        text "Actions can call "
+        code "pushUpdate"
+        text " to send an intermediate update to the view. This is simpler than polling, but less flexible, as long-running actions cannot be cancelled."
+      col ~ embed $ hyper Tasks $ taskView 0
  where
   source = routeSource Concurrency
 
@@ -182,3 +189,30 @@ viewUpdating prg = do
   col @ onLoad (CheckProgress prg) 0 $ do
     progressBar pct $ do
       el ~ grow $ text $ "Task" <> pack (show taskId)
+
+---------------------------------------------------------------
+
+data Tasks = Tasks
+  deriving (Generic, ViewId)
+
+instance (Debug :> es) => HyperView Tasks es where
+  data Action Tasks = RunLongTask
+    deriving (Generic, ViewAction)
+
+  update RunLongTask = do
+    forM_ [1 :: Float .. 100] $ \n -> do
+      pushUpdate $ taskView (n / 100)
+      delay 50
+    pure $ taskView 1
+
+taskView :: Float -> View Tasks ()
+taskView pct = col ~ gap 10 $ do
+  taskBar
+  button RunLongTask ~ btn . btnEnabled $ "Run Task"
+ where
+  taskBar
+    | pct == 0 = el ~ bg Light . pad 5 $ "Task"
+    | pct >= 1 = row ~ bg Success . color White . pad 5 $ el $ text "Complete"
+    | otherwise = progressBar pct "Task"
+
+  btnEnabled = if pct > 0 && pct < 1 then disabled else id

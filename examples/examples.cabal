@@ -50,6 +50,7 @@ executable examples
       Example.Effects.Todos
       Example.Effects.Users
       Example.Page.Advanced
+      Example.Page.Chat
       Example.Page.Concurrency
       Example.Page.Contact
       Example.Page.Contacts
