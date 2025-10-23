@@ -7,6 +7,7 @@ Create interactive HTML applications with type-safe serverside Haskell. Inspired
 [▶️ Simple Example](https://hyperbole.live/simple)
 
 ```haskell
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
