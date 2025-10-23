@@ -3,7 +3,7 @@ export type Meta = {
     value: string;
 };
 export type ViewId = string;
-export type RequestId = string;
+export type RequestId = number;
 export type EncodedAction = string;
 type RemoteEvent = {
     name: string;

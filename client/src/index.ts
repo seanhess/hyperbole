@@ -1,7 +1,7 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection, Update, Redirect } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
-import { actionMessage, ActionMessage, requestId } from './action'
+import { actionMessage, ActionMessage, Request, newRequest } from './action'
 import { ViewId, Metadata, parseMetadata } from './message'
 import { setQuery } from "./browser"
 import { parseResponse, Response, LiveUpdate } from './response'
@@ -40,7 +40,6 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     }
   }
 
-  let timeout = setTimeout(() => {
   target._timeout = setTimeout(() => {
     // add loading after 100ms, not right away
     // if it runs shorter than that we probably don't want to show the user any loading feedback
@@ -57,20 +56,6 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 }
 
 
-    if (res.meta.requestId < target.activeRequest?.requestId) {
-      // this should only happen on Replace, since other requests should be dropped
-      // but it's safe to assume we never want to apply an old requestId
-      console.warn("Ignore Stale Action (" + res.meta.requestId + ") vs (" + target.activeRequest.requestId + "): " + action)
-      return
-    }
-    else if (target.activeRequest?.isCancelled) {
-      console.warn("Cancelled request", target.activeRequest?.requestId)
-      delete target.activeRequest
-      return
-    }
-    else {
-      delete target.activeRequest
-    }
 function handleRedirect(red: Redirect) {
   console.log("REDIRECT", red)
   window.location.href = red.url
@@ -78,10 +63,11 @@ function handleRedirect(red: Redirect) {
 
 // in-process update
 function handleResponse(res: Update) {
+  console.log("Handle Response", res)
   let target = handleUpdate(res)
 
   // clean up the request
-  delete target.dataset.requestId
+  delete target.activeRequest
   clearTimeout(target._timeout)
   target.classList.remove("hyp-loading")
 }
@@ -89,23 +75,29 @@ function handleResponse(res: Update) {
 function handleUpdate(res: Update): HyperView {
   let target = document.getElementById(res.viewId) as HyperView
 
+
   if (!target) {
     console.error("Missing Update Target: ", res.viewId)
-    return
+    return target
   }
 
-  if (res.requestId != target.dataset.requestId) {
-    let err = new Error()
-    err.name = "Concurrency Error"
-    err.message = "Stale Action (" + res.requestId + "):" + res.action
-    throw err
+  if (res.requestId < target.activeRequest?.requestId) {
+    // this should only happen on Replace, since other requests should be dropped
+    // but it's safe to assume we never want to apply an old requestId
+    console.warn("Ignore Stale Action (" + res.requestId + ") vs (" + target.activeRequest.requestId + "): " + res.action)
+    return target
+  }
+  else if (target.activeRequest?.isCancelled) {
+    console.warn("Cancelled request", target.activeRequest?.requestId)
+    delete target.activeRequest
+    return target
   }
 
   let update: LiveUpdate = parseResponse(res.body)
 
   if (!update.content) {
     console.error("Empty Response!", res.body)
-    return
+    return target
   }
 
   // First, update the stylesheet

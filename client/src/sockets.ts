@@ -16,7 +16,7 @@ export class SocketConnection extends EventTarget {
   reconnectDelay: number = 0
   queue: ActionMessage[] = []
 
-  constructor() { super() }
+  // constructor() { super() }
 
   connect(addr = defaultAddress) {
     const sock = new WebSocket(addr)
@@ -98,7 +98,7 @@ export class SocketConnection extends EventTarget {
     let { command, metas, rest } = message.splitMessage(event.data)
     // console.log("MESSAGE", command, metas, rest)
 
-    let requestId = requireMeta("RequestId")
+    let requestId = parseInt(requireMeta("RequestId"), 0)
 
     function requireMeta(key: string): string {
       let val = metaValue(key, metas)
