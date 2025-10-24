@@ -11,12 +11,12 @@ Create interactive HTML applications with type-safe serverside Haskell. Inspired
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
+
 module Main where
 
 import Data.Text (Text)
-import Web.Hyperbole
 import Web.Atomic.CSS
-
+import Web.Hyperbole
 
 main :: IO ()
 main = do
@@ -77,6 +77,8 @@ Add hyperbole and text as dependencies to the `.cabal` file:
         base
       , hyperbole
       , text
+
+    default-language: GHC2021
 ```
 
 Paste the above example into Main.hs, and run:
