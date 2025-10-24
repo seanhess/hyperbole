@@ -12,5 +12,6 @@ toggleCheckbox setChecked isSelected = do
 
 progressBar :: Float -> View context () -> View context ()
 progressBar pct contents = do
+  let setWidth = if pct > 0 then width (Pct pct) else id
   row ~ bg Light $ do
-    row ~ bg PrimaryLight . width (Pct pct) . pad 5 $ contents
+    row ~ bg PrimaryLight . setWidth . pad 5 $ contents

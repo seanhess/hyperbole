@@ -3,10 +3,12 @@ module Web.Hyperbole.Effect.Response where
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
+import Effectful.Reader.Dynamic
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.HyperView (ConcurrencyValue (..), HyperView (..), ViewId (..), hyperUnsafe)
+import Web.Hyperbole.HyperView.ViewId (viewId)
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View.Types
@@ -19,11 +21,15 @@ hyperView i vw = do
   pure $ Response vid $ hyperUnsafe i vw
 
 
--- TODO: can you push updates to other views?
--- I'm sure that would be widely used, but maybe it isn't a good idea
-pushUpdate :: (Hyperbole :> es, ViewId id, ConcurrencyValue (Concurrency id)) => id -> View id () -> Eff es ()
-pushUpdate i vw = do
+pushUpdate :: (Hyperbole :> es, ViewId id, ConcurrencyValue (Concurrency id)) => View id () -> Eff (Reader id : es) ()
+pushUpdate vw = do
+  i <- viewId
   -- let vid = TargetViewId (encodedToText $ toViewId i)
+  send $ PushUpdate $ hyperUnsafe i vw
+
+
+pushUpdateTo :: (Hyperbole :> es, ViewId id, ConcurrencyValue (Concurrency id)) => id -> View id () -> Eff es ()
+pushUpdateTo i vw = do
   send $ PushUpdate $ hyperUnsafe i vw
 
 

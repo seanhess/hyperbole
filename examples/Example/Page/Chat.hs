@@ -64,6 +64,10 @@ contentView mu = do
         hyper Chats $ chatsLoad u
         hyper Message $ messageView u
 
+-- Chats State Effect -------------------------------------
+
+-- it's just not a very good use-case for it...
+
 initChats :: (Concurrent :> es) => Eff es (TVar [(Username, Text)])
 initChats = newTVarIO []
 
@@ -85,8 +89,7 @@ instance (Concurrent :> es, Reader (TVar [(Username, Text)]) :> es, IOE :> es) =
   -- type Concurrency Chats = Replace
 
   update (Stream u) = do
-    _ <- forever streamChats
-    pure $ chatsView u []
+    forever streamChats
    where
     streamChats = do
       -- this will get cancelled if the user leaves the page, and the socket connection disappears
@@ -96,14 +99,14 @@ instance (Concurrent :> es, Reader (TVar [(Username, Text)]) :> es, IOE :> es) =
       -- honestly this would be better with polling, and isn't that good without append/prepend...
       chats <- getChats
       liftIO $ putStrLn $ "CHATS => " <> unpack u <> " " <> show (length chats)
-      pushUpdate Chats $ chatsView u chats
+      pushUpdate $ chatsView u chats
       threadDelay 1000000
 
 chatsLoad :: Username -> View Chats ()
 chatsLoad user = el @ onLoad (Stream user) 100 $ "..."
 
 chatsView :: Username -> [(Username, Text)] -> View Chats ()
-chatsView user chats = do
+chatsView _user chats = do
   col ~ gap 5 . pad 5 . minHeight 400 . border 1 . bg GrayLight $ do
     forM_ chats $ \(u, msg) -> do
       el $ do
@@ -125,11 +128,7 @@ instance (Concurrent :> es, Reader (TVar [(Username, Text)]) :> es, IOE :> es) =
   update (NewMessage u) = do
     MessageForm msg <- formData
     cvar <- ask
-    _ <- atomically $ do
-      modifyTVar cvar $ \cs -> (u, msg) : cs
-      readTVar cvar
-
-    trigger Chats $ Stream u
+    atomically $ modifyTVar cvar $ \cs -> (u, msg) : cs
 
     pure $ messageView u
 
