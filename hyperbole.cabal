@@ -20,12 +20,53 @@ tested-with:
     GHC == 9.8.2
   , GHC == 9.6.6
 extra-source-files:
+    -- NOTE: The source distribution does not need to have the source js files
+    -- but adding all the files to packcheck ignore is rather tedious. So till
+    -- packcheck supports globs in the ignore file, we can keep the js files as
+    -- part of the source distribution.
+    client/*.d.ts
+    client/src/*.ts
+    client/package-lock.json
+    client/webpack.config.js
+    client/package.json
+    client/tsconfig.json
+
+    client/dist/*.d.ts
+
     client/dist/hyperbole.js
     client/dist/hyperbole.js.map
     client/util/live-reload.js
+
+    docs/docgen.cabal
+    docs/Example/AppRoute.hs
+    docs/Main.hs
+
+    examples/examples.cabal
+    examples/*.hs
+    examples/Example/*.hs
+    examples/Example/Data/*.hs
+    examples/Example/Docs/*.hs
+    examples/Example/Docs/Page/*.hs
+    examples/Example/Effects/*.hs
+    examples/Example/Page/*.hs
+    examples/Example/Page/CSS/*.hs
+    examples/Example/Page/DataLists/*.hs
+    examples/Example/Page/Interactivity/*.hs
+    examples/Example/Page/State/*.hs
+    examples/Example/Page/Todos/*.hs
+    examples/Example/Style/*.hs
+    examples/Example/View/*.hs
+    examples/static/*.ttf
+    examples/static/*.js
+    examples/static/*.css
+    examples/static/*.png
+
 extra-doc-files:
     README.md
     CHANGELOG.md
+    docs/*.md
+    docs/*.svg
+    examples/README.md
 
 source-repository head
   type: git
