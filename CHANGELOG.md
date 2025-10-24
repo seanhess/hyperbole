@@ -1,5 +1,9 @@
 # Revision history for hyperbole
 
+## NEXT
+
+* Concurrency Controls - Drop vs Replace
+
 ## 0.5.0 -- 2025-09-26
 
 Improvements

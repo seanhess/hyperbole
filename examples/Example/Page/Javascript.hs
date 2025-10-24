@@ -40,6 +40,8 @@ instance HyperView Boxes es where
     | Clear
     deriving (Generic, ViewAction)
 
+  type Concurrency Boxes = Replace
+
   update (Selected n) = do
     pure $ viewBoxes (Just n)
   update Clear = do
