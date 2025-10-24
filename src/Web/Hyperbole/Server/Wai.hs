@@ -19,11 +19,13 @@ import Web.Atomic (att, (@))
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
+import Web.Hyperbole.Data.Encoded (Encoded, encodedParseText)
 import Web.Hyperbole.Data.URI (path, uriToText)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Server.Options
 import Web.Hyperbole.Types.Client
+import Web.Hyperbole.Types.Event (Event (..), TargetViewId (..))
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View (View, addContext, renderLazyByteString, script', type_)
@@ -132,7 +134,7 @@ fromWaiRequest wr body = do
       host = Host $ fromMaybe "" $ L.lookup "Host" headers
       requestId = RequestId $ cs $ fromMaybe "" $ L.lookup "Hyp-RequestId" headers
       method = Wai.requestMethod wr
-      event = Nothing
+      event = lookupEvent headers
   cookies <- fromCookieHeader cookie
 
   pure $
@@ -146,16 +148,15 @@ fromWaiRequest wr body = do
       , host
       , requestId
       }
+ where
+  lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded)
+  lookupEvent headers = do
+    viewId <- TargetViewId . cs <$> L.lookup "Hyp-ViewId" headers
+    actText <- cs <$> L.lookup "Hyp-Action" headers
+    case encodedParseText actText of
+      Left _ -> Nothing
+      Right a -> pure $ Event viewId a
 
-
--- where
---  lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded Encoded)
---  lookupEvent headers = do
---    viewId <- TargetViewId . cs <$> L.lookup "Hyp-ViewId" headers
---    actText <- cs <$> L.lookup "Hyp-Action" headers
---    case encodedParseText actText of
---      Left _ -> Nothing
---      Right a -> pure $ Event viewId a st
 
 -- Client only returns ONE Cookie header, with everything concatenated
 fromCookieHeader :: BS.ByteString -> Either MessageError Cookies
