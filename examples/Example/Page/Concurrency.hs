@@ -14,6 +14,7 @@ import Example.View.Layout (embed, example', exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Effect.GenRandom
+import Web.Hyperbole.Effect.Response (pushUpdateTo)
 
 page :: (Hyperbole :> es, Debug :> es) => Page es '[Polling, LazyData, Progress, Tasks]
 page = do
@@ -48,7 +49,8 @@ page = do
         text "Actions can call "
         code "pushUpdate"
         text " to send an intermediate update to the view. This is simpler than polling, but less flexible, as long-running actions cannot be cancelled."
-      col ~ embed $ hyper Tasks $ taskView 0
+      col ~ embed . font $ do
+        hyper Tasks $ taskView 0
  where
   source = routeSource Concurrency
 
@@ -196,23 +198,35 @@ data Tasks = Tasks
   deriving (Generic, ViewId)
 
 instance (Debug :> es) => HyperView Tasks es where
-  data Action Tasks = RunLongTask
+  data Action Tasks
+    = RunLongTask
+    | HijackPoller
+    | Interrupt
     deriving (Generic, ViewAction)
+
+  type Concurrency Tasks = Replace
 
   update RunLongTask = do
     forM_ [1 :: Float .. 100] $ \n -> do
       pushUpdate $ taskView (n / 100)
       delay 50
     pure $ taskView 1
+  update HijackPoller = do
+    pushUpdateTo Polling "Hello from afar!"
+    pure $ "Done"
+  update Interrupt = do
+    pure $ "Interrupted!"
 
 taskView :: Float -> View Tasks ()
 taskView pct = col ~ gap 10 $ do
   taskBar
-  button RunLongTask ~ btn . btnEnabled $ "Run Task"
+  button RunLongTask ~ btn . whenLoading disabled $ "Run Task"
+  button HijackPoller ~ btn . whenLoading disabled $ "Push Update To Polling"
+  button Interrupt ~ btn $ "Attempt Interrupt"
  where
   taskBar
     | pct == 0 = el ~ bg Light . pad 5 $ "Task"
     | pct >= 1 = row ~ bg Success . color White . pad 5 $ el $ text "Complete"
     | otherwise = progressBar pct "Task"
 
-  btnEnabled = if pct > 0 && pct < 1 then disabled else id
+-- btnEnabled = if pct > 0 && pct < 1 then disabled else id

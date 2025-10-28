@@ -20,7 +20,7 @@ import Web.Hyperbole.Data.Param
 
 
 newtype ConName = ConName {text :: Text}
-  deriving newtype (Eq, Show, IsString)
+  deriving newtype (Eq, Show, IsString, Ord)
 instance Semigroup ConName where
   -- Ignore the second constructor name
   c1 <> _ = c1
@@ -34,7 +34,7 @@ For simple Sum and Product types it is equivalent to the Show/Read instance
 MyConstructor 1 2 3
 -}
 data Encoded = Encoded ConName [ParamValue]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 
 instance Semigroup Encoded where

@@ -17,20 +17,19 @@ import Web.Hyperbole.View.Types
 -- | Respond with the given hyperview
 hyperView :: (HyperView id es) => id -> View id () -> Eff es Response
 hyperView i vw = do
-  let vid = TargetViewId (encodedToText $ toViewId i)
+  let vid = TargetViewId (toViewId i)
   pure $ Response vid $ hyperUnsafe i vw
 
 
 pushUpdate :: (Hyperbole :> es, ViewId id, ConcurrencyValue (Concurrency id)) => View id () -> Eff (Reader id : es) ()
 pushUpdate vw = do
   i <- viewId
-  -- let vid = TargetViewId (encodedToText $ toViewId i)
-  send $ PushUpdate $ hyperUnsafe i vw
+  pushUpdateTo i vw
 
 
 pushUpdateTo :: (Hyperbole :> es, ViewId id, ConcurrencyValue (Concurrency id)) => id -> View id () -> Eff es ()
 pushUpdateTo i vw = do
-  send $ PushUpdate $ hyperUnsafe i vw
+  send $ PushUpdate (TargetViewId $ toViewId i) $ hyperUnsafe i vw
 
 
 -- | Abort execution and respond with an error
@@ -70,4 +69,4 @@ redirect = send . RespondNow . Redirect
 -- | Respond with a generic view. Normally you will return a view from the page or handler instead of using this function
 view :: View Body () -> Response
 view =
-  Response (TargetViewId "")
+  Response (TargetViewId mempty)

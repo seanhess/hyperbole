@@ -105,13 +105,15 @@ run = do
     pure (c, ct, a)
 
   cache <- clientCache
+  app <- exampleApp config users count chats
+
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
       Static.staticPolicy (addBase "examples/static") $
-        app config users count chats
+        app
 
-app :: AppConfig -> UserStore -> TVar Int -> TVar [(Text, Text)] -> Application
-app config users count chats = do
+exampleApp :: AppConfig -> UserStore -> TVar Int -> TVar [(Text, Text)] -> IO Application
+exampleApp config users count chats = do
   liveAppWith
     (ServerOptions (document documentHead) serverError)
     (runApp . routeRequest $ router)

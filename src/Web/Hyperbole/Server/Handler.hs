@@ -72,7 +72,7 @@ runLoad page = do
 loadPageResponse :: Eff es (View (Root total) ()) -> Eff es Response
 loadPageResponse run = do
   vw <- run
-  let vid = TargetViewId (encodedToText $ toViewId Root)
+  let vid = TargetViewId $ toViewId Root
   let res = Response vid $ addContext Root vw
   pure res
 

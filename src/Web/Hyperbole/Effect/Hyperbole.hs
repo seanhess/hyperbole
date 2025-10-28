@@ -21,7 +21,7 @@ import Web.Hyperbole.View (View)
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondNow :: Response -> Hyperbole m a
-  PushUpdate :: View Body () -> Hyperbole m ()
+  PushUpdate :: TargetViewId -> View Body () -> Hyperbole m ()
   ModClient :: (Client -> Client) -> Hyperbole m ()
   GetClient :: Hyperbole m Client
   -- TODO: this should actually execute the other view, and send the response to the client

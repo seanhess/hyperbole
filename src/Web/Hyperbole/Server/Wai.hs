@@ -23,7 +23,7 @@ import Web.Atomic (att, (@))
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
-import Web.Hyperbole.Data.Encoded (Encoded, encodedParseText)
+import Web.Hyperbole.Data.Encoded (Encoded, decode, encodedParseText)
 import Web.Hyperbole.Data.URI (path, uriToText)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
@@ -61,7 +61,7 @@ runHyperboleWai req = reinterpret (runHyperboleLocal req) $ \_ -> \case
     pure req
   RespondNow r -> do
     throwError_ r
-  PushUpdate _ -> do
+  PushUpdate _ _ -> do
     -- ignore! you can't push updates using WAI
     pure ()
   GetClient -> do
@@ -165,11 +165,11 @@ fromWaiRequest wr body = do
  where
   lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded)
   lookupEvent headers = do
-    viewId <- TargetViewId . cs <$> L.lookup "Hyp-ViewId" headers
+    viewIdText <- cs <$> L.lookup "Hyp-ViewId" headers
     actText <- cs <$> L.lookup "Hyp-Action" headers
-    case encodedParseText actText of
-      Left _ -> Nothing
-      Right a -> pure $ Event viewId a
+    act <- decode actText
+    viewId <- TargetViewId <$> decode viewIdText
+    pure $ Event viewId act
 
 
 -- Client only returns ONE Cookie header, with everything concatenated

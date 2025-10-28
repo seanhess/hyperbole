@@ -106,7 +106,7 @@ export class SocketConnection extends EventTarget {
       return val
     }
 
-    function parseUpdate(rest: string[]): Update {
+    function parseResponse(rest: string[]): Update {
       let viewId = requireMeta("ViewId")
       let action = requireMeta("Action")
       return {
@@ -116,6 +116,12 @@ export class SocketConnection extends EventTarget {
         meta: message.toMetadata(metas),
         body: rest.join("\n"),
       }
+    }
+
+    function parseUpdate(rest: string[]): Update {
+      let up = parseResponse(rest)
+      up.viewId = requireMeta("TargetViewId")
+      return up
     }
 
     function parseRedirect(rest: string[]): Redirect {
@@ -132,7 +138,7 @@ export class SocketConnection extends EventTarget {
         return this.dispatchEvent(new CustomEvent("update", { detail: parseUpdate(rest) }))
 
       case "|RESPONSE|":
-        return this.dispatchEvent(new CustomEvent("response", { detail: parseUpdate(rest) }))
+        return this.dispatchEvent(new CustomEvent("response", { detail: parseResponse(rest) }))
 
       case "|REDIRECT|":
         return this.dispatchEvent(new CustomEvent("redirect", { detail: parseRedirect(rest) }))

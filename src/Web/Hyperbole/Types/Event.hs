@@ -3,15 +3,16 @@ module Web.Hyperbole.Types.Event where
 import Data.Aeson (ToJSON)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
+import Web.Hyperbole.Data.Encoded
 
 
 -- | Serialized ViewId
-newtype TargetViewId = TargetViewId {text :: Text}
-  deriving newtype (ToJSON)
+newtype TargetViewId = TargetViewId {encoded :: Encoded}
+  deriving newtype (ToJSON, Ord, Eq)
 
 
 instance Show TargetViewId where
-  show (TargetViewId t) = "TargetViewId " <> cs t
+  show (TargetViewId e) = "TargetViewId " <> cs (encodedToText e)
 
 
 -- | An action, with its corresponding id

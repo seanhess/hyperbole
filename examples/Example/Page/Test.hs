@@ -30,6 +30,8 @@ instance (Debug :> es) => HyperView Long es where
     | Interrupt
     deriving (Generic, ViewAction)
 
+  type Concurrency Long = Replace
+
   update Start = do
     forM_ [0 .. 10] $ \n -> do
       pushUpdate $ activeView n
@@ -54,7 +56,7 @@ activeView n = do
   col ~ gap 10 $ do
     el "RUNNING"
     el $ text $ cs $ show n
-    button Interrupt ~ border 1 . whenLoading (disabled . bg GrayLight) $ "Interrupt"
+    button Interrupt ~ border 1 $ "Interrupt"
 
 -- data Message = Message1 | Message2
 --   deriving (Generic, ViewId, Show)

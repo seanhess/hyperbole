@@ -96,7 +96,10 @@ parseActionMessage = parseOnly parser
     targetViewId :: Parser TargetViewId
     targetViewId = do
       _ <- string "ViewId: "
-      TargetViewId <$> takeLine
+      line <- takeLine
+      case encodedParseText line of
+        Left e -> fail $ "Parse Encoded ViewId failed: " <> cs e <> " from " <> cs line
+        Right a -> pure $ TargetViewId a
 
     encodedAction :: Parser Encoded
     encodedAction = do
@@ -170,9 +173,13 @@ requestMetadata req =
   eventMetadata :: Event TargetViewId Encoded -> Metadata
   eventMetadata event =
     Metadata
-      [ ("ViewId", event.viewId.text)
+      [ ("ViewId", encodedToText event.viewId.encoded)
       , ("Action", encodedToText event.action)
       ]
+
+
+targetViewMetadata :: TargetViewId -> Metadata
+targetViewMetadata (TargetViewId vid) = Metadata [("TargetViewId", encodedToText vid)]
 
 
 responseMetadata :: Path -> Client -> [Remote] -> Metadata
@@ -207,7 +214,7 @@ metaRemotes rs = mconcat $ fmap meta rs
  where
   meta = \case
     RemoteAction (TargetViewId vid) act ->
-      metadata "Trigger" $ vid <> "|" <> encodedToText act
+      metadata "Trigger" $ encodedToText vid <> "|" <> encodedToText act
     RemoteEvent ev dat ->
       metadata "Event" $ T.intercalate "|" [ev, cs $ Aeson.encode dat]
 

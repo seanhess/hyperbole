@@ -5,16 +5,21 @@ module Web.Hyperbole.Server.Socket where
 import Control.Monad (void)
 import Data.Bifunctor (first)
 import Data.List qualified as L
+import Data.Map (Map)
+import Data.Map qualified as M
 import Data.Maybe (fromMaybe)
 import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Effectful
+import Effectful.Concurrent (ThreadId)
 import Effectful.Concurrent.Async
+import Effectful.Concurrent.STM (TVar, atomically, modifyTVar, readTVarIO)
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static (throwError_)
 import Effectful.Exception
-import Effectful.State.Static.Local (get, modify)
+import Effectful.State.Static.Local as Local (State, get, modify)
+import Effectful.State.Static.Shared as Shared (State, get, modify)
 import Effectful.Writer.Static.Local (tell)
 import Network.HTTP.Types as HTTP (parseQuery)
 import Network.Wai qualified as Wai
@@ -23,10 +28,12 @@ import Network.WebSockets qualified as WS
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.URI (URI, path, uriToText)
+import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Server.Options
 import Web.Hyperbole.Types.Client
+import Web.Hyperbole.Types.Event (Event (..), TargetViewId (..))
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View (View, addContext, renderLazyByteString)
@@ -37,7 +44,14 @@ data SocketRequest = SocketRequest
   }
 
 
--- the same as Wai, but it sends pushes immediately
+data SocketClient
+
+
+type RunningActions = Map (Token SocketClient, TargetViewId) (Async ())
+
+
+-- can Hyperbole cancel other actions?
+-- should probably happen in handleRequestSocket
 runHyperboleSocket
   :: (IOE :> es)
   => ServerOptions
@@ -50,12 +64,12 @@ runHyperboleSocket _opts conn req = reinterpret (runHyperboleLocal req) $ \_ -> 
     pure req
   RespondNow r -> do
     throwError_ r
-  PushUpdate vw -> do
-    sendUpdate conn (requestMetadata req) vw
+  PushUpdate vid vw -> do
+    sendUpdate conn (targetViewMetadata vid <> requestMetadata req) vw
   GetClient -> do
-    get @Client
+    Local.get @Client
   ModClient f -> do
-    modify @Client f
+    Local.modify @Client f
   TriggerAction vid act -> do
     tell [RemoteAction vid act]
   TriggerEvent name dat -> do
@@ -65,17 +79,20 @@ runHyperboleSocket _opts conn req = reinterpret (runHyperboleLocal req) $ \_ -> 
 handleRequestSocket
   :: (IOE :> es, Concurrent :> es)
   => ServerOptions
+  -> TVar RunningActions
+  -> Token SocketClient
   -> Wai.Request
   -> Connection
   -> Eff (Hyperbole : es) Response
   -> Eff es ()
-handleRequestSocket opts wreq conn actions = do
+handleRequestSocket opts actions clientId wreq conn eff = do
   flip catch onMessageError $ do
     msg <- receiveMessage
     req <- parseMessageRequest msg
 
-    void $ async $ do
-      res <- trySync $ runHyperboleSocket opts conn req actions
+    a <- async $ do
+      -- is one already running?
+      res <- trySync $ runHyperboleSocket opts conn req eff
       case res of
         -- TODO: catch socket errors separately from SomeException?
         Left (ex :: SomeException) -> do
@@ -94,7 +111,33 @@ handleRequestSocket opts wreq conn actions = do
             -- (Err (ErrServer m)) -> sendError conn meta (opts.serverError m)
             (Err err) -> sendError conn meta (opts.serverError err)
             (Redirect url) -> sendRedirect conn meta url
+      clearRunningAction req.event
+    cancelRunningAction req.event
+    addRunningAction a req.event
+    pure ()
  where
+  addRunningAction a = \case
+    Nothing -> pure ()
+    Just (Event vid _) -> do
+      -- liftIO $ putStrLn $ "ADDING|" <> cs clientId.value <> "|" <> show vid
+      atomically $ modifyTVar @RunningActions actions $ \m -> M.insert (clientId, vid) a m
+
+  clearRunningAction = \case
+    Nothing -> pure ()
+    Just (Event vid _) -> do
+      -- liftIO $ putStrLn $ "CLEARING|" <> cs clientId.value <> "|" <> show vid
+      atomically $ modifyTVar @RunningActions actions $ \m -> M.delete (clientId, vid) m
+
+  cancelRunningAction = \case
+    Nothing -> pure ()
+    Just (Event vid _) -> do
+      m <- readTVarIO actions
+      case M.lookup (clientId, vid) m of
+        Nothing -> pure ()
+        Just a -> do
+          -- liftIO $ putStrLn $ "CANCELLING|" <> cs clientId.value <> "|" <> show vid
+          cancel a
+
   onMessageError :: (IOE :> es) => MessageError -> Eff es a
   onMessageError e = do
     liftIO $ do
@@ -185,3 +228,8 @@ sendMessage (Command cmd) conn meta' msg = do
         MessageText t -> cs t
 
   liftIO $ WS.sendTextData conn (header <> "\n\n" <> body)
+
+
+-- the "client" is a given person on a given page. Unique
+newClientId :: (GenRandom :> es) => Eff es (Token SocketClient)
+newClientId = genRandomToken 6
