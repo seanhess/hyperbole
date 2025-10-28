@@ -5,7 +5,6 @@ module Example.Page.Test where
 import Control.Monad (forM_)
 import Data.String.Conversions (cs)
 import Example.AppRoute
-import Example.Colors
 import Example.Effects.Debug
 import Example.View.Layout
 import Web.Atomic.CSS

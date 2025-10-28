@@ -2,7 +2,6 @@ module Web.Hyperbole.Types.Event where
 
 import Data.Aeson (ToJSON)
 import Data.String.Conversions (cs)
-import Data.Text (Text)
 import Web.Hyperbole.Data.Encoded
 
 

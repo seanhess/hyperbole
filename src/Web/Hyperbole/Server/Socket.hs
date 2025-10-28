@@ -12,14 +12,12 @@ import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Effectful
-import Effectful.Concurrent (ThreadId)
 import Effectful.Concurrent.Async
-import Effectful.Concurrent.STM (TVar, atomically, modifyTVar, readTVarIO)
+import Effectful.Concurrent.STM (TVar, atomically, modifyTVar, readTVar, readTVarIO, writeTVar)
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static (throwError_)
 import Effectful.Exception
-import Effectful.State.Static.Local as Local (State, get, modify)
-import Effectful.State.Static.Shared as Shared (State, get, modify)
+import Effectful.State.Static.Local as Local (get, modify)
 import Effectful.Writer.Static.Local (tell)
 import Network.HTTP.Types as HTTP (parseQuery)
 import Network.Wai qualified as Wai
@@ -27,6 +25,7 @@ import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie qualified as Cookie
+import Web.Hyperbole.Data.Encoded (Encoded)
 import Web.Hyperbole.Data.URI (URI, path, uriToText)
 import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Hyperbole
@@ -90,6 +89,7 @@ handleRequestSocket opts actions clientId wreq conn eff = do
     msg <- receiveMessage
     req <- parseMessageRequest msg
 
+    -- BUG: clear can happen BEFORE moving on to the next step
     a <- async $ do
       -- is one already running?
       res <- trySync $ runHyperboleSocket opts conn req eff
@@ -111,32 +111,45 @@ handleRequestSocket opts actions clientId wreq conn eff = do
             -- (Err (ErrServer m)) -> sendError conn meta (opts.serverError m)
             (Err err) -> sendError conn meta (opts.serverError err)
             (Redirect url) -> sendRedirect conn meta url
-      clearRunningAction req.event
-    cancelRunningAction req.event
-    addRunningAction a req.event
-    pure ()
+    -- cancelRunningAction req.event
+    addRunningAction a req.requestId req.event
+
+    void $ async $ do
+      _ <- waitCatch a
+      clearRunningAction req.requestId req.event
  where
-  addRunningAction a = \case
+  addRunningAction :: (IOE :> es, Concurrent :> es) => Async () -> RequestId -> Maybe (Event TargetViewId Encoded) -> Eff es ()
+  addRunningAction a (RequestId reqId) = \case
     Nothing -> pure ()
     Just (Event vid _) -> do
-      -- liftIO $ putStrLn $ "ADDING|" <> cs clientId.value <> "|" <> show vid
-      atomically $ modifyTVar @RunningActions actions $ \m -> M.insert (clientId, vid) a m
-
-  clearRunningAction = \case
-    Nothing -> pure ()
-    Just (Event vid _) -> do
-      -- liftIO $ putStrLn $ "CLEARING|" <> cs clientId.value <> "|" <> show vid
-      atomically $ modifyTVar @RunningActions actions $ \m -> M.delete (clientId, vid) m
-
-  cancelRunningAction = \case
-    Nothing -> pure ()
-    Just (Event vid _) -> do
-      m <- readTVarIO actions
-      case M.lookup (clientId, vid) m of
+      -- liftIO $ putStrLn $ " [add] (" <> cs reqId <> ") " <> cs clientId.value <> "|" <> show vid
+      mold <- atomically $ do
+        m <- readTVar @RunningActions actions
+        writeTVar actions $ M.insert (clientId, vid) a m
+        pure $ M.lookup (clientId, vid) m
+      case mold of
         Nothing -> pure ()
-        Just a -> do
-          -- liftIO $ putStrLn $ "CANCELLING|" <> cs clientId.value <> "|" <> show vid
-          cancel a
+        Just aold -> do
+          liftIO $ putStrLn $ " [cancel] (" <> cs reqId <> ") " <> cs clientId.value <> "|" <> show vid
+          cancel aold
+
+  clearRunningAction :: (IOE :> es, Concurrent :> es) => RequestId -> Maybe (Event TargetViewId Encoded) -> Eff es ()
+  clearRunningAction (RequestId _) = \case
+    Nothing -> pure ()
+    Just (Event vid _) -> do
+      -- liftIO $ putStrLn $ " [clear] (" <> cs reqId <> ") " <> cs clientId.value <> "|" <> show vid <> ""
+      _ <- atomically $ modifyTVar actions $ M.delete (clientId, vid)
+      -- liftIO $ putStrLn $ "   " <> show (M.keys as)
+      pure ()
+
+  -- cancelRunningAction = \case
+  --   Nothing -> pure ()
+  --   Just (Event vid _) -> do
+  --     m <- readTVarIO actions
+  --     case M.lookup (clientId, vid) m of
+  --       Nothing -> pure ()
+  --       Just a -> do
+  --         cancel a
 
   onMessageError :: (IOE :> es) => MessageError -> Eff es a
   onMessageError e = do
