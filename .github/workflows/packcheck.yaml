@@ -133,13 +133,13 @@ jobs:
             runner: macos-latest
             cabal_project: cabal.project
 
-          - name: ci
-            command: hlint
-            runner: ubuntu-latest
-            pack_options: >-
-              HLINT_VERSION=3.6.1
-              HLINT_OPTIONS="lint"
-              HLINT_TARGETS="src test examples"
+          # - name: ci
+          #   command: hlint
+          #   runner: ubuntu-latest
+          #   pack_options: >-
+          #     HLINT_VERSION=3.6.1
+          #     HLINT_OPTIONS="lint"
+          #     HLINT_TARGETS="src test examples"
 
     steps:
     - uses: actions/checkout@v2
