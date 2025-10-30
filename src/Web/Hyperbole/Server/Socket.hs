@@ -25,7 +25,7 @@ import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie qualified as Cookie
-import Web.Hyperbole.Data.Encoded (Encoded)
+import Web.Hyperbole.Data.Encoded (Encoded, encodedToText)
 import Web.Hyperbole.Data.URI (URI, path, uriToText)
 import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Hyperbole
@@ -46,7 +46,7 @@ data SocketRequest = SocketRequest
 data SocketClient
 
 
-type RunningActions = Map (Token SocketClient, TargetViewId) (Async ())
+type RunningActions = Map (Token SocketClient, TargetViewId) (Encoded, Async ())
 
 
 -- can Hyperbole cancel other actions?
@@ -111,7 +111,7 @@ handleRequestSocket opts actions clientId wreq conn eff = do
             -- (Err (ErrServer m)) -> sendError conn meta (opts.serverError m)
             (Err err) -> sendError conn meta (opts.serverError err)
             (Redirect url) -> sendRedirect conn meta url
-    -- cancelRunningAction req.event
+
     addRunningAction a req.requestId req.event
 
     void $ async $ do
@@ -121,35 +121,24 @@ handleRequestSocket opts actions clientId wreq conn eff = do
   addRunningAction :: (IOE :> es, Concurrent :> es) => Async () -> RequestId -> Maybe (Event TargetViewId Encoded) -> Eff es ()
   addRunningAction a (RequestId reqId) = \case
     Nothing -> pure ()
-    Just (Event vid _) -> do
+    Just (Event vid act) -> do
       -- liftIO $ putStrLn $ " [add] (" <> cs reqId <> ") " <> cs clientId.value <> "|" <> show vid
-      mold <- atomically $ do
+      maold <- atomically $ do
         m <- readTVar @RunningActions actions
-        writeTVar actions $ M.insert (clientId, vid) a m
+        writeTVar actions $ M.insert (clientId, vid) (act, a) m
         pure $ M.lookup (clientId, vid) m
-      case mold of
+      case maold of
         Nothing -> pure ()
-        Just aold -> do
-          liftIO $ putStrLn $ " [cancel] (" <> cs reqId <> ") " <> cs clientId.value <> "|" <> show vid
+        Just (actold, aold) -> do
+          liftIO $ putStrLn $ " [cancel] (" <> cs reqId <> ") " <> cs clientId.value <> " | " <> cs (encodedToText vid.encoded) <> ": " <> cs (encodedToText actold)
           cancel aold
 
   clearRunningAction :: (IOE :> es, Concurrent :> es) => RequestId -> Maybe (Event TargetViewId Encoded) -> Eff es ()
   clearRunningAction (RequestId _) = \case
     Nothing -> pure ()
     Just (Event vid _) -> do
-      -- liftIO $ putStrLn $ " [clear] (" <> cs reqId <> ") " <> cs clientId.value <> "|" <> show vid <> ""
       _ <- atomically $ modifyTVar actions $ M.delete (clientId, vid)
-      -- liftIO $ putStrLn $ "   " <> show (M.keys as)
       pure ()
-
-  -- cancelRunningAction = \case
-  --   Nothing -> pure ()
-  --   Just (Event vid _) -> do
-  --     m <- readTVarIO actions
-  --     case M.lookup (clientId, vid) m of
-  --       Nothing -> pure ()
-  --       Just a -> do
-  --         cancel a
 
   onMessageError :: (IOE :> es) => MessageError -> Eff es a
   onMessageError e = do
