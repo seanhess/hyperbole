@@ -48,7 +48,7 @@ page = do
       el $ do
         text "Actions can call "
         code "pushUpdate"
-        text " to send an intermediate update to the view. This is simpler than polling, but less flexible, as long-running actions cannot be cancelled."
+        text " to send an intermediate update to the view. This is simpler than polling"
       col ~ embed . font $ do
         hyper Tasks $ taskView 0
  where
@@ -200,7 +200,6 @@ data Tasks = Tasks
 instance (Debug :> es) => HyperView Tasks es where
   data Action Tasks
     = RunLongTask
-    | HijackPoller
     | Interrupt
     deriving (Generic, ViewAction)
 
@@ -211,22 +210,22 @@ instance (Debug :> es) => HyperView Tasks es where
       pushUpdate $ taskView (n / 100)
       delay 50
     pure $ taskView 1
-  update HijackPoller = do
-    pushUpdateTo Polling "Hello from afar!"
-    pure $ "Done"
   update Interrupt = do
-    pure $ "Interrupted!"
+    pure $ col ~ gap 10 $ do
+      el "Interrupted!"
+      taskView 0
 
 taskView :: Float -> View Tasks ()
 taskView pct = col ~ gap 10 $ do
   taskBar
-  button RunLongTask ~ btn . whenLoading disabled $ "Run Task"
-  button HijackPoller ~ btn . whenLoading disabled $ "Push Update To Polling"
-  button Interrupt ~ btn $ "Attempt Interrupt"
+
+  if isRunning
+    then button Interrupt ~ btn $ "Interrupt"
+    else button RunLongTask ~ btn . whenLoading disabled $ "Run Task"
  where
   taskBar
     | pct == 0 = el ~ bg Light . pad 5 $ "Task"
     | pct >= 1 = row ~ bg Success . color White . pad 5 $ el $ text "Complete"
     | otherwise = progressBar pct "Task"
 
--- btnEnabled = if pct > 0 && pct < 1 then disabled else id
+  isRunning = pct > 0 && pct < 1
