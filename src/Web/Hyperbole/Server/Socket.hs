@@ -13,7 +13,7 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Effectful
 import Effectful.Concurrent.Async
-import Effectful.Concurrent.STM (TVar, atomically, modifyTVar, readTVar, readTVarIO, writeTVar)
+import Effectful.Concurrent.STM (TVar, atomically, modifyTVar, readTVar, writeTVar)
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static (throwError_)
 import Effectful.Exception

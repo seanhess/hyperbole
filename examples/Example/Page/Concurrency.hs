@@ -14,7 +14,6 @@ import Example.View.Layout (embed, example', exampleLayout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Effect.GenRandom
-import Web.Hyperbole.Effect.Response (pushUpdateTo)
 
 page :: (Hyperbole :> es, Debug :> es) => Page es '[Polling, LazyData, Progress, Tasks]
 page = do
