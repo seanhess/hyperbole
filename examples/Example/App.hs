@@ -38,6 +38,7 @@ import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
 import Example.Page.Advanced qualified as Advanced
 import Example.Page.CSS qualified as CSS
+import Example.Page.Chat qualified as Chat
 import Example.Page.Concurrency qualified as Concurrency
 import Example.Page.Contact qualified as Contact
 import Example.Page.Contacts qualified as Contacts
@@ -97,19 +98,22 @@ run = do
   putStrLn $ "Starting Examples on http://localhost:" <> show port
 
   users <- Users.initUsers
-  (count, config) <- runEff $ runEnvironment $ do
+  (count, chats, config) <- runEff $ runEnvironment $ do
     c <- runConcurrent Effects.initCounter
+    ct <- runConcurrent Chat.initChats
     a <- getAppConfigEnv
-    pure (c, a)
+    pure (c, ct, a)
 
   cache <- clientCache
+  app <- exampleApp config users count chats
+
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
       Static.staticPolicy (addBase "examples/static") $
-        app config users count
+        app
 
-app :: AppConfig -> UserStore -> TVar Int -> Application
-app config users count = do
+exampleApp :: AppConfig -> UserStore -> TVar Int -> TVar [(Text, Text)] -> IO Application
+exampleApp config users count chats = do
   liveAppWith
     (ServerOptions (document documentHead) serverError)
     (runApp . routeRequest $ router)
@@ -118,6 +122,7 @@ app config users count = do
   runApp = runReader config . runTodosSession . runUsersIO users . runDebugIO . runConcurrent . runRandom . runOAuth2 config.oauth config.manager
 
   router :: forall es. (Hyperbole :> es, OAuth2 :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es, GenRandom :> es, Reader AppConfig :> es) => AppRoute -> Eff es Response
+  router Chat = runReader chats $ runPage $ Chat.page
   router (Hello h) = runPage $ hello h
   router (Contacts (Contact uid)) = Contact.response uid
   router (Contacts ContactsAll) = runPage Contacts.page

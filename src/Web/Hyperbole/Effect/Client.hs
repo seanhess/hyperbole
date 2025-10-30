@@ -21,7 +21,7 @@ import Web.Hyperbole.Types.Event
 -}
 trigger :: (HyperView id es, HyperViewHandled id view, Hyperbole :> es) => id -> Action id -> Eff (Reader view : es) ()
 trigger vid act = do
-  send $ TriggerAction (TargetViewId $ encodeViewId vid) (toAction act)
+  send $ TriggerAction (TargetViewId $ toViewId vid) (toAction act)
 
 
 {- | Dispatch a custom javascript event. This is emitted on the current hyper view and bubbles up to the document

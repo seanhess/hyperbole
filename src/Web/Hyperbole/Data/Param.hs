@@ -24,8 +24,9 @@ newtype Param = Param {text :: Text}
 
 
 -- | Encode arbitrarily complex data into url form encoded data
-data ParamValue = ParamValue {value :: Text}
-  deriving (Eq, Show)
+newtype ParamValue = ParamValue {value :: Text}
+  deriving newtype (Ord, Eq)
+  deriving (Show)
 
 
 instance IsString ParamValue where

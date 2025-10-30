@@ -72,7 +72,7 @@ runLoad page = do
 loadPageResponse :: Eff es (View (Root total) ()) -> Eff es Response
 loadPageResponse run = do
   vw <- run
-  let vid = TargetViewId (encodedToText $ toViewId Root)
+  let vid = TargetViewId $ toViewId Root
   let res = Response vid $ addContext Root vw
   pure res
 
@@ -80,7 +80,7 @@ loadPageResponse run = do
 -- despite not needing any effects, this must be in Eff es to get `es` on the RHS
 decodeEvent :: forall id es. (HyperView id es) => Event TargetViewId Encoded -> Eff es (Maybe (Event id (Action id)))
 decodeEvent (Event (TargetViewId ti) eact) =
-  pure $ do
-    vid <- decodeViewId ti
-    act <- either (const Nothing) Just $ parseAction eact
+  pure $ either (const Nothing) Just $ do
+    vid <- parseViewId ti
+    act <- parseAction eact
     pure $ Event vid act

@@ -1,5 +1,6 @@
 import { SocketConnection } from './sockets';
-import { ViewId, Metadata, Request } from './action';
+import { Request } from './action';
+import { ViewId, Metadata } from './message';
 declare global {
     interface Window {
         Hyperbole?: HyperboleAPI;
@@ -17,6 +18,7 @@ export interface HyperView extends HTMLElement {
     activeRequest?: Request;
     cancelActiveRequest(): void;
     concurrency: ConcurrencyMode;
+    _timeout?: any;
 }
 type ConcurrencyMode = string;
 export {};

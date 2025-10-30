@@ -16,7 +16,7 @@ import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Data.QueryData (QueryData)
 import Web.Hyperbole.Data.QueryData qualified as QueryData
-import Web.Hyperbole.Data.URI (Path, URI, uriToText)
+import Web.Hyperbole.Data.URI (Path)
 import Web.Hyperbole.Effect.Hyperbole (Remote (..))
 import Web.Hyperbole.Types.Client (Client (..))
 import Web.Hyperbole.Types.Event
@@ -96,7 +96,10 @@ parseActionMessage = parseOnly parser
     targetViewId :: Parser TargetViewId
     targetViewId = do
       _ <- string "ViewId: "
-      TargetViewId <$> takeLine
+      line <- takeLine
+      case encodedParseText line of
+        Left e -> fail $ "Parse Encoded ViewId failed: " <> cs e <> " from " <> cs line
+        Right a -> pure $ TargetViewId a
 
     encodedAction :: Parser Encoded
     encodedAction = do
@@ -170,9 +173,13 @@ requestMetadata req =
   eventMetadata :: Event TargetViewId Encoded -> Metadata
   eventMetadata event =
     Metadata
-      [ ("ViewId", event.viewId.text)
+      [ ("ViewId", encodedToText event.viewId.encoded)
       , ("Action", encodedToText event.action)
       ]
+
+
+targetViewMetadata :: TargetViewId -> Metadata
+targetViewMetadata (TargetViewId vid) = Metadata [("TargetViewId", encodedToText vid)]
 
 
 responseMetadata :: Path -> Client -> [Remote] -> Metadata
@@ -207,7 +214,7 @@ metaRemotes rs = mconcat $ fmap meta rs
  where
   meta = \case
     RemoteAction (TargetViewId vid) act ->
-      metadata "Trigger" $ vid <> "|" <> encodedToText act
+      metadata "Trigger" $ encodedToText vid <> "|" <> encodedToText act
     RemoteEvent ev dat ->
       metadata "Event" $ T.intercalate "|" [ev, cs $ Aeson.encode dat]
 
@@ -216,14 +223,14 @@ metaError :: Text -> Metadata
 metaError = metadata "Error"
 
 
-metaRedirect :: URI -> Metadata
-metaRedirect u = metadata "Redirect" (uriToText u)
-
+-- metaRedirect :: URI -> Metadata
+-- metaRedirect u = metadata "Redirect" (uriToText u)
 
 data ContentType
   = ContentHtml
   | ContentText
 
 
-newtype RenderedHtml = RenderedHtml BL.ByteString
-  deriving newtype (Semigroup, Monoid)
+data RenderedMessage
+  = MessageHtml BL.ByteString
+  | MessageText Text

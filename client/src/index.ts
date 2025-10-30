@@ -1,8 +1,8 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
-import { SocketConnection } from './sockets'
+import { SocketConnection, Update, Redirect } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
-import { actionMessage, ActionMessage, ViewId, parseMetadata, Metadata, newRequest, Request, RequestId } from './action'
-import { sendActionHttp } from './http'
+import { actionMessage, ActionMessage, Request, newRequest } from './action'
+import { ViewId, Metadata, parseMetadata } from './message'
 import { setQuery } from "./browser"
 import { parseResponse, Response, LiveUpdate } from './response'
 
@@ -18,26 +18,17 @@ let addedRulesIndex = new Set();
 
 
 
-async function sendAction(msg: ActionMessage): Promise<Response> {
-  if (sock.isConnected) {
-    return sock.sendAction(msg)
-  }
-  else {
-    return sendActionHttp(msg)
-  }
-}
 
 
-
+// Run an action in a given HyperView
 async function runAction(target: HyperView, action: string, form?: FormData) {
-
   if (target === undefined) {
-    console.error("Undefined HyperView!")
+    console.error("Undefined HyperView!", action)
     return
   }
 
   if (action === undefined) {
-    console.error("Undefined Action!", target, "this is a bug, please report: https://github.com/seanhess/hyperbole")
+    console.error("Undefined Action!", target.id)
     return
   }
 
@@ -49,7 +40,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     }
   }
 
-  let timeout = setTimeout(() => {
+  target._timeout = setTimeout(() => {
     // add loading after 100ms, not right away
     // if it runs shorter than that we probably don't want to show the user any loading feedback
     target.classList.add("hyp-loading")
@@ -61,90 +52,106 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   // Set the requestId
   target.activeRequest = req
 
-  try {
-    let res: Response = await sendAction(msg)
+  sock.sendAction(msg)
+}
 
 
-    if (res.meta.requestId < target.activeRequest?.requestId) {
-      // this should only happen on Replace, since other requests should be dropped
-      // but it's safe to assume we never want to apply an old requestId
-      console.warn("Ignore Stale Action (" + res.meta.requestId + ") vs (" + target.activeRequest.requestId + "): " + action)
-      return
-    }
-    else if (target.activeRequest?.isCancelled) {
-      console.warn("Cancelled request", target.activeRequest?.requestId)
-      delete target.activeRequest
-      return
-    }
-    else {
-      delete target.activeRequest
-    }
+function handleRedirect(red: Redirect) {
+  console.log("REDIRECT", red)
+  window.location.href = red.url
+}
 
-    let shouldStop = runMetadataImmediate(res.meta)
+// in-process update
+function handleResponse(res: Update) {
+  // console.log("Handle Response", res)
+  let target = handleUpdate(res)
 
-    if (shouldStop) {
-      return
-    }
-
-    let update: LiveUpdate = parseResponse(res.body)
-
-    if (!update.content) {
-      console.error("Empty Response!", res.body)
-      return
-    }
-
-    // First, update the stylesheet
-    addCSS(update.css)
-
-
-    // Patch the node
-    const old: VNode = create(target)
-    let next: VNode = create(update.content)
-    next.attributes = old.attributes
-    patch(next, old)
-
-
-    // Emit relevant events
-    let newTarget = document.getElementById(target.id)
-    dispatchContent(newTarget)
-
-    if (newTarget) {
-      // execute the metadata, anything that doesn't interrupt the dom update
-      runMetadataDOM(res.meta, newTarget)
-
-      // now way for these to bubble)
-      listenLoad(newTarget)
-      listenMouseEnter(newTarget)
-      listenMouseLeave(newTarget)
-      fixInputs(newTarget)
-      enrichHyperViews(newTarget)
-    }
-    else {
-      console.warn("Target Missing: ", target.id)
-    }
-
-  }
-  catch (err) {
-    console.error("Caught Error in HyperView (" + target.id + "):\n", err)
-
-    // Hyperbole catches handler errors, and the server controls what to display to the user on an error
-    //  but if you manage to crash your parent server process somehow, the response may be empty
-    target.innerHTML = err.body || "<div style='background:red;color:white;padding:10px'>Hyperbole Internal Error</div>"
-  }
-
-
-  // Remove loading and clear add timeout
-  clearTimeout(timeout)
+  // clean up the request
+  delete target.activeRequest
+  clearTimeout(target._timeout)
   target.classList.remove("hyp-loading")
 }
 
-function runMetadataImmediate(meta: Metadata): boolean {
-  if (meta.redirect) {
-    // perform a redirect immediately
-    window.location.href = meta.redirect
-    return true
+function handleUpdate(res: Update): HyperView {
+  let target = document.getElementById(res.viewId) as HyperView
+
+
+  if (!target) {
+    console.error("Missing Update Target: ", res.viewId)
+    return target
   }
 
+  if (res.requestId < target.activeRequest?.requestId) {
+    // this should only happen on Replace, since other requests should be dropped
+    // but it's safe to assume we never want to apply an old requestId
+    console.warn("Ignore Stale Action (" + res.requestId + ") vs (" + target.activeRequest.requestId + "): " + res.action)
+    return target
+  }
+  else if (target.activeRequest?.isCancelled) {
+    console.warn("Cancelled request", target.activeRequest?.requestId)
+    delete target.activeRequest
+    return target
+  }
+
+  let update: LiveUpdate = parseResponse(res.body)
+
+  if (!update.content) {
+    console.error("Empty Response!", res.body)
+    return target
+  }
+
+  // First, update the stylesheet
+  addCSS(update.css)
+
+
+  // Patch the node
+  const old: VNode = create(target)
+  let next: VNode = create(update.content)
+  next.attributes = old.attributes
+  patch(next, old)
+
+
+  // Emit relevant events
+  let newTarget = document.getElementById(target.id)
+  dispatchContent(newTarget)
+
+  if (newTarget) {
+    // execute the metadata, anything that doesn't interrupt the dom update
+    runMetadata(res.meta, newTarget)
+
+    // now way for these to bubble)
+    listenLoad(newTarget)
+    listenMouseEnter(newTarget)
+    listenMouseLeave(newTarget)
+    fixInputs(newTarget)
+    enrichHyperViews(newTarget)
+  }
+  else {
+    console.warn("Target Missing: ", target.id)
+  }
+
+  return target
+}
+// catch (err) {
+//   console.error("Caught Error in HyperView (" + target.id + "):\n", err)
+//
+//   // Hyperbole catches handler errors, and the server controls what to display to the user on an error
+//   //  but if you manage to crash your parent server process somehow, the response may be empty
+//   target.innerHTML = err.body || "<div style='background:red;color:white;padding:10px'>Hyperbole Internal Error</div>"
+// }
+
+
+// Remove loading and clear add timeout
+
+// function runMetadataImmediate(meta: Metadata): boolean {
+//   if (meta.redirect) {
+//     // perform a redirect immediately
+//     window.location.href = meta.redirect
+//     return true
+//   }
+// }
+
+function runMetadata(meta: Metadata, target?: HTMLElement) {
   if (meta.query != null) {
     setQuery(meta.query)
   }
@@ -152,9 +159,7 @@ function runMetadataImmediate(meta: Metadata): boolean {
   if (meta.pageTitle != null) {
     document.title = meta.pageTitle
   }
-}
 
-function runMetadataDOM(meta: Metadata, target?: HTMLElement) {
   for (var remoteEvent of meta.events) {
     setTimeout(() => {
       let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
@@ -210,8 +215,8 @@ function addCSS(src: HTMLStyleElement | null) {
 function init() {
   // metadata attached to initial page loads need to be executed
   let meta = parseMetadata(document.getElementById("hyp.metadata").innerText)
-  runMetadataImmediate(meta)
-  runMetadataDOM(meta)
+  // runMetadataImmediate(meta)
+  runMetadata(meta)
 
   rootStyles = document.querySelector('style')
 
@@ -299,7 +304,9 @@ document.addEventListener("DOMContentLoaded", init)
 // Should we connect to the socket or not?
 const sock = new SocketConnection()
 sock.connect()
-
+sock.addEventListener("update", (ev: CustomEvent<Update>) => handleUpdate(ev.detail))
+sock.addEventListener("response", (ev: CustomEvent<Update>) => handleResponse(ev.detail))
+sock.addEventListener("redirect", (ev: CustomEvent<Redirect>) => handleRedirect(ev.detail))
 
 
 
@@ -356,6 +363,7 @@ export interface HyperView extends HTMLElement {
   activeRequest?: Request
   cancelActiveRequest(): void
   concurrency: ConcurrencyMode
+  _timeout?: any
 }
 
 type ConcurrencyMode = string

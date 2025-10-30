@@ -11,7 +11,11 @@ import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.String.Interpolate (i)
 import Effectful
+import Effectful.Dispatch.Dynamic
+import Effectful.Error.Static (throwError_)
 import Effectful.Exception (throwIO)
+import Effectful.State.Static.Local (get, modify)
+import Effectful.Writer.Static.Local (tell)
 import Network.HTTP.Types (Header, HeaderName, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
@@ -19,7 +23,7 @@ import Web.Atomic (att, (@))
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
-import Web.Hyperbole.Data.Encoded (Encoded, encodedParseText)
+import Web.Hyperbole.Data.Encoded (Encoded, decode)
 import Web.Hyperbole.Data.URI (path, uriToText)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
@@ -43,8 +47,31 @@ handleRequestWai options req respond actions = do
   body <- liftIO $ Wai.consumeRequestBodyLazy req
   rq <- either throwIO pure $ do
     fromWaiRequest req body
-  (res, client, rmts) <- runHyperbole rq actions
+  (res, client, rmts) <- runHyperboleWai rq actions
   liftIO $ sendResponse options rq client res rmts respond
+
+
+-- | Run the 'Hyperbole' effect to get a response
+runHyperboleWai
+  :: Request
+  -> Eff (Hyperbole : es) Response
+  -> Eff es (Response, Client, [Remote])
+runHyperboleWai req = reinterpret (runHyperboleLocal req) $ \_ -> \case
+  GetRequest -> do
+    pure req
+  RespondNow r -> do
+    throwError_ r
+  PushUpdate _ _ -> do
+    -- ignore! you can't push updates using WAI
+    pure ()
+  GetClient -> do
+    get @Client
+  ModClient f -> do
+    modify @Client f
+  TriggerAction vid act -> do
+    tell [RemoteAction vid act]
+  TriggerEvent name dat -> do
+    tell [RemoteEvent name dat]
 
 
 sendResponse :: ServerOptions -> Request -> Client -> Response -> [Remote] -> (Wai.Response -> IO ResponseReceived) -> IO Wai.ResponseReceived
@@ -60,23 +87,10 @@ sendResponse options req client res remotes respond = do
       respondHtml status200 (clientHeaders client) $ renderViewResponse metas vw
     (Redirect u) -> do
       let url = uriToText u
-      -- We have to use a 200 javascript redirect because javascript
-      -- will redirect the fetch(), while we want to redirect the whole page
-      -- see index.ts sendAction()
       let hs = ("Location", cs url) : clientHeaders client
-      respondHtml status200 hs $ renderViewResponse (metaRedirect u <> metas) $ do
+      respondHtml status200 hs $ renderViewResponse metas $ do
         script'
-          -- static script is safe to execute
-          [i|
-            let metaInput = document.getElementById("hyp.metadata").innerText;
-            let meta = Hyperbole.parseMetadata(metaInput)
-            if (meta.redirect) {
-              window.location = meta.redirect
-            }
-            else {
-              console.error("Invalid Redirect", meta.rediect)
-            }
-          |]
+          [i|window.location = '#{uriToText u}'|]
 
   errStatus = \case
     NotFound -> status404
@@ -151,11 +165,11 @@ fromWaiRequest wr body = do
  where
   lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded)
   lookupEvent headers = do
-    viewId <- TargetViewId . cs <$> L.lookup "Hyp-ViewId" headers
+    viewIdText <- cs <$> L.lookup "Hyp-ViewId" headers
     actText <- cs <$> L.lookup "Hyp-Action" headers
-    case encodedParseText actText of
-      Left _ -> Nothing
-      Right a -> pure $ Event viewId a
+    act <- decode actText
+    viewId <- TargetViewId <$> decode viewIdText
+    pure $ Event viewId act
 
 
 -- Client only returns ONE Cookie header, with everything concatenated

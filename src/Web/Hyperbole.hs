@@ -114,6 +114,7 @@ module Web.Hyperbole
   , pageTitle
   , trigger
   , pushEvent
+  , pushUpdate
 
     -- * HyperView #hyperview#
   , HyperView (..)
