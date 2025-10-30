@@ -20,10 +20,9 @@ page = do
   counter <- Counter.page
   pure $ exampleLayout (State Actions) $ do
     example' (routeTitle (State Actions)) (routeSource Counter) $ do
-      el "As shown in the intro, for very simple state, we can include it as a parameter on the Action"
+      hackage "#g:state" "Managing State"
       col ~ embed $ do
         pre countExample ~ font
-      el "The state is only recorded in the rendered html, so if the user refreshes it will reset"
       col ~ embed $ do
         addContext Root counter
 

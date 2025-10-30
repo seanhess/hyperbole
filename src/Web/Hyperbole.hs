@@ -583,6 +583,8 @@ The [National Solar Observatory](https://nso.edu) uses Hyperbole to manage Level
 
 #EMBED Example/Page/Counter.hs viewCount
 @
+
+This kind of state is only recorded in the rendered html, so if the user refreshes it will reset
 -}
 
 

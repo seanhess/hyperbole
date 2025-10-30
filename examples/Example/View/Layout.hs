@@ -10,7 +10,7 @@ import Example.AppRoute
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
-import Example.View.Icon as Icon (hamburger)
+import Example.View.Icon as Icon (bookOpen, hamburger)
 import Paths_examples (version)
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -147,3 +147,13 @@ onMobile = media (MaxWidth 650)
 
 onDesktop :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c
 onDesktop = media (MinWidth 650)
+
+type Fragment = String
+
+hackage :: Fragment -> Text -> View c ()
+hackage uriFragment txt = do
+  let docs = [uri|https://hackage-content.haskell.org/package/hyperbole/docs/Web-Hyperbole.html|]
+  link docs{uriFragment} @ att "target" "_blank" ~ Style.link $ do
+    row ~ gap 10 $ do
+      el ~ width 24 $ Icon.bookOpen
+      text txt
