@@ -13,8 +13,8 @@ data AppRoute
   deriving (Generic, Eq, Route)
 
 main = do
-  run 3000 $ do
-    liveApp quickStartDocument (routeRequest router)
+  app <- liveApp quickStartDocument (routeRequest router)
+  run 3000 app
  where
   router Message = runPage Message.page
   router Counter = runPage Counter.page

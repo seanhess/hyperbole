@@ -51,6 +51,6 @@ encodeViewId = encodedToText . toViewId
 
 decodeViewId :: (ViewId id) => Text -> Maybe id
 decodeViewId t = do
-  case parseViewId =<< encodedParseText t of
+  case parseViewId =<< decodeEither t of
     Left _ -> Nothing
     Right a -> pure a

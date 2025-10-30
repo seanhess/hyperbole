@@ -6,11 +6,11 @@ import Data.ByteString.Lazy qualified as BL
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Web.Atomic.CSS
 import Web.Hyperbole.Data.Encoded (Encoded, encodedToText)
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View
-import Web.Atomic.CSS
 
 
 data ServerOptions = ServerOptions
@@ -39,16 +39,16 @@ defaultError :: ResponseError -> ServerError
 defaultError = \case
   ErrCustom e -> e
   ErrNotHandled e -> errNotHandled e
-  err -> 
+  err ->
     let msg = defaultErrorMessage err
-    in ServerError msg (defaultErrorBody msg)
+     in ServerError msg (defaultErrorBody msg)
  where
   errNotHandled :: Event TargetViewId Encoded -> ServerError
   errNotHandled ev =
     ServerError "Action Not Handled" $ do
       el $ do
         text "No Handler for Event viewId: "
-        text ev.viewId.text
+        text $ encodedToText ev.viewId.encoded
         text " action: "
         text $ encodedToText ev.action
       el $ do
