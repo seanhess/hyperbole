@@ -191,10 +191,12 @@ export class SocketConnection extends EventTarget {
   //     this.socket.addEventListener('error', reject)
   //   })
   // }
-  //
-  // disconnect() {
-  //   this.socket.close()
-  // }
+
+  disconnect() {
+    this.isConnected = false
+    this.hasEverConnected = false
+    this.socket.close()
+  }
 }
 
 
