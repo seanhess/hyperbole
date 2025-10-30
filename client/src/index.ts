@@ -73,11 +73,14 @@ function handleResponse(res: Update) {
 }
 
 function handleUpdate(res: Update): HyperView {
-  let target = document.getElementById(res.viewId) as HyperView
+  // console.log("|UPDATE|", res)
+
+  let targetViewId = res.targetViewId || res.viewId
+  let target = document.getElementById(targetViewId) as HyperView
 
 
   if (!target) {
-    console.error("Missing Update Target: ", res.viewId)
+    console.error("Missing Update Target: ", targetViewId, res)
     return target
   }
 

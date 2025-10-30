@@ -11,11 +11,13 @@ export declare class SocketConnection extends EventTarget {
     sendAction(action: ActionMessage): Promise<void>;
     private runQueue;
     private onMessage;
+    disconnect(): void;
 }
 export type Update = {
     requestId: RequestId;
     meta: Metadata;
     viewId: ViewId;
+    targetViewId?: ViewId;
     action: EncodedAction;
     body: ResponseBody;
 };

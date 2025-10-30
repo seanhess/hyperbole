@@ -1,7 +1,7 @@
 import { ActionMessage, renderActionMessage } from './action'
-import { Response, FetchError, ResponseBody } from "./response"
+import { ResponseBody } from "./response"
 import * as message from "./message"
-import { Meta, SplitMessage, ViewId, RequestId, splitMessage, EncodedAction, metaValue, Metadata } from "./message"
+import { ViewId, RequestId, EncodedAction, metaValue, Metadata } from "./message"
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
@@ -85,8 +85,8 @@ export class SocketConnection extends EventTarget {
   private runQueue() {
     // send all messages queued while disconnected 
     let next: ActionMessage | null = this.queue.pop()
-    console.log("RUN QUEUE", next)
     if (next) {
+      console.log("runQueue: ", next)
       this.sendAction(next)
       this.runQueue()
     }
@@ -111,6 +111,7 @@ export class SocketConnection extends EventTarget {
       let action = requireMeta("Action")
       return {
         requestId,
+        targetViewId: undefined,
         viewId,
         action,
         meta: message.toMetadata(metas),
@@ -120,7 +121,8 @@ export class SocketConnection extends EventTarget {
 
     function parseUpdate(rest: string[]): Update {
       let up = parseResponse(rest)
-      up.viewId = requireMeta("TargetViewId")
+      // add the TargetViewId
+      up.targetViewId = metaValue("TargetViewId", metas)
       return up
     }
 
@@ -189,10 +191,12 @@ export class SocketConnection extends EventTarget {
   //     this.socket.addEventListener('error', reject)
   //   })
   // }
-  //
-  // disconnect() {
-  //   this.socket.close()
-  // }
+
+  disconnect() {
+    this.isConnected = false
+    this.hasEverConnected = false
+    this.socket.close()
+  }
 }
 
 
@@ -200,6 +204,7 @@ export type Update = {
   requestId: RequestId
   meta: Metadata
   viewId: ViewId
+  targetViewId?: ViewId
   action: EncodedAction
   body: ResponseBody
 }
