@@ -89,7 +89,6 @@ handleRequestSocket opts actions clientId wreq conn eff = do
     msg <- receiveMessage
     req <- parseMessageRequest msg
 
-    -- BUG: clear can happen BEFORE moving on to the next step
     a <- async $ do
       -- is one already running?
       res <- trySync $ runHyperboleSocket opts conn req eff

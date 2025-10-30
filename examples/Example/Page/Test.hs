@@ -2,8 +2,10 @@
 
 module Example.Page.Test where
 
-import Control.Monad (forM_)
+import Control.Exception
+import Control.Monad (forM_, when)
 import Data.String.Conversions (cs)
+import Effectful
 import Example.AppRoute
 import Example.Effects.Debug
 import Example.View.Layout
@@ -11,7 +13,7 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 
 -- TEST: add a test for Page+trigger
-page :: (Hyperbole :> es, Debug :> es) => Page es '[Long]
+page :: (Hyperbole :> es, Debug :> es, IOE :> es) => Page es '[Long]
 page = do
   -- trigger Fake Noop
   pure $ exampleLayout Test $ do
@@ -23,7 +25,7 @@ page = do
 data Long = Long
   deriving (Generic, ViewId)
 
-instance (Debug :> es) => HyperView Long es where
+instance (Debug :> es, IOE :> es) => HyperView Long es where
   data Action Long
     = Start
     | Interrupt
@@ -34,6 +36,9 @@ instance (Debug :> es) => HyperView Long es where
   update Start = do
     forM_ [0 .. 10] $ \n -> do
       pushUpdate $ activeView n
+      when (n > 5) $
+        liftIO $ do
+          throwIO $ MyException "OH NO"
       delay 1000
     pure $ do
       el "All Done"
@@ -43,6 +48,9 @@ instance (Debug :> es) => HyperView Long es where
     -- so you really don't want to execute a request while one is currently happening...
     -- per-user lock?
     pure "Interrupted"
+
+data MyException = MyException String
+  deriving (Show, Exception)
 
 longView :: View Long ()
 longView = do
