@@ -2,7 +2,7 @@
 
 module Example.Page.Concurrency where
 
-import Control.Monad (forM_)
+import Control.Monad (forM_, when)
 import Data.Text (Text, pack)
 import Effectful
 import Example.AppRoute
@@ -21,12 +21,11 @@ page = do
     example' "Concurrency" source $ do
       el "While individual HyperViews can only have one update in progress at a time, multiple HyperViews can overlap updates without issue"
       el ~ embed . font $ do
-        hyper (Progress 1 100) $ viewProgress 0
-        hyper (Progress 2 200) $ viewProgress 0
-        hyper (Progress 3 300) $ viewProgress 0
-        hyper (Progress 4 400) $ viewProgress 0
-        hyper (Progress 5 500) $ viewProgress 0
-
+        hyper (Progress 1) $ viewProgressLoad 6
+        hyper (Progress 2) $ viewProgressLoad 4
+        hyper (Progress 3) $ viewProgressLoad 2
+    -- hyper (Progress 4 200) viewProgressLoad
+    -- hyper (Progress 5 250) viewProgressLoad
     example' "Lazy Loading" source $ do
       el $ do
         text "Instead of preloading everything in our Page, a HyperView can load itself using "
@@ -156,38 +155,44 @@ pretendTasks = [1 .. 30]
 
 -----------------------------------------------------------
 
-data Progress = Progress TaskId Milliseconds
+type PercentPerTick = Int
+
+data Progress = Progress TaskId
   deriving (Generic, ViewId)
 
 instance (Debug :> es, GenRandom :> es) => HyperView Progress es where
   data Action Progress
-    = CheckProgress Int
+    = GoProgress PercentPerTick
     deriving (Generic, ViewAction)
-  update (CheckProgress prg) = do
-    Progress _ dly <- viewId
 
-    -- this will not block other hyperviews from updating
-    delay dly
+  update (GoProgress progPerTick) = do
+    tick 0
+    pure $ viewProgress 100
+   where
+    tick current = do
+      -- pretend we did some work
+      -- this will not block other hyperviews from updating
+      delay 50
+      let total = current + progPerTick
 
-    -- pretend check update of a task
-    nextProgress <- genRandom (0, 5)
+      when (total < 100) $ do
+        pushUpdate $ viewProgress total
+        tick total
 
-    pure $ viewProgress (prg + nextProgress)
+viewProgressLoad :: PercentPerTick -> View Progress ()
+viewProgressLoad p = el @ onLoad (GoProgress p) 50 $ none
 
 viewProgress :: Int -> View Progress ()
 viewProgress prg
   | prg >= 100 = viewComplete
-  | otherwise = viewUpdating prg
+  | otherwise = viewUpdating
+ where
+  viewComplete = do
+    row ~ bg Success . color White . pad 5 $ "Complete"
 
-viewComplete :: View Progress ()
-viewComplete = do
-  row ~ bg Success . color White . pad 5 $ "Complete"
-
-viewUpdating :: Int -> View Progress ()
-viewUpdating prg = do
-  let pct = fromIntegral prg / 100
-  Progress taskId _ <- viewId
-  col @ onLoad (CheckProgress prg) 0 $ do
+  viewUpdating = do
+    let pct = fromIntegral prg / 100
+    Progress taskId <- viewId
     progressBar pct $ do
       el ~ grow $ text $ "Task" <> pack (show taskId)
 

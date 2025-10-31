@@ -100,7 +100,6 @@ handleRequestSocket opts actions wreq conn eff = do
           case resp of
             (Response _ vw) -> do
               sendResponse conn meta vw
-            -- (Err (ErrServer m)) -> sendError conn meta (opts.serverError m)
             (Err err) -> sendError conn meta (opts.serverError err)
             (Redirect url) -> sendRedirect conn meta url
 

@@ -154,6 +154,6 @@ hackage :: Fragment -> Text -> View c ()
 hackage uriFragment txt = do
   let docs = [uri|https://hackage-content.haskell.org/package/hyperbole/docs/Web-Hyperbole.html|]
   link docs{uriFragment} @ att "target" "_blank" ~ Style.link $ do
-    row ~ gap 10 $ do
-      el ~ width 24 $ Icon.bookOpen
+    row ~ gap 4 $ do
+      el ~ width 22 . position Relative . top 2 $ Icon.bookOpen
       text txt
