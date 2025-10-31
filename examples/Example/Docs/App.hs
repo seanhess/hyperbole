@@ -52,5 +52,5 @@ userPage = do
 userView :: User -> View c ()
 userView _ = none
 
-app :: IO Application
+app :: Application
 app = liveApp (document documentHead) (routeRequest router)

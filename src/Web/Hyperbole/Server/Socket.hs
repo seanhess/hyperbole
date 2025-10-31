@@ -27,7 +27,6 @@ import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.Encoded (Encoded, encodedToText)
 import Web.Hyperbole.Data.URI (URI, path, uriToText)
-import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Server.Options
@@ -43,14 +42,9 @@ data SocketRequest = SocketRequest
   }
 
 
-data SocketClient
+type RunningActions = Map TargetViewId (Encoded, Async ())
 
 
-type RunningActions = Map (Token SocketClient, TargetViewId) (Encoded, Async ())
-
-
--- can Hyperbole cancel other actions?
--- should probably happen in handleRequestSocket
 runHyperboleSocket
   :: (IOE :> es)
   => ServerOptions
@@ -79,12 +73,11 @@ handleRequestSocket
   :: (IOE :> es, Concurrent :> es)
   => ServerOptions
   -> TVar RunningActions
-  -> Token SocketClient
   -> Wai.Request
   -> Connection
   -> Eff (Hyperbole : es) Response
   -> Eff es ()
-handleRequestSocket opts actions clientId wreq conn eff = do
+handleRequestSocket opts actions wreq conn eff = do
   flip catch onMessageError $ do
     msg <- receiveMessage
     req <- parseMessageRequest msg
@@ -124,19 +117,19 @@ handleRequestSocket opts actions clientId wreq conn eff = do
       -- liftIO $ putStrLn $ " [add] (" <> cs reqId <> ") " <> cs clientId.value <> "|" <> show vid
       maold <- atomically $ do
         m <- readTVar @RunningActions actions
-        writeTVar actions $ M.insert (clientId, vid) (act, a) m
-        pure $ M.lookup (clientId, vid) m
+        writeTVar actions $ M.insert vid (act, a) m
+        pure $ M.lookup vid m
       case maold of
         Nothing -> pure ()
         Just (actold, aold) -> do
-          liftIO $ putStrLn $ " [cancel] (" <> cs reqId <> ") " <> cs clientId.value <> " | " <> cs (encodedToText vid.encoded) <> ": " <> cs (encodedToText actold)
+          liftIO $ putStrLn $ "CANCEL (" <> cs reqId <> ") " <> cs (encodedToText vid.encoded) <> ": " <> cs (encodedToText actold)
           cancel aold
 
   clearRunningAction :: (IOE :> es, Concurrent :> es) => RequestId -> Maybe (Event TargetViewId Encoded) -> Eff es ()
   clearRunningAction (RequestId _) = \case
     Nothing -> pure ()
     Just (Event vid _) -> do
-      _ <- atomically $ modifyTVar actions $ M.delete (clientId, vid)
+      _ <- atomically $ modifyTVar actions $ M.delete vid
       pure ()
 
   onMessageError :: (IOE :> es) => MessageError -> Eff es a
@@ -229,8 +222,3 @@ sendMessage (Command cmd) conn meta' msg = do
         MessageText t -> cs t
 
   liftIO $ WS.sendTextData conn (header <> "\n\n" <> body)
-
-
--- the "client" is a given person on a given page. Unique
-newClientId :: (GenRandom :> es) => Eff es (Token SocketClient)
-newClientId = genRandomToken 6

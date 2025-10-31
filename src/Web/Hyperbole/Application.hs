@@ -24,13 +24,12 @@ import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets (ConnectionException (..), PendingConnection, defaultConnectionOptions, withPingThread)
 import Network.WebSockets qualified as WS
 import Web.Hyperbole.Document
-import Web.Hyperbole.Effect.GenRandom (runRandom)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request (reqPath)
 import Web.Hyperbole.Effect.Response (notFound)
 import Web.Hyperbole.Route
 import Web.Hyperbole.Server.Options
-import Web.Hyperbole.Server.Socket (RunningActions, handleRequestSocket, newClientId)
+import Web.Hyperbole.Server.Socket (RunningActions, handleRequestSocket)
 import Web.Hyperbole.Server.Wai (handleRequestWai)
 import Web.Hyperbole.Types.Response
 
@@ -39,7 +38,7 @@ import Web.Hyperbole.Types.Response
 
 > #EMBED Example/Docs/BasicPage.hs main
 -}
-liveApp :: (MonadIO m) => (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Concurrent, IOE] Response -> m Wai.Application
+liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Concurrent, IOE] Response -> Wai.Application
 liveApp doc =
   liveAppWith $
     ServerOptions
@@ -49,15 +48,13 @@ liveApp doc =
 
 
 -- | Run a Hyperbole application, customizing both the document and the format of server errors
-liveAppWith :: (MonadIO m) => ServerOptions -> Eff '[Hyperbole, Concurrent, IOE] Response -> m Wai.Application
-liveAppWith opts eff = do
-  actions :: TVar RunningActions <- liftIO $ newTVarIO mempty
-  pure $ \req -> do
-    websocketsOr
-      defaultConnectionOptions
-      (\pend -> socketApp opts actions req eff pend `catch` suppressMessages)
-      (waiApp opts eff)
-      req
+liveAppWith :: ServerOptions -> Eff '[Hyperbole, Concurrent, IOE] Response -> Wai.Application
+liveAppWith opts eff req = do
+  websocketsOr
+    defaultConnectionOptions
+    (\pend -> socketApp opts req eff pend `catch` suppressMessages)
+    (waiApp opts eff)
+    req
 
 
 waiApp :: ServerOptions -> Eff '[Hyperbole, Concurrent, IOE] Response -> Wai.Application
@@ -65,13 +62,14 @@ waiApp opts eff req res = do
   runEff $ runConcurrent $ handleRequestWai opts req res eff
 
 
-socketApp :: (MonadIO m) => ServerOptions -> TVar RunningActions -> Wai.Request -> Eff '[Hyperbole, Concurrent, IOE] Response -> PendingConnection -> m ()
-socketApp opts actions req eff pend = liftIO $ do
+socketApp :: (MonadIO m) => ServerOptions -> Wai.Request -> Eff '[Hyperbole, Concurrent, IOE] Response -> PendingConnection -> m ()
+socketApp opts req eff pend = liftIO $ do
+  -- private TVar for each client
+  actions :: TVar RunningActions <- liftIO $ newTVarIO mempty
   conn <- WS.acceptRequest pend
-  clientId <- runEff $ runRandom $ newClientId
   withPingThread conn 25 (pure ()) $ do
     forever $ do
-      runEff $ runConcurrent $ handleRequestSocket opts actions clientId req conn eff
+      runEff $ runConcurrent $ handleRequestSocket opts actions req conn eff
 
 
 suppressMessages :: ConnectionException -> IO a
