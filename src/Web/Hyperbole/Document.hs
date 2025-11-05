@@ -4,6 +4,7 @@ module Web.Hyperbole.Document where
 
 import Data.ByteString.Lazy qualified as BL
 import Data.String.Interpolate (i)
+import GHC.Generics (Generic)
 import Web.Hyperbole.View
 
 
@@ -18,7 +19,7 @@ document :: View DocumentHead () -> BL.ByteString -> BL.ByteString
 document docHead cnt =
   [i|<html>
   <head>
-    #{renderLazyByteString $ addContext DocumentHead docHead}
+    #{renderLazyByteString $ runViewContext DocumentHead () docHead}
   </head>
   <body>
     #{cnt}
@@ -35,6 +36,7 @@ document docHead cnt =
 > #EMBED Example/Docs/App.hs app
 -}
 data DocumentHead = DocumentHead
+  deriving (Generic, ViewId)
 
 
 {- | A simple mobile-friendly document with all required embeds and live reload

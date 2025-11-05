@@ -29,10 +29,11 @@ defaultErrorMessage = \case
   e -> cs $ drop 3 $ show e
 
 
-defaultErrorBody :: Text -> View Body ()
-defaultErrorBody msg =
-  el ~ bg (HexColor "#F00") . color (HexColor "#FFF") $ do
-    text msg
+defaultErrorBody :: Text -> Body
+defaultErrorBody msg = Body $
+  renderLazyByteString $ do
+    el ~ bg (HexColor "#F00") . color (HexColor "#FFF") $ do
+      text msg
 
 
 defaultError :: ResponseError -> ServerError
@@ -43,9 +44,9 @@ defaultError = \case
     let msg = defaultErrorMessage err
      in ServerError msg (defaultErrorBody msg)
  where
-  errNotHandled :: Event TargetViewId Encoded -> ServerError
+  errNotHandled :: Event TargetViewId Encoded Encoded -> ServerError
   errNotHandled ev =
-    ServerError "Action Not Handled" $ do
+    ServerError "Action Not Handled" $ Body $ renderLazyByteString $ do
       el $ do
         text "No Handler for Event viewId: "
         text $ encodedToText ev.viewId.encoded

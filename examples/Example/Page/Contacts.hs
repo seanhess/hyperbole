@@ -87,7 +87,7 @@ allContactsView fil us = col ~ gap 20 $ do
 
   row ~ gap 10 $ do
     button (Reload Nothing) ~ Style.btnLight $ "Reload"
-    target (InlineContact 2) $ button Edit ~ Style.btnLight $ "Edit Sara"
+    target (InlineContact 2) () $ button Edit ~ Style.btnLight $ "Edit Sara"
 
   hyper NewContact newContactButton
  where
@@ -124,7 +124,7 @@ newContactButton = do
 newContactForm :: View NewContact ()
 newContactForm = do
   row ~ pad 10 . gap 10 . border 1 $ do
-    target Contacts $ do
+    target Contacts () $ do
       contactForm AddUser (genFields :: ContactForm Maybe)
     col $ do
       space
@@ -171,4 +171,4 @@ contactEdit u = do
   el ~ (display None . whenLoading flexCol) $ contactLoading
   col ~ (whenLoading (display None) . gap 10) $ do
     Contact.contactEdit ViewContact Save u
-    target Contacts $ button (DeleteUser u.id) ~ btn' Danger . pad (XY 10 0) $ text "Delete"
+    target Contacts () $ button (DeleteUser u.id) ~ btn' Danger . pad (XY 10 0) $ text "Delete"

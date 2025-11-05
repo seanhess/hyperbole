@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.Effect.Hyperbole where
@@ -14,14 +13,13 @@ import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
-import Web.Hyperbole.View (View)
 
 
 -- | The 'Hyperbole' 'Effect' allows you to access information in the 'Request', manually respond, and manipulate the Client 'session' and 'query'.
 data Hyperbole :: Effect where
   GetRequest :: Hyperbole m Request
   RespondNow :: Response -> Hyperbole m a
-  PushUpdate :: TargetViewId -> View Body () -> Hyperbole m ()
+  PushUpdate :: ViewUpdate -> Hyperbole m ()
   ModClient :: (Client -> Client) -> Hyperbole m ()
   GetClient :: Hyperbole m Client
   -- TODO: this should actually execute the other view, and send the response to the client

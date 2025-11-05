@@ -26,7 +26,7 @@ newtype Param = Param {text :: Text}
 -- | Encode arbitrarily complex data into url form encoded data
 newtype ParamValue = ParamValue {value :: Text}
   deriving newtype (Ord, Eq)
-  deriving (Show)
+  deriving (Show, Generic)
 
 
 instance IsString ParamValue where
@@ -47,6 +47,8 @@ class ToParam a where
   toParam = genericToParam
 
 
+instance ToParam ParamValue where
+  toParam = id
 instance ToParam Int where
   toParam = jsonParam
 instance ToParam Integer where
@@ -79,6 +81,8 @@ instance ToParam URI where
   toParam = toParam . uriToText
 instance ToParam Value where
   toParam = jsonParam
+instance (ToParam a, ToParam b) => ToParam (a, b) where
+  toParam (a, b) = toParam [toParam a, toParam b]
 
 
 {- | Decode data from a 'query', 'session', or 'form' parameter value
@@ -105,6 +109,8 @@ class FromParam a where
 -- decodeParamValue = parseParam . decodeParam
 
 -- Permissive instances. Some of these come directly from forms!
+instance FromParam ParamValue where
+  parseParam = pure
 instance FromParam Int where
   parseParam "" = pure 0
   parseParam p = jsonParse p
@@ -119,6 +125,12 @@ instance FromParam Double where
   parseParam p = jsonParse p
 instance FromParam Text where
   parseParam = parseQueryParam
+instance (FromParam a, FromParam b) => FromParam (a, b) where
+  parseParam p = do
+    ps <- parseParam @[ParamValue] p
+    case ps of
+      [pa, pb] -> (,) <$> parseParam pa <*> parseParam pb
+      _ -> Left $ "Expected [a,b] but got: " <> cs p.value
 
 
 -- -- we don't need to desanitize the text

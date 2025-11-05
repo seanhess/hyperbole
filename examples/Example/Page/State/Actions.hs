@@ -24,7 +24,7 @@ page = do
       col ~ embed $ do
         pre countExample ~ font
       col ~ embed $ do
-        addContext Root counter
+        runViewContext Root () counter
 
 countExample :: Text
 countExample =
