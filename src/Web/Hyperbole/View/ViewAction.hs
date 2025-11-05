@@ -1,6 +1,6 @@
 {-# LANGUAGE DefaultSignatures #-}
 
-module Web.Hyperbole.HyperView.ViewAction where
+module Web.Hyperbole.View.ViewAction where
 
 import Data.Text (Text)
 import GHC.Generics

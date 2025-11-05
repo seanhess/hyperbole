@@ -2,21 +2,24 @@
 
 module Web.Hyperbole.Types.Response where
 
+import Data.ByteString.Lazy qualified as BL
 import Data.String (IsString (..))
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Web.Hyperbole.Data.Encoded (Encoded)
 import Web.Hyperbole.Data.URI (URI)
 import Web.Hyperbole.Types.Event
-import Web.Hyperbole.View
 
 
-data Body = Body
+newtype Body = Body BL.ByteString
+
+
+data ViewUpdate = ViewUpdate {viewId :: TargetViewId, body :: Body}
 
 
 -- | A processed response for the client, which might be a 'ResponseError'
 data Response
-  = Response TargetViewId (View Body ())
+  = Response ViewUpdate
   | Redirect URI
   | Err ResponseError
 
@@ -29,7 +32,7 @@ data ResponseError
   | ErrServer Text
   | ErrCustom ServerError
   | ErrInternal
-  | ErrNotHandled (Event TargetViewId Encoded)
+  | ErrNotHandled (Event TargetViewId Encoded Encoded)
   | ErrAuth Text
 instance Show ResponseError where
   show = \case
@@ -49,5 +52,5 @@ instance IsString ResponseError where
 -- Serialized server error
 data ServerError = ServerError
   { message :: Text
-  , body :: View Body ()
+  , body :: Body
   }

@@ -69,10 +69,10 @@ formView = do
       el $ text "Planet"
       field "planet" $ do
         radioGroup Earth $ do
-          radioOption Mercury
-          radioOption Venus
-          radioOption Earth
-          radioOption Mars
+          planet Mercury
+          planet Venus
+          planet Earth
+          planet Mars
 
     field "moon" $ do
       label $ do
@@ -85,7 +85,7 @@ formView = do
 
     submit "Submit" ~ btn
  where
-  radioOption val =
+  planet val =
     label ~ flexRow . gap 10 $ do
       radio val ~ width 32
       text (pack (show val))

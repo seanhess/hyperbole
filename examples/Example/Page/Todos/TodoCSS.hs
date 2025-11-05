@@ -9,7 +9,6 @@ import Example.Effects.Todos (FilterTodo (..), Todo, TodoId, Todos)
 import Example.Effects.Todos qualified as Todos
 import Example.Page.Todos.Todo (Action (..), AllTodos (..), TodoForm (..), TodoView (..), pluralize)
 import Web.Hyperbole as Hyperbole
-import Web.Hyperbole.HyperView.Forms (Input (Input))
 
 {-
 
@@ -119,8 +118,7 @@ todoForm = do
   let f :: TodoForm FieldName = fieldNames
   form (MkTodosAction SubmitTodo) $ do
     field f.task $ do
-      Input (FieldName nm) <- context
-      input' -- we use a custom input field, because the Hyperbole one overrides autocomplete
+      input TextInput -- we use a custom input field, because the Hyperbole one overrides autocomplete
         @ class_ "new-todo"
         {-
           -- . autofocus
@@ -129,10 +127,7 @@ todoForm = do
           FIXME: but since this example is meant to match as close as possible to the original CSS version
           FIXME: and not diverge too much from the other todo example, I'm leaving as-is.
          -}
-        . att "autocomplete" "off"
         . placeholder "What needs to be done?"
-        . value ""
-        . name nm -- because we use a custom field, we must provide this param for the library
 
 statusBar :: FilterTodo -> [Todo] -> View CSSTodos ()
 statusBar filt todos = do
@@ -191,7 +186,7 @@ todoView filt todo = do
     @ bool id (class_ "completed") todo.completed
     $ do
       div' @ class_ "view" $ do
-        target CSSTodos $ do
+        target CSSTodos () $ do
           input'
             @ class_ "toggle"
             . att "type" "checkbox"
@@ -201,7 +196,7 @@ todoView filt todo = do
         label' @ class_ "label" . onDblClick (MkTodoAction $ Edit filt todo) $ do
           text todo.task
 
-        target CSSTodos $ do
+        target CSSTodos () $ do
           button (MkTodosAction $ Destroy filt todo) @ class_ "destroy" $ ""
 
 todoEditView :: FilterTodo -> Todo -> View CSSTodo ()

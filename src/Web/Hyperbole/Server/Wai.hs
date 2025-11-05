@@ -32,7 +32,7 @@ import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event (Event (..), TargetViewId (..))
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
-import Web.Hyperbole.View (View, addContext, renderLazyByteString, script', type_)
+import Web.Hyperbole.View (View, renderLazyByteString, runViewContext, script', type_)
 
 
 handleRequestWai
@@ -61,7 +61,7 @@ runHyperboleWai req = reinterpret (runHyperboleLocal req) $ \_ -> \case
     pure req
   RespondNow r -> do
     throwError_ r
-  PushUpdate _ _ -> do
+  PushUpdate _ -> do
     -- ignore! you can't push updates using WAI
     pure ()
   GetClient -> do
@@ -83,12 +83,12 @@ sendResponse options req client res remotes respond = do
   response metas = \case
     (Err err) ->
       respondError (errStatus err) [] $ options.serverError err
-    (Response _ vw) -> do
+    (Response (ViewUpdate _ vw)) -> do
       respondHtml status200 (clientHeaders client) $ renderViewResponse metas vw
     (Redirect u) -> do
       let url = uriToText u
       let hs = ("Location", cs url) : clientHeaders client
-      respondHtml status200 hs $ renderViewResponse metas $ do
+      respondHtml status200 hs $ renderViewResponse metas $ Body $ renderLazyByteString $ do
         script'
           [i|window.location = '#{uriToText u}'|]
 
@@ -107,9 +107,9 @@ sendResponse options req client res remotes respond = do
       Nothing -> options.toDocument body
       _ -> body
 
-  renderViewResponse :: Metadata -> View Body () -> BL.ByteString
-  renderViewResponse metas vw =
-    addDocument $ renderLazyByteString (addContext metas $ scriptMeta metas) <> "\n\n" <> renderLazyByteString (addContext Body vw)
+  renderViewResponse :: Metadata -> Body -> BL.ByteString
+  renderViewResponse metas (Body body) =
+    addDocument $ renderLazyByteString (runViewContext metas () $ scriptMeta metas) <> "\n\n" <> body
 
   respondError s hs serr = respondHtml s hs $ renderViewResponse (metaError serr.message) serr.body
   respondHtml s hs = Wai.responseLBS s (contentType ContentHtml : hs)
@@ -163,13 +163,15 @@ fromWaiRequest wr body = do
       , requestId
       }
  where
-  lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded)
+  lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded Encoded)
   lookupEvent headers = do
     viewIdText <- cs <$> L.lookup "Hyp-ViewId" headers
     actText <- cs <$> L.lookup "Hyp-Action" headers
+    stText <- cs <$> L.lookup "Hyp-State" headers
     act <- decode actText
     viewId <- TargetViewId <$> decode viewIdText
-    pure $ Event viewId act
+    st <- decode stText
+    pure $ Event viewId act st
 
 
 -- Client only returns ONE Cookie header, with everything concatenated

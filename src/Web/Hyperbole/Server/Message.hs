@@ -2,6 +2,7 @@
 
 module Web.Hyperbole.Server.Message where
 
+import Control.Applicative ((<|>))
 import Control.Exception (Exception)
 import Data.Aeson qualified as Aeson
 import Data.Attoparsec.Text (Parser, char, endOfLine, isEndOfLine, parseOnly, sepBy, string, takeText, takeTill, takeWhile1)
@@ -11,6 +12,7 @@ import Data.List qualified as L
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
+import GHC.Generics (Generic)
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.Encoded
@@ -21,6 +23,7 @@ import Web.Hyperbole.Effect.Hyperbole (Remote (..))
 import Web.Hyperbole.Types.Client (Client (..))
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
+import Web.Hyperbole.View (ViewId)
 
 
 {-
@@ -36,7 +39,7 @@ import Web.Hyperbole.Types.Request
 
 data Message = Message
   { messageType :: Text
-  , event :: Event TargetViewId Encoded
+  , event :: Event TargetViewId Encoded Encoded
   , requestId :: RequestId
   , metadata :: Metadata
   , body :: MessageBody
@@ -85,29 +88,42 @@ parseActionMessage = parseOnly parser
   body = do
     MessageBody . cs . T.strip <$> takeText
 
-  event :: Parser (Event TargetViewId Encoded)
+  event :: Parser (Event TargetViewId Encoded Encoded)
   event = do
     vid <- targetViewId
-    endOfLine
     act <- encodedAction
-    endOfLine
-    pure $ Event vid act
+    st <- encodedState <|> pure mempty
+    pure $ Event vid act st
    where
     targetViewId :: Parser TargetViewId
     targetViewId = do
       _ <- string "ViewId: "
       line <- takeLine
-      case encodedParseText line of
+      v <- case encodedParseText line of
         Left e -> fail $ "Parse Encoded ViewId failed: " <> cs e <> " from " <> cs line
         Right a -> pure $ TargetViewId a
+      endOfLine
+      pure v
 
     encodedAction :: Parser Encoded
     encodedAction = do
       _ <- string "Action: "
       inp <- takeLine
-      case encodedParseText inp of
+      v <- case encodedParseText inp of
         Left e -> fail $ "Parse Encoded ViewAction failed: " <> cs e <> " from " <> cs inp
         Right a -> pure a
+      endOfLine
+      pure v
+
+    encodedState :: Parser Encoded
+    encodedState = do
+      _ <- string "State: "
+      inp <- takeLine
+      v <- case encodedParseText inp of
+        Left e -> fail $ "Parse Encoded ViewState failed: " <> cs e <> " from " <> cs inp
+        Right a -> pure a
+      endOfLine
+      pure v
 
   requestId :: Parser RequestId
   requestId = do
@@ -150,8 +166,14 @@ type MetaKey = Text
 
 newtype Metadata = Metadata [(Text, Text)]
   deriving newtype (Semigroup, Monoid)
-  deriving (Show)
+  deriving (Show, Generic)
+  deriving anyclass (ViewId)
 
+
+-- instance HyperView Metadata es where
+--   data Action Metadata = MetaNone
+--     deriving (Generic, ViewAction)
+--   update _ = pure none
 
 metadata :: MetaKey -> Text -> Metadata
 metadata key value = Metadata [(key, value)]
@@ -170,7 +192,7 @@ requestMetadata req =
   metaRequestId (RequestId reqId) =
     metadata "RequestId" (cs reqId)
 
-  eventMetadata :: Event TargetViewId Encoded -> Metadata
+  eventMetadata :: Event TargetViewId Encoded Encoded -> Metadata
   eventMetadata event =
     Metadata
       [ ("ViewId", encodedToText event.viewId.encoded)

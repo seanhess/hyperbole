@@ -7,6 +7,7 @@ export type Meta = { key: string, value: string }
 export type ViewId = string
 export type RequestId = number
 export type EncodedAction = string
+export type ViewState = string
 
 type RemoteEvent = { name: string, detail: any }
 

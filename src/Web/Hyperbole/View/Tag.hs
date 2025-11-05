@@ -10,10 +10,37 @@ import Data.Text qualified as T
 import Effectful
 import Effectful.State.Static.Local
 import Web.Atomic.CSS
+import Web.Atomic.Html qualified as Atomic
 import Web.Atomic.Types
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.View.Types
 
+
+-- Html ---------------------------------------------
+
+tag :: Text -> View c () -> View c ()
+tag = tag' False
+
+
+tag' :: Bool -> Text -> View c () -> View c ()
+tag' inline n (View eff) = View $ do
+  inner <- eff
+  pure $ Atomic.tag' inline n inner
+
+
+text :: Text -> View c ()
+text t = View $ pure $ Atomic.text t
+
+
+none :: View c ()
+none = View $ pure Atomic.none
+
+
+raw :: Text -> View c ()
+raw t = View $ pure $ Atomic.raw t
+
+
+---
 
 el :: View c () -> View c ()
 el = tag "div"
