@@ -206,7 +206,14 @@ function init() {
   runMetadataImmediate(meta)
   runMetadataDOM(meta)
 
-  rootStyles = document.querySelector('style')
+  rootStyles = document.body.querySelector('style')
+
+  if (!rootStyles) {
+    console.warn("rootStyles missing from page, creating...")
+    rootStyles = document.createElement("style")
+    rootStyles.type = "text/css"
+    document.body.appendChild(rootStyles)
+  }
 
   listenTopLevel(async function(target: HyperView, action: string) {
     runAction(target, action)
