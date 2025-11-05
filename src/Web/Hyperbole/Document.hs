@@ -16,8 +16,10 @@ data Document = Document
 -}
 document :: View DocumentHead () -> BL.ByteString -> BL.ByteString
 document docHead cnt =
-  [i|<html>
+  [i|<!doctype html>
+  <html>
   <head>
+    <meta charset="UTF-8"/>
     #{renderLazyByteString $ addContext DocumentHead docHead}
   </head>
   <body>
@@ -59,5 +61,4 @@ quickStart = do
 -- | Set the viewport to handle mobile zoom
 mobileFriendly :: View DocumentHead ()
 mobileFriendly = do
-  meta @ httpEquiv "Content-Type" . content "text/html" . charset "UTF-8"
   meta @ name "viewport" . content "width=device-width, initial-scale=1.0"
