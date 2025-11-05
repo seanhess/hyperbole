@@ -2,7 +2,7 @@ module Web.Hyperbole.Page where
 
 import Data.Kind (Type)
 import Effectful
-import Effectful.Reader.Dynamic
+import Effectful.Reader.Static
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.HyperView (Root (..))
 import Web.Hyperbole.Server.Handler (RunHandlers, runLoad)

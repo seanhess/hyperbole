@@ -58,5 +58,5 @@ controlView = do
 
 targetView :: View Controls ()
 targetView = do
-  target Message $ do
+  target Message () $ do
     button (SetMessage "Targeted!") ~ btn $ "Target SetMessage"

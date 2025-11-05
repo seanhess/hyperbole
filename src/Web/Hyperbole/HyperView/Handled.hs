@@ -6,6 +6,7 @@ import Data.Kind (Constraint, Type)
 import GHC.TypeLits hiding (Mod)
 import Web.Hyperbole.HyperView.Types
 import Web.Hyperbole.TypeList
+import Web.Hyperbole.View (View)
 
 
 type family ValidDescendents x :: [Type] where
@@ -75,12 +76,14 @@ type NotInPage x total =
     )
 
 
-type HyperViewHandled id ctx =
-  ( -- the id must be found in the children of the context
-    ElemOr id (ctx : Require ctx) (NotHandled id ctx (Require ctx))
-  , -- Make sure the descendents of id are in the context for the root page
-    CheckDescendents id ctx
-  )
+type family HyperViewHandled id ctx :: Constraint where
+  HyperViewHandled id (View view ()) = TypeError ('Text "View c () is not a valid ViewState, did you forget to pass ViewState into target or runViewContext?")
+  HyperViewHandled id ctx =
+    ( -- the id must be found in the children of the context
+      ElemOr id (ctx : Require ctx) (NotHandled id ctx (Require ctx))
+    , -- Make sure the descendents of id are in the context for the root page
+      CheckDescendents id ctx
+    )
 
 
 -- TODO: Report which view requires the missing one

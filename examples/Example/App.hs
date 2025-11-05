@@ -58,6 +58,7 @@ import Example.Page.State.Actions qualified as Actions
 import Example.Page.State.Effects qualified as Effects
 import Example.Page.State.Query qualified as Query
 import Example.Page.State.Sessions qualified as Sessions
+import Example.Page.State.View qualified as SView
 import Example.Page.Test qualified as Test
 import Example.Page.Todos.Todo qualified as Todo
 import Example.Page.Todos.TodoCSS qualified as TodoCSS
@@ -121,7 +122,7 @@ exampleApp config users count chats = do
   runApp = runReader config . runTodosSession . runUsersIO users . runDebugIO . runConcurrent . runRandom . runOAuth2 config.oauth config.manager
 
   router :: forall es. (Hyperbole :> es, OAuth2 :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es, GenRandom :> es, Reader AppConfig :> es) => AppRoute -> Eff es Response
-  router Chat = runReader chats $ runPage $ Chat.page
+  router Chat = runReader chats $ runPage Chat.page
   router (Hello h) = runPage $ hello h
   router (Contacts (Contact uid)) = Contact.response uid
   router (Contacts ContactsAll) = runPage Contacts.page
@@ -141,6 +142,7 @@ exampleApp config users count chats = do
     case r of
       StateRoot -> redirect $ routeUri (State Actions)
       Actions -> runPage Actions.page
+      StateView -> runPage SView.page
       Effects -> runReader count $ runPage Effects.page
       Sessions -> runPage Sessions.page
       Query -> runPage Query.page

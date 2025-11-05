@@ -29,7 +29,7 @@ page = do
         raw $(embedTopLevel "examples/Example/Page/Counter.hs" "viewCount")
 
       example Counter $ do
-        addContext Root counter
+        runViewContext Root () counter
 
 countExample :: Text
 countExample =

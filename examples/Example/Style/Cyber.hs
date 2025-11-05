@@ -74,10 +74,10 @@ hovClr Primary = PrimaryLight
 hovClr c = c
 
 font :: (Styleable h) => CSS h -> CSS h
-font = utility ("share-tech") ["font-family" :. "'Share Tech Mono'"]
+font = utility "share-tech" ["font-family" :. "'Share Tech Mono'"]
 
-cyberError :: View Body () -> View Body ()
-cyberError inner =
+cyberError :: View () () -> Body
+cyberError inner = renderBody $
   el ~ wipeIn . border (T 4) . borderColor lightRed $ do
     el ~ bg midRed . clip 10 . pad 10 . color White $
       inner
@@ -86,6 +86,6 @@ cyberError inner =
   wipeIn :: (Styleable h) => CSS h -> CSS h
   wipeIn = utility "wipe-in" ["animation" :. "wipeIn 0.5s steps(20, end) forwards"]
 
-glitch :: Text -> View Body ()
+glitch :: Text -> View c ()
 glitch msg =
   el ~ cls "glitch" @ att "data-text" msg $ text msg

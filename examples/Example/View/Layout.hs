@@ -79,6 +79,7 @@ exampleMenu current = do
   case current of
     State _ -> do
       exampleLink (State Actions) ~ sub
+      exampleLink (State StateView) ~ sub
       exampleLink (State Effects) ~ sub
       exampleLink (State Query) ~ sub
       exampleLink (State Sessions) ~ sub

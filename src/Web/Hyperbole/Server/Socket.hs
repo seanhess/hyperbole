@@ -34,7 +34,6 @@ import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event (Event (..), TargetViewId (..))
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
-import Web.Hyperbole.View (View, addContext, renderLazyByteString)
 
 
 data SocketRequest = SocketRequest
@@ -57,7 +56,7 @@ runHyperboleSocket _opts conn req = reinterpret (runHyperboleLocal req) $ \_ -> 
     pure req
   RespondNow r -> do
     throwError_ r
-  PushUpdate vid vw -> do
+  PushUpdate (ViewUpdate vid vw) -> do
     sendUpdate conn (targetViewMetadata vid <> requestMetadata req) vw
   GetClient -> do
     Local.get @Client
@@ -98,7 +97,7 @@ handleRequestSocket opts actions wreq conn eff = do
         Right (resp, clnt, rmts) -> do
           let meta = requestMetadata req <> responseMetadata req.path clnt rmts
           case resp of
-            (Response _ vw) -> do
+            (Response (ViewUpdate _ vw)) -> do
               sendResponse conn meta vw
             (Err err) -> sendError conn meta (opts.serverError err)
             (Redirect url) -> sendRedirect conn meta url
@@ -109,10 +108,10 @@ handleRequestSocket opts actions wreq conn eff = do
       _ <- waitCatch a
       clearRunningAction req.requestId req.event
  where
-  addRunningAction :: (IOE :> es, Concurrent :> es) => Async () -> RequestId -> Maybe (Event TargetViewId Encoded) -> Eff es ()
+  addRunningAction :: (IOE :> es, Concurrent :> es) => Async () -> RequestId -> Maybe (Event TargetViewId Encoded Encoded) -> Eff es ()
   addRunningAction a (RequestId reqId) = \case
     Nothing -> pure ()
-    Just (Event vid act) -> do
+    Just (Event vid act _) -> do
       -- liftIO $ putStrLn $ " [add] (" <> cs reqId <> ") " <> cs clientId.value <> "|" <> show vid
       maold <- atomically $ do
         m <- readTVar @RunningActions actions
@@ -124,10 +123,10 @@ handleRequestSocket opts actions wreq conn eff = do
           liftIO $ putStrLn $ "CANCEL (" <> cs reqId <> ") " <> cs (encodedToText vid.encoded) <> ": " <> cs (encodedToText actold)
           cancel aold
 
-  clearRunningAction :: (IOE :> es, Concurrent :> es) => RequestId -> Maybe (Event TargetViewId Encoded) -> Eff es ()
+  clearRunningAction :: (IOE :> es, Concurrent :> es) => RequestId -> Maybe (Event TargetViewId Encoded Encoded) -> Eff es ()
   clearRunningAction (RequestId _) = \case
     Nothing -> pure ()
-    Just (Event vid _) -> do
+    Just (Event vid _ _) -> do
       _ <- atomically $ modifyTVar actions $ M.delete vid
       pure ()
 
@@ -186,14 +185,14 @@ handleRequestSocket opts actions wreq conn eff = do
       maybe (Left $ MissingMeta (cs key)) pure $ lookupMetadata key m
 
 
-sendResponse :: (IOE :> es) => Connection -> Metadata -> View Body () -> Eff es ()
-sendResponse conn meta vw = do
-  sendMessage "RESPONSE" conn meta (MessageHtml $ renderLazyByteString $ addContext Body vw)
+sendResponse :: (IOE :> es) => Connection -> Metadata -> Body -> Eff es ()
+sendResponse conn meta (Body b) = do
+  sendMessage "RESPONSE" conn meta (MessageHtml b)
 
 
-sendUpdate :: (IOE :> es) => Connection -> Metadata -> View Body () -> Eff es ()
-sendUpdate conn meta vw = do
-  sendMessage "UPDATE" conn meta (MessageHtml $ renderLazyByteString $ addContext Body vw)
+sendUpdate :: (IOE :> es) => Connection -> Metadata -> Body -> Eff es ()
+sendUpdate conn meta (Body b) = do
+  sendMessage "UPDATE" conn meta (MessageHtml b)
 
 
 sendRedirect :: (IOE :> es) => Connection -> Metadata -> URI -> Eff es ()
@@ -203,8 +202,8 @@ sendRedirect conn meta u = do
 
 -- TODO: this isn't an UPDATE?
 sendError :: (IOE :> es) => Connection -> Metadata -> ServerError -> Eff es ()
-sendError conn meta (ServerError err body) = do
-  sendMessage "UPDATE" conn (metadata "Error" err <> meta) (MessageHtml $ renderLazyByteString $ addContext Body body)
+sendError conn meta (ServerError err (Body body)) = do
+  sendMessage "UPDATE" conn (metadata "Error" err <> meta) (MessageHtml body)
 
 
 newtype Command = Command Text

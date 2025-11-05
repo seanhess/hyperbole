@@ -3,31 +3,34 @@ module Web.Hyperbole.Effect.Response where
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
-import Effectful.Reader.Dynamic
+import Effectful.Reader.Static
+import Effectful.State.Static.Local
+import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.HyperView (ConcurrencyValue (..), HyperView (..), ViewId (..), hyperUnsafe)
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Response
-import Web.Hyperbole.View.Types
+import Web.Hyperbole.View
 
 
 -- | Respond with the given hyperview
-hyperView :: (HyperView id es) => id -> View id () -> Eff es Response
-hyperView i vw = do
+hyperView :: (HyperView id es, ToEncoded (ViewState id)) => id -> ViewState id -> View id () -> Eff es Response
+hyperView i st vw = do
   let vid = TargetViewId (toViewId i)
-  pure $ Response vid $ hyperUnsafe i vw
+  pure $ Response $ ViewUpdate vid $ renderBody $ hyperUnsafe i st vw
 
 
-pushUpdate :: (Reader id :> es, ViewId id, ConcurrencyValue (Concurrency id), Hyperbole :> es) => View id () -> Eff es ()
+pushUpdate :: (Hyperbole :> es, ViewId id, ToEncoded (ViewState id), ConcurrencyValue (Concurrency id)) => View id () -> Eff (Reader id : State (ViewState id) : es) ()
 pushUpdate vw = do
-  i <- ask
-  pushUpdateTo i vw
+  i <- viewId
+  st <- get
+  pushUpdateTo i st vw
 
 
-pushUpdateTo :: (ViewId id, ConcurrencyValue (Concurrency id), Hyperbole :> es) => id -> View id () -> Eff es ()
-pushUpdateTo i vw = do
-  send $ PushUpdate (TargetViewId $ toViewId i) $ hyperUnsafe i vw
+pushUpdateTo :: (Hyperbole :> es, ViewId id, ToEncoded (ViewState id), ConcurrencyValue (Concurrency id)) => id -> ViewState id -> View id () -> Eff es ()
+pushUpdateTo i st vw = do
+  send $ PushUpdate $ ViewUpdate (TargetViewId $ toViewId i) $ renderBody $ hyperUnsafe i st vw
 
 
 -- | Abort execution and respond with an error
@@ -37,9 +40,9 @@ respondError err = do
 
 
 -- | Abort execution and respond with an error view
-respondErrorView :: (Hyperbole :> es) => Text -> View Body () -> Eff es a
+respondErrorView :: (Hyperbole :> es) => Text -> View () () -> Eff es a
 respondErrorView msg vw = do
-  send $ RespondNow $ Err $ ErrCustom $ ServerError msg vw
+  send $ RespondNow $ Err $ ErrCustom $ ServerError msg $ renderBody vw
 
 
 {- | Abort execution and respond with 404 Not Found
@@ -65,6 +68,6 @@ redirect = send . RespondNow . Redirect
 
 
 -- | Respond with a generic view. Normally you will return a view from the page or handler instead of using this function
-view :: View Body () -> Response
-view =
-  Response (TargetViewId mempty)
+view :: View () () -> Response
+view v =
+  Response $ ViewUpdate (TargetViewId mempty) (renderBody v)

@@ -2,7 +2,7 @@ import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection, Update, Redirect } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
 import { actionMessage, ActionMessage, Request, newRequest } from './action'
-import { ViewId, Metadata, parseMetadata } from './message'
+import { ViewId, Metadata, parseMetadata, ViewState } from './message'
 import { setQuery } from "./browser"
 import { parseResponse, Response, LiveUpdate } from './response'
 
@@ -46,8 +46,10 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     target.classList.add("hyp-loading")
   }, 100)
 
+  let state = target.dataset.state
+
   let req = newRequest()
-  let msg = actionMessage(target.id, action, req.requestId, form)
+  let msg = actionMessage(target.id, action, state, req.requestId, form)
 
   // Set the requestId
   target.activeRequest = req
@@ -115,6 +117,7 @@ function handleUpdate(res: Update): HyperView {
   // Patch the node
   const old: VNode = create(target)
   let next: VNode = create(update.content)
+  let state = (next.attributes as any)["data-state"]
   next.attributes = old.attributes
   patch(next, old)
 
@@ -123,21 +126,24 @@ function handleUpdate(res: Update): HyperView {
   let newTarget = document.getElementById(target.id)
   dispatchContent(newTarget)
 
-  if (newTarget) {
-    // execute the metadata, anything that doesn't interrupt the dom update
-    runMetadata(res.meta, newTarget)
-    applyCookies(res.meta.cookies)
-
-    // now way for these to bubble)
-    listenLoad(newTarget)
-    listenMouseEnter(newTarget)
-    listenMouseLeave(newTarget)
-    fixInputs(newTarget)
-    enrichHyperViews(newTarget)
-  }
-  else {
+  if (!newTarget) {
     console.warn("Target Missing: ", target.id)
+    return target
   }
+
+  // re-add state attribute 
+  newTarget.dataset.state = state
+
+  // execute the metadata, anything that doesn't interrupt the dom update
+  runMetadata(res.meta, newTarget)
+  applyCookies(res.meta.cookies)
+
+  // now way for these to bubble)
+  listenLoad(newTarget)
+  listenMouseEnter(newTarget)
+  listenMouseLeave(newTarget)
+  fixInputs(newTarget)
+  enrichHyperViews(newTarget)
 
   return target
 }

@@ -16,7 +16,6 @@ module Web.Hyperbole.HyperView.Forms
   , label
   , input
   , checkbox
-  , Radio (..)
   , radioGroup
   , radio
   , select
@@ -60,7 +59,6 @@ import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView.Event (onSubmit)
 import Web.Hyperbole.HyperView.Input (Option (..), checked)
 import Web.Hyperbole.HyperView.Types
-import Web.Hyperbole.HyperView.ViewAction
 import Web.Hyperbole.View
 
 
@@ -160,7 +158,9 @@ instance GenField (Maybe a) where
 ------------------------------------------------------------------------------
 
 -- | Context that allows form fields
-data FormFields id = FormFields id
+newtype FormFields id = FormFields id
+  deriving (Generic)
+  deriving newtype (ViewId)
 
 
 {- | Type-safe \<form\>. Calls (Action id) on submit
@@ -171,9 +171,8 @@ data FormFields id = FormFields id
 -}
 form :: (ViewAction (Action id)) => Action id -> View (FormFields id) () -> View id ()
 form a cnt = do
-  vid <- context
   tag "form" @ onSubmit a $ do
-    addContext (FormFields vid) cnt
+    runChildView FormFields cnt
 
 
 -- | Button that submits the 'form'
@@ -182,8 +181,8 @@ submit = tag "button" @ att "type" "submit"
 
 
 -- | Form FieldName. This is embeded as the name attribute, and refers to the key need to parse the form when submitted. See 'fieldNames'
-newtype FieldName a = FieldName Text
-  deriving newtype (Show, IsString)
+newtype FieldName a = FieldName {value :: Text}
+  deriving newtype (Show, IsString, FromParam, ToParam)
 
 
 -- | Display a 'FormField'. See 'form' and 'Form'
@@ -193,7 +192,7 @@ field
   -> View (Input id a) ()
   -> View (FormFields id) ()
 field fn =
-  addContext (Input fn)
+  runChildView (\(FormFields i) -> Input i fn)
 
 
 -- | Choose one for 'input's to give the browser autocomplete hints
@@ -217,8 +216,12 @@ data InputType
 
 
 data Input (id :: Type) (a :: Type) = Input
-  { inputName :: FieldName a
+  { id :: id
+  , inputName :: FieldName a
   }
+  deriving (Generic)
+instance (ViewId id, FromParam id, ToParam id) => ViewId (Input id a) where
+  type ViewState (Input id a) = ViewState id
 
 
 {- | label for a 'field'
@@ -229,10 +232,10 @@ label = tag "label"
 
 
 -- | input for a 'field'
-input :: InputType -> View (Input id a) ()
+input :: forall id a. InputType -> View (Input id a) ()
 input ft = do
-  Input (FieldName nm) <- context
-  tag "input" @ att "type" (inpType ft) . name nm . att "autocomplete" (auto ft) $ none
+  inp :: Input id a <- viewId
+  tag "input" @ att "type" (inpType ft) . name inp.inputName.value . att "autocomplete" (auto ft) $ none
  where
   inpType NewPassword = "password"
   inpType CurrentPassword = "password"
@@ -242,51 +245,56 @@ input ft = do
   inpType _ = "text"
 
   auto :: InputType -> Text
-  auto = pack . kebab . show
+  auto TextInput = "off"
+  auto inp = pack . kebab . show $ inp
 
 
-checkbox :: Bool -> View (Input id a) ()
+checkbox :: forall id a. Bool -> View (Input id a) ()
 checkbox isChecked = do
-  Input (FieldName nm) <- context
-  tag "input" @ att "type" "checkbox" . name nm $ none @ checked isChecked
+  inp :: Input id a <- viewId
+  tag "input" @ att "type" "checkbox" . name inp.inputName.value $ none @ checked isChecked
 
 
 -- NOTE: Radio is a special type of selection different from list type or
 -- select. select or list input can be thought of one wrapper and multiple
 -- options whereas radio is multiple wrappers with options. The context required
 -- for radio is more than that required for select.
-data Radio (id :: Type) (a :: Type) (b :: Type) = Selection
-  { inputCtx :: Input id a
-  , defaultOption :: b
+data Radio (id :: Type) (a :: Type) (opt :: Type) = Radio
+  { id :: id
+  , inputName :: FieldName a
+  , defaultOption :: opt
   }
+  deriving (Generic)
+instance (FromParam id, ToParam id, FromParam a, ToParam a, ToParam opt, FromParam opt) => ViewId (Radio id a opt) where
+  type ViewState (Radio id a opt) = ViewState id
 
 
-radioGroup :: b -> View (Radio id a b) () -> View (Input id a) ()
-radioGroup defOpt = modifyContext $ \inp -> Selection inp defOpt
+radioGroup :: opt -> View (Radio id a opt) () -> View (Input id a) ()
+radioGroup defOpt = runChildView (\(inp :: Input id a) -> Radio inp.id inp.inputName defOpt)
 
 
-radio :: (Eq b, ToParam b) => b -> View (Radio id a b) ()
+radio :: forall id a opt. (Eq opt, ToParam opt) => opt -> View (Radio id a opt) ()
 radio val = do
-  Selection (Input (FieldName nm)) defOpt <- context
+  rd :: Radio id a opt <- viewId
   tag "input"
     @ att "type" "radio"
-    . name nm
+    . name rd.inputName.value
     . value (toParam val).value
-    . checked (defOpt == val)
+    . checked (rd.defaultOption == val)
     $ none
 
 
-select :: (Eq opt) => opt -> View (Option opt id) () -> View (Input id a) ()
+select :: forall opt id a. (Eq opt) => opt -> View (Option id opt) () -> View (Input id a) ()
 select defOpt options = do
-  Input (FieldName nm) <- context
-  tag "select" @ name nm $ addContext (Option defOpt) options
+  inp :: Input id a <- viewId
+  tag "select" @ name inp.inputName.value $ runChildView (\_ -> Option inp.id defOpt) options
 
 
 -- | textarea for a 'field'
-textarea :: Maybe Text -> View (Input id a) ()
+textarea :: forall id a. Maybe Text -> View (Input id a) ()
 textarea mDefaultText = do
-  Input (FieldName nm) <- context
-  tag "textarea" @ name nm $ text $ fromMaybe "" mDefaultText
+  inp :: Input id a <- viewId
+  tag "textarea" @ name inp.inputName.value $ text $ fromMaybe "" mDefaultText
 
 
 ------------------------------------------------------------------------------
@@ -554,91 +562,3 @@ instance (GFieldsGen f) => GFieldsGen (M1 C c f) where
 --
 -- instance (GCollect f v) => GCollect (M1 C c f) v where
 --   gCollect (M1 f) = gCollect f
-
-------------------------------------------------------------------------------
-
--- newtype User = User Text
---   deriving newtype (FromParam)
---
---
--- data TestForm f = TestForm
---   { name :: Field f Text
---   , age :: Field f Int
---   , user :: Field f User
---   }
---   deriving (Generic, FromFormF, GenFields Maybe, GenFields Validated)
-
--- test :: (Hyperbole :> es) => Eff es (TestForm Identity)
--- test = do
---   tf <- formData
---   pure tf
-
--- formView :: (ViewAction (Action id)) => View id ()
--- formView = do
---   -- generate a ContactForm' FieldName
---   let f = fieldNames @ContactForm
---   form undefined (gap 10 . pad 10) $ do
---     -- f.name :: FieldName Text
---     -- f.name = FieldName "name"
---     field f.name id $ do
---       label "Contact Name"
---       input Username (placeholder "contact name")
---
---     -- f.age :: FieldName Int
---     -- f.age = FieldName "age"
---     field f.age id $ do
---       label "Age"
---       input Number (placeholder "age" . value "0")
---
---     submit id "Submit"
---
---
--- formView' :: (ViewAction (Action id)) => ContactForm Validated -> View id ()
--- formView' contact = do
---   -- generate a ContactForm' FieldName
---   let f = formFields @ContactForm contact
---   form undefined (gap 10 . pad 10) $ do
---     -- f.name :: FieldName Text
---     -- f.name = FieldName "name"
---     field f.name id $ do
---       label "Contact Name"
---       input Username (placeholder "contact name")
---
---     -- f.age :: FieldName Int
---     -- f.age = FieldName "age"
---     field f.age id $ do
---       label "Age"
---       input Number (placeholder "age" . value "0")
---
---     field f.age id $ do
---       label "Username"
---       input Username (placeholder "username")
---
---     case f.age.value of
---       Invalid t -> el_ (text t)
---       Valid -> el_ "Username is available"
---       _ -> none
---
---     submit id "Submit"
---  where
---   valStyle (Invalid _) = id
---   valStyle Valid = id
---   valStyle _ = id
---
---
--- data ContactForm' = ContactForm'
---   { name :: Text
---   , age :: Int
---   }
---   deriving (Generic)
--- instance FormParse ContactForm'
---
---
--- formView'' :: (ViewAction (Action id)) => View id ()
--- formView'' = do
---   form undefined (gap 10 . pad 10) $ do
---     -- f.name :: FieldName Text
---     -- f.name = FieldName "name"
---     field (FieldName "name") id $ do
---       label "Contact Name"
---       input Username (placeholder "contact name")

@@ -6,7 +6,8 @@ module Web.Hyperbole.Server.Handler where
 import Data.Kind (Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
-import Effectful.Reader.Dynamic
+import Effectful.Reader.Static
+import Effectful.State.Static.Local
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Response (hyperView, respondError)
@@ -18,14 +19,14 @@ import Web.Hyperbole.View
 
 
 class RunHandlers (views :: [Type]) es where
-  runHandlers :: (Hyperbole :> es) => Event TargetViewId Encoded -> Eff es (Maybe Response)
+  runHandlers :: (Hyperbole :> es) => Event TargetViewId Encoded Encoded -> Eff es (Maybe Response)
 
 
 instance RunHandlers '[] es where
   runHandlers _ = pure Nothing
 
 
-instance (HyperView view es, RunHandlers views es) => RunHandlers (view : views) es where
+instance (HyperView view es, ToEncoded (ViewState view), FromEncoded (ViewState view), RunHandlers views es) => RunHandlers (view : views) es where
   runHandlers rawEvent = do
     mr <- runHandler @view rawEvent (update @view)
     case mr of
@@ -35,17 +36,17 @@ instance (HyperView view es, RunHandlers views es) => RunHandlers (view : views)
 
 runHandler
   :: forall id es
-   . (HyperView id es, Hyperbole :> es)
-  => Event TargetViewId Encoded
-  -> (Action id -> Eff (Reader id : es) (View id ()))
+   . (HyperView id es, ToEncoded (ViewState id), FromEncoded (ViewState id), Hyperbole :> es)
+  => Event TargetViewId Encoded Encoded
+  -> (Action id -> Eff (Reader id : State (ViewState id) : es) (View id ()))
   -> Eff es (Maybe Response)
 runHandler rawEvent run = do
   -- Get an event matching our type. If it doesn't match, skip to the next handler
-  mev <- decodeEvent @id rawEvent :: Eff es (Maybe (Event id (Action id)))
+  mev <- decodeEvent @id rawEvent :: Eff es (Maybe (Event id (Action id) (ViewState id)))
   case mev of
     Just evt -> do
-      vw <- runReader evt.viewId $ run evt.action
-      res <- hyperView evt.viewId vw
+      (vw, st) <- runState evt.state $ runReader evt.viewId $ run evt.action
+      res <- hyperView evt.viewId st vw
       pure $ Just res
     _ -> do
       pure Nothing
@@ -73,14 +74,15 @@ loadPageResponse :: Eff es (View (Root total) ()) -> Eff es Response
 loadPageResponse run = do
   vw <- run
   let vid = TargetViewId $ toViewId Root
-  let res = Response vid $ addContext Root vw
+  let res = Response $ ViewUpdate vid $ renderBody $ runViewContext Root () vw
   pure res
 
 
 -- despite not needing any effects, this must be in Eff es to get `es` on the RHS
-decodeEvent :: forall id es. (HyperView id es) => Event TargetViewId Encoded -> Eff es (Maybe (Event id (Action id)))
-decodeEvent (Event (TargetViewId ti) eact) =
+decodeEvent :: forall id es. (HyperView id es, FromEncoded (ViewState id)) => Event TargetViewId Encoded Encoded -> Eff es (Maybe (Event id (Action id) (ViewState id)))
+decodeEvent (Event (TargetViewId ti) eact est) =
   pure $ either (const Nothing) Just $ do
     vid <- parseViewId ti
     act <- parseAction eact
-    pure $ Event vid act
+    st <- parseEncoded est
+    pure $ Event vid act st

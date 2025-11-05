@@ -148,10 +148,10 @@ instance (Todos :> es) => HyperView TodoView es where
 todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
   row ~ border (TRBL 0 0 1 0) . pad 10 . showDestroyOnHover $ do
-    target AllTodos $ do
+    target AllTodos () $ do
       toggleCheckbox (SetCompleted filt todo) todo.completed
     el (text todo.task) @ onDblClick (Edit filt todo) ~ completed . pad (XY 18 4) . grow
-    target AllTodos $ do
+    target AllTodos () $ do
       button (Destroy filt todo) "✕" ~ cls "destroy-btn" . opacity 0 . hover (color Primary) . pad 4
  where
   completed = if todo.completed then Style.strikethrough else id

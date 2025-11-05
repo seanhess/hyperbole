@@ -52,7 +52,7 @@ page = do
         text "You can opt-out of Atomic CSS and use external classes with "
         code "class_"
       example (CSS Route.External) $ do
-        addContext Root ext
+        runViewContext Root () ext
  where
   header = bold
   h3 = header . fontSize 18

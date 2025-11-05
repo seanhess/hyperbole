@@ -2,14 +2,18 @@
 
 module Web.Hyperbole.View.Types where
 
-import Data.Kind (Type)
 import Data.String (IsString (..))
 import Data.Text (Text, pack)
 import Effectful
 import Effectful.Reader.Static
+import Effectful.State.Static.Local
+import GHC.Generics
 import Web.Atomic.Html (Html (..))
 import Web.Atomic.Html qualified as Atomic
 import Web.Atomic.Types
+import Web.Hyperbole.Data.Encoded (decodeEither, encodedToText)
+import Web.Hyperbole.Data.Param (FromParam, ToParam (..))
+import Web.Hyperbole.View.ViewId
 
 
 -- View ------------------------------------------------------------
@@ -20,16 +24,16 @@ import Web.Atomic.Types
 #EMBED Example/Docs/BasicPage.hs helloWorld
 @
 -}
-newtype View c a = View {html :: Eff '[Reader c] (Html a)}
+newtype View c a = View {html :: Eff '[Reader (c, ViewState c)] (Html a)}
 
 
 instance IsString (View c ()) where
   fromString s = View $ pure $ Atomic.text (pack s)
 
 
-runView :: forall c a. c -> View c a -> Html a
-runView c (View eff) = do
-  runPureEff $ runReader c eff
+execView :: forall c a. c -> ViewState c -> View c a -> Html a
+execView c st (View eff) = do
+  runPureEff $ runReader (c, st) eff
 
 
 instance Functor (View c) where
@@ -54,59 +58,49 @@ instance Monad (View ctx) where
   View ea >>= famb = View $ do
     a :: a <- (.value) <$> ea
     let View eb :: View ctx b = famb a
-    hb <- eb
-    pure $ hb
+    eb
 
 
 -- Context -----------------------------------------
 
-type family ViewContext (v :: Type) where
-  ViewContext (View c x) = c
-  ViewContext (View c x -> View c x) = c
+-- type family ViewContext (v :: Type) where
+--   ViewContext (View c x) = c
+--   ViewContext (View c x -> View c x) = c
+
+newtype ChildView a = ChildView a
+  deriving (Generic)
+instance (ViewId a, FromParam a, ToParam a) => ViewId (ChildView a) where
+  type ViewState (ChildView a) = ViewState a
 
 
 -- TEST: appending Empty
-context :: forall c. View c c
+context :: forall c. View c (c, ViewState c)
 context = View $ do
-  c <- ask @c
+  c <- ask @(c, ViewState c)
   pure $ pure c
 
 
-addContext :: ctx -> View ctx () -> View c ()
-addContext c (View eff) = View $ do
-  pure $ runPureEff $ runReader c eff
+viewState :: View c (ViewState c)
+viewState = snd <$> context
 
 
-modifyContext
-  :: forall ctx0 ctx1. (ctx0 -> ctx1) -> View ctx1 () -> View ctx0 ()
-modifyContext f (View eff) = View $ do
-  ctx0 <- ask @ctx0
-  pure $ runPureEff $ runReader (f ctx0) eff
+runViewContext :: ctx -> ViewState ctx -> View ctx () -> View c ()
+runViewContext c st (View eff) = View $ do
+  pure $ runPureEff $ runReader (c, st) eff
 
 
--- Html ---------------------------------------------
-
-tag :: Text -> View c () -> View c ()
-tag = tag' False
-
-
-tag' :: Bool -> Text -> View c () -> View c ()
-tag' inline n (View eff) = View $ do
-  content <- eff
-  pure $ Atomic.tag' inline n content
+runChildView :: (ViewState ctx ~ ViewState c) => (c -> ctx) -> View ctx () -> View c ()
+runChildView f v = do
+  st <- viewState
+  c <- viewId
+  runViewContext (f c) st v
 
 
-text :: Text -> View c ()
-text t = View $ pure $ Atomic.text t
-
-
-none :: View c ()
-none = View $ pure Atomic.none
-
-
-raw :: Text -> View c ()
-raw t = View $ pure $ Atomic.raw t
-
+-- modifyContext
+--   :: forall ctx0 ctx1. (ctx0 -> ctx1) -> View ctx1 () -> View ctx0 ()
+-- modifyContext f (View eff) = View $ do
+--   ctx0 <- ask @ctx0
+--   pure $ runPureEff $ runReader (f ctx0) eff
 
 -- Attributes -----------------------------------------
 
@@ -120,3 +114,32 @@ instance Styleable (View c a) where
   modCSS f (View eff) = View $ do
     h <- eff
     pure $ modCSS f h
+
+
+{- | Access the 'viewId' in a 'View' or 'update'
+
+@
+#EMBED Example/Page/Concurrency.hs data LazyData
+
+#EMBED Example/Page/Concurrency.hs instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
+@
+-}
+class HasViewId m view where
+  viewId :: m view
+
+
+instance HasViewId (View ctx) ctx where
+  viewId = fst <$> context
+instance (ViewState view ~ st) => HasViewId (Eff (Reader view : State st : es)) view where
+  viewId = ask
+
+
+encodeViewId :: (ViewId id) => id -> Text
+encodeViewId = encodedToText . toViewId
+
+
+decodeViewId :: (ViewId id) => Text -> Maybe id
+decodeViewId t = do
+  case parseViewId =<< decodeEither t of
+    Left _ -> Nothing
+    Right a -> pure a

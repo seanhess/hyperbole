@@ -26,6 +26,7 @@ page = do
 
       example Simple ~ Cyber.font $ do
         addContext Root simple
+        runViewContext Root () simple
 
       snippet $ do
         raw $(embedSource "examples/Example/Page/Simple.hs" (const True) (const True))
@@ -47,3 +48,4 @@ page = do
         text "Notice how it expects the current count as a parameter."
       example Counter $ do
         addContext Root counter
+        runViewContext Root () counter
