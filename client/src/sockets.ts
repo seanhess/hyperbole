@@ -8,15 +8,18 @@ const defaultAddress = `${protocol}//${window.location.host}${window.location.pa
 
 
 
-export class SocketConnection extends EventTarget {
+export class SocketConnection {
   socket: WebSocket
 
   hasEverConnected: Boolean = false
   isConnected: Boolean = false
   reconnectDelay: number = 0
   queue: ActionMessage[] = []
+  events: EventTarget
 
-  // constructor() { super() }
+  constructor() {
+    this.events = new EventTarget()
+  }
 
   connect(addr = defaultAddress) {
     const sock = new WebSocket(addr)
@@ -191,6 +194,14 @@ export class SocketConnection extends EventTarget {
   //     this.socket.addEventListener('error', reject)
   //   })
   // }
+
+  addEventListener(e: string, cb: EventListenerOrEventListenerObject) {
+    this.events.addEventListener(e, cb)
+  }
+
+  dispatchEvent(e: Event) {
+    this.events.dispatchEvent(e)
+  }
 
   disconnect() {
     this.isConnected = false

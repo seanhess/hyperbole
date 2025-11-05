@@ -144,16 +144,6 @@ function handleUpdate(res: Update): HyperView {
 // }
 
 
-// Remove loading and clear add timeout
-
-// function runMetadataImmediate(meta: Metadata): boolean {
-//   if (meta.redirect) {
-//     // perform a redirect immediately
-//     window.location.href = meta.redirect
-//     return true
-//   }
-// }
-
 function runMetadata(meta: Metadata, target?: HTMLElement) {
   if (meta.query != null) {
     setQuery(meta.query)
@@ -163,13 +153,17 @@ function runMetadata(meta: Metadata, target?: HTMLElement) {
     document.title = meta.pageTitle
   }
 
-  for (var remoteEvent of meta.events) {
+  meta.cookies.forEach((cookie: string) => {
+    document.cookie = cookie
+  })
+
+  meta.events.forEach((remoteEvent) => {
     setTimeout(() => {
       let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
       let eventTarget = target || document
       eventTarget.dispatchEvent(event)
     }, 10)
-  }
+  })
 
   meta.actions.forEach(([viewId, action]) => {
     setTimeout(() => {

@@ -1,16 +1,20 @@
 import { ActionMessage } from './action';
 import { ResponseBody } from "./response";
 import { ViewId, RequestId, EncodedAction, Metadata } from "./message";
-export declare class SocketConnection extends EventTarget {
+export declare class SocketConnection {
     socket: WebSocket;
     hasEverConnected: Boolean;
     isConnected: Boolean;
     reconnectDelay: number;
     queue: ActionMessage[];
+    events: EventTarget;
+    constructor();
     connect(addr?: string): void;
     sendAction(action: ActionMessage): Promise<void>;
     private runQueue;
     private onMessage;
+    addEventListener(e: string, cb: EventListenerOrEventListenerObject): void;
+    dispatchEvent(e: Event): void;
     disconnect(): void;
 }
 export type Update = {
