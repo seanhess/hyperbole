@@ -10,7 +10,7 @@ let PACKAGE = require('../package.json');
 
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole " + PACKAGE.version)
+console.log("Hyperbole " + PACKAGE.version + "b")
 
 
 let rootStyles: HTMLStyleElement;
@@ -56,8 +56,13 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
 }
 
 
+// TODO: redirect concurrency
 function handleRedirect(red: Redirect) {
   console.log("REDIRECT", red)
+
+  // the other metdata doesn't apply, they are all specific to the page
+  applyCookies(red.meta.cookies)
+
   window.location.href = red.url
 }
 
@@ -121,6 +126,7 @@ function handleUpdate(res: Update): HyperView {
   if (newTarget) {
     // execute the metadata, anything that doesn't interrupt the dom update
     runMetadata(res.meta, newTarget)
+    applyCookies(res.meta.cookies)
 
     // now way for these to bubble)
     listenLoad(newTarget)
@@ -143,6 +149,12 @@ function handleUpdate(res: Update): HyperView {
 //   target.innerHTML = err.body || "<div style='background:red;color:white;padding:10px'>Hyperbole Internal Error</div>"
 // }
 
+function applyCookies(cookies: string[]) {
+  cookies.forEach((cookie: string) => {
+    console.log("SetCookie: ", cookie)
+    document.cookie = cookie
+  })
+}
 
 function runMetadata(meta: Metadata, target?: HTMLElement) {
   if (meta.query != null) {
@@ -152,10 +164,6 @@ function runMetadata(meta: Metadata, target?: HTMLElement) {
   if (meta.pageTitle != null) {
     document.title = meta.pageTitle
   }
-
-  meta.cookies.forEach((cookie: string) => {
-    document.cookie = cookie
-  })
 
   meta.events.forEach((remoteEvent) => {
     setTimeout(() => {

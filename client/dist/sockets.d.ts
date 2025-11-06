@@ -27,6 +27,7 @@ export type Update = {
 };
 export type Redirect = {
     requestId: RequestId;
+    meta: Metadata;
     url: string;
 };
 export type MessageType = string;

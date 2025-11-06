@@ -133,6 +133,7 @@ export class SocketConnection {
       let url = rest[0]
       return {
         requestId,
+        meta: message.toMetadata(metas),
         url
       }
     }
@@ -222,6 +223,7 @@ export type Update = {
 
 export type Redirect = {
   requestId: RequestId
+  meta: Metadata
   url: string
 }
 
