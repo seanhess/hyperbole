@@ -7,7 +7,6 @@ import Effectful.Reader.Dynamic
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.HyperView (ConcurrencyValue (..), HyperView (..), ViewId (..), hyperUnsafe)
-import Web.Hyperbole.HyperView.ViewId (viewId)
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View.Types
@@ -20,13 +19,13 @@ hyperView i vw = do
   pure $ Response vid $ hyperUnsafe i vw
 
 
-pushUpdate :: (Hyperbole :> es, ViewId id, ConcurrencyValue (Concurrency id)) => View id () -> Eff (Reader id : es) ()
+pushUpdate :: (Reader id :> es, ViewId id, ConcurrencyValue (Concurrency id), Hyperbole :> es) => View id () -> Eff es ()
 pushUpdate vw = do
-  i <- viewId
+  i <- ask
   pushUpdateTo i vw
 
 
-pushUpdateTo :: (Hyperbole :> es, ViewId id, ConcurrencyValue (Concurrency id)) => id -> View id () -> Eff es ()
+pushUpdateTo :: (ViewId id, ConcurrencyValue (Concurrency id), Hyperbole :> es) => id -> View id () -> Eff es ()
 pushUpdateTo i vw = do
   send $ PushUpdate (TargetViewId $ toViewId i) $ hyperUnsafe i vw
 
