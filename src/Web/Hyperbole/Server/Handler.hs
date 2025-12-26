@@ -6,8 +6,8 @@ module Web.Hyperbole.Server.Handler where
 import Data.Kind (Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
-import Effectful.Reader.Static
-import Effectful.State.Static.Local
+import Effectful.Reader.Dynamic
+import Effectful.State.Dynamic
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Response (hyperView, respondError)
@@ -45,7 +45,7 @@ runHandler rawEvent run = do
   mev <- decodeEvent @id rawEvent :: Eff es (Maybe (Event id (Action id) (ViewState id)))
   case mev of
     Just evt -> do
-      (vw, st) <- runState evt.state $ runReader evt.viewId $ run evt.action
+      (vw, st) <- runStateLocal evt.state $ runReader evt.viewId $ run evt.action
       res <- hyperView evt.viewId st vw
       pure $ Just res
     _ -> do

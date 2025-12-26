@@ -3,8 +3,8 @@ module Web.Hyperbole.Effect.Response where
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
-import Effectful.Reader.Static
-import Effectful.State.Static.Local
+import Effectful.Reader.Dynamic
+import Effectful.State.Dynamic
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))

@@ -8,7 +8,7 @@ import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
 import Effectful
-import Effectful.State.Static.Local
+import Effectful.State.Dynamic
 import Web.Atomic.CSS
 import Web.Atomic.Html qualified as Atomic
 import Web.Atomic.Types
@@ -190,7 +190,7 @@ nav = tag "nav"
 -}
 table :: [dt] -> TableColumns c dt () -> View c ()
 table dts (TableColumns wcs) = do
-  let cols = runPureEff . execState [] $ wcs
+  let cols = runPureEff . execStateLocal [] $ wcs
   tag "table" $ do
     tag "thead" $ do
       tag "tr" $ do

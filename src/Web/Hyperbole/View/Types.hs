@@ -5,8 +5,8 @@ module Web.Hyperbole.View.Types where
 import Data.String (IsString (..))
 import Data.Text (Text, pack)
 import Effectful
-import Effectful.Reader.Static
-import Effectful.State.Static.Local
+import Effectful.Reader.Dynamic
+import Effectful.State.Dynamic
 import GHC.Generics
 import Web.Atomic.Html (Html (..))
 import Web.Atomic.Html qualified as Atomic

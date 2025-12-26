@@ -37,10 +37,10 @@ instance (Reader (TVar Int) :> es, Concurrent :> es) => HyperView Counter es whe
     deriving (Generic, ViewAction)
 
   update Increment = do
-    n <- modify (+ 1)
+    n <- modifyCount (+ 1)
     pure $ viewCount n
   update Decrement = do
-    n <- modify (subtract 1)
+    n <- modifyCount (subtract 1)
     pure $ viewCount n
 
 viewCount :: Int -> View Counter ()
@@ -51,8 +51,8 @@ viewCount n = row $ do
       button Decrement "Decrement" ~ btn
       button Increment "Increment" ~ btn
 
-modify :: (Concurrent :> es, Reader (TVar Int) :> es) => (Int -> Int) -> Eff es Int
-modify f = do
+modifyCount :: (Concurrent :> es, Reader (TVar Int) :> es) => (Int -> Int) -> Eff es Int
+modifyCount f = do
   var <- ask
   atomically $ do
     modifyTVar var f

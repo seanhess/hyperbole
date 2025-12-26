@@ -4,7 +4,7 @@ import Data.Aeson
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
-import Effectful.Reader.Static
+import Effectful.Reader.Dynamic
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Types.Client (clientSetPageTitle)

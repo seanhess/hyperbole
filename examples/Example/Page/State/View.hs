@@ -4,12 +4,12 @@
 module Example.Page.State.View where
 
 import Data.Text (pack)
-import Effectful.State.Static.Local
 import Example.AppRoute qualified as Route
 import Example.Style.Cyber as Style
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Web.Hyperbole.HyperView
 
 page :: (Hyperbole :> es) => Page es '[Counter]
 page = do

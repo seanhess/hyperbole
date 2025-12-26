@@ -6,8 +6,8 @@ module Web.Hyperbole.HyperView.Types where
 
 import Data.Kind (Type)
 import Effectful
-import Effectful.Reader.Static
-import Effectful.State.Static.Local
+import Effectful.Reader.Dynamic
+import Effectful.State.Dynamic
 import GHC.Generics
 import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
