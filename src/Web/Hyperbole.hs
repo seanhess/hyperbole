@@ -119,7 +119,7 @@ module Web.Hyperbole
     -- * HyperView #hyperview#
   , HyperView (..)
   , hyper
-  , hyper'
+  , hyperState
   , HasViewId (..)
 
     -- * Interactive Elements #interactive#

@@ -8,7 +8,7 @@ import Effectful.State.Static.Local
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
-import Web.Hyperbole.HyperView (ConcurrencyValue (..), HyperView (..), ViewId (..), hyperUnsafe)
+import Web.Hyperbole.HyperView (ConcurrencyValue (..), HyperView (..), hyperUnsafe)
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View

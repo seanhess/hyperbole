@@ -18,21 +18,21 @@ import Web.Hyperbole.View.ViewId
 -}
 hyper
   :: forall id ctx
-   . (HyperViewHandled id ctx, ViewId id, ViewState id ~ (), ViewState id ~ (), ConcurrencyValue (Concurrency id))
+   . (HyperViewHandled id ctx, ViewId id, ViewState id ~ (), ConcurrencyValue (Concurrency id))
   => id
   -> View id ()
   -> View ctx ()
-hyper vid = hyperUnsafe vid ()
+hyper vid = hyperState vid ()
 
 
-hyper'
+hyperState
   :: forall id ctx
-   . (HyperViewHandled id ctx, ViewId id, ViewState id ~ ViewState id, ToEncoded (ViewState id), ConcurrencyValue (Concurrency id))
+   . (HyperViewHandled id ctx, ViewId id, ToEncoded (ViewState id), ConcurrencyValue (Concurrency id))
   => id
   -> ViewState id
   -> View id ()
   -> View ctx ()
-hyper' = hyperUnsafe
+hyperState = hyperUnsafe
 
 
 hyperUnsafe :: forall id ctx. (ViewId id, ViewState id ~ ViewState id, ToEncoded (ViewState id), ConcurrencyValue (Concurrency id)) => id -> ViewState id -> View id () -> View ctx ()

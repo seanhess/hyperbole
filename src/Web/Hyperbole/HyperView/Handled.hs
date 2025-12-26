@@ -77,6 +77,8 @@ type NotInPage x total =
 
 
 type family HyperViewHandled id ctx :: Constraint where
+  -- If you forget to pass the state into a function that expects it, you end up passing a view
+  -- in as the ctx. Show an error to help with this
   HyperViewHandled id (View view ()) = TypeError ('Text "View c () is not a valid ViewState, did you forget to pass ViewState into target or runViewContext?")
   HyperViewHandled id ctx =
     ( -- the id must be found in the children of the context

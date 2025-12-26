@@ -17,7 +17,7 @@ page = do
   pure $ exampleLayout rt $ do
     example rt $ do
       col ~ embed $ do
-        hyper' Counter 1 viewCount
+        hyperState Counter 1 viewCount
 
 data Counter = Counter
   deriving (Generic)

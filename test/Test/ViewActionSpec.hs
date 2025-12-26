@@ -7,7 +7,7 @@ import Skeletest.Predicate qualified as P
 import Web.Hyperbole (FromJSON, ToJSON)
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Data.Param
-import Web.Hyperbole.HyperView (ViewAction (..))
+import Web.Hyperbole.View
 import Web.Hyperbole.HyperView.Event (toActionInput)
 
 

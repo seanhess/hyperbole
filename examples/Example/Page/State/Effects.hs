@@ -7,7 +7,7 @@ import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
 import Example.AppRoute hiding (Counter)
-import Example.Style.Cyber as Cyber (btn, dataFeature, font)
+import Example.Style.Cyber as Cyber (btn, dataFeature)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole

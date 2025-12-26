@@ -8,7 +8,6 @@ import GHC.Generics
 import Skeletest
 import Web.Hyperbole
 import Web.Hyperbole.Data.Encoded
-import Web.Hyperbole.HyperView
 
 
 data Thing = Thing
