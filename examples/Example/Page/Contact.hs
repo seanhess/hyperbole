@@ -7,7 +7,7 @@ import Data.String.Conversions
 import Data.Text (Text, pack)
 import Effectful
 import Effectful.Reader.Dynamic
-import Example.AppRoute (UserId, routeSource)
+import Example.AppRoute (UserId)
 import Example.AppRoute qualified as Route
 import Example.Colors
 import Example.Effects.Debug
@@ -32,8 +32,8 @@ page = do
   uid <- ask
   u <- Users.find uid
   pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
-    example' "Contact" (routeSource $ Route.Contacts (Route.Contact 1)) $ do
-      col ~ embed $ do
+    section' "Contact" $ do
+      example (Route.Contacts (Route.Contact 1)) $ do
         hyper (Contact uid) $ contactView u
 
 -- Contact ----------------------------------------------------

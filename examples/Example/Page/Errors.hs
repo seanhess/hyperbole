@@ -18,24 +18,24 @@ import Web.Hyperbole hiding (link)
 page :: (Hyperbole :> es) => Page es '[Defaults, Users]
 page = do
   pure $ exampleLayout Errors $ do
-    example' "Exceptions" (routeSource Errors) $ do
+    section' "Exceptions" $ do
       el "Any uncaught exceptions thrown from a handler will be displayed in a bright red box inline in the corresponding HyperView"
-      col ~ embed $ do
+      example Errors $ do
         hyper Exceptions viewExceptions
 
-    example' "Edge Cases" (routeSource Errors) $ do
+    section' "Edge Cases" $ do
       el "You can use the same mechanism to exit execution early and display an application error to handle edge cases"
-      col ~ embed $ do
+      example Errors $ do
         hyper KnownUsers viewKnownUsers
 
-    example' "Handling in Views" (routeSource Errors) $ do
+    section' "Handling in Views" $ do
       el "Handle any expected errors in your view function, by making it accept a Maybe or Either"
-      col ~ embed $ do
+      example Errors $ do
         hyper SearchUsers viewSearchUsers
 
-    example' "Custom Error Views" (routeSource Errors) $ do
+    section' "Custom Error Views" $ do
       el "You can also exit execution early and display a custom view from application code or from caught execptions"
-      col ~ embed $ do
+      example Errors $ do
         hyper Customs viewCustom
 
 -- Defaults ------------------------------------------------

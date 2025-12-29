@@ -21,8 +21,9 @@ page :: (Todos :> es) => Page es '[AllTodos, TodoView]
 page = do
   todos <- Todos.loadAll
   pure $ exampleLayout (Route.Examples Route.Todos) $ do
-    example' "Todos" "Example/Page/Todos/Todo.hs" $ do
-      col ~ embed $ hyper AllTodos $ todosView FilterAll todos
+    section' "Todos" $ do
+      example' "Example/Page/Todos/Todo.hs" $ do
+        hyper AllTodos $ todosView FilterAll todos
 
 -- Keep this, it's used for documentation (+ usable via the REPL, see main below)
 simplePage :: (Todos :> es) => Page es '[AllTodos, TodoView]

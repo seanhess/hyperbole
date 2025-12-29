@@ -16,19 +16,19 @@ page = do
 
     el "Include custom js on a page with the script tag on only the page where it is needed, or globally via your toDocument function"
 
-    example' "Javascript - runAction" (routeSource Javascript) $ do
+    section' "Javascript - runAction" $ do
       el $ do
         text "JS can call the server via an API attached to "
         code "window.Hyperbole"
         text ". Here we re-implement mouseover boxes from the Interactivity example using Javascript"
 
-      col ~ embed . font $ do
+      example Javascript ~ font $ do
         hyper Boxes $ viewBoxes Nothing
 
-    example' "Javascript - pushEvent" (routeSource Javascript) $ do
+    section' "Javascript - pushEvent" $ do
       el "The server can push an event to be dispatched on a HyperView"
 
-      col ~ embed $ do
+      example Javascript $ do
         hyper Message $ button AlertMe ~ btn $ "Alert Me"
 
 data Boxes = Boxes

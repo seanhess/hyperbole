@@ -10,7 +10,7 @@ import Example.Colors
 import Example.Effects.Debug
 import Example.Style.Cyber (btn, font)
 import Example.View.Inputs (progressBar)
-import Example.View.Layout (embed, example', exampleLayout)
+import Example.View.Layout (example, exampleLayout, section')
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Effect.GenRandom
@@ -18,39 +18,38 @@ import Web.Hyperbole.Effect.GenRandom
 page :: (Hyperbole :> es, Debug :> es) => Page es '[Polling, LazyData, Progress, Tasks]
 page = do
   pure $ exampleLayout Concurrency $ do
-    example' "Concurrency" source $ do
+    section' "Concurrency" $ do
       el "While individual HyperViews can only have one update in progress at a time, multiple HyperViews can overlap updates without issue"
-      el ~ embed . font $ do
+      example Concurrency ~ font $ do
         hyper (Progress 1) $ viewProgressLoad 6
         hyper (Progress 2) $ viewProgressLoad 4
         hyper (Progress 3) $ viewProgressLoad 2
     -- hyper (Progress 4 200) viewProgressLoad
     -- hyper (Progress 5 250) viewProgressLoad
-    example' "Lazy Loading" source $ do
+    section' "Lazy Loading" $ do
       el $ do
         text "Instead of preloading everything in our Page, a HyperView can load itself using "
         code "onLoad"
-      el ~ flexRow . embed . flexWrap Wrap . font $ do
-        forM_ pretendTasks $ \taskId -> do
-          el ~ border 1 . width 120 . pad 5 $ do
-            hyper (LazyData taskId) viewTaskLoad
+      example Concurrency $ do
+        row ~ flexWrap Wrap . font . gap 10 $ do
+          forM_ pretendTasks $ \taskId -> do
+            el ~ border 1 . width 120 . pad 5 $ do
+              hyper (LazyData taskId) viewTaskLoad
 
-    example' "Polling" source $ do
+    section' "Polling" $ do
       el $ do
         text "By including an "
         code "onLoad"
         text "in every view update, we can poll the server after a given delay"
-      col ~ embed $ hyper Polling viewInit
+      example Concurrency $ hyper Polling viewInit
 
-    example' "Push Updates" source $ do
+    section' "Push Updates" $ do
       el $ do
         text "Actions can call "
         code "pushUpdate"
         text " to send an intermediate update to the view. This is simpler than polling"
-      col ~ embed . font $ do
+      example Concurrency ~ font $ do
         hyper Tasks $ taskView 0
- where
-  source = routeSource Concurrency
 
 -----------------------------------------------------------
 -- Simple Polling

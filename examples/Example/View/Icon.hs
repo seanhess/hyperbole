@@ -3,6 +3,8 @@
 module Example.View.Icon where
 
 import Data.String.Interpolate (i)
+import Data.Text (Text)
+import Web.Atomic.CSS
 import Web.Hyperbole.View
 
 hamburger :: View c ()
@@ -37,8 +39,27 @@ chevronDown = raw $ do
   <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
 </svg>|]
 
+-- see icons.svg
+icon :: Text -> View c ()
+icon iconId = tag "svg" ~ icn $ do
+  tag "use" @ att "href" ("/icons.svg#" <> iconId) $ none
+ where
+  icn =
+    utility
+      "icn"
+      [ "width" :. "1.2em"
+      , "height" :. "1.2em"
+      , "display" :. "inline-block"
+      , "fill" :. "none"
+      , "stroke" :. "current-color"
+      , "transform" :. "translateY(0.175em)"
+      ]
+
 bookOpen :: View c ()
-bookOpen = raw $ do
-  [i|<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-  </svg>|]
+bookOpen = icon "book"
+
+linkOut :: View c ()
+linkOut = icon "link-out"
+
+iconInline :: (Styleable h) => CSS h -> CSS h
+iconInline = flexRow . gap 2 . utility "items-baseline" ["align-items" :. "baseline"]

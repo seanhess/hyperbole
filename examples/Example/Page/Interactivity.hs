@@ -10,7 +10,7 @@ import Web.Hyperbole
 page :: (Hyperbole :> es) => Page es '[Boxes]
 page = do
   pure $ exampleLayout Interactivity $ do
-    example' "Events" "Example/Page/Interactivity/Events.hs" $ do
+    section' "Events" $ do
       el $ do
         text "Hyperbole provides various events that can be tied to specific actions. Up to this point, we've only used them via the higher-level views like "
         code "button"
@@ -22,4 +22,4 @@ page = do
         code "onMouseLeave"
       el $ do
         text "Remember it is better to use Atomic CSS to provide immediate feedback whenever possible. If used improperly, too many mouse events could make the app unresponsive."
-      col ~ embed . font $ hyper Boxes (viewBoxes Nothing)
+      example' "Example/Page/Interactivity/Events.hs" ~ font $ hyper Boxes (viewBoxes Nothing)

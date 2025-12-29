@@ -19,11 +19,12 @@ page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   counter <- Counter.page
   pure $ exampleLayout (State Actions) $ do
-    example' (routeTitle (State Actions)) (routeSource Counter) $ do
+    section (State Actions) $ do
       hackage "#g:state" "Managing State"
-      col ~ embed $ do
+      example Counter $ do
         pre countExample ~ font
-      col ~ embed $ do
+
+      example Counter $ do
         addContext Root counter
 
 countExample :: Text

@@ -26,9 +26,9 @@ page
 page = do
   us <- Users.all
   pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
-    example (Route.Contacts Route.ContactsAll) $ do
+    section (Route.Contacts Route.ContactsAll) $ do
       el "This example combines various features"
-      col ~ embed $ do
+      example (Route.Contacts Route.ContactsAll) $ do
         hyper Contacts $ allContactsView Nothing us
 
 -- Contacts ----------------------------------------------

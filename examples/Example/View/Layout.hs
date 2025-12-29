@@ -10,7 +10,7 @@ import Example.AppRoute
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
-import Example.View.Icon as Icon (bookOpen, hamburger)
+import Example.View.Icon as Icon (bookOpen, hamburger, iconInline, linkOut)
 import Paths_examples (version)
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -34,25 +34,33 @@ exampleLayout rt contents =
 
 sourceLink :: Path -> View c ()
 sourceLink p =
-  link sourceUrl "View Source" ~ Style.link
+  link sourceUrl ~ Style.link . fontSize 14 @ att "target" "_blank" $ do
+    text "View Source"
  where
   sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/main/examples/|]
   sourceUrl = sourceUrlBase ./. p
 
 embed :: (Styleable h) => CSS h -> CSS h
 embed =
-  pad 20 . gap 10 . bg White . flexCol . Cyber.clip 10
+  pad 25 . gap 10 . bg White . flexCol . Cyber.clip 10
 
 example :: AppRoute -> View c () -> View c ()
-example r = example' (routeTitle r) (routeSource r)
+example r = example' (routeSource r)
 
-example' :: Text -> Path -> View c () -> View c ()
-example' t p cnt =
+example' :: Path -> View c () -> View c ()
+example' p cnt = do
+  el ~ stack $ do
+    col ~ embed $ cnt
+    sourceLink p ~ popup (TR 4 4)
+
+section :: AppRoute -> View c () -> View c ()
+section r = section' (routeTitle r)
+
+section' :: Text -> View c () -> View c ()
+section' t cnt =
   col ~ gap 10 $ do
     row $ do
       el ~ bold . fontSize 28 . Cyber.font . Style.uppercase $ text t
-      space
-      sourceLink p
     cnt
 
 exampleMenu :: AppRoute -> View c ()
@@ -154,6 +162,6 @@ hackage :: Fragment -> Text -> View c ()
 hackage uriFragment txt = do
   let docs = [uri|https://hackage-content.haskell.org/package/hyperbole/docs/Web-Hyperbole.html|]
   link docs{uriFragment} @ att "target" "_blank" ~ Style.link $ do
-    row ~ gap 4 $ do
-      el ~ width 22 . position Relative . top 2 $ Icon.bookOpen
+    el ~ iconInline $ do
+      Icon.bookOpen
       text txt

@@ -10,18 +10,18 @@ import Web.Hyperbole
 page :: (Hyperbole :> es) => Page es '[Message, Controls]
 page = do
   pure $ exampleLayout Route.Advanced $ do
-    example' "Trigger" (routeSource Advanced) $ do
+    section' "Trigger" $ do
       el "Tell other HyperViews to run an action"
-      col ~ embed $ do
+      example Advanced $ do
         hyper Message $ messageView "..."
 
-      col ~ embed $ do
+      example Advanced $ do
         hyper Controls controlView
 
-    example' "Target" (routeSource Advanced) $ do
+    section' "Target" $ do
       el "Alternatively, you can switch contexts to another view to embed its actions"
 
-      col ~ embed $ do
+      example Advanced $ do
         hyper Controls targetView
 
 data Message = Message
