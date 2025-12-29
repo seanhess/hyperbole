@@ -15,7 +15,6 @@ import Paths_examples (version)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI
-import Web.Hyperbole.View.Types (tag')
 
 exampleLayout :: AppRoute -> View c () -> View c ()
 exampleLayout rt contents =
