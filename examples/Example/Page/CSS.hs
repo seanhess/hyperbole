@@ -1,7 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Example.Page.CSS where
 
+import Data.Snippet
 import Data.String.Interpolate (i)
 import Effectful
 import Example.AppRoute (AppRoute (CSS))
@@ -11,7 +13,7 @@ import Example.Page.CSS.Tooltips
 import Example.Page.CSS.Transitions
 import Example.Page.Interactivity.Events as Events
 import Example.Style qualified as Style
-import Example.View.Layout (embed, example, exampleLayout, section')
+import Example.View.Layout (embed, example, exampleLayout, section', snippet)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types (Root (..))
@@ -26,23 +28,8 @@ page = do
         text "Hyperbole encourages using the "
         link [uri|https://github.com/seanhess/atomic-css|] ~ Style.link $ "Atomic CSS"
         text "package to factor styles with haskell functions"
-      example (CSS Route.CSSAll) $ do
-        pre
-          [i|import Web.Atomic.CSS
-import Web.Hyperbole
-
-header = bold
-h1 = header . fontSize 32
-h2 = header . fontSize 24
-h3 = header . fontSize 18
-clickable = pointer . hover bold
-
-example = do
-  col $ do
-    el ~ h3 $ "My Page"
-    el ~ border 1 . pad 10 . clickable $ "Hover Me"
-  ...
-|]
+      snippet $ do
+        raw $(embedSource "examples/Example/Docs/CSS.hs" (isTopLevel "import") (const True))
 
       el $ do
         text "Note how we use "

@@ -1,17 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Example.Page.State.Actions where
 
+import Data.Snippet
 import Data.String.Interpolate (i)
 import Data.Text (Text)
 import Example.AppRoute
 import Example.Page.Counter (Counter)
 import Example.Page.Counter qualified as Counter
-import Example.Style.Cyber (font)
 import Example.View.Layout
-import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types
 
@@ -21,8 +21,12 @@ page = do
   pure $ exampleLayout (State Actions) $ do
     section (State Actions) $ do
       hackage "#g:state" "Managing State"
-      example Counter $ do
-        pre countExample ~ font
+
+      snippet $ do
+        raw $(embedTopLevel "examples/Example/Page/Counter.hs" "instance HyperView")
+
+      snippet $ do
+        raw $(embedTopLevel "examples/Example/Page/Counter.hs" "viewCount")
 
       example Counter $ do
         addContext Root counter

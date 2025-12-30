@@ -181,6 +181,8 @@ exampleApp config users count chats = do
     stylesheet "/cyber.css"
     script "/hyperbole.js"
     script' scriptLiveReload
+    stylesheet "/prism.css"
+    script "/prism.js" @ att "defer" ""
     style "body { background-color: #d3dceb }, button { font-family: 'Share Tech Mono'}"
     style cssEmbed
 

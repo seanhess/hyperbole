@@ -102,3 +102,7 @@
 
 
 
+pre[class*="language-"],
+code[class*="language-"] {
+  font-size: inherit;
+}

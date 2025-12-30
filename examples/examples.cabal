@@ -23,6 +23,7 @@ source-repository head
 executable examples
   main-is: Main.hs
   other-modules:
+      Data.Snippet
       Example.App
       Example.AppRoute
       Example.Cache
@@ -33,6 +34,7 @@ executable examples
       Example.Docs.BasicPage
       Example.Docs.Client
       Example.Docs.Component
+      Example.Docs.CSS
       Example.Docs.Encoding
       Example.Docs.Interactive
       Example.Docs.MultiCopies
@@ -126,6 +128,7 @@ executable examples
     , safe
     , string-conversions
     , string-interpolate
+    , template-haskell
     , text
     , time
     , wai

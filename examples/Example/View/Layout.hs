@@ -10,11 +10,12 @@ import Example.AppRoute
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
-import Example.View.Icon as Icon (bookOpen, hamburger, iconInline, linkOut)
+import Example.View.Icon as Icon (bookOpen, hamburger, iconInline)
 import Paths_examples (version)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI
+import Web.Hyperbole.View.Types (tag')
 
 exampleLayout :: AppRoute -> View c () -> View c ()
 exampleLayout rt contents =
@@ -42,16 +43,22 @@ sourceLink p =
 
 embed :: (Styleable h) => CSS h -> CSS h
 embed =
-  pad 25 . gap 10 . bg White . flexCol . Cyber.clip 10
+  pad 15 . gap 10 . bg White . flexCol . Cyber.clip 10
 
 example :: AppRoute -> View c () -> View c ()
 example r = example' (routeSource r)
 
 example' :: Path -> View c () -> View c ()
 example' p cnt = do
-  el ~ stack $ do
+  col $ do
     col ~ embed $ cnt
-    sourceLink p ~ popup (TR 4 4)
+    sourceLink p
+
+snippet :: View c () -> View c ()
+snippet cnt = do
+  tag' True "pre" ~ bg Light $ do
+    tag' True "code" @ class_ "language-haskell" $ do
+      cnt
 
 section :: AppRoute -> View c () -> View c ()
 section r = section' (routeTitle r)

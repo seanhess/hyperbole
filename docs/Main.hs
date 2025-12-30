@@ -201,6 +201,7 @@ expandEmbed src pfx def = do
     T.replace "\"" "\\\"" . highlightTermsLine
   markupLinePrefix line =
     pfx <> line
+
 highlightTermsLine :: Text -> Text
 highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
  where
