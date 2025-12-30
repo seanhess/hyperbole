@@ -1,6 +1,6 @@
 
 import { takeWhileMap } from "./lib"
-import { Meta, ViewId, RequestId, EncodedAction } from "./message"
+import { Meta, ViewId, RequestId, EncodedAction, ViewState } from "./message"
 import * as message from "./message"
 
 
@@ -9,6 +9,7 @@ export type ActionMessage = {
   viewId: ViewId
   action: EncodedAction
   requestId: RequestId
+  state?: ViewState
   meta: Meta[]
   form: URLSearchParams | undefined
 }
@@ -16,13 +17,13 @@ export type ActionMessage = {
 
 
 
-export function actionMessage(id: ViewId, action: EncodedAction, reqId: RequestId, form?: FormData): ActionMessage {
+export function actionMessage(id: ViewId, action: EncodedAction, state: ViewState | undefined, reqId: RequestId, form?: FormData): ActionMessage {
   let meta: Meta[] = [
     { key: "Cookie", value: decodeURI(document.cookie) },
     { key: "Query", value: window.location.search }
   ]
 
-  return { viewId: id, action, requestId: reqId, meta, form: toSearch(form) }
+  return { viewId: id, action, state, requestId: reqId, meta, form: toSearch(form) }
 }
 
 export function toSearch(form?: FormData): URLSearchParams | undefined {
@@ -42,9 +43,14 @@ export function renderActionMessage(msg: ActionMessage): string {
     "|ACTION|",
     "ViewId: " + msg.viewId,
     "Action: " + msg.action,
-    "RequestId: " + msg.requestId
   ]
 
+
+  if (msg.state) {
+    header.push("State: " + msg.state)
+  }
+
+  header.push("RequestId: " + msg.requestId)
 
   return [
     header.join('\n'),

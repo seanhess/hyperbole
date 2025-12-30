@@ -21,7 +21,7 @@ data Request = Request
   , body :: BL.ByteString
   , method :: Method
   , cookies :: Cookies
-  , event :: Maybe (Event TargetViewId Encoded)
+  , event :: Maybe (Event TargetViewId Encoded Encoded)
   , requestId :: RequestId
   }
   deriving (Show)

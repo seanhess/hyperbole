@@ -9,6 +9,7 @@ import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Types.Client (clientSetPageTitle)
 import Web.Hyperbole.Types.Event
+import Web.Hyperbole.View (toAction, toViewId)
 
 
 {- | Trigger an action for an arbitrary 'HyperView'

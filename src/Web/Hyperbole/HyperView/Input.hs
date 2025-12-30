@@ -2,11 +2,11 @@ module Web.Hyperbole.HyperView.Input where
 
 import Data.String.Conversions (cs)
 import Data.Text (Text)
+import GHC.Generics (Generic)
 import Web.Atomic.Types
-import Web.Hyperbole.Data.Param (ParamValue (..), ToParam (..))
+import Web.Hyperbole.Data.Param (FromParam, ParamValue (..), ToParam (..))
 import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..))
-import Web.Hyperbole.HyperView.ViewAction (ViewAction (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
 import Web.Hyperbole.View
 
@@ -41,24 +41,28 @@ button action cnt = do
 @
 -}
 dropdown
-  :: (ViewAction (Action id))
+  :: forall opt id
+   . (ViewAction (Action id))
   => (opt -> Action id)
   -> opt -- default option
-  -> View (Option opt id) ()
+  -> View (Option id opt) ()
   -> View id ()
 dropdown act defOpt options = do
+  st :: ViewState id <- viewState
+  i :: id <- viewId
   tag "select" @ onChange act $ do
-    addContext (Option defOpt) options
+    runViewContext (Option i defOpt) st options
 
 
 -- | An option for a 'dropdown' or 'select'
 option
-  :: (ViewAction (Action id), Eq opt, ToParam opt)
+  :: forall opt id
+   . (ViewAction (Action id), Eq opt, ToParam opt)
   => opt
   -> Text
-  -> View (Option opt id) ()
+  -> View (Option id opt) ()
 option opt cnt = do
-  os <- context
+  os :: Option id opt <- viewId
   tag "option" @ att "value" (toParam opt).value @ selected (os.defaultOption == opt) $ text cnt
 
 
@@ -68,9 +72,15 @@ selected b = if b then att "selected" "true" else id
 
 
 -- | The view context for an 'option'
-data Option opt id = Option
-  { defaultOption :: opt
+data Option id opt = Option
+  { id :: id
+  , defaultOption :: opt
   }
+  deriving (Generic)
+
+
+instance (ToParam id, ToParam opt, FromParam id, FromParam opt) => ViewId (Option id opt) where
+  type ViewState (Option id opt) = ViewState id
 
 
 {- | A live search field. Set a DelayMs to avoid hitting the server on every keystroke

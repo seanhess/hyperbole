@@ -57,8 +57,6 @@ library
       Web.Hyperbole.HyperView.Hyper
       Web.Hyperbole.HyperView.Input
       Web.Hyperbole.HyperView.Types
-      Web.Hyperbole.HyperView.ViewAction
-      Web.Hyperbole.HyperView.ViewId
       Web.Hyperbole.Page
       Web.Hyperbole.Route
       Web.Hyperbole.Server.Handler
@@ -77,6 +75,8 @@ library
       Web.Hyperbole.View.Render
       Web.Hyperbole.View.Tag
       Web.Hyperbole.View.Types
+      Web.Hyperbole.View.ViewAction
+      Web.Hyperbole.View.ViewId
   other-modules:
       Paths_hyperbole
   autogen-modules:

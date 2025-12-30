@@ -68,6 +68,7 @@ instance Route DataRoute where
 data StateRoute
   = StateRoot
   | Actions
+  | StateView
   | Effects
   | Query
   | Sessions
@@ -110,6 +111,7 @@ routeTitle (Hello _) = "Hello World"
 routeTitle (Contacts ContactsAll) = "Contacts"
 routeTitle (State Effects) = "Effects"
 routeTitle (State StateRoot) = "State"
+routeTitle (State StateView) = "Built-in State"
 routeTitle (State Actions) = "Managing State"
 routeTitle (State Query) = "Query"
 routeTitle (State Sessions) = "Sessions"

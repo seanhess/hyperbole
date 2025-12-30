@@ -15,11 +15,12 @@ instance Show TargetViewId where
 
 
 -- | An action, with its corresponding id
-data Event id act = Event
+data Event id act st = Event
   { viewId :: id
   , action :: act
+  , state :: st
   }
 
 
-instance (Show act, Show id) => Show (Event id act) where
-  show e = "Event " <> show e.viewId <> " " <> show e.action
+instance (Show act, Show id, Show st) => Show (Event id act st) where
+  show e = "Event " <> show e.viewId <> " " <> show e.action <> " " <> show e.state

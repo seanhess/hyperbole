@@ -7,13 +7,14 @@ module Web.Hyperbole.HyperView.Types where
 import Data.Kind (Type)
 import Effectful
 import Effectful.Reader.Dynamic
+import Effectful.State.Dynamic
 import GHC.Generics
-import Web.Hyperbole.Data.Encoded (FromEncoded, ToEncoded (..))
+import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole)
-import Web.Hyperbole.HyperView.ViewAction
-import Web.Hyperbole.HyperView.ViewId
-import Web.Hyperbole.View (View, none)
+import Web.Hyperbole.View (View (..), ViewAction, ViewId (..), none)
 
+
+-- HyperView --------------------------------------------
 
 {- | HyperViews are interactive subsections of a 'Page'
 
@@ -42,6 +43,9 @@ class (ViewId id, ViewAction (Action id), ConcurrencyValue (Concurrency id)) => 
   type Require id = '[]
 
 
+  -- type ViewState id :: Type
+  -- type ViewState id = ()
+
   -- | Control how overlapping actions are handled. 'Drop' by default
   --
   -- > type Concurrency Autocomplete = Replace
@@ -55,7 +59,13 @@ class (ViewId id, ViewAction (Action id), ConcurrencyValue (Concurrency id)) => 
   --
   -- > update (SetMessage msg) = pure $ messageView msg
   -- > update ClearMessage = pure $ messageView ""
-  update :: (Hyperbole :> es) => Action id -> Eff (Reader id : es) (View id ())
+  update :: (Hyperbole :> es) => Action id -> Eff (Reader id : State (ViewState id) : es) (View id ())
+
+
+instance HyperView () es where
+  data Action () = TupleNone
+    deriving (Generic, ViewAction)
+  update _ = pure none
 
 
 -- convert the type to a value

@@ -15,7 +15,6 @@ import Paths_examples (version)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI
-import Web.Hyperbole.View.Types (tag')
 
 exampleLayout :: AppRoute -> View c () -> View c ()
 exampleLayout rt contents =
@@ -79,6 +78,7 @@ exampleMenu current = do
   case current of
     State _ -> do
       exampleLink (State Actions) ~ sub
+      exampleLink (State StateView) ~ sub
       exampleLink (State Effects) ~ sub
       exampleLink (State Query) ~ sub
       exampleLink (State Sessions) ~ sub

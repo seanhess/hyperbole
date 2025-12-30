@@ -25,7 +25,7 @@ page = do
       el "Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView."
 
       example Simple ~ Cyber.font $ do
-        addContext Root simple
+        runViewContext Root () simple
 
       snippet $ do
         raw $(embedSource "examples/Example/Page/Simple.hs" (const True) (const True))
@@ -46,4 +46,4 @@ page = do
         code "viewCount :: Int -> View Counter ()."
         text "Notice how it expects the current count as a parameter."
       example Counter $ do
-        addContext Root counter
+        runViewContext Root () counter

@@ -80,6 +80,7 @@ executable examples
       Example.Page.State.Effects
       Example.Page.State.Query
       Example.Page.State.Sessions
+      Example.Page.State.View
       Example.Page.Tags
       Example.Page.Test
       Example.Page.Todos.Todo

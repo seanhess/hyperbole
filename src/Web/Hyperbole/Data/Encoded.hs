@@ -69,10 +69,7 @@ decodeEither t = do
 -- | Basic Encoding
 encodedToText :: Encoded -> Text
 encodedToText (Encoded con values) =
-  let params = T.intercalate " " $ fmap encodeParam values
-   in case params of
-        "" -> con.text
-        _ -> con.text <> " " <> params
+  T.intercalate " " (con.text : fmap encodeParam values)
 
 
 encodedParseText :: Text -> Either String Encoded
@@ -83,8 +80,8 @@ encodedParseText inp =
   encodedParser = do
     con <- AC.takeTill AC.isSpace
     AC.skipSpace
-    params <- paramParser `sepBy` AC.char ' '
-    pure $ Encoded (ConName (cs con)) params
+    ps <- paramParser `sepBy` AC.char ' '
+    pure $ Encoded (ConName (cs con)) ps
 
 
 genericToEncoded :: (Generic a, GToEncoded (Rep a)) => a -> Encoded
@@ -112,6 +109,14 @@ class ToEncoded a where
 
 instance ToEncoded Encoded where
   toEncoded = id
+instance ToEncoded () where
+  toEncoded _ = mempty
+instance ToEncoded ParamValue where
+  toEncoded p = Encoded mempty [toParam p]
+instance ToEncoded Int where
+  toEncoded = toEncoded . toParam
+instance ToEncoded Text where
+  toEncoded = toEncoded . toParam
 
 
 -- | Custom Encoding for embedding into web documents. Noteably used for 'ViewId' and 'ViewAction'
@@ -123,6 +128,17 @@ class FromEncoded a where
 
 instance FromEncoded Encoded where
   parseEncoded = pure
+instance FromEncoded () where
+  parseEncoded _ = pure ()
+instance FromEncoded ParamValue where
+  parseEncoded (Encoded _ ps) = do
+    case ps of
+      [p] -> parseParam p
+      _ -> Left $ "Expected single param value [param] but got: " <> show ps
+instance FromEncoded Int where
+  parseEncoded enc = parseEncoded enc >>= parseParam
+instance FromEncoded Text where
+  parseEncoded enc = parseEncoded enc >>= parseParam
 
 
 fromResult :: A.Result a -> Either String a
