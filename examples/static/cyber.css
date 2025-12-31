@@ -106,3 +106,8 @@ pre[class*="language-"],
 code[class*="language-"] {
   font-size: inherit;
 }
+
+
+.nav-active {
+  color: #6D9BD3;
+}

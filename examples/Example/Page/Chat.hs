@@ -4,6 +4,7 @@ module Example.Page.Chat where
 
 import Control.Monad (forM_, forever)
 import Data.Text (Text, unpack)
+import Docs.Page
 import Effectful
 import Effectful.Concurrent (threadDelay)
 import Effectful.Concurrent.STM
@@ -18,7 +19,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar [(Username, Text)]) :> es) => Page es '[Content, Chats, Message]
 page = do
-  pure $ exampleLayout Chat $ do
+  pure $ layout Chat $ do
     example Chat $ do
       el "Demonstrates server pushes"
       col ~ embed . Cyber.font $ do

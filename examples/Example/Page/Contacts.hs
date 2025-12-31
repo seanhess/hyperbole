@@ -4,6 +4,7 @@
 module Example.Page.Contacts where
 
 import Control.Monad (forM_)
+import Docs.Page
 import Effectful
 import Example.AppRoute (UserId)
 import Example.AppRoute qualified as Route
@@ -25,7 +26,7 @@ page
   => Page es '[Contacts, InlineContact, NewContact]
 page = do
   us <- Users.all
-  pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
+  pure $ layout (Route.Contacts Route.ContactsAll) $ do
     section (Route.Contacts Route.ContactsAll) $ do
       el "This example combines various features"
       example (Route.Contacts Route.ContactsAll) $ do

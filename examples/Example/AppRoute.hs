@@ -15,10 +15,11 @@ type UserId = Int
 data AppRoute
   = Main
   | Intro
+  | Basics
+  | CSS
   | Simple
   | Hello Hello
   | Contacts ContactRoute
-  | CSS CSSRoute
   | Interactivity
   | State StateRoute
   | Counter
@@ -39,21 +40,25 @@ data AppRoute
 instance Route AppRoute where
   baseRoute = Just Main
 
+-- -- View Route
+-- data IntroRoute
+--   = IntroMain
+--   | Pages
+--   | Views
+--   | HyperViews
+--   | ViewFunctions
+--   | CSS CSSRoute
+--   deriving (Eq, Generic, Show)
+-- instance Route IntroRoute where
+--   baseRoute = Just IntroMain
+
+
 data FormRoute
   = FormSimple
   | FormValidation
   deriving (Eq, Generic, Show)
 instance Route FormRoute where
   baseRoute = Just FormSimple
-
-data CSSRoute
-  = CSSAll
-  | Transitions
-  | Tooltips
-  | External
-  deriving (Eq, Generic, Show)
-instance Route CSSRoute where
-  baseRoute = Just CSSAll
 
 data DataRoute
   = DataLists
@@ -108,6 +113,9 @@ data Hello
 
 routeTitle :: AppRoute -> Text
 routeTitle (Hello _) = "Hello World"
+-- routeTitle (Intro IntroMain) = "Intro"
+-- routeTitle (Intro (CSS _)) = "Atomic CSS"
+-- routeTitle (Intro r) = defaultTitle r
 routeTitle (Contacts ContactsAll) = "Contacts"
 routeTitle (State Effects) = "Effects"
 routeTitle (State StateRoot) = "State"
@@ -122,20 +130,8 @@ routeTitle Errors = "Error Handling"
 routeTitle (Examples Todos) = "TodoMVC"
 routeTitle (Examples TodosCSS) = "TodoMVC (CSS version)"
 routeTitle (Examples BigExamples) = "Large Examples"
-routeTitle (CSS _) = "CSS"
 routeTitle OAuth2 = "OAuth2"
 routeTitle r = defaultTitle r
-
-routeSource :: AppRoute -> Path
-routeSource (State s) = ["Example", "Page", "State", cs (show s) <> ".hs"]
-routeSource (Contacts (Contact _)) = "Example/Page/Contact.hs"
-routeSource (Contacts ContactsAll) = "Example/Page/Contacts.hs"
-routeSource (CSS CSSAll) = ["Example", "Page", "CSS.hs"]
-routeSource (CSS c) = ["Example", "Page", "CSS", cs (show c) <> ".hs"]
-routeSource (Data SortableTable) = "Example/Page/DataLists/DataTable.hs"
-routeSource (Data d) = ["Example", "Page", "DataLists", cs (show d) <> ".hs"]
-routeSource (Forms f) = ["Example", "Page", "Forms", cs (show f) <> ".hs"]
-routeSource r = ["Example", "Page", cs (show r) <> ".hs"]
 
 defaultTitle :: (Show r) => r -> Text
 defaultTitle = cs . toWords . fromHumps . show

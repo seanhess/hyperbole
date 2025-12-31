@@ -1,6 +1,7 @@
 module Example.Page.Advanced where
 
 import Data.Text (Text)
+import Docs.Page
 import Example.AppRoute as Route
 import Example.Style.Cyber as Cyber (btn, font)
 import Example.View.Layout
@@ -9,7 +10,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es '[Message, Controls]
 page = do
-  pure $ exampleLayout Route.Advanced $ do
+  pure $ layout Route.Advanced $ do
     section' "Trigger" $ do
       el "Tell other HyperViews to run an action"
       example Advanced $ do

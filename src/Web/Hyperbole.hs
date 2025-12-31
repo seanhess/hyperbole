@@ -476,7 +476,7 @@ We can add type-safe links to other pages using 'route'
 If you need the same header or menu on all pages, use a view function:
 
 @
-#EMBED Example/Docs/MultiPage.hs exampleLayout
+#EMBED Example/Docs/MultiPage.hs layout
 
 #EMBED Example/Docs/MultiPage.hs examplePage
 @

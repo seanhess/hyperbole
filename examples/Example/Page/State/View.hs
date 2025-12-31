@@ -4,6 +4,7 @@
 module Example.Page.State.View where
 
 import Data.Text (pack)
+import Docs.Page
 import Example.AppRoute qualified as Route
 import Example.Style.Cyber as Style
 import Example.View.Layout
@@ -14,7 +15,7 @@ import Web.Hyperbole.HyperView
 page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   let rt = Route.State Route.StateView
-  pure $ exampleLayout rt $ do
+  pure $ layout rt $ do
     example rt $ do
       col ~ embed $ do
         hyperState Counter 1 viewCount

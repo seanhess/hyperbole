@@ -5,9 +5,10 @@
 
 module Example.Page.State.Actions where
 
-import Data.Snippet
 import Data.String.Interpolate (i)
 import Data.Text (Text)
+import Docs.Page
+import Docs.Snippet
 import Example.AppRoute
 import Example.Page.Counter (Counter)
 import Example.Page.Counter qualified as Counter
@@ -18,9 +19,9 @@ import Web.Hyperbole.HyperView.Types
 page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   counter <- Counter.page
-  pure $ exampleLayout (State Actions) $ do
+  pure $ layout (State Actions) $ do
     section (State Actions) $ do
-      hackage "#g:state" "Managing State"
+      -- hackage "#g:state" "Managing State"
 
       snippet $ do
         raw $(embedTopLevel "examples/Example/Page/Counter.hs" "instance HyperView")

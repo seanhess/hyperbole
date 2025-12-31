@@ -23,7 +23,9 @@ source-repository head
 executable examples
   main-is: Main.hs
   other-modules:
-      Data.Snippet
+      Docs.Markdown
+      Docs.Page
+      Docs.Snippet
       Example.App
       Example.AppRoute
       Example.Cache
@@ -71,7 +73,8 @@ executable examples
       Example.Page.FormValidation
       Example.Page.Interactivity
       Example.Page.Interactivity.Events
-      Example.Page.Intro
+      Example.Page.Intro.Basics
+      Example.Page.Intro.Intro
       Example.Page.Javascript
       Example.Page.OAuth2
       Example.Page.Requests
@@ -112,6 +115,7 @@ executable examples
     , base
     , bytestring
     , casing
+    , cmark
     , containers
     , cookie
     , data-default

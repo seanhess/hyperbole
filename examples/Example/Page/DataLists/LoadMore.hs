@@ -1,5 +1,6 @@
 module Example.Page.DataLists.LoadMore where
 
+import Docs.Page
 import Effectful
 import Example.AppRoute as Route
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages)
@@ -13,7 +14,7 @@ import Prelude hiding (even, odd)
 page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   ls <- loadNextLanguages 0
-  pure $ exampleLayout (Data LoadMore) $ do
+  pure $ layout (Data LoadMore) $ do
     example (Data LoadMore) $ do
       el "Progressively load more data"
       col ~ embed $ hyper (Languages 0) $ languagesView ls

@@ -5,6 +5,7 @@ module Example.Page.DataLists.Autocomplete where
 import Control.Monad (forM_)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Docs.Page
 import Effectful
 import Example.AppRoute as Route
 import Example.Colors
@@ -18,7 +19,7 @@ import Prelude hiding (even, odd)
 
 page :: (Hyperbole :> es) => Page es '[LiveSearch]
 page = do
-  pure $ exampleLayout (Data Autocomplete) $ do
+  pure $ layout (Data Autocomplete) $ do
     example (Data Autocomplete) $ do
       el "Create a serverside autocomplete with a combination of onInput and onKeyDown"
       col ~ embed $ hyper LiveSearch $ liveSearchView allLanguages 0 ""

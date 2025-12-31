@@ -1,6 +1,6 @@
-module Data.Snippet where
+module Docs.Snippet where
 
-import Data.Char (isAlpha, isSpace)
+import Data.Char (isSpace)
 import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
@@ -8,6 +8,17 @@ import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
+import Web.Hyperbole.View
+import Web.Atomic.CSS
+
+snippet :: View c () -> View c ()
+snippet cnt = do
+  tag' True "pre" ~ bg (HexColor "#F2F2F3") $ do
+    tag' True "code" @ class_ "language-haskell" $ do
+      cnt
+
+rawMulti :: [Text] -> View c ()
+rawMulti = raw . T.stripEnd . T.unlines
 
 embedLines :: FilePath -> Int -> Int -> Q Exp
 embedLines path start end = do
@@ -36,16 +47,16 @@ embedTopLevel path tld = do
 
 embedSource :: FilePath -> (Text -> Bool) -> (Text -> Bool) -> Q Exp
 embedSource path isStart isCurrent = do
-  src <- runIO $ readSourceCode path
-  let lns = selectLines isStart isCurrent src
+  s <- runIO $ readSourceCode path
+  let lns = selectLines isStart isCurrent s
   case lns of
     [] -> fail "Missing embed"
     _ -> lift (T.unlines lns)
 
 readSnippet :: FilePath -> TopLevelDefinition -> IO [Text]
 readSnippet path tld = do
-  src <- readSourceCode path
-  pure $ findTopLevel tld src
+  s <- readSourceCode path
+  pure $ findTopLevel tld s
 
 readSourceCode :: FilePath -> IO SourceCode
 readSourceCode path = SourceCode . T.lines <$> T.readFile path
@@ -65,8 +76,8 @@ isTopLevel :: TopLevelDefinition -> Text -> Bool
 isTopLevel (TopLevelDefinition def) line = T.isPrefixOf def $ T.dropWhile (== ' ') line
 
 selectLines :: (Text -> Bool) -> (Text -> Bool) -> SourceCode -> [Text]
-selectLines isStart isCurrent src =
-  let rest = dropWhile (not . isStart) src.lines
+selectLines isStart isCurrent s =
+  let rest = dropWhile (not . isStart) s.lines
    in dropWhileEnd isEmpty $ takeWhile isCurrent rest
  where
   isEmpty = T.null

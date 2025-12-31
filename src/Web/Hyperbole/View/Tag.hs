@@ -68,7 +68,7 @@ code t = tag "code" (text t)
 
 -- | A hyperlink to the given url
 link :: URI -> View c () -> View c ()
-link u = tag "a" @ att "href" (uriToText u)
+link u = tag' True "a" @ att "href" (uriToText u)
 
 
 img :: Text -> View c ()

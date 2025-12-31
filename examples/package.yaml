@@ -53,6 +53,7 @@ dependencies:
   - http-client
   - http-client-tls
   - template-haskell
+  - cmark
 
 executables:
   examples:

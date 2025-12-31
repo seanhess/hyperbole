@@ -5,6 +5,7 @@ module Example.Page.Contact where
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions
 import Data.Text (Text, pack)
+import Docs.Page
 import Effectful
 import Effectful.Reader.Dynamic
 import Example.AppRoute (UserId)
@@ -31,7 +32,7 @@ page
 page = do
   uid <- ask
   u <- Users.find uid
-  pure $ exampleLayout (Route.Contacts Route.ContactsAll) $ do
+  pure $ layout (Route.Contacts Route.ContactsAll) $ do
     section' "Contact" $ do
       example (Route.Contacts (Route.Contact 1)) $ do
         hyper (Contact uid) $ contactView u

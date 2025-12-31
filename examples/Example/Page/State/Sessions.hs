@@ -4,12 +4,13 @@
 module Example.Page.State.Sessions where
 
 import Data.Text (Text)
+import Docs.Page
 import Effectful
 import Example.AppRoute as Route
 import Example.Colors
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn', btnLight)
-import Example.View.Layout (embed, example, exampleLayout)
+import Example.View.Layout (layout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
@@ -24,7 +25,7 @@ instance Default Preferences where
 page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
   prefs <- session @Preferences
-  pure $ exampleLayout (State Sessions) $ do
+  pure $ layout (State Sessions) $ do
     example (State Sessions) $ do
       el "We can also persist state in a browser cookie. This is most useful for user-specific preferences and state that should last until they clear their browser cookies"
       col ~ embed $ hyper Contents $ viewContent prefs

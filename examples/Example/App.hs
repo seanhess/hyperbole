@@ -23,6 +23,7 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as L
 import Data.Text.Lazy.Encoding qualified as L
 import Data.Version (showVersion)
+import Docs.Page
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Dispatch.Dynamic
@@ -50,7 +51,8 @@ import Example.Page.DataLists.LoadMore qualified as LoadMore
 import Example.Page.Errors qualified as Errors
 import Example.Page.Forms qualified as Forms
 import Example.Page.Interactivity qualified as Interactivity
-import Example.Page.Intro qualified as Intro
+import Example.Page.Intro.Basics qualified as Basics
+import Example.Page.Intro.Intro qualified as Intro
 import Example.Page.Javascript qualified as Javascript
 import Example.Page.OAuth2 qualified as OAuth2
 import Example.Page.Requests qualified as Requests
@@ -64,7 +66,7 @@ import Example.Page.Todos.Todo qualified as Todo
 import Example.Page.Todos.TodoCSS qualified as TodoCSS
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
-import Example.View.Layout as Layout (example, exampleLayout, sourceLink)
+import Example.View.Layout as Layout (layout)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
 import GHC.Generics (Generic)
 import GHC.Word (Word32)
@@ -147,7 +149,11 @@ exampleApp config users count chats = do
       Sessions -> runPage Sessions.page
       Query -> runPage Query.page
   router Intro = runPage Intro.page
-  router (CSS _) = runPage CSS.page
+  router Basics = runPage Basics.page
+  -- router (Intro HyperViews) = runPage IntroHyperViews.page
+  -- router (Intro Pages) = runPage IntroPages.page
+  -- router (Intro ViewFunctions) = runPage IntroViewFunctions.page
+  router CSS = runPage CSS.page
   router Interactivity = runPage Interactivity.page
   router (Examples BigExamples) = redirect $ routeUri (Examples Todos)
   router (Examples Todos) = runPage Todo.page
@@ -156,7 +162,7 @@ exampleApp config users count chats = do
   router OAuth2 = runPage OAuth2.page
   router OAuth2Authenticate = OAuth2.handleRedirect
   router Simple = redirect (routeUri Intro)
-  router Counter = redirect (routeUri Intro)
+  router Counter = redirect (routeUri $ State StateRoot)
   router Test = runPage Test.page
   router Advanced = runPage Advanced.page
   router Main = do
@@ -167,12 +173,12 @@ exampleApp config users count chats = do
   hello RedirectNow = do
     redirect (routeUri $ Hello Redirected)
   hello (Greet who) = do
-    pure $ exampleLayout (Hello $ Greet who) $ do
+    pure $ layout (Hello $ Greet who) $ do
       row ~ gap 6 . pad 10 $ do
         el "Hello:"
         el $ text who
   hello Redirected = do
-    pure $ exampleLayout Requests $ el ~ pad 10 $ "You were redirected"
+    pure $ layout Requests $ el ~ pad 10 $ "You were redirected"
 
   -- Use the embedded version for real applications (see quickStartDocument).
   -- The link to /hyperbole.js here is just to make local development easier
@@ -185,7 +191,8 @@ exampleApp config users count chats = do
     script' scriptLiveReload
     stylesheet "/prism.css"
     script "/prism.js" @ att "defer" ""
-    style "body { background-color: #d3dceb }, button { font-family: 'Share Tech Mono'}"
+    script "/docs.js" @ att "defer" ""
+    style "html { scroll-behavior: smooth; }\n body { background-color: #e0e7f1; font-family: font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans\", Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\") }, button { font-family: 'Share Tech Mono'}"
     style cssEmbed
 
   serverError :: ResponseError -> ServerError
