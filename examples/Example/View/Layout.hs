@@ -80,41 +80,42 @@ navigation menu = do
 
 exampleMenu :: forall sections c. (PageAnchor sections) => AppRoute -> View c ()
 exampleMenu current = do
-  exampleLink Intro
-  exampleLink Basics
-  exampleLink CSS
-  exampleLink Concurrency
-  exampleLink (State StateRoot)
-  case current of
-    State _ -> do
-      exampleLink (State Actions) ~ sub
-      exampleLink (State StateView) ~ sub
-      exampleLink (State Effects) ~ sub
-      exampleLink (State Query) ~ sub
-      exampleLink (State Sessions) ~ sub
-    _ -> none
-  exampleLink Requests
-  exampleLink (Data DataLists)
-  case current of
-    Data _ -> do
-      exampleLink (Data SortableTable) ~ sub
-      exampleLink (Data Autocomplete) ~ sub
-      exampleLink (Data Filter) ~ sub
-      exampleLink (Data LoadMore) ~ sub
-    _ -> none
-  exampleLink (Forms FormSimple)
-  exampleLink Interactivity
-  exampleLink Errors
-  exampleLink OAuth2
-  exampleLink Javascript
-  exampleLink Advanced
-  exampleLink (Examples BigExamples)
-  case current of
-    Examples _ ->
-      completeExamples
-    (Contacts _) ->
-      completeExamples
-    _ -> none
+  col ~ color White $ do
+    exampleLink Intro
+    exampleLink Basics
+    exampleLink CSS
+    exampleLink Concurrency
+    exampleLink (State StateRoot)
+    case current of
+      State _ -> do
+        exampleLink (State Actions) ~ sub
+        exampleLink (State StateView) ~ sub
+        exampleLink (State Effects) ~ sub
+        exampleLink (State Query) ~ sub
+        exampleLink (State Sessions) ~ sub
+      _ -> none
+    exampleLink Requests
+    exampleLink (Data DataLists)
+    case current of
+      Data _ -> do
+        exampleLink (Data SortableTable) ~ sub
+        exampleLink (Data Autocomplete) ~ sub
+        exampleLink (Data Filter) ~ sub
+        exampleLink (Data LoadMore) ~ sub
+      _ -> none
+    exampleLink (Forms FormSimple)
+    exampleLink Interactivity
+    exampleLink Errors
+    exampleLink OAuth2
+    exampleLink Javascript
+    exampleLink Advanced
+    exampleLink (Examples BigExamples)
+    case current of
+      Examples _ ->
+        completeExamples
+      (Contacts _) ->
+        completeExamples
+      _ -> none
  where
   completeExamples = do
     exampleLink (Examples Todos) ~ sub
@@ -127,10 +128,10 @@ exampleMenu current = do
 
   menuItem :: (Styleable h) => CSS h -> CSS h
   menuItem =
-    pad (XY 20 10) . color White . hover (bg DarkHighlight)
+    pad (XY 20 10) . hover (bg DarkHighlight)
 
   selected rt =
-    if rt == current then bg DarkHighlight . border (L 2) . pad (L 18) else id
+    if rt == current then bg DarkHighlight . border (L 4) . pad (L 16) . color PrimaryLight else id
 
   exampleLink rt = do
     route rt ~ selected rt . menuItem $
