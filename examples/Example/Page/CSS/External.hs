@@ -11,8 +11,8 @@ main = do
 page :: (Hyperbole :> es) => Page es '[Items]
 page = do
   pure $ do
-    -- you can choose to include a stylesheet only on the page that uses it
-    -- or load it in your document function
+    -- you can choose to include a stylesheet only on pages
+    -- that use it or load it globally in your document function
     stylesheet "external.css"
     hyper Items $ itemsView "one"
 

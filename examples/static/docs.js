@@ -1,18 +1,10 @@
 
-console.log("CUSTOM DOCS JS")
+console.log("CUSTOM DOCS JS 2")
 
 const sections = document.querySelectorAll("section[id]")
 const navLinks = document.querySelectorAll('nav a[href^="#"]')
+let isNavigating = false
 
-console.log("SECTIONS", sections, navLinks)
-
-// const sections = links
-//   .map(a => document.querySelector(a.getAttribute("href")))
-//   .filter(Boolean);
-
-// console.log("SECTIONS", links)
-
-// const byId = new Map(links.map(a => [a.getAttribute("href").slice(1), a]));
 
 const obs = new IntersectionObserver((entries) => {
 
@@ -23,16 +15,46 @@ const obs = new IntersectionObserver((entries) => {
 
   if (!visible[0] || !visible[0].target.id) return
 
+
   const activeId = visible[0].target.id
-  const activeLink = document.querySelector('nav a[href^="#' + activeId + '"]')
+  console.log("VISIBLE", activeId)
 
-  console.log("VISIBLE", activeId, activeLink.href)
+  if (!isNavigating) {
+    highlightNav(activeId)
+  }
 
-  navLinks.forEach(a => a.classList.remove('nav-active'))
-  activeLink.classList.add('nav-active')
 
   // Optional: keep URL in sync without jump
-  // history.replaceState(null, "", `#${id}`);
+  history.replaceState(null, "", `#${activeId}`);
+
 }, { threshold: 0, rootMargin: "-10% 0px -80% 0px", });
 
 sections.forEach(s => obs.observe(s));
+
+function highlightNav(activeId) {
+  console.log("highlightNav", activeId)
+  const activeLink = document.querySelector('nav a[href^="#' + activeId + '"]')
+  navLinks.forEach(a => a.classList.remove('nav-active'))
+  activeLink.classList.add('nav-active')
+}
+
+window.addEventListener('popstate', function(event) {
+  console.log("popstate", event, window.location.hash)
+  isNavigating = true
+
+  if (window.location.hash) {
+    highlightNav(window.location.hash.substring(1))
+  }
+});
+
+
+
+// window.addEventListener('scroll', (_event) => {
+//   console.log('scroll');
+//   isScrolling = true
+// })
+
+window.addEventListener('scrollend', (_event) => {
+  console.log('scrollend');
+  isNavigating = false
+});

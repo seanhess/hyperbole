@@ -7,10 +7,10 @@ import Web.Hyperbole
 
 main :: IO ()
 main = do
-  run 3000 $ liveApp quickStartDocument (runPage page)
+  run 3000 $ liveApp quickStartDocument (runPage hello)
 
-page :: Page es '[]
-page = do
+hello :: Page es '[]
+hello = do
   pure $ el "Hello World"
 
 messageView :: Text -> View context ()
@@ -21,6 +21,6 @@ helloWorld :: View context ()
 helloWorld =
   el "Hello World"
 
-page' :: Page es '[]
-page' = do
+page :: Page es '[]
+page = do
   pure $ messageView "Hello World"

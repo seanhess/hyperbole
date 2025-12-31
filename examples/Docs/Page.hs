@@ -20,7 +20,7 @@ class ExampleSource a where
   exampleSource :: a -> Path
 
 instance ExampleSource AppRoute where
-  exampleSource (State s) = ["Example", "Page", "State", cs (show s) <> ".hs"]
+  -- exampleSource (State s) = ["Example", "Page", "State", cs (show s) <> ".hs"]
   exampleSource (Contacts (Contact _)) = "Example/Page/Contact.hs"
   exampleSource (Contacts ContactsAll) = "Example/Page/Contacts.hs"
   -- routeSource (Intro (CSS CSSAll)) = ["Example", "Page", "Intro", "CSS.hs"]
@@ -54,7 +54,7 @@ instance PageAnchor () where
 
 sourceLink :: Path -> View c ()
 sourceLink p =
-  link sourceUrl ~ Style.link . Cyber.font . fontSize 14 @ att "target" "_blank" $ do
+  link sourceUrl ~ Style.link . fontSize 14 @ att "target" "_blank" $ do
     text "View Source"
  where
   sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/main/examples/|]
@@ -62,7 +62,7 @@ sourceLink p =
 
 embed :: (Styleable h) => CSS h -> CSS h
 embed =
-  pad 15 . gap 10 . bg White . flexCol . Cyber.clip 10
+  pad 15 . gap 10 . bg White . flexCol . Cyber.clip 10 . Cyber.font
 
 example :: (ExampleSource e) => e -> View c () -> View c ()
 example e = example' (exampleSource e)

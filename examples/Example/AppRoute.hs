@@ -21,7 +21,8 @@ data AppRoute
   | Hello Hello
   | Contacts ContactRoute
   | Interactivity
-  | State StateRoute
+  | SideEffects
+  | State
   | Counter
   | Forms FormRoute
   | Requests
@@ -52,7 +53,6 @@ instance Route AppRoute where
 -- instance Route IntroRoute where
 --   baseRoute = Just IntroMain
 
-
 data FormRoute
   = FormSimple
   | FormValidation
@@ -70,16 +70,16 @@ data DataRoute
 instance Route DataRoute where
   baseRoute = Just DataLists
 
-data StateRoute
-  = StateRoot
-  | Actions
-  | StateView
-  | Effects
-  | Query
-  | Sessions
-  deriving (Eq, Generic, Show)
-instance Route StateRoute where
-  baseRoute = Just StateRoot
+-- data StateRoute
+--   = StateRoot
+--   | Actions
+--   | StateView
+--   | Effects
+--   | Query
+--   | Sessions
+--   deriving (Eq, Generic, Show)
+-- instance Route StateRoute where
+--   baseRoute = Just StateRoot
 
 data ContactRoute
   = ContactsAll
@@ -113,16 +113,17 @@ data Hello
 
 routeTitle :: AppRoute -> Text
 routeTitle (Hello _) = "Hello World"
+routeTitle CSS = "Styles"
 -- routeTitle (Intro IntroMain) = "Intro"
 -- routeTitle (Intro (CSS _)) = "Atomic CSS"
 -- routeTitle (Intro r) = defaultTitle r
 routeTitle (Contacts ContactsAll) = "Contacts"
-routeTitle (State Effects) = "Effects"
-routeTitle (State StateRoot) = "State"
-routeTitle (State StateView) = "Built-in State"
-routeTitle (State Actions) = "Managing State"
-routeTitle (State Query) = "Query"
-routeTitle (State Sessions) = "Sessions"
+routeTitle State = "Managing State"
+-- routeTitle (State StateRoot) = "State"
+-- routeTitle (State StateView) = "Built-in State"
+-- routeTitle (State Actions) = "Managing State"
+-- routeTitle (State Query) = "Query"
+-- routeTitle (State Sessions) = "Sessions"
 routeTitle (Forms FormSimple) = "Forms"
 routeTitle (Forms FormValidation) = "Form Validation"
 routeTitle (Data d) = defaultTitle d

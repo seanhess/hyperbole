@@ -13,7 +13,7 @@ page = do
 messageView :: Text -> View Message ()
 messageView msg = do
   el ~ bold $ text msg
-  button (SetMessage "Goodbye") "Say Goodbye"
+  button (SetMessage "Goodbye") ~ border 1 $ "Say Goodbye"
 
 data Message = Message
   deriving (Generic, ViewId)

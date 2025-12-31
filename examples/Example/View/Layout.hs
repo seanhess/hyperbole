@@ -10,7 +10,7 @@ import Data.String.Conversions (cs)
 import Data.Version (showVersion)
 import Docs.Page
 import Example.AppRoute
-import Example.Colors (AppColor (..))
+import Example.Colors (AppColor (..), cyan)
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Example.View.Icon as Icon (hamburger)
@@ -28,7 +28,7 @@ layout' :: View c () -> View c () -> View c ()
 layout' menu contents =
   el ~ grow $ do
     navigation menu ~ position Fixed . zIndex 1 . onDesktop leftMenu . onMobile topMenu
-    col ~ pad 25 . gap 30 . onDesktop horizontal . onMobile vertical $ do
+    col ~ pad (TRBL 25 25 100 25) . gap 30 . onDesktop horizontal . onMobile vertical $ do
       contents
  where
   leftMenu = width menuWidth . left 0 . top 0 . bottom 0
@@ -84,16 +84,9 @@ exampleMenu current = do
     exampleLink Intro
     exampleLink Basics
     exampleLink CSS
+    exampleLink SideEffects
+    exampleLink State
     exampleLink Concurrency
-    exampleLink (State StateRoot)
-    case current of
-      State _ -> do
-        exampleLink (State Actions) ~ sub
-        exampleLink (State StateView) ~ sub
-        exampleLink (State Effects) ~ sub
-        exampleLink (State Query) ~ sub
-        exampleLink (State Sessions) ~ sub
-      _ -> none
     exampleLink Requests
     exampleLink (Data DataLists)
     case current of
@@ -131,7 +124,7 @@ exampleMenu current = do
     pad (XY 20 10) . hover (bg DarkHighlight)
 
   selected rt =
-    if rt == current then bg DarkHighlight . border (L 4) . pad (L 16) . color PrimaryLight else id
+    if rt == current then bg DarkHighlight . border (L 4) . pad (L 16) . color cyan else id
 
   exampleLink rt = do
     route rt ~ selected rt . menuItem $
