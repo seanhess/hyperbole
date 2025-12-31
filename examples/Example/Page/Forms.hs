@@ -1,5 +1,6 @@
 module Example.Page.Forms where
 
+import Docs.Page
 import Example.AppRoute
 import Example.Page.FormSimple (AddContact (..))
 import Example.Page.FormSimple qualified as FormSimple
@@ -11,7 +12,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es '[Signup, AddContact]
 page = do
-  pure $ exampleLayout (Forms FormSimple) $ do
+  pure $ layout (Forms FormSimple) $ do
     example (Forms FormSimple) $ do
       el "We can render and parse forms via a record"
       col ~ embed $ do

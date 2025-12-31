@@ -4,6 +4,7 @@
 module Example.Page.DataLists.Filter where
 
 import Data.Text (Text, pack)
+import Docs.Page
 import Effectful hiding (Dynamic)
 import Example.AppRoute as Route
 import Example.Colors
@@ -18,7 +19,7 @@ import Prelude hiding (even, odd)
 page :: (Hyperbole :> es, IOE :> es) => Page es '[Languages]
 page = do
   filters <- query
-  pure $ exampleLayout (Data Filter) $ do
+  pure $ layout (Data Filter) $ do
     example (Data Filter) $ do
       el "Incrementally search a list of data, storing parameters in the query string"
       el ~ embed $ hyper Languages $ languagesView filters

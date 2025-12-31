@@ -1,5 +1,6 @@
 module Example.Page.Interactivity where
 
+import Docs.Page
 import Example.AppRoute
 import Example.Page.Interactivity.Events
 import Example.Style.Cyber (font)
@@ -9,7 +10,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es '[Boxes]
 page = do
-  pure $ exampleLayout Interactivity $ do
+  pure $ layout Interactivity $ do
     section' "Events" $ do
       el $ do
         text "Hyperbole provides various events that can be tied to specific actions. Up to this point, we've only used them via the higher-level views like "

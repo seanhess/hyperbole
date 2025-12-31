@@ -4,13 +4,14 @@
 module Example.Page.Intro.Intro where
 
 import Docs.Markdown
+import Docs.Page
 import Docs.Snippet
 import Example.AppRoute
 import Example.Colors
 import Example.Page.Counter (Counter)
 import Example.Page.Simple (Message)
 import Example.Page.Simple qualified as Simple
-import Example.View.Layout
+import Example.View.Layout (layout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types
@@ -23,7 +24,7 @@ page = do
   simple <- subPage Simple.page
   -- counter <- subPage Counter.page
 
-  pure $ exampleLayout Intro $ do
+  pure $ layout Intro $ do
     -- el ~ italic . fontSize 20 . pad (X 15) . border (X 3) . borderColor PrimaryLight $ "Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView"
     col ~ gap 20 $ do
       el ~ embed . italic . fontSize 20 . border (L 3) . borderColor PrimaryLight $ "Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView"

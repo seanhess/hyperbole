@@ -1,12 +1,9 @@
-{-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLists #-}
 
 module Example.AppRoute where
 
 import Data.String.Conversions (cs)
 import Data.Text (Text, unpack)
-import Data.Text qualified as T
 import Text.Casing (fromHumps, toWords)
 import Text.Read (readMaybe)
 import Web.Hyperbole
@@ -55,18 +52,6 @@ instance Route AppRoute where
 -- instance Route IntroRoute where
 --   baseRoute = Just IntroMain
 
-data Basics
-  = Pages
-  | HtmlViews
-  | Interactive
-  deriving (Show, Enum, Bounded)
-instance PageAnchor Basics where
-  sectionTitle Interactive = "Interactive HyperViews"
-  sectionTitle HtmlViews = "HTML Views"
-  sectionTitle b = cs (show b)
-
-  navEntry Interactive = "HyperViews"
-  navEntry a = sectionTitle a
 
 data FormRoute
   = FormSimple
@@ -74,19 +59,6 @@ data FormRoute
   deriving (Eq, Generic, Show)
 instance Route FormRoute where
   baseRoute = Just FormSimple
-
-data CSSExample
-  = Transitions
-  | Tooltips
-  | External
-  deriving (Eq, Generic, Show, Enum, Bounded)
-instance PageAnchor CSSExample where
-  sectionTitle = \case
-    Transitions -> "CSS Transitions"
-    Tooltips -> "Tooltips"
-    External -> "External Stylesheets"
-instance ExampleSource CSSExample where
-  exampleSource c = ["Example", "Page", "Intro", "CSS", cs (show c) <> ".hs"]
 
 data DataRoute
   = DataLists
@@ -161,32 +133,5 @@ routeTitle (Examples BigExamples) = "Large Examples"
 routeTitle OAuth2 = "OAuth2"
 routeTitle r = defaultTitle r
 
-instance ExampleSource AppRoute where
-  exampleSource (State s) = ["Example", "Page", "State", cs (show s) <> ".hs"]
-  exampleSource (Contacts (Contact _)) = "Example/Page/Contact.hs"
-  exampleSource (Contacts ContactsAll) = "Example/Page/Contacts.hs"
-  -- routeSource (Intro (CSS CSSAll)) = ["Example", "Page", "Intro", "CSS.hs"]
-  -- routeSource (Intro (CSS c)) = ["Example", "Page", "Intro", "CSS", cs (show c) <> ".hs"]
-  exampleSource (Data SortableTable) = "Example/Page/DataLists/DataTable.hs"
-  exampleSource (Data d) = ["Example", "Page", "DataLists", cs (show d) <> ".hs"]
-  exampleSource (Forms f) = ["Example", "Page", "Forms", cs (show f) <> ".hs"]
-  exampleSource r = ["Example", "Page", cs (show r) <> ".hs"]
-
 defaultTitle :: (Show r) => r -> Text
 defaultTitle = cs . toWords . fromHumps . show
-
-class ExampleSource a where
-  exampleSource :: a -> Path
-
-class PageAnchor n where
-  pageAnchor :: n -> Text
-  default pageAnchor :: n -> Text
-  pageAnchor = T.toLower . T.replace " " "-" . sectionTitle
-
-  sectionTitle :: n -> Text
-  default sectionTitle :: (Show n) => n -> Text
-  sectionTitle = cs . toWords . fromHumps . show
-
-  navEntry :: n -> Text
-  default navEntry :: n -> Text
-  navEntry = sectionTitle

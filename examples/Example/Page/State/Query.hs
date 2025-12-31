@@ -4,12 +4,13 @@
 module Example.Page.State.Query where
 
 import Data.Text (Text)
+import Docs.Page
 import Effectful
 import Example.AppRoute as Route
 import Example.Colors
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn', btnLight)
-import Example.View.Layout (embed, example, exampleLayout)
+import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Effect.Query
@@ -25,7 +26,7 @@ instance Default Preferences where
 page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
   prefs <- query @Preferences
-  pure $ exampleLayout (State Query) $ do
+  pure $ layout (State Query) $ do
     example (State Query) $ do
       el "We can persist state in the query string. This is useful for faceted search, or any time when a user might want to share the url include local state changes"
       col ~ embed $ hyper Contents $ viewContent prefs

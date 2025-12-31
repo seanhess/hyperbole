@@ -23,6 +23,7 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as L
 import Data.Text.Lazy.Encoding qualified as L
 import Data.Version (showVersion)
+import Docs.Page
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Dispatch.Dynamic
@@ -65,7 +66,7 @@ import Example.Page.Todos.Todo qualified as Todo
 import Example.Page.Todos.TodoCSS qualified as TodoCSS
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
-import Example.View.Layout as Layout (example, exampleLayout, sourceLink)
+import Example.View.Layout as Layout (layout)
 import Foreign.Store (Store (..), lookupStore, readStore, storeAction, withStore)
 import GHC.Generics (Generic)
 import GHC.Word (Word32)
@@ -172,12 +173,12 @@ exampleApp config users count chats = do
   hello RedirectNow = do
     redirect (routeUri $ Hello Redirected)
   hello (Greet who) = do
-    pure $ exampleLayout (Hello $ Greet who) $ do
+    pure $ layout (Hello $ Greet who) $ do
       row ~ gap 6 . pad 10 $ do
         el "Hello:"
         el $ text who
   hello Redirected = do
-    pure $ exampleLayout Requests $ el ~ pad 10 $ "You were redirected"
+    pure $ layout Requests $ el ~ pad 10 $ "You were redirected"
 
   -- Use the embedded version for real applications (see quickStartDocument).
   -- The link to /hyperbole.js here is just to make local development easier

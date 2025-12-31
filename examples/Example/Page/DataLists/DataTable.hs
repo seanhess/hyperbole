@@ -4,6 +4,7 @@ module Example.Page.DataLists.DataTable where
 
 import Data.List (sortOn)
 import Data.Text (pack)
+import Docs.Page
 import Effectful
 import Example.AppRoute as Route
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages)
@@ -18,7 +19,7 @@ import Prelude hiding (even, odd)
 
 page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
-  pure $ exampleLayout (Data SortableTable) $ do
+  pure $ layout (Data SortableTable) $ do
     example (Data SortableTable) $ do
       el "We can write view Functions that work in any view, like a dataTable"
       col ~ embed $ hyper Languages $ languagesView Nothing allLanguages

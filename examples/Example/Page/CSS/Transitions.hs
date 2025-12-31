@@ -4,11 +4,11 @@ import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-data Transitions = Transitions
+data Animate = Animate
   deriving (Generic, ViewId)
 
-instance HyperView Transitions es where
-  data Action Transitions
+instance HyperView Animate es where
+  data Action Animate
     = Expand
     | Collapse
     deriving (Generic, ViewAction)
@@ -17,13 +17,13 @@ instance HyperView Transitions es where
   update Collapse = do
     pure viewSmall
 
-viewSmall :: View Transitions ()
+viewSmall :: View Animate ()
 viewSmall = do
   col ~ gap 10 . transition 300 (Width 200) $ do
     el "Small"
     button Expand "Expand" ~ btn
 
-viewBig :: View Transitions ()
+viewBig :: View Animate ()
 viewBig =
   col ~ gap 10 . transition 300 (Width 400) $ do
     el "Expanded"

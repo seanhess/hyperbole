@@ -3,19 +3,36 @@
 
 module Example.Page.Intro.Basics where
 
+import Data.String.Conversions (cs)
 import Data.String.Interpolate (i)
 import Docs.Markdown
+import Docs.Page
 import Docs.Snippet
 import Example.AppRoute
 import Example.Page.Counter (Counter)
 import Example.Page.Simple (Message)
-import Example.View.Layout
+import Example.View.Layout (layoutSubnav)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+data Basics
+  = Pages
+  | HtmlViews
+  | Interactive
+  deriving (Show, Enum, Bounded)
+
+-- TODO: move to basics
+instance PageAnchor Basics where
+  sectionTitle Interactive = "Interactive HyperViews"
+  sectionTitle HtmlViews = "HTML Views"
+  sectionTitle b = cs (show b)
+
+  navEntry Interactive = "HyperViews"
+  navEntry a = sectionTitle a
+
 page :: (Hyperbole :> es) => Page es '[Message, Counter]
 page = do
-  pure $ exampleLayout Basics $ do
+  pure $ layoutSubnav @Basics Basics $ do
     sectionA Pages $ do
       markdocs $(embedFile "docs/getting-started.md")
       snippet $ do

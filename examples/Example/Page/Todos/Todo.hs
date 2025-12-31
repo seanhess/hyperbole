@@ -5,6 +5,7 @@ module Example.Page.Todos.Todo where
 
 import Control.Monad (forM_)
 import Data.Text (Text, pack)
+import Docs.Page
 import Effectful
 import Example.AppRoute qualified as Route
 import Example.Colors
@@ -20,7 +21,7 @@ import Web.Hyperbole as Hyperbole
 page :: (Todos :> es) => Page es '[AllTodos, TodoView]
 page = do
   todos <- Todos.loadAll
-  pure $ exampleLayout (Route.Examples Route.Todos) $ do
+  pure $ layout (Route.Examples Route.Todos) $ do
     section' "Todos" $ do
       example' "Example/Page/Todos/Todo.hs" $ do
         hyper AllTodos $ todosView FilterAll todos

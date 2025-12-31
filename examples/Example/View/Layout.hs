@@ -1,24 +1,33 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Example.View.Layout where
 
-import Data.Text (Text)
+import Control.Monad (when)
+import Data.String.Conversions (cs)
+import Data.Version (showVersion)
+import Docs.Page
 import Example.AppRoute
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
-import Example.View.Icon as Icon (bookOpen, iconInline)
-import Example.View.Navigation
+import Example.View.Icon as Icon (hamburger)
+import Paths_examples (version)
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.Data.URI
 
-exampleLayout :: AppRoute -> View c () -> View c ()
-exampleLayout rt contents =
+layout :: AppRoute -> View c () -> View c ()
+layout rt = layout' (exampleMenu @() rt)
+
+layoutSubnav :: forall sections c. (PageAnchor sections) => AppRoute -> View c () -> View c ()
+layoutSubnav rt = layout' (exampleMenu @sections rt)
+
+layout' :: View c () -> View c () -> View c ()
+layout' menu contents =
   el ~ grow $ do
-    navigation rt ~ position Fixed . zIndex 1 . onDesktop leftMenu . onMobile topMenu
+    navigation menu ~ position Fixed . zIndex 1 . onDesktop leftMenu . onMobile topMenu
     col ~ pad 25 . gap 30 . onDesktop horizontal . onMobile vertical $ do
       contents
  where
@@ -31,48 +40,113 @@ exampleLayout rt contents =
   menuWidth = 230
   menuHeight = 70
 
-sourceLink :: Path -> View c ()
-sourceLink p =
-  link sourceUrl ~ Style.link . Cyber.font . fontSize 14 @ att "target" "_blank" $ do
-    text "View Source"
- where
-  sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/main/examples/|]
-  sourceUrl = sourceUrlBase ./. p
+-- Navigation --------------------------------------
 
-embed :: (Styleable h) => CSS h -> CSS h
-embed =
-  pad 15 . gap 10 . bg White . flexCol . Cyber.clip 10
-
-example :: (ExampleSource e) => e -> View c () -> View c ()
-example e = example' (exampleSource e)
-
-example' :: Path -> View c () -> View c ()
-example' p cnt = do
-  col ~ Cyber.font $ do
-    col ~ embed $ cnt
-    sourceLink p
-
-section :: AppRoute -> View c () -> View c ()
-section r = section' (routeTitle r)
-
-section' :: Text -> View c () -> View c ()
-section' t cnt = do
-  tag "section" ~ gap 10 . flexCol $ do
+navigation :: View c () -> View c ()
+navigation menu = do
+  nav ~ bg Dark . color White . flexCol . showMenuHover $ do
     row $ do
-      el ~ bold . fontSize 28 . Cyber.font . Style.uppercase $ text t
-    cnt
+      link [uri|https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html|] "HYPERBOLE" ~ bold . pad 20 . logo . width 220
+      space
+      menuButton
+    col ~ cls "menu" . onMobile (display None) . Cyber.font . Style.uppercase $ do
+      menu
+      space
+      el ~ pad 10 . fontSize 12 $ do
+        text "v"
+        text $ cs $ showVersion version
+ where
+  menuButton =
+    el ~ onDesktop (display None) . onMobile flexCol $ do
+      el ~ pad 6 $ do
+        el Icon.hamburger ~ color White . width 50 . height 50
 
-sectionA :: (PageAnchor n) => n -> View c () -> View c ()
-sectionA n =
-  section' (sectionTitle n)
-    @ att "id" (pageAnchor n)
+  showMenuHover =
+    css
+      "show-menu"
+      ".show-menu:hover > .menu"
+      [ "display" :. "flex"
+      ]
 
-type Fragment = String
+  -- https://www.fontspace.com/super-brigade-font-f96444
+  logo =
+    utility
+      "logo"
+      [ "background" :. "no-repeat center/90% url(/logo-robot.png)"
+      , "color" :. "transparent"
+      ]
 
-hackage :: Fragment -> Text -> View c ()
-hackage uriFragment txt = do
-  let docs = [uri|https://hackage-content.haskell.org/package/hyperbole/docs/Web-Hyperbole.html|]
-  link docs{uriFragment} @ att "target" "_blank" ~ Style.link $ do
-    el ~ iconInline $ do
-      Icon.bookOpen
-      text txt
+-- Menu --------------------------------------
+
+exampleMenu :: forall sections c. (PageAnchor sections) => AppRoute -> View c ()
+exampleMenu current = do
+  exampleLink Intro
+  exampleLink Basics
+  exampleLink CSS
+  exampleLink Concurrency
+  exampleLink (State StateRoot)
+  case current of
+    State _ -> do
+      exampleLink (State Actions) ~ sub
+      exampleLink (State StateView) ~ sub
+      exampleLink (State Effects) ~ sub
+      exampleLink (State Query) ~ sub
+      exampleLink (State Sessions) ~ sub
+    _ -> none
+  exampleLink Requests
+  exampleLink (Data DataLists)
+  case current of
+    Data _ -> do
+      exampleLink (Data SortableTable) ~ sub
+      exampleLink (Data Autocomplete) ~ sub
+      exampleLink (Data Filter) ~ sub
+      exampleLink (Data LoadMore) ~ sub
+    _ -> none
+  exampleLink (Forms FormSimple)
+  exampleLink Interactivity
+  exampleLink Errors
+  exampleLink OAuth2
+  exampleLink Javascript
+  exampleLink Advanced
+  exampleLink (Examples BigExamples)
+  case current of
+    Examples _ ->
+      completeExamples
+    (Contacts _) ->
+      completeExamples
+    _ -> none
+ where
+  completeExamples = do
+    exampleLink (Examples Todos) ~ sub
+    exampleLink (Examples TodosCSS) ~ sub
+    exampleLink (Contacts ContactsAll) ~ sub
+
+  -- link "/query?key=value" lnk "Query Params"
+  sub :: (Styleable h) => CSS h -> CSS h
+  sub = pad (TRBL 5 10 5 40) . fontSize 14
+
+  menuItem :: (Styleable h) => CSS h -> CSS h
+  menuItem =
+    pad (XY 20 10) . color White . hover (bg DarkHighlight)
+
+  selected rt =
+    if rt == current then bg DarkHighlight . border (L 2) . pad (L 18) else id
+
+  exampleLink rt = do
+    route rt ~ selected rt . menuItem $
+      text $
+        routeTitle
+          rt
+    when (rt == current) $ do
+      mapM_ anchorLink (subnav @sections)
+
+  anchorLink :: (PageAnchor a) => a -> View c ()
+  anchorLink a = do
+    tag "a" ~ sub . menuItem @ att "href" ("#" <> pageAnchor a) $ do
+      text $ navEntry a
+
+onMobile :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c
+onMobile = media (MaxWidth 650)
+
+onDesktop :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c
+onDesktop = media (MinWidth 650)

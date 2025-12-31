@@ -7,6 +7,7 @@ module Example.Page.OAuth2 where
 import Data.Aeson (eitherDecode)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
+import Docs.Page
 import Effectful
 import Effectful.Reader.Dynamic
 import Example.AppRoute qualified as Route
@@ -83,7 +84,7 @@ page
   => Page es '[Contents]
 page = do
   muser <- lookupSession @UserSession
-  pure $ exampleLayout Route.OAuth2 $ do
+  pure $ layout Route.OAuth2 $ do
     example Route.OAuth2 $ do
       el "Hyperbole provides some helpers to make OAuth2 easier. This is done in 2 steps:"
       el "1. Initiate the login via the OAuth provider given a redirect url"

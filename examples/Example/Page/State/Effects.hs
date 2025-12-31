@@ -3,6 +3,7 @@
 module Example.Page.State.Effects where
 
 import Data.Text (pack)
+import Docs.Page
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
@@ -16,7 +17,7 @@ page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es 
 page = do
   n <- getCount
   pure $ do
-    exampleLayout (State Effects) $ do
+    layout (State Effects) $ do
       example (State Effects) $ do
         el "For all but the simplest cases, we will want to use some sort of Effect to manage our state"
         el $ do

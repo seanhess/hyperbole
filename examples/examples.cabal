@@ -24,6 +24,7 @@ executable examples
   main-is: Main.hs
   other-modules:
       Docs.Markdown
+      Docs.Page
       Docs.Snippet
       Example.App
       Example.AppRoute
@@ -92,7 +93,6 @@ executable examples
       Example.View.Icon
       Example.View.Inputs
       Example.View.Layout
-      Example.View.Navigation
       Example.View.SortableTable
       Paths_examples
   autogen-modules:

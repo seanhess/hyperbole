@@ -5,6 +5,7 @@ module Example.Page.Errors where
 import Control.Monad (forM_)
 import Data.List qualified as L
 import Data.Text (Text, pack, unpack)
+import Docs.Page
 import Effectful
 import Effectful.Exception
 import Example.AppRoute as Route hiding (UserId)
@@ -17,7 +18,7 @@ import Web.Hyperbole hiding (link)
 
 page :: (Hyperbole :> es) => Page es '[Defaults, Users]
 page = do
-  pure $ exampleLayout Errors $ do
+  pure $ layout Errors $ do
     section' "Exceptions" $ do
       el "Any uncaught exceptions thrown from a handler will be displayed in a bright red box inline in the corresponding HyperView"
       example Errors $ do

@@ -1,7 +1,7 @@
-
 module Example.Page.Tags where
 
 import Data.Text (Text)
+import Docs.Page
 import Example.AppRoute qualified as Route
 import Example.Style.Cyber (btn)
 import Example.View.Layout
@@ -10,7 +10,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es '[Test]
 page = do
-  pure $ exampleLayout Route.Test $ do
+  pure $ layout Route.Test $ do
     example Route.Test $ do
       col ~ embed $ do
         hyper Test $ tagsView []
@@ -26,7 +26,7 @@ data TagForm = TagForm
 data Test = Test
   deriving (Generic, ViewId)
 
-instance  HyperView Test es where
+instance HyperView Test es where
   data Action Test
     = SubmitTag [Tag]
     deriving (Generic, ViewAction)

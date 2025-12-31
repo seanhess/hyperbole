@@ -1,6 +1,7 @@
 module Example.Page.Javascript where
 
 import Data.Text (Text, pack)
+import Docs.Page
 import Example.AppRoute as Route
 import Example.Page.Interactivity.Events (box, viewBoxes')
 import Example.Style.Cyber (btn, font)
@@ -10,7 +11,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es) => Page es '[Boxes, Message]
 page = do
-  pure $ exampleLayout Route.Javascript $ do
+  pure $ layout Route.Javascript $ do
     -- NOTE: include custom javascript only on this page
     script "custom.js"
 

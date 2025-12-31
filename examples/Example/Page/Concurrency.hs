@@ -4,20 +4,21 @@ module Example.Page.Concurrency where
 
 import Control.Monad (forM_, when)
 import Data.Text (Text, pack)
+import Docs.Page
 import Effectful
 import Example.AppRoute
 import Example.Colors
 import Example.Effects.Debug
 import Example.Style.Cyber (btn, font)
 import Example.View.Inputs (progressBar)
-import Example.View.Layout (example, exampleLayout, section')
+import Example.View.Layout (layout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Effect.GenRandom
 
 page :: (Hyperbole :> es, Debug :> es) => Page es '[Polling, LazyData, Progress, Tasks]
 page = do
-  pure $ exampleLayout Concurrency $ do
+  pure $ layout Concurrency $ do
     section' "Concurrency" $ do
       el "While individual HyperViews can only have one update in progress at a time, multiple HyperViews can overlap updates without issue"
       example Concurrency ~ font $ do
