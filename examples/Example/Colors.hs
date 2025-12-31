@@ -32,6 +32,7 @@ instance ToColor AppColor where
   colorValue DarkHighlight = "#343945" -- "#232C41"
   colorValue Primary = "#4171b7"
   colorValue PrimaryLight = "#6D9BD3"
+  -- colorValue PrimaryLight = "#e2ebf6"
   colorValue Secondary = "#5D5A5C"
   colorValue SecondaryLight = "#9D999C"
   -- colorValue Success = "67C837"

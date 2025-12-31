@@ -5,9 +5,9 @@
 
 module Example.Page.State.Actions where
 
-import Data.Snippet
 import Data.String.Interpolate (i)
 import Data.Text (Text)
+import Docs.Snippet
 import Example.AppRoute
 import Example.Page.Counter (Counter)
 import Example.Page.Counter qualified as Counter

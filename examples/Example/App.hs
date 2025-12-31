@@ -50,7 +50,8 @@ import Example.Page.DataLists.LoadMore qualified as LoadMore
 import Example.Page.Errors qualified as Errors
 import Example.Page.Forms qualified as Forms
 import Example.Page.Interactivity qualified as Interactivity
-import Example.Page.Intro qualified as Intro
+import Example.Page.Intro.Basics qualified as Basics
+import Example.Page.Intro.Intro qualified as Intro
 import Example.Page.Javascript qualified as Javascript
 import Example.Page.OAuth2 qualified as OAuth2
 import Example.Page.Requests qualified as Requests
@@ -147,7 +148,11 @@ exampleApp config users count chats = do
       Sessions -> runPage Sessions.page
       Query -> runPage Query.page
   router Intro = runPage Intro.page
-  router (CSS _) = runPage CSS.page
+  router Basics = runPage Basics.page
+  -- router (Intro HyperViews) = runPage IntroHyperViews.page
+  -- router (Intro Pages) = runPage IntroPages.page
+  -- router (Intro ViewFunctions) = runPage IntroViewFunctions.page
+  router CSS = runPage CSS.page
   router Interactivity = runPage Interactivity.page
   router (Examples BigExamples) = redirect $ routeUri (Examples Todos)
   router (Examples Todos) = runPage Todo.page
@@ -156,7 +161,7 @@ exampleApp config users count chats = do
   router OAuth2 = runPage OAuth2.page
   router OAuth2Authenticate = OAuth2.handleRedirect
   router Simple = redirect (routeUri Intro)
-  router Counter = redirect (routeUri Intro)
+  router Counter = redirect (routeUri $ State StateRoot)
   router Test = runPage Test.page
   router Advanced = runPage Advanced.page
   router Main = do
@@ -185,7 +190,8 @@ exampleApp config users count chats = do
     script' scriptLiveReload
     stylesheet "/prism.css"
     script "/prism.js" @ att "defer" ""
-    style "body { background-color: #d3dceb }, button { font-family: 'Share Tech Mono'}"
+    script "/docs.js" @ att "defer" ""
+    style "html { scroll-behavior: smooth; }\n body { background-color: #e0e7f1; font-family: font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans\", Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\") }, button { font-family: 'Share Tech Mono'}"
     style cssEmbed
 
   serverError :: ResponseError -> ServerError
