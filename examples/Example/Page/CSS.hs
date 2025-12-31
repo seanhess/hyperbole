@@ -22,12 +22,14 @@ import Web.Hyperbole.HyperView.Types (Root (..))
 import Web.Hyperbole.Page (subPage)
 
 data CSSExample
-  = Transitions
+  = Factoring
+  | Transitions
   | Tooltips
   | External
   deriving (Eq, Generic, Show, Enum, Bounded)
 instance PageAnchor CSSExample where
   sectionTitle = \case
+    Factoring -> "Atomic CSS"
     Transitions -> "CSS Transitions"
     Tooltips -> "Tooltips"
     External -> "External Stylesheets"
@@ -38,7 +40,7 @@ page :: (Hyperbole :> es) => Page es '[Animate, External.Items, Boxes]
 page = do
   ext <- subPage External.page
   pure $ layoutSubnav @CSSExample CSS $ do
-    section' "Atomic CSS" $ do
+    sectionA Factoring $ do
       markdocs "Hyperbole encourages using the [atomic-css](https://github.com/seanhess/atomic-css)  package to factor styles with haskell functions"
 
       snippet $ do

@@ -10,7 +10,7 @@ import Data.String.Conversions (cs)
 import Data.Version (showVersion)
 import Docs.Page
 import Example.AppRoute
-import Example.Colors (AppColor (..))
+import Example.Colors (AppColor (..), cyan)
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Example.View.Icon as Icon (hamburger)
@@ -131,7 +131,7 @@ exampleMenu current = do
     pad (XY 20 10) . hover (bg DarkHighlight)
 
   selected rt =
-    if rt == current then bg DarkHighlight . border (L 4) . pad (L 16) . color PrimaryLight else id
+    if rt == current then bg DarkHighlight . border (L 4) . pad (L 16) . color cyan else id
 
   exampleLink rt = do
     route rt ~ selected rt . menuItem $
