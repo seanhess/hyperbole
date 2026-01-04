@@ -28,7 +28,7 @@ layout' :: View c () -> View c () -> View c ()
 layout' menu contents =
   el ~ grow $ do
     navigation menu ~ position Fixed . zIndex 1 . onDesktop leftMenu . onMobile topMenu
-    col ~ pad 25 . gap 30 . onDesktop horizontal . onMobile vertical $ do
+    col ~ pad (TRBL 25 25 100 25) . gap 30 . onDesktop horizontal . onMobile vertical $ do
       contents
  where
   leftMenu = width menuWidth . left 0 . top 0 . bottom 0

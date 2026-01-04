@@ -9,9 +9,9 @@ import Web.Hyperbole
 page :: Page es '[Message]
 page = do
   pure $ do
-    hyper Message $ messageView "Hello"
+    hyper VFMessage $ messageView "Hello"
 
-data Message = Message
+data Message = VFMessage
   deriving (Generic, ViewId)
 
 instance HyperView Message es where

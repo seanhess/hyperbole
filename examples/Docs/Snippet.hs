@@ -8,8 +8,8 @@ import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-import Web.Hyperbole.View
 import Web.Atomic.CSS
+import Web.Hyperbole.View
 
 snippet :: View c () -> View c ()
 snippet cnt = do
@@ -73,7 +73,10 @@ isCurrentDefinition tld line =
   isTopLevel tld line || not (isFullyOutdented line)
 
 isTopLevel :: TopLevelDefinition -> Text -> Bool
-isTopLevel (TopLevelDefinition def) line = T.isPrefixOf def $ T.dropWhile (== ' ') line
+isTopLevel (TopLevelDefinition def) line =
+  if "^" `T.isPrefixOf` def
+    then T.isPrefixOf (T.drop 1 def) line
+    else T.isPrefixOf def $ T.dropWhile (== ' ') line
 
 selectLines :: (Text -> Bool) -> (Text -> Bool) -> SourceCode -> [Text]
 selectLines isStart isCurrent s =
