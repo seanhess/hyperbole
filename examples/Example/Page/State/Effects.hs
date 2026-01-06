@@ -17,8 +17,8 @@ page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es 
 page = do
   n <- getCount
   pure $ do
-    layout (State Effects) $ do
-      example (State Effects) $ do
+    layout State $ do
+      example State $ do
         el "For all but the simplest cases, we will want to use some sort of Effect to manage our state"
         el $ do
           text "Pages and update functions can run side effects before rendering. Here we add a "

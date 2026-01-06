@@ -26,8 +26,8 @@ instance Default Preferences where
 page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
   prefs <- query @Preferences
-  pure $ layout (State Query) $ do
-    example (State Query) $ do
+  pure $ layout State $ do
+    example State $ do
       el "We can persist state in the query string. This is useful for faceted search, or any time when a user might want to share the url include local state changes"
       col ~ embed $ hyper Contents $ viewContent prefs
 

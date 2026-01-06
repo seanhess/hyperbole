@@ -20,7 +20,7 @@ class ExampleSource a where
   exampleSource :: a -> Path
 
 instance ExampleSource AppRoute where
-  exampleSource (State s) = ["Example", "Page", "State", cs (show s) <> ".hs"]
+  -- exampleSource (State s) = ["Example", "Page", "State", cs (show s) <> ".hs"]
   exampleSource (Contacts (Contact _)) = "Example/Page/Contact.hs"
   exampleSource (Contacts ContactsAll) = "Example/Page/Contacts.hs"
   -- routeSource (Intro (CSS CSSAll)) = ["Example", "Page", "Intro", "CSS.hs"]

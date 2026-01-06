@@ -77,6 +77,8 @@ typeKeywords =
   , "ViewAction"
   , "ViewState"
   , "Action"
+  , "Hyperbole"
+  , "Effect"
   ]
 
 valueKeywords :: [Text]
@@ -85,6 +87,7 @@ valueKeywords =
   , "update"
   , "form"
   , "hyper"
+  , "request"
   ]
 
 -- DOCUMENT -> mapM nodeToView childs

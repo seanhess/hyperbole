@@ -25,8 +25,8 @@ instance Default Preferences where
 page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
   prefs <- session @Preferences
-  pure $ layout (State Sessions) $ do
-    example (State Sessions) $ do
+  pure $ layout State $ do
+    example State $ do
       el "We can also persist state in a browser cookie. This is most useful for user-specific preferences and state that should last until they clear their browser cookies"
       col ~ embed $ hyper Contents $ viewContent prefs
 

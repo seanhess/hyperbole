@@ -19,8 +19,8 @@ import Web.Hyperbole.HyperView.Types
 page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   counter <- Counter.page
-  pure $ layout (State Actions) $ do
-    section (State Actions) $ do
+  pure $ layout State $ do
+    section State $ do
       -- hackage "#g:state" "Managing State"
 
       snippet $ do

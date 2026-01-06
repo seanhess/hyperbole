@@ -56,7 +56,8 @@ import Example.Page.Intro.Intro qualified as Intro
 import Example.Page.Javascript qualified as Javascript
 import Example.Page.OAuth2 qualified as OAuth2
 import Example.Page.Requests qualified as Requests
-import Example.Page.State.Actions qualified as Actions
+import Example.Page.SideEffects qualified as SideEffects
+import Example.Page.State qualified as State
 import Example.Page.State.Effects qualified as Effects
 import Example.Page.State.Query qualified as Query
 import Example.Page.State.Sessions qualified as Sessions
@@ -140,14 +141,8 @@ exampleApp config users count chats = do
   router (Forms _) = runPage Forms.page
   router Requests = runPage Requests.page
   router Route.Response = redirect (routeUri Requests)
-  router (State r) =
-    case r of
-      StateRoot -> redirect $ routeUri (State Actions)
-      Actions -> runPage Actions.page
-      StateView -> runPage SView.page
-      Effects -> runReader count $ runPage Effects.page
-      Sessions -> runPage Sessions.page
-      Query -> runPage Query.page
+  router State = runPage State.page
+  router SideEffects = runPage SideEffects.page
   router Intro = runPage Intro.page
   router Basics = runPage Basics.page
   -- router (Intro HyperViews) = runPage IntroHyperViews.page
@@ -162,7 +157,7 @@ exampleApp config users count chats = do
   router OAuth2 = runPage OAuth2.page
   router OAuth2Authenticate = OAuth2.handleRedirect
   router Simple = redirect (routeUri Intro)
-  router Counter = redirect (routeUri $ State StateRoot)
+  -- router Counter = redirect (routeUri $ State StateRoot)
   router Test = runPage Test.page
   router Advanced = runPage Advanced.page
   router Main = do

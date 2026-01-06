@@ -46,6 +46,7 @@ executable examples
       Example.Docs.Page.Messages
       Example.Docs.Page.Users
       Example.Docs.Params
+      Example.Docs.QueryMessage
       Example.Docs.Sessions
       Example.Docs.SideEffects
       Example.Docs.State
@@ -78,11 +79,14 @@ executable examples
       Example.Page.Javascript
       Example.Page.OAuth2
       Example.Page.Requests
+      Example.Page.SideEffects
       Example.Page.Simple
+      Example.Page.State
       Example.Page.State.Actions
       Example.Page.State.Effects
       Example.Page.State.Query
       Example.Page.State.Sessions
+      Example.Page.State.Stateless
       Example.Page.State.View
       Example.Page.Tags
       Example.Page.Test
