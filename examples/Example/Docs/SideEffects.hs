@@ -73,5 +73,5 @@ instance HyperView Titler es where
     pageTitle msg
     pure "Check the title"
 
-source :: ExampleSource
-source = $(exampleSource)
+source :: ModuleSource
+source = $(moduleSource)

@@ -29,5 +29,5 @@ instance HyperView Message es where
   update (SetMessage msg) =
     pure $ messageView msg
 
-source :: ExampleSource
-source = $(exampleSource)
+source :: ModuleSource
+source = $(moduleSource)

@@ -71,5 +71,5 @@ app :: TVar Int -> Application
 app var = do
   liveApp quickStartDocument (runReader var . runConcurrent $ runPage page)
 
-source :: ExampleSource
-source = $(exampleSource)
+source :: ModuleSource
+source = $(moduleSource)

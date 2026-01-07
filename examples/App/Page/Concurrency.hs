@@ -54,7 +54,7 @@ page = do
       example source ~ font $ do
         hyper Tasks $ taskView 0
  where
-  source = $(exampleSource)
+  source = $(moduleSource)
 
 -----------------------------------------------------------
 -- Simple Polling

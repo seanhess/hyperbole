@@ -18,7 +18,7 @@ page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   let rt = Route.State
   pure $ layout rt $ do
-    example $(exampleSource) $ do
+    example $(moduleSource) $ do
       col ~ embed $ do
         hyperState Counter 1 viewCount
 

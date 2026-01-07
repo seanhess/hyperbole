@@ -7,11 +7,11 @@ import Docs.Snippet (ModuleName (..), modulePath)
 import Language.Haskell.TH
 import System.Directory (doesFileExist, getCurrentDirectory)
 
-newtype ExampleSource = ExampleSource FilePath
+newtype ModuleSource = ModuleSource FilePath
   deriving newtype (Show, Eq, IsString)
 
-exampleSource :: Q Exp
-exampleSource = do
+moduleSource :: Q Exp
+moduleSource = do
   loc <- location
   dir <- runIO getCurrentDirectory
   let path = loc_filename loc
@@ -21,8 +21,8 @@ exampleSource = do
     fromMaybe p $
       L.stripPrefix dir p
 
-moduleSource :: ModuleName -> Q Exp
-moduleSource mn = do
+moduleSourceNamed :: ModuleName -> Q Exp
+moduleSourceNamed mn = do
   let p = modulePath mn
   -- attempt to open the file
   b <- runIO $ doesFileExist p

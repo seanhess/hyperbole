@@ -39,5 +39,5 @@ header :: Text -> View ctx ()
 header txt = do
   el ~ bold $ text txt
 
-source :: ExampleSource
-source = $(exampleSource)
+source :: ModuleSource
+source = $(moduleSource)

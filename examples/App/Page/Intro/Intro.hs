@@ -53,7 +53,7 @@ page = do
         markdocs $(embedFile "docs/intro.md")
 
         section' "Simple Example" $ do
-          example $(moduleSource "Example.Simple") $ do
+          example $(moduleSourceNamed "Example.Simple") $ do
             runViewContext Root () simple
 
         snippet $ do

@@ -14,7 +14,7 @@ import Web.Hyperbole
 page :: (Hyperbole :> es) => Page es '[Test]
 page = do
   pure $ layout Route.Test $ do
-    example $(exampleSource) $ do
+    example $(moduleSource) $ do
       col ~ embed $ do
         hyper Test $ tagsView []
 

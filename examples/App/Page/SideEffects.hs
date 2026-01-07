@@ -4,17 +4,12 @@
 module App.Page.SideEffects where
 
 import App.Route as Route (AppRoute (SideEffects))
-import Data.String.Interpolate (i)
 import Docs.Markdown
 import Docs.Page
 import Docs.Snippet
-
--- import Example.Docs.Interactive
-
-import Example.Counter (Counter (..), viewCount)
+import Example.Counter (Counter (..))
 import Example.Docs.SideEffects as SideEffects
 import Example.View.Layout (layoutSubnav)
-import Web.Atomic.CSS
 import Web.Hyperbole
 
 data EffectsSection
@@ -48,17 +43,19 @@ page = do
   --     hyper Counter $ viewCount 0
 
   sideEffects = do
-    markdocs "Hyperbole relies heavily on [Effectful](https://hackage.haskell.org/package/effectful) to run and compose side effects. We can use these `Effect`s in any `Page` or `update`."
-    markdocs "The `Hyperbole` effect is automatically available in both, and gives us direct access to the client connection. We can use it to get information about the `request`, update the page directly, and more. Here is how you might use it to set the page title:"
-    snippet $ do
-      raw $(embedTopLevel "Example.Docs.SideEffects" "instance HyperView Titler")
+    markdocs $(embedFile "docs/side-effects.md")
 
-    markdocs "If we want to use an `Effect` besides `Hyperbole`, add it as a constraint to the `page` and `update`. This `HyperView` uses `Concurrent` to delay every response by 500ms:"
-    snippet $ do
-      raw "{-# LANGUAGE UndecidableInstances #-}\n\n"
-      raw $(embedTopLevel "Example.Docs.SideEffects" "data SlowMessage")
-      raw "\n"
-      raw $(embedTopLevel "Example.Docs.SideEffects" "instance (Concurrent :> es) => HyperView SlowMessage")
+    -- markdocs "Hyperbole relies heavily on [Effectful](https://hackage.haskell.org/package/effectful) to run and compose side effects. We can use these `Effect`s in any `Page` or `update`."
+    -- markdocs "The `Hyperbole` effect is automatically available in both, and gives us direct access to the client connection. We can use it to get information about the `request`, update the page directly, and more. Here is how you might use it to set the page title:"
+    -- snippet $ do
+    --   raw $(embedTopLevel "Example.Docs.SideEffects" "instance HyperView Titler")
+    --
+    -- markdocs "If we want to use an `Effect` besides `Hyperbole`, add it as a constraint to the `Page` and `update`. This `HyperView` uses `Concurrent` to delay every response by 500ms:"
+    -- snippet $ do
+    --   raw "{-# LANGUAGE UndecidableInstances #-}\n\n"
+    --   raw $(embedTopLevel "Example.Docs.SideEffects" "data SlowMessage")
+    --   raw "\n"
+    --   raw $(embedTopLevel "Example.Docs.SideEffects" "instance (Concurrent :> es) => HyperView SlowMessage")
 
     example SideEffects.source $ do
       hyper SlowMessage $ messageView ""

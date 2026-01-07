@@ -40,5 +40,5 @@ instance HyperView Message es where
     pushEvent @Text "server-message" "hello"
     pure "Sent 'server-message' event"
 
-source :: ExampleSource
-source = $(exampleSource)
+source :: ModuleSource
+source = $(moduleSource)

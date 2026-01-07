@@ -60,8 +60,8 @@ sourceLink p =
   sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/main/examples/|]
   sourceUrl = sourceUrlBase ./. p
 
-example :: ExampleSource -> View c () -> View c ()
-example (ExampleSource e) = example' (path $ cs e)
+example :: ModuleSource -> View c () -> View c ()
+example (ModuleSource e) = example' (path $ cs e)
 
 example' :: Path -> View c () -> View c ()
 example' p cnt = do

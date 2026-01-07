@@ -23,7 +23,7 @@ import Prelude hiding (even, odd)
 page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   pure $ layout (Data SortableTable) $ do
-    example $(exampleSource) $ do
+    example $(moduleSource) $ do
       el "We can write view Functions that work in any view, like a dataTable"
       col ~ embed $ hyper Languages $ languagesView Nothing allLanguages
 
