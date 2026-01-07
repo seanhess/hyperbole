@@ -28,7 +28,7 @@ page = do
       example source $ do
         hyper Controls targetView
  where
-  source = $(exampleSource)
+  source = $(moduleSource)
 
 data Message = Message
   deriving (Generic, ViewId)

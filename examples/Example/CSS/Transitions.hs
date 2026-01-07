@@ -7,8 +7,8 @@ import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-source :: ExampleSource
-source = $(exampleSource)
+source :: ModuleSource
+source = $(moduleSource)
 
 data Animate = Animate
   deriving (Generic, ViewId)

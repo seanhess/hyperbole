@@ -23,7 +23,7 @@ page :: (Hyperbole :> es, IOE :> es) => Page es '[Languages]
 page = do
   filters <- query
   pure $ layout (Data Filter) $ do
-    example $(exampleSource) $ do
+    example $(moduleSource) $ do
       el "Incrementally search a list of data, storing parameters in the query string"
       el ~ embed $ hyper Languages $ languagesView filters
 

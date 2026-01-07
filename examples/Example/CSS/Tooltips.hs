@@ -7,8 +7,8 @@ import Example.Colors
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-source :: ExampleSource
-source = $(exampleSource)
+source :: ModuleSource
+source = $(moduleSource)
 
 tooltips :: View c ()
 tooltips = do

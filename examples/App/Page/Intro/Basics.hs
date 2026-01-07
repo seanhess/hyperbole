@@ -95,7 +95,7 @@ page = do
       hyper Message $ messageView "Hello World"
 
   viewFunctions = do
-    markdocs "We showed above how we can factor `View`s into functions. It's best practice to have a main `View` function for each `HyperView`. Create views as pure function of input data and state, by passing them in"
+    markdocs "We showed above how we can factor `View`s into functions. It's best practice to have a main `View` function for each `HyperView`. Create views as pure function of input data and state, by passing them in:"
     snippet "inputs -> View viewId ()"
 
     markdocs "We can write multiple view functions with our `HyperView` as the `context`, and factor them however is most convenient:"

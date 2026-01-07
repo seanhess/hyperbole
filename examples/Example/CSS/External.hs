@@ -6,8 +6,8 @@ import Data.Text (Text)
 import Docs.Examples
 import Web.Hyperbole
 
-source :: ExampleSource
-source = $(exampleSource)
+source :: ModuleSource
+source = $(moduleSource)
 
 main :: IO ()
 main = do

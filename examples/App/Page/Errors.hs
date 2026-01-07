@@ -41,7 +41,7 @@ page = do
       example source $ do
         hyper Customs viewCustom
  where
-  source = $(exampleSource)
+  source = $(moduleSource)
 
 -- Defaults ------------------------------------------------
 

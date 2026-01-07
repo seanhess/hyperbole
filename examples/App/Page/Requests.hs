@@ -28,8 +28,8 @@ page = do
       el "It also allows us to directly affect the response and the javascript client"
       example source ~ Cyber.font $ hyper ControlResponse responseView
  where
-  source :: ExampleSource
-  source = $(exampleSource)
+  source :: ModuleSource
+  source = $(moduleSource)
 
 -- REQUEst -------------------------------------------------
 

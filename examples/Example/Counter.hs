@@ -36,5 +36,5 @@ viewCount n = row $ do
       button (Decrement n) "Decrement" ~ Style.btn
       button (Increment n) "Increment" ~ Style.btn
 
-source :: ExampleSource
-source = $(exampleSource)
+source :: ModuleSource
+source = $(moduleSource)
