@@ -1,6 +1,9 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Example.Docs.Interactive where
 
 import Data.Text (Text)
+import Docs.Examples
 import Web.Atomic.CSS
 import Web.Hyperbole
 
@@ -25,3 +28,6 @@ instance HyperView Message es where
 
   update (SetMessage msg) =
     pure $ messageView msg
+
+source :: ExampleSource
+source = $(exampleSource)

@@ -1,0 +1,26 @@
+module App.Page.Interactivity where
+
+import App.Route
+import Docs.Page
+import Example.Interactivity.Events
+import Example.Style.Cyber (font)
+import Example.View.Layout
+import Web.Atomic.CSS
+import Web.Hyperbole
+
+page :: (Hyperbole :> es) => Page es '[Boxes]
+page = do
+  pure $ layout Interactivity $ do
+    section' "Events" $ do
+      el $ do
+        text "Hyperbole provides various events that can be tied to specific actions. Up to this point, we've only used them via the higher-level views like "
+        code "button"
+        text " and "
+        code "search"
+        text ". They can also be used directly. In this example we use "
+        code "onMouseEnter"
+        text " and "
+        code "onMouseLeave"
+      el $ do
+        text "Remember it is better to use Atomic CSS to provide immediate feedback whenever possible. If used improperly, too many mouse events could make the app unresponsive."
+      example' "Example/Page/Interactivity/Events.hs" ~ font $ hyper Boxes (viewBoxes Nothing)

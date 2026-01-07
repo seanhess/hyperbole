@@ -89,3 +89,17 @@ cyberError inner = renderBody $
 glitch :: Text -> View c ()
 glitch msg =
   el ~ cls "glitch" @ att "data-text" msg $ text msg
+
+embed :: (Styleable h) => CSS h -> CSS h
+embed =
+  pad 15
+    . gap 10
+    . bg White
+    . flexCol
+    . clip 10
+    . font
+    . border (L 3)
+    . borderColor PrimaryLight
+
+quote :: (Styleable h) => CSS h -> CSS h
+quote = embed . italic . border (L 3) . borderColor PrimaryLight . textAlign AlignRight

@@ -13,7 +13,9 @@ import Data.ByteString (ByteString)
 import Data.FileEmbed (embedFile)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
+import Docs.Snippet (snippet)
 import Example.Style qualified as Style
+import Example.Style.Cyber qualified as Cyber
 import Web.Atomic.CSS
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.View
@@ -25,6 +27,12 @@ markdocs md = do
 markdump :: ByteString -> View c ()
 markdump md = do
   code $ cs $ show $ commonmarkToNode [] $ cs md
+
+--
+--
+-- #EMBED Example.Docs.Interactive
+--
+-- #EMBED
 
 nodeToView :: Node -> View c ()
 nodeToView (Node _mpos typ childs) = do
@@ -45,11 +53,21 @@ nodeToView (Node _mpos typ childs) = do
     LIST (ListAttributes BULLET_LIST _ _ _) ->
       tag "ul" ~ list Disc . pad (L 32) $ inner
     ITEM -> tag "li" inner
-    _ -> inner
+    DOCUMENT -> inner
+    CODE_BLOCK info t -> snippet $ raw t
+    BLOCK_QUOTE -> el ~ Cyber.quote $ inner
+    HTML_BLOCK t -> raw t
+    x ->
+      -- inner
+      raw $ cs $ show x
  where
   -- symbolColor = "#c2185b"
   hackageSymbolColor :: HexColor
   hackageSymbolColor = "#9e358f"
+
+-- TODO: expand embeds!
+-- expandCodeEmbed :: [Text] -> View c [Text]
+-- expandCodeEmbed = []
 
 hackageDocsURI :: URI
 hackageDocsURI = [uri|https://hackage-content.haskell.org/package/hyperbole-0.5.0/docs/Web-Hyperbole.html|]

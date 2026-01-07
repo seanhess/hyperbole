@@ -8,7 +8,7 @@ package() {
 }
 
 watch() {
-  ghcid -c "cabal repl examples lib:hyperbole" -T Example.App.run -W --reload=./client/dist/hyperbole.js
+  ghcid -c "cabal repl examples lib:hyperbole" -T App.run -W --reload=./client/dist/hyperbole.js
 }
 
 client() {

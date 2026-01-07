@@ -1,8 +1,10 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Example.Docs.ViewFunctions where
 
 import Data.Text (Text)
+import Docs.Examples
 import Web.Atomic.CSS
 import Web.Hyperbole
 
@@ -36,3 +38,6 @@ messageButton msg = do
 header :: Text -> View ctx ()
 header txt = do
   el ~ bold $ text txt
+
+source :: ExampleSource
+source = $(exampleSource)

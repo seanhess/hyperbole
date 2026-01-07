@@ -23,14 +23,46 @@ source-repository head
 executable examples
   main-is: Main.hs
   other-modules:
+      App
+      App.Cache
+      App.Config
+      App.Page.Advanced
+      App.Page.Concurrency
+      App.Page.CSS
+      App.Page.DataLists.Autocomplete
+      App.Page.DataLists.DataTable
+      App.Page.DataLists.Filter
+      App.Page.DataLists.LoadMore
+      App.Page.Errors
+      App.Page.Forms
+      App.Page.Interactivity
+      App.Page.Intro.Basics
+      App.Page.Intro.Intro
+      App.Page.Javascript
+      App.Page.OAuth2
+      App.Page.Requests
+      App.Page.SideEffects
+      App.Page.State
+      App.Page.State.Actions
+      App.Page.State.Effects
+      App.Page.State.Query
+      App.Page.State.Sessions
+      App.Page.State.View
+      App.Route
+      App.Style
+      Docs.Examples
+      Docs.FindExamples
       Docs.Markdown
       Docs.Page
       Docs.Snippet
-      Example.App
-      Example.AppRoute
-      Example.Cache
+      Example.Chat
       Example.Colors
-      Example.Config
+      Example.Contact
+      Example.Contacts
+      Example.Counter
+      Example.CSS.External
+      Example.CSS.Tooltips
+      Example.CSS.Transitions
       Example.Data.ProgrammingLanguage
       Example.Docs.App
       Example.Docs.BasicPage
@@ -54,46 +86,18 @@ executable examples
       Example.Effects.Debug
       Example.Effects.Todos
       Example.Effects.Users
-      Example.Page.Advanced
-      Example.Page.Chat
-      Example.Page.Concurrency
-      Example.Page.Contact
-      Example.Page.Contacts
-      Example.Page.Counter
-      Example.Page.CSS
-      Example.Page.CSS.External
-      Example.Page.CSS.Tooltips
-      Example.Page.CSS.Transitions
-      Example.Page.DataLists.Autocomplete
-      Example.Page.DataLists.DataTable
-      Example.Page.DataLists.Filter
-      Example.Page.DataLists.LoadMore
-      Example.Page.Errors
-      Example.Page.Forms
-      Example.Page.FormSimple
-      Example.Page.FormValidation
-      Example.Page.Interactivity
-      Example.Page.Interactivity.Events
-      Example.Page.Intro.Basics
-      Example.Page.Intro.Intro
-      Example.Page.Javascript
-      Example.Page.OAuth2
-      Example.Page.Requests
-      Example.Page.SideEffects
-      Example.Page.Simple
-      Example.Page.State
-      Example.Page.State.Actions
-      Example.Page.State.Effects
-      Example.Page.State.Query
-      Example.Page.State.Sessions
-      Example.Page.State.Stateless
-      Example.Page.State.View
-      Example.Page.Tags
-      Example.Page.Test
-      Example.Page.Todos.Todo
-      Example.Page.Todos.TodoCSS
+      Example.FormSimple
+      Example.FormValidation
+      Example.Interactivity.Events
+      Example.Javascript
+      Example.Simple
+      Example.State.Stateless
       Example.Style
       Example.Style.Cyber
+      Example.Tags
+      Example.Test
+      Example.Todos.Todo
+      Example.Todos.TodoCSS
       Example.View.Icon
       Example.View.Inputs
       Example.View.Layout
@@ -123,8 +127,10 @@ executable examples
     , containers
     , cookie
     , data-default
+    , directory
     , effectful
     , file-embed
+    , filepath
     , foreign-store
     , http-api-data
     , http-client
