@@ -29,21 +29,25 @@ page = do
 
   pure $ layout Intro $ do
     -- el ~ italic . fontSize 20 . pad (X 15) . border (X 3) . borderColor PrimaryLight $ "Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView"
-    codeblock ~ color Dark $ do
-      [i|
-╔═════════════════════════════════════════════════════════════════════════════════╗ 
-║                                                                                 ║ 
-║  ██╗  ██╗██╗   ██╗██████╗ ███████╗██████╗ ██████╗  ██████╗ ██╗     ███████╗ ██╗ ║ 
-║  ██║  ██║╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔═══██╗██║     ██╔════╝ ██║ ║ 
-║  ███████║ ╚████╔╝ ██████╔╝█████╗  ██████╔╝██████╔╝██║   ██║██║     █████╗   ██║ ║ 
-║  ██╔══██║  ╚██╔╝  ██╔═══╝ ██╔══╝  ██╔══██╗██╔══██╗██║   ██║██║     ██╔══╝   ╚═╝ ║ 
-║  ██║  ██║   ██║   ██║     ███████╗██║  ██║██████╔╝╚██████╔╝███████╗███████╗ ██╗ ║ 
-║  ╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚══════╝╚══════╝ ╚═╝ ║                                                                             ║ 
-╚═════════════════════════════════════════════════════════════════════════════════╝ 
-|]
 
     col ~ gap 20 $ do
-      el ~ fontSize 18 . Cyber.font . bold $ "Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView"
+      row $ do
+        space
+        codeblock ~ color Dark $ do
+          [i|
+╔═════════════════════════════════════════════════════════════════════════════╗
+║                                                                             ║
+║  ██╗  ██╗██╗   ██╗██████╗ ███████╗██████╗ ██████╗  ██████╗ ██╗     ███████╗ ║
+║  ██║  ██║╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔═══██╗██║     ██╔════╝ ║
+║  ███████║ ╚████╔╝ ██████╔╝█████╗  ██████╔╝██████╔╝██║   ██║██║     █████╗   ║
+║  ██╔══██║  ╚██╔╝  ██╔═══╝ ██╔══╝  ██╔══██╗██╔══██╗██║   ██║██║     ██╔══╝   ║
+║  ██║  ██║   ██║   ██║     ███████╗██║  ██║██████╔╝╚██████╔╝███████╗███████╗ ║
+║  ╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚══════╝╚══════╝ ║
+╚═════════════════════════════════════════════════════════════════════════════╝
+|]
+        space
+
+      el ~ fontSize 18 . Cyber.font . bold . textAlign AlignCenter $ "Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView"
 
       col ~ gap 10 $ do
         markdocs $(embedFile "docs/intro.md")

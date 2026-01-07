@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Example.Simple where
@@ -9,11 +8,6 @@ module Example.Simple where
 import Data.Text (Text)
 import Web.Atomic.CSS
 import Web.Hyperbole
-
-import Docs.Examples
-
-source :: ExampleSource
-source = $(exampleSource)
 
 main :: IO ()
 main = do

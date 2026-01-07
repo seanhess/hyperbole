@@ -90,16 +90,20 @@ glitch :: Text -> View c ()
 glitch msg =
   el ~ cls "glitch" @ att "data-text" msg $ text msg
 
-embed :: (Styleable h) => CSS h -> CSS h
-embed =
+highlight :: (Styleable h) => CSS h -> CSS h
+highlight =
   pad 15
     . gap 10
     . bg White
     . flexCol
     . clip 10
     . font
-    . border (L 3)
+
+embed :: (Styleable h) => CSS h -> CSS h
+embed =
+  border (TL 0 8)
     . borderColor PrimaryLight
+    . highlight
 
 quote :: (Styleable h) => CSS h -> CSS h
-quote = embed . italic . border (L 3) . borderColor PrimaryLight . textAlign AlignRight
+quote = highlight . italic . textAlign AlignRight

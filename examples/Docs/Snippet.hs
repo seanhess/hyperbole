@@ -61,7 +61,9 @@ embedTopLevel mn tld = do
 
 embedSource :: ModuleName -> (Text -> Bool) -> (Text -> Bool) -> Q Exp
 embedSource mn isStart isCurrent = do
-  s <- runIO $ readSourceCode $ modulePath mn
+  let path = modulePath mn
+  addDependentFile path
+  s <- runIO $ readSourceCode path
   let lns = selectLines isStart isCurrent s
   case lns of
     [] -> fail "Missing embed"
