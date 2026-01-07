@@ -1,4 +1,4 @@
-module Example.Style where
+module App.Style where
 
 import Example.Colors
 import Web.Atomic.CSS

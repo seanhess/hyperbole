@@ -2,13 +2,13 @@
 
 module Example.Effects.Users where
 
+import App.Route (UserId)
 import Control.Concurrent.MVar
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
-import Example.AppRoute (UserId)
 import Web.Hyperbole (Hyperbole, notFound)
 
 data User = User

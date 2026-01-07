@@ -17,6 +17,14 @@ snippet cnt = do
     tag' True "code" @ class_ "language-haskell" $ do
       cnt
 
+codeblock :: Text -> View c ()
+codeblock t =
+  tag' True "pre" ~ monoline $ do
+    tag' True "code" $ do
+      raw t
+ where
+  monoline = utility "monoline" ["line-height" :. "1"]
+
 rawMulti :: [Text] -> View c ()
 rawMulti = raw . T.stripEnd . T.unlines
 
@@ -37,16 +45,24 @@ newtype TopLevelDefinition = TopLevelDefinition Text
 
 newtype SourceCode = SourceCode {lines :: [Text]}
 
+newtype ModuleName = ModuleName Text
+  deriving newtype (Show, Eq, IsString)
+
+modulePath :: ModuleName -> FilePath
+modulePath (ModuleName mn) = cs $ "examples/" <> T.replace "." "/" mn <> ".hs"
+
 {- | A top-level definition as text
 
 > snippet $(topLevel "examples/Example/Page/Concurrency.hs" "instance (Debug :> es) => HyperView Polling")
 -}
-embedTopLevel :: FilePath -> TopLevelDefinition -> Q Exp
-embedTopLevel path tld = do
-  embedSource path (isTopLevel tld) (isCurrentDefinition tld)
+embedTopLevel :: ModuleName -> TopLevelDefinition -> Q Exp
+embedTopLevel mn tld = do
+  embedSource mn (isTopLevel tld) (isCurrentDefinition tld)
 
-embedSource :: FilePath -> (Text -> Bool) -> (Text -> Bool) -> Q Exp
-embedSource path isStart isCurrent = do
+embedSource :: ModuleName -> (Text -> Bool) -> (Text -> Bool) -> Q Exp
+embedSource mn isStart isCurrent = do
+  let path = modulePath mn
+  addDependentFile path
   s <- runIO $ readSourceCode path
   let lns = selectLines isStart isCurrent s
   case lns of
@@ -95,3 +111,9 @@ isFullyOutdented line =
     "" -> False
     [c] -> not $ isSpace c
     _ -> False
+
+-- moduleName :: Q Exp
+-- moduleName = do
+--   loc <- location
+--   -- stringE (loc_filename loc)
+--   litE $ stringL (loc_module loc)

@@ -11,7 +11,7 @@ import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Distribution.Simple.Utils (copyDirectoryRecursive)
 import Distribution.Verbosity (verbose)
-import Example.AppRoute as Example
+import App.Route as Example
 import System.Directory
 import System.FilePath
 import Web.Hyperbole.Data.URI

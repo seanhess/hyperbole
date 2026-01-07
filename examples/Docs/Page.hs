@@ -2,33 +2,32 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Docs.Page where
+module Docs.Page
+  ( PageAnchor (..)
+  , sourceLink
+  , example
+  , example'
+  , section
+  , sectionA
+  , section'
+  , Cyber.embed
+  , Cyber.quote
+  ) where
 
+import App.Route
+import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
-import Example.AppRoute
+import Docs.Examples
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
+import Language.Haskell.TH
 import Text.Casing (fromHumps, toWords)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI
-
-class ExampleSource a where
-  exampleSource :: a -> Path
-
-instance ExampleSource AppRoute where
-  -- exampleSource (State s) = ["Example", "Page", "State", cs (show s) <> ".hs"]
-  exampleSource (Contacts (Contact _)) = "Example/Page/Contact.hs"
-  exampleSource (Contacts ContactsAll) = "Example/Page/Contacts.hs"
-  -- routeSource (Intro (CSS CSSAll)) = ["Example", "Page", "Intro", "CSS.hs"]
-  -- routeSource (Intro (CSS c)) = ["Example", "Page", "Intro", "CSS", cs (show c) <> ".hs"]
-  exampleSource (Data SortableTable) = "Example/Page/DataLists/DataTable.hs"
-  exampleSource (Data d) = ["Example", "Page", "DataLists", cs (show d) <> ".hs"]
-  exampleSource (Forms f) = ["Example", "Page", "Forms", cs (show f) <> ".hs"]
-  exampleSource r = ["Example", "Page", cs (show r) <> ".hs"]
 
 class PageAnchor n where
   pageAnchor :: n -> Text
@@ -52,26 +51,23 @@ instance PageAnchor () where
 
 -- Sections ----------------------------------------------------------------------
 
+-- TODO: remove prefix if absolute path
 sourceLink :: Path -> View c ()
 sourceLink p =
-  link sourceUrl ~ Style.link . fontSize 14 @ att "target" "_blank" $ do
-    text "View Source"
+  link sourceUrl ~ fontSize 14 @ att "target" "_blank" $ do
+    text "</> Source"
  where
   sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/main/examples/|]
   sourceUrl = sourceUrlBase ./. p
 
-embed :: (Styleable h) => CSS h -> CSS h
-embed =
-  pad 15 . gap 10 . bg White . flexCol . Cyber.clip 10 . Cyber.font
-
-example :: (ExampleSource e) => e -> View c () -> View c ()
-example e = example' (exampleSource e)
+example :: ExampleSource -> View c () -> View c ()
+example (ExampleSource e) = example' (path $ cs e)
 
 example' :: Path -> View c () -> View c ()
 example' p cnt = do
-  col ~ Cyber.font $ do
-    col ~ embed $ cnt
-    sourceLink p
+  el ~ stack . Cyber.font $ do
+    col ~ Cyber.embed $ cnt
+    sourceLink p ~ popup (TR (-10) 0) . pad (XY 8 2) . bg PrimaryLight . color White . hover (bg Primary) -- . pad (TRBL 0 20 0 10) . border (L 3) . borderColor PrimaryLight . Cyber.clip 10
 
 section :: AppRoute -> View c () -> View c ()
 section r = section' (routeTitle r)
