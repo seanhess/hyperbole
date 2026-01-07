@@ -51,7 +51,6 @@ executable examples
       App.Route
       App.Style
       Docs.Examples
-      Docs.FindExamples
       Docs.Markdown
       Docs.Page
       Docs.Snippet

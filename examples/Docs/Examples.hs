@@ -1,9 +1,11 @@
 module Docs.Examples where
 
+import Data.List qualified as L
+import Data.Maybe (fromMaybe)
 import Data.String (IsString)
 import Docs.Snippet (ModuleName (..), modulePath)
 import Language.Haskell.TH
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, getCurrentDirectory)
 
 newtype ExampleSource = ExampleSource FilePath
   deriving newtype (Show, Eq, IsString)
@@ -11,7 +13,13 @@ newtype ExampleSource = ExampleSource FilePath
 exampleSource :: Q Exp
 exampleSource = do
   loc <- location
-  stringE (loc_filename loc)
+  dir <- runIO getCurrentDirectory
+  let path = loc_filename loc
+  stringE $ stripDir "/examples" $ stripDir dir $ path
+ where
+  stripDir dir p =
+    fromMaybe p $
+      L.stripPrefix dir p
 
 moduleSource :: ModuleName -> Q Exp
 moduleSource mn = do
