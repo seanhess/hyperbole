@@ -1,6 +1,7 @@
 module Docs.Snippet where
 
 import Data.Char (isSpace)
+import Data.Maybe (fromMaybe)
 import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
@@ -66,7 +67,7 @@ embedSource mn isStart isCurrent = do
   s <- runIO $ readSourceCode path
   let lns = selectLines isStart isCurrent s
   case lns of
-    [] -> fail "Missing embed"
+    [] -> fail $ "Missing embed in: " ++ show mn
     _ -> lift (T.unlines lns)
 
 readSnippet :: FilePath -> TopLevelDefinition -> IO [Text]
@@ -112,8 +113,9 @@ isFullyOutdented line =
     [c] -> not $ isSpace c
     _ -> False
 
--- moduleName :: Q Exp
--- moduleName = do
---   loc <- location
---   -- stringE (loc_filename loc)
---   litE $ stringL (loc_module loc)
+-- #EMBED Example.Docs.Interactive "instance HyperView Titler"
+parseLineEmbed :: Text -> Maybe (ModuleName, TopLevelDefinition)
+parseLineEmbed l = do
+  rest <- T.stripPrefix "#EMBED " l
+  (mn : tld) <- pure $ T.words rest
+  pure (ModuleName mn, TopLevelDefinition $ T.unwords tld)

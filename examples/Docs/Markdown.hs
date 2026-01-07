@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Docs.Markdown
@@ -10,10 +11,13 @@ module Docs.Markdown
 
 import CMark
 import Data.ByteString (ByteString)
-import Data.FileEmbed (embedFile)
+
+-- import Data.FileEmbed (embedFile)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import Docs.Snippet (snippet)
+import Data.Text qualified as T
+import Data.Text.IO qualified as T
+import Docs.Snippet (embedTopLevel, parseLineEmbed, snippet)
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Language.Haskell.TH
@@ -22,22 +26,13 @@ import Web.Atomic.CSS
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.View
 
-markdocs :: ByteString -> View c ()
+markdocs :: Text -> View c ()
 markdocs md = do
   nodeToView $ commonmarkToNode [] $ cs md
 
-markdump :: ByteString -> View c ()
+markdump :: Text -> View c ()
 markdump md = do
   code $ cs $ show $ commonmarkToNode [] $ cs md
-
---
---
--- #EMBED Example.Docs.Interactive
---
--- #EMBED
-
-embedAndExpand :: FilePath -> Q Exp
-embedAndExpand = _
 
 nodeToView :: Node -> View c ()
 nodeToView (Node _mpos typ childs) = do
@@ -63,6 +58,7 @@ nodeToView (Node _mpos typ childs) = do
       snippet $ raw t
     BLOCK_QUOTE -> el ~ Cyber.quote $ inner
     HTML_BLOCK t -> raw t
+    SOFTBREAK -> inner
     x ->
       -- inner
       raw $ cs $ show x
@@ -131,61 +127,20 @@ valueKeywords =
 -- LINK url title -> _
 -- IMAGE url title -> _
 
--- > EMBED Example/Docs/BasicPage.hs page
-expandLine :: Text -> IO [Text]
-expandLine line = do
-  case parseMacro line of
-    Nothing -> do
-      pure [line]
-    Just (pre, Embed src def) -> do
-      expandEmbed src pre def
-    Just (pre, Example src) -> do
-      expandExample src pre
- where
-  parseMacro :: Text -> Maybe (Text, Macro)
-  parseMacro inp = do
-    parseEmbed inp <|> parseExample inp
+embedFile :: FilePath -> Q Exp
+embedFile p = do
+  addDependentFile p
+  lns :: [Text] <- runIO $ T.lines <$> T.readFile p
+  exps :: [Exp] <- traverse expandLine lns
+  e :: Exp <- listE (fmap pure exps)
+  [|T.unlines $(pure e)|]
 
-  parseExample l = do
-    case T.splitOn "#EXAMPLE " l of
-      [prefix, src] -> do
-        pure (prefix, Example $ path src)
-      _ -> Nothing
-
-  parseEmbed l = do
-    case T.splitOn "#EMBED " l of
-      [prefix, info] -> do
-        (sourceFile, definition) <- splitSrcDef $ T.dropWhile (== ' ') info
-        pure (prefix, Embed sourceFile definition)
-      _ -> Nothing
-
-  splitSrcDef inp =
-    let (src, def) = T.breakOn " " inp
-     in pure (cs src, TopLevelDefinition $ T.drop 1 def)
-
-
-expandEmbed :: FilePath -> Text -> TopLevelDefinition -> IO [Text]
-expandEmbed src pfx def = do
-  source <- T.readFile $ "./examples/" <> src
-  expanded <- requireTopLevel def (SourceCode $ T.lines source)
-  pure $ fmap markupLine expanded
- where
-  requireTopLevel :: TopLevelDefinition -> SourceCode -> IO [Text]
-  requireTopLevel tld sc =
-    case findTopLevel tld sc of
-      [] -> fail $ "Could not find: " <> show (Embed src def)
-      lns -> pure lns
-
-  -- addPrefix line = embed.prefix <> line
-  markupLine :: Text -> Text
-  markupLine line =
-    case pfx of
-      "" -> markupLineAt line
-      _ -> markupLinePrefix line
-  markupLineAt =
-    T.replace "\"" "\\\"" . highlightTermsLine
-  markupLinePrefix line =
-    pfx <> line
-
-newtype TopLevelDefinition = TopLevelDefinition Text
-  deriving newtype (Show, Eq)
+-- only handle these with
+-- TODO: prefixes
+expandLine :: Text -> Q Exp
+expandLine l =
+  case parseLineEmbed l of
+    Just (mn, tld) -> do
+      e <- embedTopLevel mn tld
+      [|T.strip $(pure e)|]
+    Nothing -> lift l
