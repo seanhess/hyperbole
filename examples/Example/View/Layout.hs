@@ -6,14 +6,14 @@
 module Example.View.Layout where
 
 import App.Route
-import Control.Monad (when)
 import Data.String.Conversions (cs)
 import Data.Version (showVersion)
 import Docs.Page
-import Example.Colors (AppColor (..), cyan)
+import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Example.View.Icon as Icon (hamburger)
+import Example.View.Menu (menu)
 import Paths_examples (version)
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -75,69 +75,6 @@ navigation chosenMenu = do
       [ "background" :. "no-repeat center/90% url(/logo-robot.png)"
       , "color" :. "transparent"
       ]
-
--- Menu --------------------------------------
-
-menu :: forall sections c. (PageAnchor sections) => AppRoute -> View c ()
-menu current = do
-  col ~ color White $ do
-    docLink Intro
-    docLink Basics
-    docLink CSS
-    docLink SideEffects
-    docLink State
-    docLink Concurrency
-    docLink Requests
-    docLink (Data DataLists)
-    case current of
-      Data _ -> do
-        docLink (Data SortableTable) ~ sub
-        docLink (Data Autocomplete) ~ sub
-        docLink (Data Filter) ~ sub
-        docLink (Data LoadMore) ~ sub
-      _ -> none
-    docLink (Forms FormSimple)
-    docLink Interactivity
-    docLink Errors
-    docLink OAuth2
-    docLink Javascript
-    docLink Advanced
-    docLink (Examples BigExamples)
-    case current of
-      Examples _ ->
-        completeExamples
-      (Contacts _) ->
-        completeExamples
-      _ -> none
- where
-  completeExamples = do
-    docLink (Examples Todos) ~ sub
-    docLink (Examples TodosCSS) ~ sub
-    docLink (Contacts ContactsAll) ~ sub
-
-  -- link "/query?key=value" lnk "Query Params"
-  sub :: (Styleable h) => CSS h -> CSS h
-  sub = pad (TRBL 5 10 5 40) . fontSize 14
-
-  menuItem :: (Styleable h) => CSS h -> CSS h
-  menuItem =
-    pad (XY 20 10) . hover (bg DarkHighlight)
-
-  selected rt =
-    if rt == current then bg DarkHighlight . border (L 4) . pad (L 16) . color cyan else id
-
-  docLink rt = do
-    route rt ~ selected rt . menuItem $
-      text $
-        routeTitle
-          rt
-    when (rt == current) $ do
-      mapM_ anchorLink (subnav @sections)
-
-  anchorLink :: (PageAnchor a) => a -> View c ()
-  anchorLink a = do
-    tag "a" ~ sub . menuItem @ att "href" ("#" <> pageAnchor a) $ do
-      text $ navEntry a
 
 onMobile :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c
 onMobile = media (MaxWidth 650)

@@ -5,27 +5,23 @@ module App where
 
 import App.Cache (clientCache)
 import App.Config
-import App.Page.Advanced qualified as Advanced
 import App.Page.CSS qualified as CSS
 import App.Page.Concurrency qualified as Concurrency
 import App.Page.DataLists.Autocomplete qualified as Autocomplete
 import App.Page.DataLists.DataTable qualified as DataTable
 import App.Page.DataLists.Filter qualified as Filter
 import App.Page.DataLists.LoadMore qualified as LoadMore
-import App.Page.Errors qualified as Errors
 import App.Page.Forms qualified as Forms
+import App.Page.HyperboleEffect qualified as Hyp
+import App.Page.Hyperviews qualified as Hyperviews
 import App.Page.Interactivity qualified as Interactivity
 import App.Page.Intro.Basics qualified as Basics
 import App.Page.Intro.Intro qualified as Intro
 import App.Page.Javascript qualified as Javascript
 import App.Page.OAuth2 qualified as OAuth2
-import App.Page.Requests qualified as Requests
 import App.Page.SideEffects qualified as SideEffects
 import App.Page.State qualified as State
-import App.Page.State.Effects qualified as Effects
-import App.Page.State.Query qualified as Query
-import App.Page.State.Sessions qualified as Sessions
-import App.Page.State.View qualified as SView
+import App.Page.ViewFunctions qualified as ViewFunctions
 import App.Route as Route
 import Control.Concurrent
   ( MVar
@@ -62,8 +58,12 @@ import Example.Counter qualified as Counter
 import Example.Effects.Debug as Debug
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
+import Example.State.Effects qualified as Effects
+import Example.State.Query qualified as Query
+import Example.State.Sessions qualified as Sessions
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
+import Example.Tags qualified as Tags
 import Example.Test qualified as Test
 import Example.Todos.Todo qualified as Todo
 import Example.Todos.TodoCSS qualified as TodoCSS
@@ -139,29 +139,31 @@ exampleApp config users count chats = do
       Autocomplete -> runPage Autocomplete.page
       Filter -> runPage Filter.page
       LoadMore -> runPage LoadMore.page
-  router Errors = runPage Errors.page
+  router Errors = redirect (routeUri HyperboleEffect)
   router (Forms _) = runPage Forms.page
-  router Requests = runPage Requests.page
-  router Route.Response = redirect (routeUri Requests)
-  router State = runPage State.page
-  router SideEffects = runPage SideEffects.page
+  router HyperboleEffect = runPage Hyp.page
+  router Hyperviews = runPage Hyperviews.page
+  router Route.Response = redirect (routeUri HyperboleEffect)
+  router State = runReader count $ runPage State.page
+  router SideEffects = runReader @Text "Secret Message!" $ runPage SideEffects.page
   router Intro = runPage Intro.page
   router Basics = runPage Basics.page
+  router ViewFunctions = runPage ViewFunctions.page
   -- router (Intro HyperViews) = runPage IntroHyperViews.page
   -- router (Intro Pages) = runPage IntroPages.page
   -- router (Intro ViewFunctions) = runPage IntroViewFunctions.page
   router CSS = runPage CSS.page
   router Interactivity = runPage Interactivity.page
-  router (Examples BigExamples) = redirect $ routeUri (Examples Todos)
+  router (Examples OtherExamples) = redirect $ routeUri (Examples Tags)
   router (Examples Todos) = runPage Todo.page
+  router (Examples Tags) = runPage Tags.page
   router (Examples TodosCSS) = runPage TodoCSS.page
   router Javascript = runPage Javascript.page
-  router OAuth2 = runPage OAuth2.page
-  router OAuth2Authenticate = OAuth2.handleRedirect
+  router (Examples OAuth2) = runPage OAuth2.page
+  router (Examples OAuth2Authenticate) = OAuth2.handleRedirect
   router Simple = redirect (routeUri Intro)
   -- router Counter = redirect (routeUri $ State StateRoot)
   router Test = runPage Test.page
-  router Advanced = runPage Advanced.page
   router Main = do
     redirect (routeUri Intro)
 
@@ -175,7 +177,10 @@ exampleApp config users count chats = do
         el "Hello:"
         el $ text who
   hello Redirected = do
-    pure $ layout Requests $ el ~ pad 10 $ "You were redirected"
+    pure $ layout HyperboleEffect $ do
+      col ~ pad 10 . gap 10 $ do
+        el "You were redirected"
+        route HyperboleEffect ~ Style.link $ "Go Back"
 
   -- Use the embedded version for real applications (see quickStartDocument).
   -- The link to /hyperbole.js here is just to make local development easier

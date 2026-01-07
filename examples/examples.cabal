@@ -26,30 +26,26 @@ executable examples
       App
       App.Cache
       App.Config
-      App.Page.Advanced
       App.Page.Concurrency
       App.Page.CSS
       App.Page.DataLists.Autocomplete
       App.Page.DataLists.DataTable
       App.Page.DataLists.Filter
       App.Page.DataLists.LoadMore
-      App.Page.Errors
       App.Page.Forms
+      App.Page.HyperboleEffect
+      App.Page.Hyperviews
       App.Page.Interactivity
       App.Page.Intro.Basics
       App.Page.Intro.Intro
       App.Page.Javascript
       App.Page.OAuth2
-      App.Page.Requests
       App.Page.SideEffects
       App.Page.State
-      App.Page.State.Actions
-      App.Page.State.Effects
-      App.Page.State.Query
-      App.Page.State.Sessions
-      App.Page.State.View
+      App.Page.ViewFunctions
       App.Route
       App.Style
+      Docs
       Docs.Examples
       Docs.Markdown
       Docs.Page
@@ -70,10 +66,10 @@ executable examples
       Example.Docs.CSS
       Example.Docs.Encoding
       Example.Docs.Interactive
-      Example.Docs.MultiCopies
       Example.Docs.MultiPage
       Example.Docs.MultiView
       Example.Docs.Nested
+      Example.Docs.Nesting
       Example.Docs.Page.Messages
       Example.Docs.Page.Users
       Example.Docs.Params
@@ -81,25 +77,34 @@ executable examples
       Example.Docs.Sessions
       Example.Docs.SideEffects
       Example.Docs.State
+      Example.Docs.UniqueViewId
       Example.Docs.ViewFunctions
       Example.Effects.Debug
       Example.Effects.Todos
       Example.Effects.Users
+      Example.Errors
       Example.FormSimple
       Example.FormValidation
       Example.Interactivity.Events
       Example.Javascript
+      Example.Requests
       Example.Simple
+      Example.State.Effects
+      Example.State.Query
+      Example.State.Sessions
       Example.State.Stateless
+      Example.State.ViewState
       Example.Style
       Example.Style.Cyber
       Example.Tags
       Example.Test
       Example.Todos.Todo
       Example.Todos.TodoCSS
+      Example.Trigger
       Example.View.Icon
       Example.View.Inputs
       Example.View.Layout
+      Example.View.Menu
       Example.View.SortableTable
       Paths_examples
   autogen-modules:

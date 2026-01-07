@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Docs.Markdown
@@ -8,41 +9,56 @@ module Docs.Markdown
   , embedFile
   ) where
 
+import App.Route
 import CMark
-import Data.ByteString (ByteString)
-import Data.FileEmbed (embedFile)
+import Data.Char (isSpace)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import Docs.Snippet (snippet)
+import Data.Text qualified as T
+import Data.Text.IO qualified as T
+import Docs.Snippet
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Web.Atomic.CSS
 import Web.Hyperbole.Data.URI
+import Web.Hyperbole.HyperView.Input (route)
+import Web.Hyperbole.Route
 import Web.Hyperbole.View
 
-markdocs :: ByteString -> View c ()
+markdocs :: Text -> View c ()
 markdocs md = do
   nodeToView $ commonmarkToNode [] $ cs md
 
-markdump :: ByteString -> View c ()
+markdump :: Text -> View c ()
 markdump md = do
   code $ cs $ show $ commonmarkToNode [] $ cs md
-
---
---
--- #EMBED Example.Docs.Interactive
---
--- #EMBED
-
-embedAndExpand :: FilePath -> Q Exp
-embedAndExpand = _
 
 nodeToView :: Node -> View c ()
 nodeToView (Node _mpos typ childs) = do
   let inner = mapM_ nodeToView childs
   case typ of
+    -- DOCUMENT -> mapM nodeToView childs
+    -- THEMATIC_BREAK -> _
+    -- PARAGRAPH -> _
+    -- BLOCK_QUOTE -> _
+    -- HTML_BLOCK Text -> _
+    -- CUSTOM_BLOCK OnEnter OnExit -> _
+    -- CODE_BLOCK Info Text -> _
+    -- HEADING Level -> _
+    -- LIST ListAttributes -> _
+    -- ITEM -> _
+    -- TEXT Text -> _
+    -- SOFTBREAK -> _
+    -- LINEBREAK -> _
+    -- HTML_INLINE Text -> _
+    -- CUSTOM_INLINE OnEnter OnExit -> _
+    -- CODE Text -> _
+    -- EMPH -> _
+    -- STRONG -> _
+    -- LINK url title -> _
+    -- IMAGE url title -> _
     PARAGRAPH -> el inner
     TEXT t -> text t
     CODE t -> do
@@ -50,9 +66,14 @@ nodeToView (Node _mpos typ childs) = do
     HEADING _lvl ->
       el ~ bold $ inner
     LINK url _title ->
-      case parseURIReference (cs url) of
-        Nothing -> text $ "INVALID URI: " <> url
-        Just u -> link u ~ Style.link @ att "target" "_blank" $ inner
+      case matchRoute @AppRoute (path url) of
+        Nothing -> do
+          case parseURIReference (cs url) of
+            Nothing -> text $ "INVALID URI: " <> url
+            Just u ->
+              link u ~ Style.link @ att "target" "_blank" $ inner
+        Just r ->
+          route r ~ Style.link $ inner
     LIST (ListAttributes ORDERED_LIST _ _ _) ->
       tag "ol" ~ list Decimal . pad (L 32) $ inner
     LIST (ListAttributes BULLET_LIST _ _ _) ->
@@ -63,6 +84,8 @@ nodeToView (Node _mpos typ childs) = do
       snippet $ raw t
     BLOCK_QUOTE -> el ~ Cyber.quote $ inner
     HTML_BLOCK t -> raw t
+    SOFTBREAK -> inner
+    EMPH -> tag' True "span" ~ italic $ inner
     x ->
       -- inner
       raw $ cs $ show x
@@ -99,6 +122,11 @@ typeKeywords =
   , "Action"
   , "Hyperbole"
   , "Effect"
+  , "Query"
+  , "Session"
+  , "Require"
+  , "Client"
+  , "Request"
   ]
 
 valueKeywords :: [Text]
@@ -108,84 +136,46 @@ valueKeywords =
   , "form"
   , "hyper"
   , "request"
+  , "viewId"
+  , "viewState"
+  , "trigger"
+  , "target"
   ]
 
--- DOCUMENT -> mapM nodeToView childs
--- THEMATIC_BREAK -> _
--- PARAGRAPH -> _
--- BLOCK_QUOTE -> _
--- HTML_BLOCK Text -> _
--- CUSTOM_BLOCK OnEnter OnExit -> _
--- CODE_BLOCK Info Text -> _
--- HEADING Level -> _
--- LIST ListAttributes -> _
--- ITEM -> _
--- TEXT Text -> _
--- SOFTBREAK -> _
--- LINEBREAK -> _
--- HTML_INLINE Text -> _
--- CUSTOM_INLINE OnEnter OnExit -> _
--- CODE Text -> _
--- EMPH -> _
--- STRONG -> _
--- LINK url title -> _
--- IMAGE url title -> _
+embedFile :: FilePath -> Q Exp
+embedFile p = do
+  addDependentFile p
+  lns :: [Text] <- runIO $ T.lines <$> T.readFile p
+  exps :: [Exp] <- traverse expandLine lns
+  e :: Exp <- listE (fmap pure exps)
+  [|T.unlines $(pure e)|]
 
--- > EMBED Example/Docs/BasicPage.hs page
-expandLine :: Text -> IO [Text]
-expandLine line = do
-  case parseMacro line of
+expandLine :: Text -> Q Exp
+expandLine l = do
+  let whitespace = T.takeWhile isSpace l
+  case parseLineEmbed l of
+    Just (mn, tld) -> do
+      e <- embedSource' mn (isTopLevel tld) (isCurrentDefinition tld)
+      [|T.stripEnd $ T.unlines $ fmap (whitespace <>) $(pure e)|]
     Nothing -> do
-      pure [line]
-    Just (pre, Embed src def) -> do
-      expandEmbed src pre def
-    Just (pre, Example src) -> do
-      expandExample src pre
+      expandText l
+
+expandText :: Text -> Q Exp
+expandText t = do
+  let segs = T.splitOn "[[" t
+  es :: [Text] <- mapM checkLink segs
+  lift $ mconcat es
  where
-  parseMacro :: Text -> Maybe (Text, Macro)
-  parseMacro inp = do
-    parseEmbed inp <|> parseExample inp
+  checkLink :: (MonadFail m) => Text -> m Text
+  checkLink l = do
+    case T.breakOn "]]" l of
+      (txt, "") -> pure txt
+      (lnk, rest) -> do
+        mdlnk <- routeLink lnk
+        pure $ mdlnk <> T.dropWhile (== ']') rest
 
-  parseExample l = do
-    case T.splitOn "#EXAMPLE " l of
-      [prefix, src] -> do
-        pure (prefix, Example $ path src)
-      _ -> Nothing
-
-  parseEmbed l = do
-    case T.splitOn "#EMBED " l of
-      [prefix, info] -> do
-        (sourceFile, definition) <- splitSrcDef $ T.dropWhile (== ' ') info
-        pure (prefix, Embed sourceFile definition)
-      _ -> Nothing
-
-  splitSrcDef inp =
-    let (src, def) = T.breakOn " " inp
-     in pure (cs src, TopLevelDefinition $ T.drop 1 def)
-
-
-expandEmbed :: FilePath -> Text -> TopLevelDefinition -> IO [Text]
-expandEmbed src pfx def = do
-  source <- T.readFile $ "./examples/" <> src
-  expanded <- requireTopLevel def (SourceCode $ T.lines source)
-  pure $ fmap markupLine expanded
- where
-  requireTopLevel :: TopLevelDefinition -> SourceCode -> IO [Text]
-  requireTopLevel tld sc =
-    case findTopLevel tld sc of
-      [] -> fail $ "Could not find: " <> show (Embed src def)
-      lns -> pure lns
-
-  -- addPrefix line = embed.prefix <> line
-  markupLine :: Text -> Text
-  markupLine line =
-    case pfx of
-      "" -> markupLineAt line
-      _ -> markupLinePrefix line
-  markupLineAt =
-    T.replace "\"" "\\\"" . highlightTermsLine
-  markupLinePrefix line =
-    pfx <> line
-
-newtype TopLevelDefinition = TopLevelDefinition Text
-  deriving newtype (Show, Eq)
+  routeLink :: (MonadFail m) => Text -> m Text
+  routeLink l =
+    case matchRoute @AppRoute (path l) of
+      Nothing -> error $ "Could not find page link: " <> cs l <> " " <> show (path l)
+      Just r -> pure $ "[" <> routeTitle r <> "](" <> uriToText (routeUri r) <> ")"

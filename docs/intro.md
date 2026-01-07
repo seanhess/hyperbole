@@ -10,10 +10,10 @@ There are frameworks that support this in different ways, including [HTMX](https
 1. 100% Haskell
 2. Type safe views, actions, routes, and forms
 3. Elegant interface with little boilerplate
-4. VirtualDOM updates over sockets, fallback to HTTP
+4. VirtualDOM updates over sockets
 5. Easy to use
 
->  Better than all the other frameworks I've used!
+>  1000x more fun than React!
 
 Like [HTMX](https://htmx.org/), Hyperbole extends the capability of UI elements, but it uses Haskell's type-system to prevent common errors and provide default functionality. Specifically, a page has multiple update targets called `HyperView`s. These are automatically targeted by any UI element that triggers an action inside them. The compiler makes sure that actions and targets match
 
@@ -21,7 +21,7 @@ Like [Phoenix LiveView](https://www.phoenixframework.org/), it upgrades the page
 
 Like [Elm](https://elm-lang.org/), it uses an `update` function to process actions, but greatly simplifies the Elm Architecture by directly returning html instead of using a reducer. `ViewState` is optional. Effects are handled by [Effectful](https://hackage.haskell.org/package/effectful). `form`s are easy to use with minimal boilerplate
 
-Hyperbole depends heavily on the following frameworks
+Hyperbole depends heavily on the following frameworks:
 
 * [Effectful](https://hackage.haskell.org/package/effectful-core)
 * [Atomic CSS](https://hackage.haskell.org/package/atomic-css)

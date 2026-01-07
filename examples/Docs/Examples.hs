@@ -1,7 +1,7 @@
 module Docs.Examples where
 
+import Control.Monad (unless)
 import Data.List qualified as L
-import Data.Maybe (fromMaybe)
 import Data.String (IsString)
 import Docs.Snippet (ModuleName (..), modulePath)
 import Language.Haskell.TH
@@ -13,19 +13,27 @@ newtype ModuleSource = ModuleSource FilePath
 moduleSource :: Q Exp
 moduleSource = do
   loc <- location
-  dir <- runIO getCurrentDirectory
   let path = loc_filename loc
-  stringE $ stripDir "/examples" $ stripDir dir $ path
- where
-  stripDir dir p =
-    fromMaybe p $
-      L.stripPrefix dir p
+  localFile path
 
 moduleSourceNamed :: ModuleName -> Q Exp
 moduleSourceNamed mn = do
   let p = modulePath mn
-  -- attempt to open the file
+  localFile p
+
+localFile :: FilePath -> Q Exp
+localFile p = do
+  current <- runIO getCurrentDirectory
   b <- runIO $ doesFileExist p
-  if b
-    then stringE p
-    else fail $ "Could not find module: " <> show mn
+
+  unless b $ do
+    fail $ "Could not find file: " <> show p
+
+  stringE $ stripDir "examples" $ stripDir current p
+
+stripDir :: FilePath -> FilePath -> FilePath
+stripDir dir p =
+  maybe
+    p
+    (dropWhile (== '/'))
+    (L.stripPrefix dir p)

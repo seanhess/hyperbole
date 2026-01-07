@@ -8,14 +8,12 @@ module Docs.Page
   , example
   , example'
   , section
-  , sectionA
   , section'
+  , camelTitle
   , Cyber.embed
   , Cyber.quote
   ) where
 
-import App.Route
-import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
@@ -23,7 +21,6 @@ import Docs.Examples
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
-import Language.Haskell.TH
 import Text.Casing (fromHumps, toWords)
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -36,7 +33,7 @@ class PageAnchor n where
 
   sectionTitle :: n -> Text
   default sectionTitle :: (Show n) => n -> Text
-  sectionTitle = cs . toWords . fromHumps . show
+  sectionTitle = camelTitle
 
   navEntry :: n -> Text
   default navEntry :: n -> Text
@@ -48,6 +45,9 @@ class PageAnchor n where
 
 instance PageAnchor () where
   subnav = []
+
+camelTitle :: (Show a) => a -> Text
+camelTitle = cs . toWords . fromHumps . show
 
 -- Sections ----------------------------------------------------------------------
 
@@ -69,8 +69,8 @@ example' p cnt = do
     col ~ Cyber.embed $ cnt
     sourceLink p ~ popup (TR (-10) 0) . pad (XY 8 2) . bg PrimaryLight . color White . hover (bg Primary) -- . pad (TRBL 0 20 0 10) . border (L 3) . borderColor PrimaryLight . Cyber.clip 10
 
-section :: AppRoute -> View c () -> View c ()
-section r = section' (routeTitle r)
+-- section :: AppRoute -> View c () -> View c ()
+-- section r = section' (routeTitle r)
 
 section' :: Text -> View c () -> View c ()
 section' t cnt = do
@@ -79,8 +79,8 @@ section' t cnt = do
       el ~ bold . fontSize 28 . Cyber.font . Style.uppercase $ text t
     cnt
 
-sectionA :: (PageAnchor n) => n -> View c () -> View c ()
-sectionA n =
+section :: (PageAnchor n) => n -> View c () -> View c ()
+section n =
   section' (sectionTitle n)
     @ att "id" (pageAnchor n)
 

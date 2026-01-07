@@ -1,55 +1,25 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
 
-module App.Page.Errors where
+module Example.Errors where
 
-import App.Route as Route hiding (UserId)
+import Docs
+import Effectful.Exception
+import Example.Colors
+import Text.Read (readMaybe)
+import Example.Style.Cyber as Cyber (btn)
 import Control.Monad (forM_)
 import Data.List qualified as L
 import Data.Text (Text, pack, unpack)
-import Docs.Examples
-import Docs.Page
-import Effectful
-import Effectful.Exception
-import Example.Colors
-import Example.Style.Cyber (btn)
-import Example.View.Layout
-import Text.Read (readMaybe)
 import Web.Atomic.CSS
-import Web.Hyperbole hiding (link)
+import Web.Hyperbole hiding (Response)
 
-page :: (Hyperbole :> es) => Page es '[Defaults, Users]
-page = do
-  pure $ layout Errors $ do
-    section' "Exceptions" $ do
-      el "Any uncaught exceptions thrown from a handler will be displayed in a bright red box inline in the corresponding HyperView"
-      example source $ do
-        hyper Exceptions viewExceptions
+-- Exceptiosn
 
-    section' "Edge Cases" $ do
-      el "You can use the same mechanism to exit execution early and display an application error to handle edge cases"
-      example source $ do
-        hyper KnownUsers viewKnownUsers
-
-    section' "Handling in Views" $ do
-      el "Handle any expected errors in your view function, by making it accept a Maybe or Either"
-      example source $ do
-        hyper SearchUsers viewSearchUsers
-
-    section' "Custom Error Views" $ do
-      el "You can also exit execution early and display a custom view from application code or from caught execptions"
-      example source $ do
-        hyper Customs viewCustom
- where
-  source = $(moduleSource)
-
--- Defaults ------------------------------------------------
-
-data Defaults = Exceptions | Customs
+data Errors = Exceptions | Customs
   deriving (Generic, ViewId)
 
-instance HyperView Defaults es where
-  data Action Defaults
+instance HyperView Errors es where
+  data Action Errors
     = CauseServerside
     | CauseUserFacing
     | CauseCustom
@@ -66,16 +36,20 @@ instance HyperView Defaults es where
       el ~ border 1 . borderColor Danger . rounded 3 $ "Style errors however you want!"
     pure $ el "unreachable"
 
-viewExceptions :: View Defaults ()
+viewExceptions :: View Errors ()
 viewExceptions = do
   row ~ gap 10 $ do
     button CauseServerside ~ btn $ "Cause Exception"
 
-viewCustom :: View Defaults ()
+viewCustom :: View Errors ()
 viewCustom = do
   row ~ gap 10 $ do
     button CauseUserFacing ~ btn $ "Custom Error Message"
     button CauseCustom ~ btn $ "Custom Error View"
+
+data SomeServerError
+  = SomeServerError String
+  deriving (Show, Eq, Exception)
 
 -- Users ------------------------------------------------
 
@@ -97,6 +71,7 @@ fakeDatabase =
 findUser :: UserId -> Eff es (Maybe User)
 findUser uid =
   pure $ L.find (\(User i _) -> uid == i) fakeDatabase
+
 
 -- KnownUsers ------------------------------------------------
 
@@ -168,8 +143,6 @@ viewSearchResults mu = do
     Nothing -> el ~ italic $ "User not found. No big deal. Doesn't need to be an application error"
     Just u -> viewUserDetails u
 
------------------------------------------------------------
 
-data SomeServerError
-  = SomeServerError String
-  deriving (Show, Eq, Exception)
+source :: ModuleSource
+source = $(moduleSource)

@@ -31,11 +31,11 @@ page = do
     -- el ~ italic . fontSize 20 . pad (X 15) . border (X 3) . borderColor PrimaryLight $ "Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView"
 
     col ~ gap 20 $ do
-      row $ do
+      row ~ color cyan . bg Dark . pad 20 $ do
         space
-        codeblock ~ color Dark $ do
-          [i|
-╔═════════════════════════════════════════════════════════════════════════════╗
+        col ~ gap 10 $ do
+          codeblock $ do
+            [i|╔═════════════════════════════════════════════════════════════════════════════╗
 ║                                                                             ║
 ║  ██╗  ██╗██╗   ██╗██████╗ ███████╗██████╗ ██████╗  ██████╗ ██╗     ███████╗ ║
 ║  ██║  ██║╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔═══██╗██║     ██╔════╝ ║
@@ -45,9 +45,10 @@ page = do
 ║  ╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚══════╝╚══════╝ ║
 ╚═════════════════════════════════════════════════════════════════════════════╝
 |]
+          el ~ fontSize 18 . Cyber.font . bold . textAlign AlignCenter $ do
+            el "Create interactive HTML applications with type-safe serverside Haskell."
+            el "Inspired by HTMX, Elm, and Phoenix LiveView"
         space
-
-      el ~ fontSize 18 . Cyber.font . bold . textAlign AlignCenter $ "Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView"
 
       col ~ gap 10 $ do
         markdocs $(embedFile "docs/intro.md")

@@ -24,7 +24,8 @@ data Message = Message1 | Message2
   deriving (Generic, ViewId)
 
 instance HyperView Message es where
-  data Action Message = Louder Text
+  data Action Message
+    = Louder Text
     deriving (Generic, ViewAction)
 
   update (Louder msg) = do

@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Docs.Snippet where
 
 import Data.Char (isSpace)
@@ -61,13 +63,18 @@ embedTopLevel mn tld = do
 
 embedSource :: ModuleName -> (Text -> Bool) -> (Text -> Bool) -> Q Exp
 embedSource mn isStart isCurrent = do
+  e <- embedSource' mn isStart isCurrent
+  [|T.unlines $(pure e)|]
+
+embedSource' :: ModuleName -> (Text -> Bool) -> (Text -> Bool) -> Q Exp
+embedSource' mn isStart isCurrent = do
   let path = modulePath mn
   addDependentFile path
   s <- runIO $ readSourceCode path
   let lns = selectLines isStart isCurrent s
   case lns of
-    [] -> fail "Missing embed"
-    _ -> lift (T.unlines lns)
+    [] -> fail $ "Missing embed in: " ++ show mn
+    _ -> lift lns
 
 readSnippet :: FilePath -> TopLevelDefinition -> IO [Text]
 readSnippet path tld = do
@@ -112,8 +119,9 @@ isFullyOutdented line =
     [c] -> not $ isSpace c
     _ -> False
 
--- moduleName :: Q Exp
--- moduleName = do
---   loc <- location
---   -- stringE (loc_filename loc)
---   litE $ stringL (loc_module loc)
+-- #EMBED Example.Docs.Interactive "instance HyperView Titler"
+parseLineEmbed :: Text -> Maybe (ModuleName, TopLevelDefinition)
+parseLineEmbed l = do
+  rest <- T.stripPrefix "#EMBED " (T.stripStart l)
+  (mn : tld) <- pure $ T.words rest
+  pure (ModuleName mn, TopLevelDefinition $ T.unwords tld)

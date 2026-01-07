@@ -1,37 +1,30 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module App.Page.State.Effects where
+module Example.State.Effects where
 
-import App.Route hiding (Counter)
 import Data.Text (pack)
 import Docs.Examples
-import Docs.Page
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
 import Example.Style.Cyber as Cyber (btn, dataFeature)
-import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
+import Web.Hyperbole.Data.Encoded
 
 page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar Int) :> es) => Page es '[Counter]
 page = do
   n <- getCount
   pure $ do
-    layout State $ do
-      el "For all but the simplest cases, we will want to use some sort of Effect to manage our state"
-      el $ do
-        text "Pages and update functions can run side effects before rendering. Here we add a "
-        code "Reader (TVar Int)"
-        text "to track the count. "
-        text "Notice that the current count now persists after a browser refresh"
-      el "Instead of a TVar, you might use a database, or some other external effect"
-      example source $ do
-        col ~ embed $ hyper Counter (viewCount n)
+    hyper Counter (viewCount n)
 
 data Counter = Counter
-  deriving (Generic, ViewId)
+  deriving (Generic)
+instance ViewId Counter where
+  -- to avoid conflicts with other "Counter" ViewIds on example pages
+  toViewId _ = Encoded "counter-effects" []
+  parseViewId _ = pure Counter
 
 instance (Reader (TVar Int) :> es, Concurrent :> es) => HyperView Counter es where
   data Action Counter

@@ -43,7 +43,7 @@ instance Session UserSession where
 openLogin :: (Hyperbole :> es, OAuth2 :> es, Reader AppConfig :> es) => Eff es a
 openLogin = do
   Endpoint appRoot <- (.endpoint) <$> ask @AppConfig
-  let redirectUrl = appRoot ./. routePath Route.OAuth2Authenticate
+  let redirectUrl = appRoot ./. routePath (Route.Examples Route.OAuth2Authenticate)
   u <- OAuth2.authUrl redirectUrl "email"
   redirect u
 
@@ -86,13 +86,14 @@ page
   => Page es '[Contents]
 page = do
   muser <- lookupSession @UserSession
-  pure $ layout Route.OAuth2 $ do
-    example $(moduleSource) $ do
+  pure $ layout (Route.Examples Route.OAuth2) $ do
+    col ~ gap 10 $ do
       el "Hyperbole provides some helpers to make OAuth2 easier. This is done in 2 steps:"
       el "1. Initiate the login via the OAuth provider given a redirect url"
       el "2. After the redirect, the library validates the response and fetches an access token from the oauth provider."
       el "The developer can then make authenticated requests, and store a user session"
-      col ~ embed $ hyper Contents $ viewContents muser
+      example $(moduleSource) $ do
+        hyper Contents $ viewContents muser
 
 data Contents = Contents
   deriving (Generic, ViewId)

@@ -22,21 +22,20 @@ data AppRoute
   | Contacts ContactRoute
   | Interactivity
   | SideEffects
+  | Hyperviews
   | State
   | Counter
   | Forms FormRoute
-  | Requests
+  | HyperboleEffect
   | Response
   | Concurrency
   | Data DataRoute
   | Examples ExamplesRoute
   | Errors
   | Javascript
-  | Advanced
-  | OAuth2Authenticate
-  | OAuth2
   | Test
   | Chat
+  | ViewFunctions
   deriving (Eq, Generic, Show)
 instance Route AppRoute where
   baseRoute = Just Main
@@ -98,12 +97,15 @@ instance Route ContactRoute where
   routePath ContactsAll = []
 
 data ExamplesRoute
-  = BigExamples
+  = OtherExamples
   | Todos
   | TodosCSS -- A version using the CSS from TodoMVC project
+  | Tags
+  | OAuth2Authenticate
+  | OAuth2
   deriving (Eq, Generic, Show)
 instance Route ExamplesRoute where
-  baseRoute = Just BigExamples
+  baseRoute = Just OtherExamples
 
 data Hello
   = Greet Text
@@ -119,6 +121,7 @@ routeTitle CSS = "Styles"
 -- routeTitle (Intro r) = defaultTitle r
 routeTitle (Contacts ContactsAll) = "Contacts"
 routeTitle State = "Managing State"
+routeTitle Hyperviews = "More HyperViews"
 -- routeTitle (State StateRoot) = "State"
 -- routeTitle (State StateView) = "Built-in State"
 -- routeTitle (State Actions) = "Managing State"
@@ -130,8 +133,9 @@ routeTitle (Data d) = defaultTitle d
 routeTitle Errors = "Error Handling"
 routeTitle (Examples Todos) = "TodoMVC"
 routeTitle (Examples TodosCSS) = "TodoMVC (CSS version)"
-routeTitle (Examples BigExamples) = "Large Examples"
-routeTitle OAuth2 = "OAuth2"
+routeTitle (Examples OAuth2) = "OAuth2"
+routeTitle (Examples OtherExamples) = "Examples"
+routeTitle (Examples e) = defaultTitle e
 routeTitle r = defaultTitle r
 
 defaultTitle :: (Show r) => r -> Text

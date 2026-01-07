@@ -52,6 +52,11 @@ modifyQuery f = do
   pure updated
 
 
+clearQuery :: (Hyperbole :> es) => Eff es ()
+clearQuery =
+  setQuery (mempty :: QueryData)
+
+
 {- | Parse a single query parameter. Return a 400 status if missing or if parsing fails. See 'FromParam'
 
 @

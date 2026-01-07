@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module App.Page.State.Query where
+module Example.State.Sessions where
 
 import App.Route as Route
 import Data.Text (Text)
@@ -12,25 +12,24 @@ import Effectful
 import Example.Colors
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn', btnLight)
-import Example.View.Layout
+import Example.View.Layout (layout)
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.Effect.Query
 
 data Preferences = Preferences
   { message :: Text
   , color :: AppColor
   }
-  deriving (Generic, Show, ToQuery, FromQuery)
+  deriving (Generic, Show, ToEncoded, FromEncoded, Session)
 instance Default Preferences where
-  def = Preferences mempty def
+  def = Preferences "_" White
 
 page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
-  prefs <- query @Preferences
+  prefs <- session @Preferences
   pure $ layout State $ do
     example $(moduleSource) $ do
-      el "We can persist state in the query string. This is useful for faceted search, or any time when a user might want to share the url include local state changes"
+      el "We can also persist state in a browser cookie. This is most useful for user-specific preferences and state that should last until they clear their browser cookies"
       col ~ embed $ hyper Contents $ viewContent prefs
 
 data Contents = Contents
@@ -40,16 +39,16 @@ instance HyperView Contents es where
   data Action Contents
     = SaveColor AppColor
     | SaveMessage Text
-    | Clear
+    | ClearSession
     deriving (Generic, ViewAction)
   update (SaveColor clr) = do
-    prefs <- modifyQuery $ \p -> p{color = clr}
+    prefs <- modifySession $ \p -> p{color = clr}
     pure $ viewContent prefs
   update (SaveMessage msg) = do
-    prefs <- modifyQuery $ \p -> p{message = msg}
+    prefs <- modifySession $ \p -> p{message = msg}
     pure $ viewContent prefs
-  update Clear = do
-    setQuery @Preferences def
+  update ClearSession = do
+    deleteSession @Preferences
     pure $ viewContent def
 
 viewContent :: Preferences -> View Contents ()
@@ -57,12 +56,12 @@ viewContent prefs = do
   col ~ gap 20 $ do
     viewColorPicker prefs.color
     viewMessage prefs.message
-    button Clear ~ Style.btnLight $ "Clear"
+    button ClearSession ~ Style.btnLight $ "Clear"
 
 viewColorPicker :: AppColor -> View Contents ()
 viewColorPicker clr = do
   col ~ gap 10 . pad 20 . bg clr . border 1 $ do
-    el ~ fontSize 18 . bold $ "Query Background"
+    el ~ fontSize 18 . bold $ "Session Background"
     row ~ gap 10 $ do
       button (SaveColor Success) ~ (btn' Success . brd) $ "Successs"
       button (SaveColor Warning) ~ (btn' Warning . brd) $ "Warning"
@@ -73,7 +72,7 @@ viewColorPicker clr = do
 viewMessage :: Text -> View Contents ()
 viewMessage msg = do
   col ~ gap 10 . pad 20 . border 1 $ do
-    el ~ fontSize 18 . bold $ "Query Message"
+    el ~ fontSize 18 . bold $ "Session Message"
     el $ text msg
     row ~ gap 10 $ do
       button (SaveMessage "Hello") ~ btnLight $ "Msg: Hello"

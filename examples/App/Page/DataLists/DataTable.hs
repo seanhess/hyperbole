@@ -10,7 +10,6 @@ import Docs.Examples
 import Docs.Page
 import Effectful
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages)
-import Example.Style.Cyber (embed)
 import Example.View.Layout
 import Example.View.SortableTable (dataTable, sortBtn, sortColumn)
 import Web.Atomic.CSS
@@ -23,9 +22,9 @@ import Prelude hiding (even, odd)
 page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   pure $ layout (Data SortableTable) $ do
+    el "We can write view Functions that work in any view, like a dataTable"
     example $(moduleSource) $ do
-      el "We can write view Functions that work in any view, like a dataTable"
-      col ~ embed $ hyper Languages $ languagesView Nothing allLanguages
+      hyper Languages $ languagesView Nothing allLanguages
 
 data Languages = Languages
   deriving (Generic, ViewId)

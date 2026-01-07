@@ -22,9 +22,9 @@ import Prelude hiding (even, odd)
 page :: (Hyperbole :> es) => Page es '[LiveSearch]
 page = do
   pure $ layout (Data Autocomplete) $ do
+    el "Create a serverside autocomplete with a combination of onInput and onKeyDown"
     example $(moduleSource) $ do
-      el "Create a serverside autocomplete with a combination of onInput and onKeyDown"
-      col ~ embed $ hyper LiveSearch $ liveSearchView allLanguages 0 ""
+      hyper LiveSearch $ liveSearchView allLanguages 0 ""
 
 data LiveSearch = LiveSearch
   deriving (Generic, ViewId)

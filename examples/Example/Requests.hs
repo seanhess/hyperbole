@@ -1,35 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module App.Page.Requests where
+module Example.Requests where
 
-import App.Route as Route
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import Docs.Examples
-import Docs.Page
-import Effectful
+import Docs
 import Example.Colors
-import Example.Style.Cyber as Cyber (btn, btn', font)
-import Example.View.Layout (layout)
+import Example.Style.Cyber as Cyber (btn, btn')
 import Web.Atomic.CSS
-import Web.Hyperbole
+import Web.Hyperbole hiding (Response)
 import Web.Hyperbole.Data.URI
-
-page :: (Hyperbole :> es) => Page es '[CheckRequest, ControlResponse, ControlClient]
-page = do
-  r <- request
-  pure $ layout Requests $ do
-    section Requests $ do
-      el "The Hyperbole Effect allows us to skip the normal update cycle to directly access the Request or manipulate the Client"
-      example source ~ Cyber.font $ hyper CheckRequest $ viewRequest r
-      example source ~ Cyber.font $ hyper ControlClient viewClient
-
-    section' "Response" $ do
-      el "It also allows us to directly affect the response and the javascript client"
-      example source ~ Cyber.font $ hyper ControlResponse responseView
- where
-  source :: ModuleSource
-  source = $(moduleSource)
 
 -- REQUEst -------------------------------------------------
 
@@ -76,16 +56,24 @@ instance HyperView ControlClient es where
 
   data Action ControlClient
     = SetQuery
+    | ClearQuery
     deriving (Generic, ViewAction)
 
   update SetQuery = do
     setQuery $ Message "hello"
     trigger CheckRequest Refresh
-    pure "Updated Query String"
+    pure $ do
+      el "Updated Query String"
+      viewClient
+  update ClearQuery = do
+    clearQuery
+    trigger CheckRequest Refresh
+    pure viewClient
 
 viewClient :: View ControlClient ()
 viewClient = do
-  button SetQuery ~ btn $ "Set Query String from another HyperView"
+  button SetQuery ~ btn $ "Set Query from another HyperView"
+  button ClearQuery ~ btn $ "Clear Query"
 
 -- RESPONSE -------------------------------------------------
 
@@ -124,3 +112,6 @@ responseView = do
     button SetPageTitle ~ btn $ "Set Page Title"
     button RespondNotFound ~ btn' Danger $ "Respond Not Found"
     button RespondWithError ~ btn' Danger $ "Respond Error"
+
+source :: ModuleSource
+source = $(moduleSource)

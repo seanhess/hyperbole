@@ -11,7 +11,6 @@ import Docs.Page
 import Effectful hiding (Dynamic)
 import Example.Colors
 import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguage (..), TypeFeature (..), allLanguages, isMatchLanguage)
-import Example.Style.Cyber (embed)
 import Example.View.Icon as Icon
 import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout
@@ -23,9 +22,9 @@ page :: (Hyperbole :> es, IOE :> es) => Page es '[Languages]
 page = do
   filters <- query
   pure $ layout (Data Filter) $ do
+    el "Incrementally search a list of data, storing parameters in the query string"
     example $(moduleSource) $ do
-      el "Incrementally search a list of data, storing parameters in the query string"
-      el ~ embed $ hyper Languages $ languagesView filters
+      hyper Languages $ languagesView filters
 
 data Languages = Languages
   deriving (Generic, ViewId)

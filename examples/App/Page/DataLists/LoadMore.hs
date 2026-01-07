@@ -18,9 +18,9 @@ page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   ls <- loadNextLanguages 0
   pure $ layout (Data LoadMore) $ do
+    el "Progressively load more data"
     example $(moduleSource) $ do
-      el "Progressively load more data"
-      col ~ embed $ hyper (Languages 0) $ languagesView ls
+      hyper (Languages 0) $ languagesView ls
 
 type Offset = Int
 
