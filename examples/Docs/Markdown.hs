@@ -13,11 +13,13 @@ import CMark
 import Data.ByteString (ByteString)
 
 -- import Data.FileEmbed (embedFile)
+
+import Data.Char (isSpace)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
-import Docs.Snippet (embedTopLevel, parseLineEmbed, snippet)
+import Docs.Snippet
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Language.Haskell.TH
@@ -138,9 +140,10 @@ embedFile p = do
 -- only handle these with
 -- TODO: prefixes
 expandLine :: Text -> Q Exp
-expandLine l =
+expandLine l = do
+  let whitespace = T.takeWhile isSpace l
   case parseLineEmbed l of
     Just (mn, tld) -> do
-      e <- embedTopLevel mn tld
-      [|T.strip $(pure e)|]
+      e <- embedSource' mn (isTopLevel tld) (isCurrentDefinition tld)
+      [|T.stripEnd $ T.unlines $ fmap (whitespace <>) $(pure e)|]
     Nothing -> lift l
