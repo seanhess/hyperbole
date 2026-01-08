@@ -11,7 +11,7 @@ Just like built-in effects, we add it to any `HyperView` and `Page` that needs i
 
     #EMBED Example.Todos.Todo simplePage
 
-We run a custom effect in our Application just like any other. The [TodoMVC example](/examples/todos) implements the Todos `Effect` using `Hyperbole` `sessions`, but you could write a different runner that connects to a database instead.
+We run a custom effect in our Application just like any other. The [TodoMVC example](/examples/todos) implements the Todos `Effect` using `Hyperbole` `session`s, but you could write a different runner that connects to a database instead.
 
     #EMBED Example.Todos.Todo main
 

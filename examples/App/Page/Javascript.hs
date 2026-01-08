@@ -1,9 +1,7 @@
 module App.Page.Javascript where
 
 import App.Route as Route
-import Data.Text (Text, pack)
 import Docs.Page
-import Example.Interactivity.Events (box, viewBoxes')
 import Example.Javascript
 import Example.Style.Cyber (btn, font)
 import Example.View.Layout

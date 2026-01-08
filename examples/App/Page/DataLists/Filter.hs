@@ -11,7 +11,6 @@ import Docs.Page
 import Effectful hiding (Dynamic)
 import Example.Colors
 import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguage (..), TypeFeature (..), allLanguages, isMatchLanguage)
-import Example.Style.Cyber (embed)
 import Example.View.Icon as Icon
 import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout

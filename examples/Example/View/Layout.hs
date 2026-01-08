@@ -99,10 +99,11 @@ menu current = do
     docLink (Forms FormSimple)
     docLink Interactivity
     docLink Errors
+    docLink BestPractices
     docLink OAuth2
     docLink Javascript
     docLink Advanced
-    docLink (Examples BigExamples)
+    docLink (Examples OtherExamples)
     case current of
       Examples _ ->
         completeExamples
@@ -111,6 +112,7 @@ menu current = do
       _ -> none
  where
   completeExamples = do
+    docLink (Examples Tags) ~ sub
     docLink (Examples Todos) ~ sub
     docLink (Examples TodosCSS) ~ sub
     docLink (Contacts ContactsAll) ~ sub

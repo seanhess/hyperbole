@@ -4,21 +4,16 @@
 module App.Page.State where
 
 import App.Route (AppRoute (State))
-import Data.String.Interpolate (i)
 import Docs.Markdown
 import Docs.Page
 import Docs.Snippet
 import Example.Counter as Counter
-import Example.Docs.Interactive
-import Example.Docs.ViewFunctions qualified as ViewFunctions
 import Example.View.Layout (layoutSubnav)
-import Web.Atomic.CSS
 import Web.Hyperbole
 
 data StateSection
   = Stateless
   | ActionThreading
-  | SideEffects
   | ViewState
   deriving (Show, Enum, Bounded)
 
@@ -29,7 +24,6 @@ page = do
   pure $ layoutSubnav @StateSection State $ do
     sectionA Stateless stateless
     sectionA ActionThreading actions
-    sectionA SideEffects sideEffects
     sectionA ViewState viewState
  where
   stateless = do
@@ -50,12 +44,3 @@ page = do
 
     example Counter.source $ do
       hyper Counter $ viewCount 0
-
-  sideEffects = do
-    markdocs "For any real application with more complex state and data persistence, we need side effects."
-    markdocs "Hyperbole relies on [Effectful](https://hackage.haskell.org/package/effectful) to compose side effects. We can use these `Effect`s in a `Page` or an `update`. In this example the page keeps the message in the query params."
-    snippet $ raw "HI"
-
-  -- The `Hyperbole` effect gives us access to the request and client state, including sessions and the query params.
-  viewState = do
-    snippet $ raw "HI"

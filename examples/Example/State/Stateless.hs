@@ -1,13 +1,6 @@
 module Example.State.Stateless where
 
-import App.Route qualified as Route
-import Data.Text (pack)
-import Docs.Page
-import Example.Style.Cyber as Style
-import Example.View.Layout
-import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.HyperView
 
 data Swapper = Swapper
   deriving (Generic, ViewId)

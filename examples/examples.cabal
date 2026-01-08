@@ -37,6 +37,7 @@ executable examples
       App.Page.Forms
       App.Page.Interactivity
       App.Page.Intro.Basics
+      App.Page.Intro.BestPractices
       App.Page.Intro.Intro
       App.Page.Javascript
       App.Page.OAuth2

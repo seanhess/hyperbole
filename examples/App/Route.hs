@@ -18,6 +18,7 @@ data AppRoute
   | Basics
   | CSS
   | Simple
+  | BestPractices
   | Hello Hello
   | Contacts ContactRoute
   | Interactivity
@@ -98,12 +99,13 @@ instance Route ContactRoute where
   routePath ContactsAll = []
 
 data ExamplesRoute
-  = BigExamples
+  = OtherExamples
   | Todos
   | TodosCSS -- A version using the CSS from TodoMVC project
+  | Tags
   deriving (Eq, Generic, Show)
 instance Route ExamplesRoute where
-  baseRoute = Just BigExamples
+  baseRoute = Just OtherExamples
 
 data Hello
   = Greet Text
@@ -130,7 +132,7 @@ routeTitle (Data d) = defaultTitle d
 routeTitle Errors = "Error Handling"
 routeTitle (Examples Todos) = "TodoMVC"
 routeTitle (Examples TodosCSS) = "TodoMVC (CSS version)"
-routeTitle (Examples BigExamples) = "Large Examples"
+routeTitle (Examples e) = defaultTitle e
 routeTitle OAuth2 = "OAuth2"
 routeTitle r = defaultTitle r
 

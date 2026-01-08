@@ -6,7 +6,7 @@ import App.Route qualified as Route
 import Data.Text (Text)
 import Docs.Examples
 import Docs.Page
-import Example.Style.Cyber (btn, embed)
+import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -15,8 +15,7 @@ page :: (Hyperbole :> es) => Page es '[Test]
 page = do
   pure $ layout Route.Test $ do
     example $(moduleSource) $ do
-      col ~ embed $ do
-        hyper Test $ tagsView []
+      hyper Test $ tagsView []
 
 newtype Tag = Tag Text
   deriving newtype (ToParam, FromParam)

@@ -16,6 +16,7 @@ import App.Page.Errors qualified as Errors
 import App.Page.Forms qualified as Forms
 import App.Page.Interactivity qualified as Interactivity
 import App.Page.Intro.Basics qualified as Basics
+import App.Page.Intro.BestPractices qualified as BestPractices
 import App.Page.Intro.Intro qualified as Intro
 import App.Page.Javascript qualified as Javascript
 import App.Page.OAuth2 qualified as OAuth2
@@ -64,6 +65,7 @@ import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
+import Example.Tags qualified as Tags
 import Example.Test qualified as Test
 import Example.Todos.Todo qualified as Todo
 import Example.Todos.TodoCSS qualified as TodoCSS
@@ -147,13 +149,15 @@ exampleApp config users count chats = do
   router SideEffects = runReader @Text "Secret Message!" $ runPage SideEffects.page
   router Intro = runPage Intro.page
   router Basics = runPage Basics.page
+  router BestPractices = runPage BestPractices.page
   -- router (Intro HyperViews) = runPage IntroHyperViews.page
   -- router (Intro Pages) = runPage IntroPages.page
   -- router (Intro ViewFunctions) = runPage IntroViewFunctions.page
   router CSS = runPage CSS.page
   router Interactivity = runPage Interactivity.page
-  router (Examples BigExamples) = redirect $ routeUri (Examples Todos)
+  router (Examples OtherExamples) = redirect $ routeUri (Examples Tags)
   router (Examples Todos) = runPage Todo.page
+  router (Examples Tags) = runPage Tags.page
   router (Examples TodosCSS) = runPage TodoCSS.page
   router Javascript = runPage Javascript.page
   router OAuth2 = runPage OAuth2.page

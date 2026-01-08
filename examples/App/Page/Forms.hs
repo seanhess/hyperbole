@@ -6,7 +6,6 @@ import Example.FormSimple (AddContact (..))
 import Example.FormSimple qualified as FormSimple
 import Example.FormValidation (Signup (..))
 import Example.FormValidation qualified as FormValidation
-import Example.Style.Cyber (embed)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole

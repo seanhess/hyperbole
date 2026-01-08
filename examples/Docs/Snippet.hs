@@ -3,7 +3,6 @@
 module Docs.Snippet where
 
 import Data.Char (isSpace)
-import Data.Maybe (fromMaybe)
 import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)

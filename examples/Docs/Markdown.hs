@@ -10,10 +10,6 @@ module Docs.Markdown
   ) where
 
 import CMark
-import Data.ByteString (ByteString)
-
--- import Data.FileEmbed (embedFile)
-
 import Data.Char (isSpace)
 import Data.String.Conversions (cs)
 import Data.Text (Text)

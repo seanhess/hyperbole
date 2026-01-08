@@ -19,7 +19,6 @@ data Basics
   = GetRunning
   | HtmlViews
   | Interactive
-  | ViewFunctions
   deriving (Show, Enum, Bounded)
 
 -- TODO: move to basics
@@ -27,7 +26,6 @@ instance PageAnchor Basics where
   sectionTitle Interactive = "Interactive HyperViews"
   sectionTitle HtmlViews = "HTML Views"
   sectionTitle GetRunning = "Get Running"
-  sectionTitle ViewFunctions = "View Functions"
 
   navEntry Interactive = "HyperViews"
   navEntry a = sectionTitle a
@@ -38,7 +36,6 @@ page = do
     sectionA GetRunning getRunning
     sectionA HtmlViews htmlViews
     sectionA Interactive interactive
-    sectionA ViewFunctions viewFunctions
  where
   getRunning = do
     markdocs "Hyperbole applications are divided into top-level `Page`s, which run side effects, then return an HTML `View`"
@@ -86,26 +83,10 @@ page = do
 
     snippet $ raw $(embedTopLevel "Example.Docs.Interactive" "page")
 
-    markdocs "Now let's add a button to trigger the `Action`. Note that instead of using a generic `context` in our `View` type signature, we must set it to our `ViewId`. The compiler will tell us if we try to trigger actions that don't belong to our `HyperView`"
+    markdocs "Now let's add a button to trigger the `Action`. Instead of using a generic `context` in our `View` type signature, we must set it to our `ViewId`. The compiler will tell us if we try to trigger actions that don't belong to our `HyperView`"
     snippet $ raw $(embedTopLevel "Example.Docs.Interactive" "messageView")
 
     markdocs "If the user clicks the button, the contents of `hyper` will be replaced with the result of `update`, leaving the rest of the page untouched."
 
     example Interactive.source $ do
       hyper Message $ messageView "Hello World"
-
-  viewFunctions = do
-    markdocs "We showed above how we can factor `View`s into functions. It's best practice to have a main `View` function for each `HyperView`. Create views as pure function of input data and state, by passing them in:"
-    snippet "inputs -> View viewId ()"
-
-    markdocs "We can write multiple view functions with our `HyperView` as the `context`, and factor them however is most convenient:"
-    snippet $ raw $(embedTopLevel "Example.Docs.ViewFunctions" "^messageButton")
-
-    markdocs "Some `View` functions can be used in any `context`:"
-    snippet $ raw $(embedTopLevel "Example.Docs.ViewFunctions" "^header")
-
-    markdocs "With those two functions defined, we can refactor our main `View` Function to use them and avoid repeating ourselves"
-    snippet $ raw $(embedTopLevel "Example.Docs.ViewFunctions" "messageView")
-
-    example ViewFunctions.source $ do
-      hyper ViewFunctions.VFMessage $ ViewFunctions.messageView "Hello"
