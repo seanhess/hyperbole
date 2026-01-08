@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Example.Contacts where
@@ -6,6 +7,8 @@ module Example.Contacts where
 import App.Route (UserId)
 import App.Route qualified as Route
 import Control.Monad (forM_)
+import Docs.Examples
+import Docs.Page
 import Effectful
 import Example.Colors
 import Example.Contact (ContactForm, contactForm, contactLoading, contactView', parseUser)
@@ -15,6 +18,7 @@ import Example.Effects.Users (User (..), Users)
 import Example.Effects.Users qualified as Users
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn, btn', btnLight)
+import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
@@ -24,11 +28,9 @@ page
   => Page es '[Contacts, InlineContact, NewContact]
 page = do
   us <- Users.all
-  -- pure $ layout (Route.Contacts Route.ContactsAll) $ do
-  -- section (Route.Contacts Route.ContactsAll) $ do
-  --   el "This example combines various features"
-  --   example (Route.Contacts Route.ContactsAll) $ do
-  pure $ hyper Contacts $ allContactsView Nothing us
+  pure $ layout (Route.Contacts Route.ContactsAll) $ do
+    example $(moduleSource) $ do
+      hyper Contacts $ allContactsView Nothing us
 
 -- Contacts ----------------------------------------------
 

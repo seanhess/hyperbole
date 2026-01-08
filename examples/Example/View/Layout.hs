@@ -91,10 +91,10 @@ menu current = do
     docLink (Data DataLists)
     case current of
       Data _ -> do
-        docLink (Data SortableTable) ~ sub
-        docLink (Data Autocomplete) ~ sub
-        docLink (Data Filter) ~ sub
-        docLink (Data LoadMore) ~ sub
+        subLink (Data SortableTable)
+        subLink (Data Autocomplete)
+        subLink (Data Filter)
+        subLink (Data LoadMore)
       _ -> none
     docLink (Forms FormSimple)
     docLink Interactivity
@@ -103,7 +103,7 @@ menu current = do
     docLink OAuth2
     docLink Javascript
     docLink Advanced
-    docLink (Examples OtherExamples)
+    docLink' isExamples (Examples OtherExamples)
     case current of
       Examples _ ->
         completeExamples
@@ -112,29 +112,39 @@ menu current = do
       _ -> none
  where
   completeExamples = do
-    docLink (Examples Tags) ~ sub
-    docLink (Examples Todos) ~ sub
-    docLink (Examples TodosCSS) ~ sub
-    docLink (Contacts ContactsAll) ~ sub
+    subLink (Examples Tags)
+    subLink (Contacts ContactsAll)
+    subLink (Examples Todos)
+    subLink (Examples TodosCSS)
 
-  -- link "/query?key=value" lnk "Query Params"
-  sub :: (Styleable h) => CSS h -> CSS h
+  isExamples =
+    case current of
+      Examples _ -> True
+      _ -> False
+
   sub = pad (TRBL 5 10 5 40) . fontSize 14
 
   menuItem :: (Styleable h) => CSS h -> CSS h
   menuItem =
     pad (XY 20 10) . hover (bg DarkHighlight)
 
-  selected rt =
-    if rt == current then bg DarkHighlight . border (L 4) . pad (L 16) . color cyan else id
+  docLink rt = docLink' (rt == current) rt
 
-  docLink rt = do
-    route rt ~ selected rt . menuItem $
+  docLink' isSelected rt = do
+    let highlight = if isSelected then bg DarkHighlight . border (L 4) . pad (L 16) . color cyan else id
+    route rt ~ highlight . menuItem $
       text $
         routeTitle
           rt
     when (rt == current) $ do
       mapM_ anchorLink (subnav @sections)
+
+  subLink rt = do
+    let isSelected = rt == current
+    let highlight = if isSelected then bg DarkHighlight . color cyan else id -- border (L 4) . pad (L 16) . color cyan else id
+    route rt ~ highlight . sub . menuItem $
+      text $
+        routeTitle rt
 
   anchorLink :: (PageAnchor a) => a -> View c ()
   anchorLink a = do

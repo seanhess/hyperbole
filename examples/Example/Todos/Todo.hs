@@ -1,4 +1,5 @@
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Example.Todos.Todo where
@@ -6,6 +7,7 @@ module Example.Todos.Todo where
 import App.Route qualified as Route
 import Control.Monad (forM_)
 import Data.Text (Text, pack)
+import Docs.Examples
 import Docs.Page
 import Effectful
 import Example.Colors
@@ -23,7 +25,7 @@ page = do
   todos <- Todos.loadAll
   pure $ layout (Route.Examples Route.Todos) $ do
     section' "Todos" $ do
-      example' "Example/Page/Todos/Todo.hs" $ do
+      example $(moduleSource) $ do
         hyper AllTodos $ todosView FilterAll todos
 
 -- Keep this, it's used for documentation (+ usable via the REPL, see main below)

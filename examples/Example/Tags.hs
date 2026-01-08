@@ -11,11 +11,11 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-page :: (Hyperbole :> es) => Page es '[Test]
+page :: (Hyperbole :> es) => Page es '[Tags]
 page = do
-  pure $ layout Route.Test $ do
+  pure $ layout (Route.Examples Route.Tags) $ do
     example $(moduleSource) $ do
-      hyper Test $ tagsView []
+      hyper Tags $ tagsView []
 
 newtype Tag = Tag Text
   deriving newtype (ToParam, FromParam)
@@ -25,11 +25,11 @@ data TagForm = TagForm
   }
   deriving (Generic, FromForm)
 
-data Test = Test
+data Tags = Tags
   deriving (Generic, ViewId)
 
-instance HyperView Test es where
-  data Action Test
+instance HyperView Tags es where
+  data Action Tags
     = SubmitTag [Tag]
     deriving (Generic, ViewAction)
 
@@ -37,7 +37,7 @@ instance HyperView Test es where
     TagForm t <- formData
     pure $ tagsView (Tag t : ts)
 
-tagsView :: [Tag] -> View Test ()
+tagsView :: [Tag] -> View Tags ()
 tagsView ts = do
   row ~ gap 5 $ do
     mapM_ tagView ts
