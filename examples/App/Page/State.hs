@@ -4,10 +4,19 @@
 module App.Page.State where
 
 import App.Route (AppRoute (State))
+import Docs.Examples
 import Docs.Markdown
 import Docs.Page
 import Docs.Snippet
-import Example.Counter as Counter
+import Effectful.Concurrent
+import Effectful.Concurrent.STM (TVar)
+import Effectful.Reader.Dynamic
+import Example.Counter as Threaded
+import Example.State.Effects as Effects
+import Example.State.Query (QueryPrefs (..))
+import Example.State.Query qualified as Query
+import Example.State.Sessions qualified as Session
+import Example.State.Stateless
 import Example.View.Layout (layoutSubnav)
 import Web.Hyperbole
 
@@ -15,32 +24,48 @@ data StateSection
   = Stateless
   | ActionThreading
   | ViewState
+  | BrowserQuery
+  | BrowserSessions
+  | WithEffects
   deriving (Show, Enum, Bounded)
 
 instance PageAnchor StateSection
 
-page :: (Hyperbole :> es) => Page es '[Counter]
+page :: (Hyperbole :> es, Reader (TVar Int) :> es, Concurrent :> es) => Page es '[Threaded.Counter, Swapper, QueryPrefs, Session.Contents, Effects.Counter]
 page = do
+  ssn <- session @Session.Preferences
+  qry <- query @Query.Preferences
+  cnt <- getCount
   pure $ layoutSubnav @StateSection State $ do
-    sectionA Stateless stateless
-    sectionA ActionThreading actions
-    sectionA ViewState viewState
- where
-  stateless = do
-    markdocs "By default, `HyperView`s are stateless. No state is stored in the server connection. `HyperView` `update`s are the direct result of processing the `Action`."
-    snippet $
-      raw $(embedSource "Example.State.Stateless" (isTopLevel "data Swap") (const True))
+    sectionA Stateless $ do
+      markdocs $(embedFile "docs/state-stateless.md")
 
-  actions = do
-    markdocs "The simplest way to add state is to pass it back and forth between the `Action` and the `View`. Here's an implementation of the classic counter example. Notice how each action expects an `Int`, which represents the current count:"
-    snippet $
-      raw
-        $(embedTopLevel "Example.Counter" "instance HyperView Counter")
+      example $(moduleSourceNamed "Example.State.Stateless") $ do
+        hyper Swapper viewSwap
 
-    markdocs "We also pass the current count to our `View` Function. Then each button includes it in its corresponding action:"
-    snippet $
-      raw
-        $(embedTopLevel "Example.Counter" "viewCount")
+    sectionA ActionThreading $ do
+      markdocs $(embedFile "docs/state-threading.md")
 
-    example Counter.source $ do
-      hyper Counter $ viewCount 0
+      example $(moduleSourceNamed "Example.Counter") $ do
+        hyper Threaded.Counter $ Threaded.viewCount 0
+
+    sectionA ViewState $ do
+      markdocs $(embedFile "docs/state-viewstate.md")
+
+    sectionA BrowserQuery $ do
+      markdocs $(embedFile "docs/state-browser.md")
+
+      example $(moduleSourceNamed "Example.State.Query") $ do
+        hyper QueryPrefs $ Query.viewPreferences qry
+
+    sectionA BrowserSessions $ do
+      markdocs $(embedFile "docs/state-sessions.md")
+
+      example $(moduleSourceNamed "Example.State.Sessions") $ do
+        hyper Session.Contents $ Session.viewContent ssn
+
+    sectionA WithEffects $ do
+      markdocs $(embedFile "docs/state-effects.md")
+
+      example $(moduleSourceNamed "Example.State.Effects") $ do
+        hyper Effects.Counter $ Effects.viewCount cnt

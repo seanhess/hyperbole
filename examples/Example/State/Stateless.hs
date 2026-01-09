@@ -1,5 +1,7 @@
 module Example.State.Stateless where
 
+import Example.Style.Cyber (btn)
+import Web.Atomic.CSS
 import Web.Hyperbole
 
 data Swapper = Swapper
@@ -11,6 +13,11 @@ instance HyperView Swapper es where
 
   update Hello = pure "Hello"
   update Goodbye = pure "Goodbye"
+
+viewSwap :: View Swapper ()
+viewSwap = do
+  button Hello ~ btn $ "Hello"
+  button Goodbye ~ btn $ "Goodbye"
 
 page :: (Hyperbole :> es) => Page es '[Swapper]
 page = do

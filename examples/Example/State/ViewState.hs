@@ -1,26 +1,15 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
+module Example.State.ViewState where
 
-module App.Page.State.View where
-
-import App.Route qualified as Route
 import Data.Text (pack)
-import Docs.Examples
-import Docs.Page
-import Example.Style.Cyber as Style
-import Example.View.Layout
+import Example.Style.Cyber (btn, dataFeature)
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.HyperView
 
 page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
-  let rt = Route.State
-  pure $ layout rt $ do
-    example $(moduleSource) $ do
-      col ~ embed $ do
-        hyperState Counter 1 viewCount
+  pure $ do
+    hyperState Counter 1 viewCount
 
 data Counter = Counter
   deriving (Generic)
@@ -46,5 +35,5 @@ viewCount = row $ do
   col ~ gap 10 $ do
     el ~ dataFeature $ text $ pack $ show n
     row ~ gap 10 $ do
-      button Decrement "Decrement" ~ Style.btn
-      button Increment "Increment" ~ Style.btn
+      button Decrement "Decrement" ~ btn
+      button Increment "Increment" ~ btn

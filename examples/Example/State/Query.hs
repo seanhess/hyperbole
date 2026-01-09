@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module App.Page.State.Query where
+module Example.State.Query where
 
 import App.Route as Route
 import Data.Text (Text)
@@ -25,41 +25,43 @@ data Preferences = Preferences
 instance Default Preferences where
   def = Preferences mempty def
 
-page :: (Hyperbole :> es) => Page es '[Contents]
+page :: (Hyperbole :> es) => Page es '[QueryPrefs]
 page = do
   prefs <- query @Preferences
-  pure $ layout State $ do
-    example $(moduleSource) $ do
-      el "We can persist state in the query string. This is useful for faceted search, or any time when a user might want to share the url include local state changes"
-      col ~ embed $ hyper Contents $ viewContent prefs
+  pure $ do
+    hyper QueryPrefs $ viewPreferences prefs
 
-data Contents = Contents
+data QueryPrefs = QueryPrefs
   deriving (Generic, ViewId)
 
-instance HyperView Contents es where
-  data Action Contents
+instance HyperView QueryPrefs es where
+  data Action QueryPrefs
     = SaveColor AppColor
     | SaveMessage Text
     | Clear
     deriving (Generic, ViewAction)
   update (SaveColor clr) = do
-    prefs <- modifyQuery $ \p -> p{color = clr}
-    pure $ viewContent prefs
+    prefs <- saveColor clr
+    pure $ viewPreferences prefs
   update (SaveMessage msg) = do
     prefs <- modifyQuery $ \p -> p{message = msg}
-    pure $ viewContent prefs
+    pure $ viewPreferences prefs
   update Clear = do
     setQuery @Preferences def
-    pure $ viewContent def
+    pure $ viewPreferences def
 
-viewContent :: Preferences -> View Contents ()
-viewContent prefs = do
+saveColor :: Hyperbole :> es => AppColor -> Eff es Preferences
+saveColor clr = 
+  modifyQuery $ \p -> p{color = clr}
+
+viewPreferences :: Preferences -> View QueryPrefs ()
+viewPreferences prefs = do
   col ~ gap 20 $ do
     viewColorPicker prefs.color
     viewMessage prefs.message
     button Clear ~ Style.btnLight $ "Clear"
 
-viewColorPicker :: AppColor -> View Contents ()
+viewColorPicker :: AppColor -> View QueryPrefs ()
 viewColorPicker clr = do
   col ~ gap 10 . pad 20 . bg clr . border 1 $ do
     el ~ fontSize 18 . bold $ "Query Background"
@@ -70,7 +72,7 @@ viewColorPicker clr = do
  where
   brd = border $ TRBL 1 0 0 1
 
-viewMessage :: Text -> View Contents ()
+viewMessage :: Text -> View QueryPrefs ()
 viewMessage msg = do
   col ~ gap 10 . pad 20 . border 1 $ do
     el ~ fontSize 18 . bold $ "Query Message"

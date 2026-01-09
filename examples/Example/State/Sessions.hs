@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module App.Page.State.Sessions where
+module Example.State.Sessions where
 
 import App.Route as Route
 import Data.Text (Text)

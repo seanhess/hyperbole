@@ -94,6 +94,7 @@ module Web.Hyperbole
   , FromQuery (..)
   , query
   , setQuery
+  , modifyQuery
   , param
   , lookupParam
   , setParam

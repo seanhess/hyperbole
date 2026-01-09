@@ -93,6 +93,8 @@ typeKeywords =
   , "Action"
   , "Hyperbole"
   , "Effect"
+  , "Query"
+  , "Session"
   ]
 
 valueKeywords :: [Text]

@@ -44,11 +44,6 @@ executable examples
       App.Page.Requests
       App.Page.SideEffects
       App.Page.State
-      App.Page.State.Actions
-      App.Page.State.Effects
-      App.Page.State.Query
-      App.Page.State.Sessions
-      App.Page.State.View
       App.Route
       App.Style
       Docs.Examples
@@ -91,7 +86,11 @@ executable examples
       Example.Interactivity.Events
       Example.Javascript
       Example.Simple
+      Example.State.Effects
+      Example.State.Query
+      Example.State.Sessions
       Example.State.Stateless
+      Example.State.ViewState
       Example.Style
       Example.Style.Cyber
       Example.Tags

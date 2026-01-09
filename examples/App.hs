@@ -23,10 +23,6 @@ import App.Page.OAuth2 qualified as OAuth2
 import App.Page.Requests qualified as Requests
 import App.Page.SideEffects qualified as SideEffects
 import App.Page.State qualified as State
-import App.Page.State.Effects qualified as Effects
-import App.Page.State.Query qualified as Query
-import App.Page.State.Sessions qualified as Sessions
-import App.Page.State.View qualified as SView
 import App.Route as Route
 import Control.Concurrent
   ( MVar
@@ -63,6 +59,9 @@ import Example.Counter qualified as Counter
 import Example.Effects.Debug as Debug
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
+import Example.State.Effects qualified as Effects
+import Example.State.Query qualified as Query
+import Example.State.Sessions qualified as Sessions
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Example.Tags qualified as Tags
@@ -145,7 +144,7 @@ exampleApp config users count chats = do
   router (Forms _) = runPage Forms.page
   router Requests = runPage Requests.page
   router Route.Response = redirect (routeUri Requests)
-  router State = runPage State.page
+  router State = runReader count $ runPage State.page
   router SideEffects = runReader @Text "Secret Message!" $ runPage SideEffects.page
   router Intro = runPage Intro.page
   router Basics = runPage Basics.page

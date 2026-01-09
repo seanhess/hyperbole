@@ -1,10 +1,8 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Example.Counter where
 
 import Data.Text (pack)
-import Docs.Examples
 import Effectful
 import Example.Style.Cyber as Style
 import Web.Atomic.CSS
@@ -35,6 +33,3 @@ viewCount n = row $ do
     row ~ gap 10 $ do
       button (Decrement n) "Decrement" ~ Style.btn
       button (Increment n) "Increment" ~ Style.btn
-
-source :: ModuleSource
-source = $(moduleSource)
