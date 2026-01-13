@@ -200,7 +200,6 @@ sendRedirect conn meta u = do
   sendMessage "REDIRECT" conn meta (MessageText $ uriToText u)
 
 
--- TODO: this isn't an UPDATE?
 sendError :: (IOE :> es) => Connection -> Metadata -> ServerError -> Eff es ()
 sendError conn meta (ServerError err (Body body)) = do
   sendMessage "UPDATE" conn (metadata "Error" err <> meta) (MessageHtml body)

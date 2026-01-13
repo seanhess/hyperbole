@@ -6,12 +6,11 @@
 module App.Page.OAuth2 where
 
 import App.Config (AppConfig (..))
+import App.Docs
 import App.Route qualified as Route
 import Data.Aeson (eitherDecode)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
-import App.Docs.Examples
-import App.Docs.Page
 import Effectful
 import Effectful.Reader.Dynamic
 import Example.Style.Cyber as Cyber (btn, font)

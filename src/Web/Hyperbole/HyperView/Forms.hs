@@ -69,7 +69,7 @@ import Web.Hyperbole.View
 {- | Simple types that be decoded from form data
 
 @
-#EMBED Example/Page/FormSimple.hs data ContactForm
+#EMBED Example.FormSimple data ContactForm
 @
 -}
 class FromForm (form :: Type) where
@@ -81,7 +81,7 @@ class FromForm (form :: Type) where
 {- | A Higher-Kinded type that can be parsed from a 'Web.FormUrlEncoded.Form'
 
 @
-#EMBED Example/Page/FormValidation.hs data UserForm
+#EMBED Example.FormValidation data UserForm
 @
 -}
 class FromFormF (f :: (Type -> Type) -> Type) where
@@ -111,11 +111,11 @@ formData = do
 {- | Generate a Higher Kinded record with all selectors filled with default values. See 'GenField'
 
 @
-#EMBED Example/Page/FormValidation.hs data UserForm
+#EMBED Example.FormValidation data UserForm
 @
 
 @
-#EMBED Example/Page/Contacts.hs newContactForm
+#EMBED Example.Contacts newContactForm
 @
 -}
 class GenFields f (form :: (Type -> Type) -> Type) where
@@ -128,9 +128,9 @@ class GenFields f (form :: (Type -> Type) -> Type) where
 
 #EXAMPLE /forms
 
-> #EMBED Example/Page/Todos/Todo.hs data TodoForm
+> #EMBED Example.Todos.Todo data TodoForm
 >
-> #EMBED Example/Page/Todos/Todo.hs todoForm
+> #EMBED Example.Todos.Todo todoForm
 -}
 fieldNames :: forall form. (GenFields FieldName form) => form FieldName
 fieldNames = genFields
@@ -166,7 +166,7 @@ newtype FormFields id = FormFields id
 {- | Type-safe \<form\>. Calls (Action id) on submit
 
 @
-#EMBED Example/Page/FormSimple.hs formView
+#EMBED Example.FormSimple formView
 @
 -}
 form :: (ViewAction (Action id)) => Action id -> View (FormFields id) () -> View id ()
@@ -304,11 +304,11 @@ textarea mDefaultText = do
 {- | Validation results for a 'Form'. See 'validate'
 
 @
-#EMBED Example/Page/FormValidation.hs data UserForm
+#EMBED Example.FormValidation data UserForm
 
-#EMBED Example/Page/FormValidation.hs validateForm
+#EMBED Example.FormValidation validateForm
 
-#EMBED Example/Page/FormValidation.hs validateAge
+#EMBED Example.FormValidation validateAge
 @
 -}
 data Validated a = Invalid Text | NotInvalid | Valid
@@ -368,7 +368,7 @@ invalidText v = do
 {- | specify a check for a 'Validation'
 
 @
-#EMBED Example/Page/FormValidation.hs validateAge
+#EMBED Example.FormValidation validateAge
 @
 -}
 validate :: Bool -> Text -> Validated a

@@ -9,6 +9,7 @@ module App.Docs.Markdown
   , embedFile
   ) where
 
+import App.Docs.Snippet
 import App.Route
 import CMark
 import Data.Char (isSpace)
@@ -16,7 +17,6 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
-import App.Docs.Snippet
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Language.Haskell.TH
@@ -133,6 +133,8 @@ typeKeywords =
   , "Require"
   , "Client"
   , "Request"
+  , "Document"
+  , "Path"
   ]
 
 valueKeywords :: [Text]
@@ -146,6 +148,10 @@ valueKeywords =
   , "viewState"
   , "trigger"
   , "target"
+  , "hyperState"
+  , "runPage"
+  , "document"
+  , "routeRequest"
   ]
 
 embedFile :: FilePath -> Q Exp
@@ -164,13 +170,14 @@ expandLine l = do
       e <- embedSource' mn (isTopLevel tld) (isCurrentDefinition tld)
       [|T.stripEnd $ T.unlines $ fmap (whitespace <>) $(pure e)|]
     Nothing -> do
-      expandText l
+      t <- expandText l
+      lift t
 
-expandText :: Text -> Q Exp
+expandText :: (MonadFail m) => Text -> m Text
 expandText t = do
   let segs = T.splitOn "[[" t
   es :: [Text] <- mapM checkLink segs
-  lift $ mconcat es
+  pure $ mconcat es
  where
   checkLink :: (MonadFail m) => Text -> m Text
   checkLink l = do

@@ -2,9 +2,9 @@
 
 module Example.View.Menu where
 
+import App.Docs
 import App.Route
 import Control.Monad (when)
-import App.Docs.Page
 import Example.Colors (AppColor (..), cyan)
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -21,24 +21,18 @@ menu current = do
     docLink State
     docLink CSS
     docLink HyperboleEffect
+    docLink Application
     docLink (Forms FormSimple)
-    docLink (Data DataLists)
-    case current of
-      Data _ -> do
-        subLink (Data SortableTable)
-        subLink (Data Autocomplete)
-        subLink (Data Filter)
-        subLink (Data LoadMore)
-      _ -> none
     docLink Interactivity
-    docLink (Examples OtherExamples)
-    -- case current of
-    --   Examples _ ->
-    --     completeExamples
-    --   (Contacts _) ->
-    --     completeExamples
-    --   _ -> none
+    docLink' isExamples (Examples OtherExamples)
  where
+  -- case current of
+  --   Examples _ ->
+  --     completeExamples
+  --   (Contacts _) ->
+  --     completeExamples
+  --   _ -> none
+
   -- completeExamples = do
   --   subLink (Examples Tags)
   --   subLink (Contacts ContactsAll)
@@ -46,10 +40,12 @@ menu current = do
   --   subLink (Examples Todos)
   --   subLink (Examples TodosCSS)
 
-  -- isExamples =
-  --   case current of
-  --     Examples _ -> True
-  --     _ -> False
+  isExamples =
+    case current of
+      Examples _ -> True
+      Data _ -> True
+      Contacts _ -> True
+      _ -> False
 
   sub = pad (TRBL 5 10 5 40) . fontSize 14
 
@@ -68,12 +64,12 @@ menu current = do
     when (rt == current) $ do
       mapM_ anchorLink (subnav @sections)
 
-  subLink rt = do
-    let isSelected = rt == current
-    let highlight = if isSelected then bg DarkHighlight . color cyan else id -- border (L 4) . pad (L 16) . color cyan else id
-    route rt ~ highlight . sub . menuItem $
-      text $
-        routeTitle rt
+  -- subLink rt = do
+  --   let isSelected = rt == current
+  --   let highlight = if isSelected then bg DarkHighlight . color cyan else id -- border (L 4) . pad (L 16) . color cyan else id
+  --   route rt ~ highlight . sub . menuItem $
+  --     text $
+  --       routeTitle rt
 
   anchorLink :: (PageAnchor a) => a -> View c ()
   anchorLink a = do

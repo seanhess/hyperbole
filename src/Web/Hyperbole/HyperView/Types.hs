@@ -21,9 +21,9 @@ import Web.Hyperbole.View (View (..), ViewAction, ViewId (..), none)
 Create an instance with a unique view id type and a sum type describing the actions the HyperView supports. The View Id can contain context (a database id, for example)
 
 @
-#EMBED Example/Docs/Interactive.hs data Message
+#EMBED Example.Simple data Message
 
-#EMBED Example/Docs/Interactive.hs instance HyperView Message es where
+#EMBED Example.Simple instance HyperView Message es where
 @
 -}
 class (ViewId id, ViewAction (Action id), ConcurrencyValue (Concurrency id)) => HyperView id es where

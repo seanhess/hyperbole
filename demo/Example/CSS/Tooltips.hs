@@ -2,7 +2,7 @@
 
 module Example.CSS.Tooltips where
 
-import App.Docs.Examples
+import App.Docs
 import Example.Colors
 import Web.Atomic.CSS
 import Web.Hyperbole

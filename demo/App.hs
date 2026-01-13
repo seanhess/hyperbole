@@ -6,6 +6,7 @@ module App where
 import App.Cache (clientCache)
 import App.Config
 import App.Docs.Page
+import App.Page.Application qualified as Application
 import App.Page.CSS qualified as CSS
 import App.Page.Concurrency qualified as Concurrency
 import App.Page.DataLists.Autocomplete qualified as Autocomplete
@@ -154,6 +155,7 @@ exampleApp config users count chats = do
   router SideEffects = runReader @Text "Secret Message!" $ runPage SideEffects.page
   router Intro = runPage Intro.page
   router Basics = runPage Basics.page
+  router Application = runPage Application.page
   router ViewFunctions = runPage ViewFunctions.page
   -- router (Intro HyperViews) = runPage IntroHyperViews.page
   -- router (Intro Pages) = runPage IntroPages.page

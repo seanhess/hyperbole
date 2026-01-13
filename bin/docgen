@@ -2,7 +2,7 @@
 
 set -e
 
-hpack examples
+hpack demo
 hpack docs
 cabal run docs
 

@@ -2,9 +2,8 @@
 
 module App.Page.SideEffects where
 
+import App.Docs
 import App.Route as Route (AppRoute (SideEffects))
-import App.Docs.Markdown
-import App.Docs.Page
 import Example.Counter (Counter (..))
 import Example.Docs.SideEffects as SideEffects
 import Example.View.Layout (layoutSubnav)

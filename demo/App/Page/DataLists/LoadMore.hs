@@ -2,8 +2,7 @@
 
 module App.Page.DataLists.LoadMore where
 
-import App.Docs.Examples
-import App.Docs.Page
+import App.Docs
 import App.Page.DataLists.Filter (viewFamily)
 import App.Route as Route
 import Effectful

@@ -26,9 +26,9 @@ import Prelude hiding (dropWhile)
 {- | Derive this class to use a sum type as a route. Constructors and Selectors map intuitively to url patterns
 
 @
-#EMBED Example/Docs/App.hs data AppRoute
+#EMBED Example.Docs.App data AppRoute
 
-#EMBED Example/Docs/App.hs instance Route
+#EMBED Example.Docs.App instance Route
 @
 
 >>> routeUri Main

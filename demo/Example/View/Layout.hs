@@ -5,10 +5,10 @@
 
 module Example.View.Layout where
 
+import App.Docs (PageAnchor (..))
 import App.Route
 import Data.String.Conversions (cs)
 import Data.Version (showVersion)
-import App.Docs.Page
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
@@ -81,4 +81,3 @@ onMobile = media (MaxWidth 650)
 
 onDesktop :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c
 onDesktop = media (MinWidth 650)
-

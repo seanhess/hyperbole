@@ -2,8 +2,8 @@
 
 module Example.FormSimple where
 
+import App.Docs
 import Data.Text (Text, pack)
-import App.Docs.Examples
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
@@ -47,6 +47,15 @@ data ContactForm = ContactForm
   , moon :: Moon
   }
   deriving (Generic, FromForm)
+
+nameForm :: View AddContact ()
+nameForm = do
+  form Submit $ do
+    -- Make sure these names match the field names used by FormParse / formData
+    field "name" $ do
+      label $ do
+        text "Contact Name"
+        input Username @ placeholder "contact name"
 
 -- and a view that displays an input for each field
 formView :: View AddContact ()
@@ -116,6 +125,15 @@ data ContactForm' f = ContactForm'
   , moon :: Field f Moon
   }
   deriving (Generic, FromFormF, GenFields FieldName)
+
+nameForm' :: View AddContact ()
+nameForm' = do
+  let f = fieldNames @ContactForm'
+  form Submit $ do
+    field f.name $ do
+      label $ do
+        text "Contact Name"
+        input Username @ placeholder "contact name"
 
 formView' :: View AddContact ()
 formView' = do

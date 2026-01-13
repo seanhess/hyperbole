@@ -4,10 +4,9 @@
 
 module Example.State.Sessions where
 
+import App.Docs
 import App.Route as Route
 import Data.Text (Text)
-import App.Docs.Examples
-import App.Docs.Page
 import Effectful
 import Example.Colors
 import Example.Style qualified as Style

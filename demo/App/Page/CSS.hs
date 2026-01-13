@@ -1,14 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module App.Page.CSS where
 
+import App.Docs
 import App.Route (AppRoute (CSS))
-import App.Docs.Markdown
-import App.Docs.Page
-import App.Docs.Snippet
 import Effectful
 import Example.CSS.External qualified as External
 import Example.CSS.Tooltips as Tooltips

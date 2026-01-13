@@ -2,10 +2,9 @@
 
 module Example.Tags where
 
+import App.Docs
 import App.Route qualified as Route
 import Data.Text (Text)
-import App.Docs.Examples
-import App.Docs.Page
 import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Web.Atomic.CSS

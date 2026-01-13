@@ -96,7 +96,7 @@ highlight =
 embed :: (Styleable h) => CSS h -> CSS h
 embed =
   border (TL 0 8)
-    . borderColor PrimaryLight
+    . borderColor (light PrimaryLight)
     . highlight
 
 quote :: (Styleable h) => CSS h -> CSS h

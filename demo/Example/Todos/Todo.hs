@@ -4,11 +4,10 @@
 
 module Example.Todos.Todo where
 
+import App.Docs
 import App.Route qualified as Route
 import Control.Monad (forM_)
 import Data.Text (Text, pack)
-import App.Docs.Examples
-import App.Docs.Page
 import Effectful
 import Example.Colors
 import Example.Effects.Todos (FilterTodo (..), Todo (..), TodoId, Todos, runTodosSession)

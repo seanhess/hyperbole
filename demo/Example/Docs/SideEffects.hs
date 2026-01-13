@@ -4,7 +4,7 @@
 module Example.Docs.SideEffects where
 
 import Data.Text (Text)
-import App.Docs.Examples
+import App.Docs
 import Effectful
 import Effectful.Concurrent
 import Effectful.Reader.Dynamic

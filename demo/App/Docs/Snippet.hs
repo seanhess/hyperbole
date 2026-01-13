@@ -2,14 +2,18 @@
 
 module App.Docs.Snippet where
 
+import Control.Monad (unless)
 import Data.Char (isSpace)
+import Data.List qualified as L
 import Data.String (IsString)
 import Data.String.Conversions (cs)
+import System.FilePath ((</>))
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
+import System.Directory (doesFileExist, getCurrentDirectory)
 import Web.Atomic.CSS
 import Web.Hyperbole.View
 
@@ -68,7 +72,7 @@ embedSource mn isStart isCurrent = do
 
 embedSource' :: ModuleName -> (Text -> Bool) -> (Text -> Bool) -> Q Exp
 embedSource' mn isStart isCurrent = do
-  let path = modulePath mn
+  path <- runIO $ localFile $ modulePath mn
   addDependentFile path
   s <- runIO $ readSourceCode path
   let lns = selectLines isStart isCurrent s
@@ -119,9 +123,46 @@ isFullyOutdented line =
     [c] -> not $ isSpace c
     _ -> False
 
--- #EMBED Example.Docs.Interactive "instance HyperView Titler"
+-- #EMBED Example.Docs.Interactive instance HyperView Titler
 parseLineEmbed :: Text -> Maybe (ModuleName, TopLevelDefinition)
 parseLineEmbed l = do
   rest <- T.stripPrefix "#EMBED " (T.stripStart l)
   (mn : tld) <- pure $ T.words rest
   pure (ModuleName mn, TopLevelDefinition $ T.unwords tld)
+
+-- start with a relative OR absolute path, end up with a path to the file
+-- works with any working directory
+localFile :: FilePath -> IO FilePath
+localFile p = do
+  current <- getCurrentDirectory
+  let lpath = addRelativeDemo current $ stripDir "demo" $ stripDir current p
+  b <- doesFileExist lpath
+  unless b $ do
+    fail $ "Could not find file: " <> show lpath <> " in working dir: " <> current
+  pure lpath
+  where
+    addRelativeDemo wd rp
+      | "demo" `L.isSuffixOf` wd = rp
+      | otherwise = "demo" </> rp
+
+stripDir :: FilePath -> FilePath -> FilePath
+stripDir dir p =
+  maybe
+    p
+    (dropWhile (== '/'))
+    (L.stripPrefix dir p)
+
+newtype ModuleSource = ModuleSource FilePath
+  deriving newtype (Show, Eq, IsString)
+
+moduleSource :: Q Exp
+moduleSource = do
+  loc <- location
+  let path = loc_filename loc
+  fp <- runIO $ localFile path
+  lift fp
+
+moduleSourceNamed :: ModuleName -> Q Exp
+moduleSourceNamed mn = do
+  fp <- runIO $ localFile $ modulePath mn
+  lift fp

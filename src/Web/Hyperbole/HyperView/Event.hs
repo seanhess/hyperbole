@@ -21,10 +21,10 @@ eventName :: Text -> Name
 eventName t = "data-on" <> t
 
 
-{- | Send the action after N milliseconds. Can be used to implement lazy loading or polling. See [Example.Page.Concurrent](https://docs.hyperbole.live/concurrent)
+{- | Send the action after N milliseconds. Can be used to implement lazy loading or polling.
 
 @
-#EMBED Example/Page/Concurrency.hs viewTaskLoad
+#EMBED App.Page.Concurrency viewTaskLoad
 @
 -}
 onLoad :: (ViewAction (Action id), Attributable a) => Action id -> DelayMs -> Attributes a -> Attributes a
@@ -126,7 +126,7 @@ dataTarget = att "data-target" . encodedToText . toViewId
 {- | Allow inputs to trigger actions for a different view
 
 @
-#EMBED Example/Page/Advanced.hs targetView
+#EMBED Example.Trigger targetView
 @
 -}
 target :: forall id ctx. (HyperViewHandled id ctx, ViewId id) => id -> ViewState id -> View id () -> View ctx ()

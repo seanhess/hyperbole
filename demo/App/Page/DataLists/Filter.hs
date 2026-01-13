@@ -4,10 +4,9 @@
 
 module App.Page.DataLists.Filter where
 
+import App.Docs
 import App.Route as Route
 import Data.Text (Text, pack)
-import App.Docs.Examples
-import App.Docs.Page
 import Effectful hiding (Dynamic)
 import Example.Colors
 import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguage (..), TypeFeature (..), allLanguages, isMatchLanguage)

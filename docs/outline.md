@@ -1,6 +1,4 @@
 # TODO: ConcurrencyMode = Replace, etc
-# TODO: Documents
-# TODO: Routes
 
 Intro
 ------
@@ -22,7 +20,6 @@ More HyperViews
 * Unique ViewId
 * Nesting
 
-* [ ] Concurrency?
 
 
 View Functions
@@ -70,13 +67,13 @@ NEEDS SORTING
 
 Application
 ----------------
-* [ ] Pages and Routes
-* [ ] Document
+* Pages and Routes
+*  Document
 
 Hyperbole Effect
 ----------------
-* [ ] Requests
-* [ ] Error Handling (Exceptions, Edge Cases, Handling in Views, Custom Error Views)
+*  Requests
+*  Error Handling (Exceptions, Edge Cases, Handling in Views, Custom Error Views)
 
 
 Examples

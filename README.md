@@ -1,4 +1,4 @@
-![Hyperbole](https://github.com/seanhess/hyperbole/raw/main/examples/static/logo-robot.png)
+![Hyperbole](https://github.com/seanhess/hyperbole/raw/main/demo/static/logo-robot.png)
 
 [![Hackage Version](https://img.shields.io/hackage/v/hyperbole?color=success)](https://hackage.haskell.org/package/hyperbole)
 
@@ -54,7 +54,7 @@ The examples directory contains an app demonstrating many features. See them in 
 
 <a href="https://hyperbole.live">
   <!--<img alt="Hyperbole Examples" src="https://github.com/seanhess/hyperbole/raw/main/examples/static/examples.png"/>-->
-  <img alt="Hyperbole Examples" src="https://github.com/seanhess/hyperbole/raw/main/examples/static/examples.png"/>
+  <img alt="Hyperbole Examples" src="https://github.com/seanhess/hyperbole/raw/main/demo/static/examples.png"/>
 </a>
 
 <!-- out of date!

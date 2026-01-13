@@ -4,11 +4,10 @@
 
 module Example.Contacts where
 
+import App.Docs
 import App.Route (UserId)
 import App.Route qualified as Route
 import Control.Monad (forM_)
-import App.Docs.Examples
-import App.Docs.Page
 import Effectful
 import Example.Colors
 import Example.Contact (ContactForm, contactForm, contactLoading, contactView', parseUser)

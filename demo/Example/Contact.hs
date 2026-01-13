@@ -7,7 +7,7 @@ import App.Route qualified as Route
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions
 import Data.Text (Text, pack)
-import App.Docs.Page
+import App.Docs
 import Effectful
 import Effectful.Reader.Dynamic
 import Example.Colors

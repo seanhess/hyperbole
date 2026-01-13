@@ -13,7 +13,7 @@ import Web.Hyperbole.View.ViewId
 {- | Embed a 'HyperView' into a page or another 'View'
 
 @
-#EMBED Example/Docs/Interactive.hs page
+#EMBED Example.Docs.Interactive page
 @
 -}
 hyper

@@ -20,9 +20,9 @@ import Prelude
 {- | Parse querystring from the 'Request' into a datatype. See 'FromQuery'
 
 @
-#EMBED Example/Docs/Params.hs data Filters
+#EMBED Example.Docs.Params data Filters
 
-#EMBED Example/Docs/Params.hs page
+#EMBED Example.Docs.Params page
 @
 -}
 query :: (FromQuery a, Hyperbole :> es) => Eff es a
@@ -36,7 +36,7 @@ query = do
 {- | Update the client's querystring to an encoded datatype. See 'ToQuery'
 
 @
-#EMBED Example/Docs/Params.hs instance HyperView Todos
+#EMBED Example.Docs.Params instance HyperView Todos
 @
 -}
 setQuery :: (ToQuery a, Hyperbole :> es) => a -> Eff es ()
@@ -60,7 +60,7 @@ clearQuery =
 {- | Parse a single query parameter. Return a 400 status if missing or if parsing fails. See 'FromParam'
 
 @
-#EMBED Example/Docs/Params.hs page'
+#EMBED Example.Docs.Params page'
 @
 -}
 param :: (FromParam a, Hyperbole :> es) => Param -> Eff es a
@@ -75,7 +75,7 @@ param p = do
 
 
 @
-#EMBED Example/Docs/SideEffects.hs page
+#EMBED Example.Docs.SideEffects page
 @
 -}
 lookupParam :: (FromParam a, Hyperbole :> es) => Param -> Eff es (Maybe a)
@@ -86,7 +86,7 @@ lookupParam p = do
 {- | Modify the client's querystring to set a single parameter. See 'ToParam'
 
 @
-#EMBED Example/Docs/Params.hs instance HyperView Message
+#EMBED Example.Docs.Params instance HyperView Message
 @
 -}
 setParam :: (ToParam a, Hyperbole :> es) => Param -> a -> Eff es ()

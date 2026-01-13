@@ -3,10 +3,8 @@
 
 module App.Page.State where
 
+import App.Docs
 import App.Route (AppRoute (State))
-import App.Docs.Examples
-import App.Docs.Markdown
-import App.Docs.Page
 import Effectful.Concurrent
 import Effectful.Concurrent.STM (TVar)
 import Effectful.Reader.Dynamic
@@ -16,6 +14,7 @@ import Example.State.Query (QueryPrefs (..))
 import Example.State.Query qualified as Query
 import Example.State.Sessions qualified as Session
 import Example.State.Stateless
+import Example.State.ViewState qualified as ViewState
 import Example.View.Layout (layoutSubnav)
 import Web.Hyperbole
 
@@ -30,7 +29,7 @@ data StateSection
 
 instance PageAnchor StateSection
 
-page :: (Hyperbole :> es, Reader (TVar Int) :> es, Concurrent :> es) => Page es '[Threaded.Counter, Swapper, QueryPrefs, Session.Contents, Effects.Counter]
+page :: (Hyperbole :> es, Reader (TVar Int) :> es, Concurrent :> es) => Page es '[Threaded.Counter, Swapper, QueryPrefs, Session.Contents, Effects.Counter, ViewState.Counter]
 page = do
   ssn <- session @Session.Preferences
   qry <- query @Query.Preferences
@@ -50,6 +49,9 @@ page = do
 
     section ViewState $ do
       markdocs $(embedFile "docs/state-viewstate.md")
+
+      example $(moduleSourceNamed "Example.State.ViewState") $ do
+        hyperState ViewState.CounterState 0 ViewState.viewCount
 
     section BrowserQuery $ do
       markdocs $(embedFile "docs/state-browser.md")

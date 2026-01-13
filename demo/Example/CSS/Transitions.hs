@@ -2,7 +2,7 @@
 
 module Example.CSS.Transitions where
 
-import App.Docs.Examples
+import App.Docs
 import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole

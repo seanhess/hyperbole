@@ -56,12 +56,6 @@ import Web.Hyperbole.Effect.Session (Session (..), deleteSession, saveSession, s
 import Web.Hyperbole.Types.Response
 
 
--- TODO: could all hyperbole applications have an oauth2 redirect endpoint?
--- TVar (Map State (Eff es _))
--- then you could execute it afterwards!
-
--- High level effect interface
-
 authUrl :: (OAuth2 :> es) => URI -> Scopes -> Eff es URI
 authUrl redirectUrl scopes = send $ AuthUrl redirectUrl scopes
 

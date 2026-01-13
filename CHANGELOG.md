@@ -3,6 +3,8 @@
 ## NEXT
 
 * Concurrency Controls - Drop vs Replace
+* ViewState
+* New shiny website
 
 ## 0.5.0 -- 2025-09-26
 

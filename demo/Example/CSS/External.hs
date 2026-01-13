@@ -3,7 +3,7 @@
 module Example.CSS.External where
 
 import Data.Text (Text)
-import App.Docs.Examples
+import App.Docs
 import Web.Hyperbole
 
 source :: ModuleSource

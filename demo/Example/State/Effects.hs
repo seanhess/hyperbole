@@ -4,7 +4,7 @@
 module Example.State.Effects where
 
 import Data.Text (pack)
-import App.Docs.Examples
+import App.Docs
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic

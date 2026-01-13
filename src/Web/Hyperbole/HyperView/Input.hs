@@ -14,7 +14,7 @@ import Web.Hyperbole.View
 {- | \<button\> HTML tag which sends the action when pressed
 
 @
-#EMBED  Example/Page/Simple.hs messageView
+#EMBED Example.Simple messageView
 @
 -}
 button :: (ViewAction (Action id)) => Action id -> View id () -> View id ()
@@ -22,22 +22,12 @@ button action cnt = do
   tag "button" cnt @ onClick action
 
 
--- tag "button" @ att "whatber" "asdf" $ cnt
-
--- {- | \<input type="checkbox"\> which toggles automatically
---
--- > toggle True SetIsSelected id
--- -}
--- toggle :: (ViewAction (Action id)) => Bool -> (Bool -> Action id) -> Mod id -> View id ()
--- toggle isSelected clickAction f = do
---   tag "input" (att "type" "checkbox" . checked isSelected . onClick (clickAction (not isSelected)) . f) none
-
 {- | Type-safe dropdown. Sends (opt -> Action id) when selected. The default will be selected.
 
 #EXAMPLE /data/filter
 
 @
-#EMBED Example/Page/DataLists/Filter.hs familyDropdown
+#EMBED App.Page.DataLists.Filter familyDropdown
 @
 -}
 dropdown
@@ -86,7 +76,7 @@ instance (ToParam id, ToParam opt, FromParam id, FromParam opt) => ViewId (Optio
 {- | A live search field. Set a DelayMs to avoid hitting the server on every keystroke
 
 @
-#EMBED Example/Page/Errors.hs viewSearchUsers
+#EMBED Example.Errors viewSearchUsers
 @
 -}
 search :: (ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> View id ()

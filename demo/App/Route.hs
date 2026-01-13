@@ -36,6 +36,7 @@ data AppRoute
   | Test
   | Chat
   | ViewFunctions
+  | Application
   deriving (Eq, Generic, Show)
 instance Route AppRoute where
   baseRoute = Just Main

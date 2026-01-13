@@ -2,8 +2,6 @@
 
 module Main where
 
-import App.Route as Example
-import Control.Applicative ((<|>))
 import Control.Exception (SomeException, try)
 import Data.Char (isAlpha, isSpace)
 import Data.String.Conversions (cs)
@@ -15,7 +13,6 @@ import Distribution.Verbosity (verbose)
 import System.Directory
 import System.FilePath
 import Web.Hyperbole.Data.URI
-import Web.Hyperbole.Route
 
 
 main :: IO ()
@@ -59,6 +56,7 @@ copyExtraFilesTo tmpDir = do
 
 expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
 expandAndCopyFileTo tmpDir pth = do
+  putStrLn $ "EXPANDING " <> pth
   src <- readSource pth
   expanded <- expandFile src
   writeSource tmpDir pth expanded
@@ -73,9 +71,9 @@ readSource pth = do
 writeSource :: FilePath -> FilePath -> SourceCode -> IO ()
 writeSource tmpDir relPath src = do
   let pth = tmpDir </> cleanRelativeDir relPath
+  -- putStrLn $ "WRITE " <> pth <> " " <> show (length src.lines)
   createDirectoryIfMissing True $ takeDirectory pth
   T.writeFile pth $ T.unlines src.lines
-  putStrLn $ "WROTE to " <> pth <> " " <> show (length src.lines)
  where
   cleanRelativeDir =
     dropWhile (== '/') . dropWhile (== '.')
@@ -105,15 +103,17 @@ relativeSourceFiles dir = do
 
 data Macro
   = Embed
-      { sourceFile :: FilePath
-      , definition :: TopLevelDefinition
-      }
-  | Example Path
+  { moduleName :: ModuleName
+  , definition :: TopLevelDefinition
+  }
   deriving (Eq)
 newtype SourceCode = SourceCode {lines :: [Text]}
 instance Show Macro where
-  show (Embed src def) = "Embed " <> src <> " " <> show def
-  show (Example src) = "Example " <> show src
+  show (Embed mn def) = "Embed " <> show mn <> " " <> show def
+
+
+newtype ModuleName = ModuleName Text
+  deriving newtype (Eq, Show)
 
 
 newtype TopLevelDefinition = TopLevelDefinition Text
@@ -136,51 +136,57 @@ expandLine line = do
       pure [line]
     Just (pre, Embed src def) -> do
       expandEmbed src pre def
-    Just (pre, Example src) -> do
-      expandExample src pre
  where
+  -- Just (pre, Example src) -> do
+  --   expandExample src pre
+
   parseMacro :: Text -> Maybe (Text, Macro)
   parseMacro inp = do
-    parseEmbed inp <|> parseExample inp
+    parseEmbed inp -- <|> parseExample inp
 
-  parseExample l = do
-    case T.splitOn "#EXAMPLE " l of
-      [prefix, src] -> do
-        pure (prefix, Example $ path src)
-      _ -> Nothing
+  -- parseExample l = do
+  --   case T.splitOn "#EXAMPLE " l of
+  --     [prefix, src] -> do
+  --       pure (prefix, Example $ path src)
+  --     _ -> Nothing
 
   parseEmbed l = do
     case T.splitOn "#EMBED " l of
       [prefix, info] -> do
-        (sourceFile, definition) <- splitSrcDef $ T.dropWhile (== ' ') info
-        pure (prefix, Embed sourceFile definition)
+        (mn, definition) <- splitSrcDef $ T.dropWhile (== ' ') info
+        pure (prefix, Embed mn definition)
       _ -> Nothing
 
   splitSrcDef inp =
-    let (src, def) = T.breakOn " " inp
-     in pure (cs src, TopLevelDefinition $ T.drop 1 def)
+    let (mn, def) = T.breakOn " " inp
+     in pure (ModuleName mn, TopLevelDefinition $ T.drop 1 def)
 
 
--- look it up as a URI...
-expandExample :: Path -> Text -> IO [Text]
-expandExample p prefix = do
-  let pre = if T.null prefix then "▶️ " else prefix
-  r <- appRoute
-  pure [pre <> "[" <> Example.routeTitle r <> "](" <> uriToText (exampleBaseURI ./. p) <> ")"]
- where
-  appRoute :: IO AppRoute
-  appRoute = do
-    case matchRoute @AppRoute p of
-      Nothing -> fail $ "Could not find example: " <> cs (pathToText False p)
-      Just r -> pure r
-
+-- -- look it up as a URI...
+-- expandExample :: Path -> Text -> IO [Text]
+-- expandExample p prefix = do
+--   let pre = if T.null prefix then "▶️ " else prefix
+--   r <- appRoute
+--   pure [pre <> "[" <> Example.routeTitle r <> "](" <> uriToText (exampleBaseURI ./. p) <> ")"]
+--  where
+--   appRoute :: IO AppRoute
+--   appRoute = do
+--     case matchRoute @AppRoute p of
+--       Nothing -> fail $ "Could not find example: " <> cs (pathToText False p)
+--       Just r -> pure r
 
 exampleBaseURI :: URI
 exampleBaseURI = [uri|https://hyperbole.live|]
 
 
-expandEmbed :: FilePath -> Text -> TopLevelDefinition -> IO [Text]
-expandEmbed src pfx def = do
+modulePath :: ModuleName -> FilePath
+modulePath (ModuleName mn) = cs $ T.replace "." "/" mn <> ".hs"
+
+
+expandEmbed :: ModuleName -> Text -> TopLevelDefinition -> IO [Text]
+expandEmbed mn pfx def = do
+  let src = modulePath mn
+  putStrLn $ "  embed: " <> src
   source <- T.readFile $ "./demo/" <> src
   expanded <- requireTopLevel def (SourceCode $ T.lines source)
   pure $ fmap markupLine expanded
@@ -188,7 +194,7 @@ expandEmbed src pfx def = do
   requireTopLevel :: TopLevelDefinition -> SourceCode -> IO [Text]
   requireTopLevel tld sc =
     case findTopLevel tld sc of
-      [] -> fail $ "Could not find: " <> show (Embed src def)
+      [] -> fail $ "Could not find: " <> show (Embed mn def) <> " " <> show def
       lns -> pure lns
 
   -- addPrefix line = embed.prefix <> line

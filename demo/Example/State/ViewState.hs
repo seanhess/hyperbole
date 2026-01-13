@@ -9,9 +9,9 @@ import Web.Hyperbole.HyperView
 page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   pure $ do
-    hyperState Counter 1 viewCount
+    hyperState CounterState 1 viewCount
 
-data Counter = Counter
+data Counter = CounterState
   deriving (Generic)
 instance ViewId Counter where
   type ViewState Counter = Int

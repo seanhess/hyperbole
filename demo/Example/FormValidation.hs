@@ -4,7 +4,7 @@ module Example.FormValidation where
 
 import Data.Text (Text, pack)
 import Data.Text qualified as T
-import App.Docs.Examples
+import App.Docs
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn)
 import Web.Atomic.CSS

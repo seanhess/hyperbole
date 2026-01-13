@@ -13,7 +13,7 @@ import Web.Hyperbole.View (View)
 {- | An application is divided into multiple [Pages](#g:pages). Each page module should have a 'Page' function, which returns a root 'View'
 
 @
-#EMBED Example/Docs/MultiView.hs page
+#EMBED Example.Docs.MultiView page
 @
 -}
 type Page es (views :: [Type]) = Eff (Reader (Root views) : es) (View (Root views) ())
@@ -22,9 +22,9 @@ type Page es (views :: [Type]) = Eff (Reader (Root views) : es) (View (Root view
 {- | Run a 'Page' and return a 'Response'
 
 @
-#EMBED Example/Docs/BasicPage.hs main
+#EMBED Example.Docs.BasicPage main
 
-#EMBED Example/Docs/BasicPage.hs page
+#EMBED Example.Docs.BasicPage page
 @
 -}
 runPage

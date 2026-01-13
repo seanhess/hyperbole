@@ -27,10 +27,10 @@ executable demo
       App.Cache
       App.Config
       App.Docs
-      App.Docs.Examples
       App.Docs.Markdown
       App.Docs.Page
       App.Docs.Snippet
+      App.Page.Application
       App.Page.Concurrency
       App.Page.CSS
       App.Page.DataLists.Autocomplete
@@ -79,6 +79,7 @@ executable demo
       Example.Docs.State
       Example.Docs.UniqueViewId
       Example.Docs.ViewFunctions
+      Example.Document
       Example.Effects.Debug
       Example.Effects.Todos
       Example.Effects.Users
@@ -86,6 +87,7 @@ executable demo
       Example.FormSimple
       Example.FormValidation
       Example.Interactivity.Events
+      Example.Interactivity.Inputs
       Example.Javascript
       Example.Push
       Example.Requests

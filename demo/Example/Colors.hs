@@ -54,6 +54,10 @@ midRed = HexColor "#A03F38"
 cyan :: HexColor
 cyan = "#0FF"
 
+light :: AppColor -> HexColor
+light PrimaryLight = "#a8c3e5"
+light c = colorValue c
+
 hoverColor :: AppColor -> HexColor
 hoverColor = \case
   Primary -> colorValue PrimaryLight

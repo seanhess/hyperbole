@@ -21,7 +21,7 @@ import Web.Hyperbole.View.ViewId
 {- | 'View's are HTML fragments with a 'context'
 
 @
-#EMBED Example/Docs/BasicPage.hs helloWorld
+#EMBED Example.Docs.BasicPage helloWorld
 @
 -}
 newtype View c a = View {html :: Eff '[Reader (c, ViewState c)] (Html a)}
@@ -119,9 +119,9 @@ instance Styleable (View c a) where
 {- | Access the 'viewId' in a 'View' or 'update'
 
 @
-#EMBED Example/Page/Concurrency.hs data LazyData
+#EMBED App.Page.Concurrency data LazyData
 
-#EMBED Example/Page/Concurrency.hs instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
+#EMBED App.Page.Concurrency instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
 @
 -}
 class HasViewId m view where

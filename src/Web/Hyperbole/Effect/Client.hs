@@ -17,7 +17,7 @@ import Web.Hyperbole.View (toAction, toViewId)
 #EXAMPLE /advanced
 
 @
-#EMBED Example/Page/Advanced.hs instance HyperView Controls
+#EMBED Example.Trigger instance HyperView Controls
 @
 -}
 trigger :: (HyperView id es, HyperViewHandled id view, Hyperbole :> es) => id -> Action id -> Eff (Reader view : es) ()
@@ -30,11 +30,16 @@ trigger vid act = do
 #EXAMPLE /javascript
 
 @
-#EMBED Example/Page/Javascript.hs instance HyperView Message
+#EMBED Example.Javascript instance HyperView Message
 @
 
 @
-#EMBED static/custom.js function listenServerEvents
+function listenServerEvents() {
+  // you can listen on document instead, the event will bubble
+  Hyperbole.hyperView("Message").addEventListener("server-message", function(e) {
+    alert("Server Message: " + e.detail)
+  })
+}
 @
 -}
 pushEvent :: (ToJSON a, Hyperbole :> es) => Text -> a -> Eff es ()
@@ -45,7 +50,7 @@ pushEvent nm a = do
 {- | Set the document title
 
 @
-#EMBED Example/Docs/Client.hs page
+#EMBED Example.Docs.Client page
 @
 -}
 pageTitle :: (Hyperbole :> es) => Text -> Eff es ()

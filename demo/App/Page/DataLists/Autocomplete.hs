@@ -3,13 +3,12 @@
 
 module App.Page.DataLists.Autocomplete where
 
+import App.Docs
 import App.Page.DataLists.Filter as Filter (chosenView, clearButton, resultsTable)
 import App.Route as Route
 import Control.Monad (forM_)
 import Data.Text (Text)
 import Data.Text qualified as T
-import App.Docs.Examples
-import App.Docs.Page
 import Effectful
 import Example.Colors
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages, isMatchLanguage)

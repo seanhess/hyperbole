@@ -5,3 +5,5 @@ Another way to store application-wide state is to use the `Concurrent` effect. I
     #EMBED Example.State.Effects page
 
     #EMBED Example.State.Effects getCount
+
+Notice how this state is shared among all users application-wide, and survives until the app restarts

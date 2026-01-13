@@ -3,11 +3,10 @@
 
 module App.Page.DataLists.DataTable where
 
+import App.Docs
 import App.Route as Route
 import Data.List (sortOn)
 import Data.Text (pack)
-import App.Docs.Examples
-import App.Docs.Page
 import Effectful
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages)
 import Example.View.Layout

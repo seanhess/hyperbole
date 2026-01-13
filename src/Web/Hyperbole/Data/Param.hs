@@ -38,7 +38,7 @@ instance IsString ParamValue where
 This is equivalent to Web.HttpApiData, which is missing some instances and has some strange defaults
 
 @
-#EMBED Example/Docs/Sessions.hs data AppColor
+#EMBED Example.Docs.Sessions data AppColor
 @
 -}
 class ToParam a where
@@ -88,7 +88,7 @@ instance (ToParam a, ToParam b) => ToParam (a, b) where
 {- | Decode data from a 'query', 'session', or 'form' parameter value
 
 @
-#EMBED Example/Docs/Sessions.hs data AppColor
+#EMBED Example.Docs.Sessions data AppColor
 @
 -}
 class FromParam a where

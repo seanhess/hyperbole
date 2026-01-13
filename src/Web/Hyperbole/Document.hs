@@ -13,7 +13,7 @@ data Document = Document
 
 {- | 'liveApp' requires a function which turns an html fragment into an entire html document. Use this to import javascript, css, etc. Use 'quickStartDocument' to get going quickly
 
-> #EMBED Example/Docs/App.hs app
+> #EMBED Example.Docs.App app
 -}
 document :: View DocumentHead () -> BL.ByteString -> BL.ByteString
 document docHead cnt =
@@ -33,9 +33,9 @@ document docHead cnt =
 
 > import Web.Hyperbole (scriptEmbed, cssEmbed)
 >
-> #EMBED Example/Docs/App.hs documentHead
+> #EMBED Example.Docs.App documentHead
 >
-> #EMBED Example/Docs/App.hs app
+> #EMBED Example.Docs.App app
 -}
 data DocumentHead = DocumentHead
   deriving (Generic, ViewId)

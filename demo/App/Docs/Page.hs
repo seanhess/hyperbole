@@ -14,10 +14,10 @@ module App.Docs.Page
   , Cyber.quote
   ) where
 
+import App.Docs.Snippet (ModuleSource (..))
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
-import App.Docs.Examples
 import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
@@ -51,7 +51,6 @@ camelTitle = cs . toWords . fromHumps . show
 
 -- Sections ----------------------------------------------------------------------
 
--- TODO: remove prefix if absolute path
 sourceLink :: Path -> View c ()
 sourceLink p =
   link sourceUrl ~ fontSize 14 @ att "target" "_blank" $ do

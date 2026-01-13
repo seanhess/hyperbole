@@ -24,9 +24,9 @@ import Web.Hyperbole.Types.Response
 {- | Configure a data type to persist in the 'session' as a cookie. These are type-indexed, so only one of each can exist in the session
 
 @
-#EMBED Example/Docs/Sessions.hs data Preferences
+#EMBED Example.Docs.Sessions data Preferences
 
-#EMBED Example/Docs/Sessions.hs instance Default Preferences
+#EMBED Example.Docs.Sessions instance Default Preferences
 @
 -}
 class Session a where
@@ -58,11 +58,11 @@ class Session a where
 {- | Load data from a browser cookie. If it doesn't exist, the 'Default' instance is used
 
 @
-#EMBED Example/Docs/Sessions.hs data Preferences
+#EMBED Example.Docs.Sessions data Preferences
 
-#EMBED Example/Docs/Sessions.hs instance Default Preferences
+#EMBED Example.Docs.Sessions instance Default Preferences
 
-#EMBED Example/Docs/Sessions.hs page
+#EMBED Example.Docs.Sessions page
 @
 -}
 session :: (Session a, Default a, Hyperbole :> es) => Eff es a
@@ -84,11 +84,11 @@ lookupSession = do
 {- | Persist datatypes in browser cookies
 
 @
-#EMBED Example/Docs/Sessions.hs data Preferences
+#EMBED Example.Docs.Sessions data Preferences
 
-#EMBED Example/Docs/Sessions.hs instance Default Preferences
+#EMBED Example.Docs.Sessions instance Default Preferences
 
-#EMBED Example/Docs/Sessions.hs instance HyperView Content
+#EMBED Example.Docs.Sessions instance HyperView Content
 @
 -}
 saveSession :: forall a es. (Session a, Hyperbole :> es) => a -> Eff es ()

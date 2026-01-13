@@ -36,7 +36,7 @@ import Web.Hyperbole.Types.Response
 
 {- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
 
-> #EMBED Example/Docs/BasicPage.hs main
+> #EMBED Example.Docs.BasicPage main
 -}
 liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Concurrent, IOE] Response -> Wai.Application
 liveApp doc =
@@ -90,15 +90,15 @@ suppressMessages ex = do
 
 
 @
-#EMBED Example/Docs/App.hs import Example.Docs.Page
+#EMBED Example.Docs.App import Example.Docs.Page
 
-#EMBED Example/Docs/App.hs type UserId
+#EMBED Example.Docs.App type UserId
 
-#EMBED Example/Docs/App.hs data AppRoute
+#EMBED Example.Docs.App data AppRoute
 
-#EMBED Example/Docs/App.hs instance Route
+#EMBED Example.Docs.App instance Route
 
-#EMBED Example/Docs/App.hs router
+#EMBED Example.Docs.App router
 @
 -}
 routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response

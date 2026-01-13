@@ -2,17 +2,17 @@
 
 module App.Page.Hyperviews where
 
-import App.Route qualified as Route (AppRoute (..))
 import App.Docs
+import App.Route qualified as Route (AppRoute (..))
 import Example.Counter (Counter (..))
 import Example.Docs.MultiView qualified as Multi
 import Example.Docs.Nesting qualified as Nesting
 import Example.Docs.UniqueViewId qualified as UniqueViewId
+import Example.Push as Push
 import Example.Simple (Message (..))
 import Example.Trigger as Trigger
 import Example.View.Layout (layoutSubnav)
 import Web.Hyperbole
-import Example.Push as Push
 import Web.Hyperbole.HyperView.Types (Root (..))
 import Web.Hyperbole.Page (subPage)
 

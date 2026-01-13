@@ -1,9 +1,8 @@
 module App.Page.Examples where
 
-import App.Route as Route
 import App.Docs
-import Example.Colors
-import Example.Style.Cyber
+import App.Route as Route
+import Example.Style as Style (link)
 import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
@@ -11,47 +10,52 @@ import Web.Hyperbole
 page :: (Hyperbole :> es) => Page es '[]
 page = do
   pure $ layout (Examples OtherExamples) $ do
-    section' "Other Examples" $ do
-      el ~ grid . gap 10 $ do
-        card (Examples Tags) "Tag component"
-        card (Examples Todos) "Implementation of TodoMVC using Atomic CSS"
-        card (Examples TodosCSS) "Implementation of TodoMVC using external classes"
-        card (Examples OAuth2) "Demonstration of OAuth2"
+    section' "UI Demos" $ do
+      col ~ gap 10 $ do
+        card (Examples Tags) "Add and remove \"tags\" from via an input"
 
     section' "Data Lists" $ do
-      el ~ grid . gap 10 $ do
-        card (Data SortableTable) "Tag component"
-        card (Data Autocomplete) "Tag component"
-        card (Data Filter) "Tag component"
-        card (Data LoadMore) "testing asdf"
+      col ~ gap 10 $ do
+        card (Data SortableTable) "Sort by column, demonstrates view functions"
+        card (Data Autocomplete) "Incremental search using only hyperbole"
+        card (Data Filter) "Faceted search, live filtering of lists  "
+        card (Data LoadMore) "Progressively load more items"
+
+    section' "Other Features" $ do
+      card (Examples OAuth2) "Demonstration of OAuth2"
+
+    section' "Reference Implementations" $ do
+      card (Examples Todos) "using Atomic CSS"
+      card (Examples TodosCSS) "using external classes"
  where
-  card r cnt = route r ~ cardBtn . tile $ do
-    el ~ bold . fontSize 20 . color White . bg PrimaryLight . font . pad 4 . textAlign AlignCenter $ do
+  card r cnt = row ~ gap 5 $ do
+    route r ~ Style.link $ do
       text $ routeTitle r
-    el ~ pad 10 $ text cnt
+    text "-"
+    el $ text cnt
 
-  cardBtn :: (Styleable h) => CSS h -> CSS h
-  cardBtn =
-    bgAnimated
-      . bgGradient White
-      . hover bgzero
-      . clip 10
-      . shadow ()
-
-  grid :: (Styleable h) => CSS h -> CSS h
-  grid =
-    utility
-      "grid-ex"
-      [ "display" :. "grid"
-      , "grid-template-columns" :. "repeat(auto-fit, minmax(200px, 1fr))"
-      ]
-
-  tile :: (Styleable h) => CSS h -> CSS h
-  tile =
-    utility
-      "tile"
-      [ "aspect-ratio" :. "16 / 9"
-      ]
+-- cardBtn :: (Styleable h) => CSS h -> CSS h
+-- cardBtn =
+--   bgAnimated
+--     . bgGradient White
+--     . hover bgzero
+--     . clip 10
+--     . shadow ()
+--
+-- grid :: (Styleable h) => CSS h -> CSS h
+-- grid =
+--   utility
+--     "grid-ex"
+--     [ "display" :. "grid"
+--     , "grid-template-columns" :. "repeat(auto-fit, minmax(200px, 1fr))"
+--     ]
+--
+-- tile :: (Styleable h) => CSS h -> CSS h
+-- tile =
+--   utility
+--     "tile"
+--     [ "aspect-ratio" :. "16 / 9"
+--     ]
 
 -- section Effectful $ do
 --   markdocs $(embedFile "docs/effectful.md")

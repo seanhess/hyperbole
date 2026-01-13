@@ -10,7 +10,7 @@ import Web.Hyperbole.Data.Encoded as Encoded
 {- | Define every action possible for a given 'HyperView'
 
 @
-#EMBED Example/Page/Simple.hs instance HyperView Message
+#EMBED Example.Simple instance HyperView Message
 @
 -}
 class ViewAction a where
