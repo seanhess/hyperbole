@@ -113,11 +113,14 @@ run = do
 
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
-      Static.staticPolicy (addBase "examples/static") $ do
-        noCache $ exampleApp config users count chats
+      Static.staticPolicy (addBase "demo/static") $ do
+        devReload config $ exampleApp config users count chats
  where
-  noCache :: Application -> Application
-  noCache = Wai.modifyResponse $ Wai.mapResponseHeaders (\hs -> (hCacheControl, "no-store, max-age=0, must-revalidate") : ("Pragma", "no-cache") : ("Expires", "0") : hs)
+  devReload :: AppConfig -> Application -> Application
+  devReload config = Wai.modifyResponse $ Wai.mapResponseHeaders $ \hs ->
+    if config.devMode
+      then ("Connection", "close") : hs
+      else hs
 
 exampleApp :: AppConfig -> UserStore -> TVar Int -> TVar [(Text, Text)] -> Application
 exampleApp config users count chats = do

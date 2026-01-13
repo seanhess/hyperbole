@@ -30,16 +30,16 @@ ADD ./cabal.project .
 ADD ./client ./client
 ADD ./test ./test
 ADD ./src ./src
-ADD ./examples ./examples
+ADD ./demo ./demo
 ADD ./docs ./docs
 ADD *.md .
 ADD LICENSE .
 RUN hpack
-RUN hpack examples
+RUN hpack demo
 RUN hpack docs
-RUN cabal build examples
+RUN cabal build demo
 RUN mkdir bin
-RUN cd examples && export EXEC=$(cabal list-bin examples | tail -n1); cp "$EXEC" /opt/build/bin/examples
+RUN cd demo && export EXEC=$(cabal list-bin demo | tail -n1); cp "$EXEC" /opt/build/bin/demo
 
 
 FROM ubuntu:24.04 AS app
@@ -49,9 +49,9 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends ca-certificates
 RUN update-ca-certificates && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /opt/build/bin/examples ./bin/examples
+COPY --from=build /opt/build/bin/demo ./bin/demo
 ADD ./client ./client
-ADD ./examples/static ./examples/static
+ADD ./demo/static ./demo/static
 
 # ENV DYNAMO_LOCAL=False
-ENTRYPOINT ["/opt/app/bin/examples"]
+ENTRYPOINT ["/opt/app/bin/demo"]

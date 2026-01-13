@@ -51,11 +51,11 @@ newtype ModuleName = ModuleName Text
   deriving newtype (Show, Eq, IsString)
 
 modulePath :: ModuleName -> FilePath
-modulePath (ModuleName mn) = cs $ "examples/" <> T.replace "." "/" mn <> ".hs"
+modulePath (ModuleName mn) = cs $ "demo/" <> T.replace "." "/" mn <> ".hs"
 
 {- | A top-level definition as text
 
-> snippet $(topLevel "examples/Example/Page/Concurrency.hs" "instance (Debug :> es) => HyperView Polling")
+> snippet $(topLevel "demo/Example/Page/Concurrency.hs" "instance (Debug :> es) => HyperView Polling")
 -}
 embedTopLevel :: ModuleName -> TopLevelDefinition -> Q Exp
 embedTopLevel mn tld = do

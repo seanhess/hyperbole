@@ -23,7 +23,7 @@ page = do
         card (Data SortableTable) "Tag component"
         card (Data Autocomplete) "Tag component"
         card (Data Filter) "Tag component"
-        card (Data LoadMore) "asdf"
+        card (Data LoadMore) "testing asdf"
  where
   card r cnt = route r ~ cardBtn . tile $ do
     el ~ bold . fontSize 20 . color White . bg PrimaryLight . font . pad 4 . textAlign AlignCenter $ do

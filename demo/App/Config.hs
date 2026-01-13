@@ -2,7 +2,7 @@
 
 module App.Config where
 
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isNothing)
 import Effectful
 import Effectful.Environment
 import Effectful.Exception
@@ -18,6 +18,7 @@ data AppConfig = AppConfig
   { endpoint :: Endpoint App
   , manager :: HTTP.Manager
   , oauth :: OAuth2.Config
+  , devMode :: Bool
   }
 
 getAppConfigEnv :: (IOE :> es, Environment :> es) => Eff es AppConfig
@@ -29,6 +30,7 @@ getAppConfigEnv = do
       { endpoint = fromMaybe (Endpoint [uri|http://localhost:3000|]) endpoint
       , manager
       , oauth = dummyOAuthConfig
+      , devMode = isNothing endpoint
       }
 
 type Key = String

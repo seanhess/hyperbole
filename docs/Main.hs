@@ -25,7 +25,7 @@ main = do
   expandSourcesTo tmpDir
   putStrLn $ "COPY RECURSIVE: " <> (tmpDir <> "docs")
   copyDirectoryRecursive verbose "./docs" (tmpDir </> "docs")
-  copyDirectoryRecursive verbose "./examples" (tmpDir </> "examples")
+  copyDirectoryRecursive verbose "./demo" (tmpDir </> "demo")
 
 
 test :: IO ()
