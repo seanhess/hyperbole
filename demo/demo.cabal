@@ -1,0 +1,159 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           demo
+version:        0.6.0
+synopsis:       Interactive HTML apps using type-safe serverside Haskell
+description:    Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
+category:       Web, Network
+homepage:       https://github.com/seanhess/hyperbole
+bug-reports:    https://github.com/seanhess/hyperbole/issues
+author:         Sean Hess
+maintainer:     seanhess@gmail.com
+license:        BSD-3-Clause
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/seanhess/hyperbole
+
+executable demo
+  main-is: Main.hs
+  other-modules:
+      App
+      App.Cache
+      App.Config
+      App.Docs
+      App.Docs.Examples
+      App.Docs.Markdown
+      App.Docs.Page
+      App.Docs.Snippet
+      App.Page.Concurrency
+      App.Page.CSS
+      App.Page.DataLists.Autocomplete
+      App.Page.DataLists.DataTable
+      App.Page.DataLists.Filter
+      App.Page.DataLists.LoadMore
+      App.Page.Examples
+      App.Page.Forms
+      App.Page.HyperboleEffect
+      App.Page.Hyperviews
+      App.Page.Interactivity
+      App.Page.Intro.Basics
+      App.Page.Intro.Intro
+      App.Page.OAuth2
+      App.Page.SideEffects
+      App.Page.State
+      App.Page.ViewFunctions
+      App.Route
+      App.Style
+      Example.Chat
+      Example.Colors
+      Example.Contact
+      Example.Contacts
+      Example.Counter
+      Example.CSS.External
+      Example.CSS.Tooltips
+      Example.CSS.Transitions
+      Example.Data.ProgrammingLanguage
+      Example.Docs.App
+      Example.Docs.BasicPage
+      Example.Docs.Client
+      Example.Docs.Component
+      Example.Docs.CSS
+      Example.Docs.Encoding
+      Example.Docs.Interactive
+      Example.Docs.MultiPage
+      Example.Docs.MultiView
+      Example.Docs.Nested
+      Example.Docs.Nesting
+      Example.Docs.Page.Messages
+      Example.Docs.Page.Users
+      Example.Docs.Params
+      Example.Docs.QueryMessage
+      Example.Docs.Sessions
+      Example.Docs.SideEffects
+      Example.Docs.State
+      Example.Docs.UniqueViewId
+      Example.Docs.ViewFunctions
+      Example.Effects.Debug
+      Example.Effects.Todos
+      Example.Effects.Users
+      Example.Errors
+      Example.FormSimple
+      Example.FormValidation
+      Example.Interactivity.Events
+      Example.Javascript
+      Example.Push
+      Example.Requests
+      Example.Simple
+      Example.State.Effects
+      Example.State.Query
+      Example.State.Sessions
+      Example.State.Stateless
+      Example.State.ViewState
+      Example.Style
+      Example.Style.Cyber
+      Example.Tags
+      Example.Test
+      Example.Todos.Todo
+      Example.Todos.TodoCSS
+      Example.Trigger
+      Example.View.Icon
+      Example.View.Inputs
+      Example.View.Layout
+      Example.View.Menu
+      Example.View.SortableTable
+      Paths_demo
+  autogen-modules:
+      Paths_demo
+  hs-source-dirs:
+      ./
+  default-extensions:
+      OverloadedStrings
+      OverloadedRecordDot
+      DuplicateRecordFields
+      NoFieldSelectors
+      TypeFamilies
+      DataKinds
+      DerivingStrategies
+      DeriveAnyClass
+  ghc-options: -Wall -fdefer-typed-holes -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , atomic-css
+    , base
+    , bytestring
+    , casing
+    , cmark
+    , containers
+    , cookie
+    , data-default
+    , directory
+    , effectful
+    , file-embed
+    , filepath
+    , foreign-store
+    , http-api-data
+    , http-client
+    , http-client-tls
+    , http-types
+    , hyperbole
+    , network
+    , network-uri
+    , random
+    , safe
+    , string-conversions
+    , string-interpolate
+    , template-haskell
+    , text
+    , time
+    , wai
+    , wai-middleware-static
+    , wai-websockets
+    , warp
+    , websockets
+  default-language: GHC2021

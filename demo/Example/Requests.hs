@@ -1,0 +1,117 @@
+{-# LANGUAGE TemplateHaskell #-}
+
+module Example.Requests where
+
+import Data.String.Conversions (cs)
+import Data.Text (Text)
+import App.Docs
+import Example.Colors
+import Example.Style.Cyber as Cyber (btn, btn')
+import Web.Atomic.CSS
+import Web.Hyperbole hiding (Response)
+import Web.Hyperbole.Data.URI
+
+-- REQUEst -------------------------------------------------
+
+data CheckRequest = CheckRequest
+  deriving (Generic, ViewId)
+
+instance HyperView CheckRequest es where
+  data Action CheckRequest
+    = Refresh
+    deriving (Generic, ViewAction)
+
+  update Refresh = do
+    r <- request
+    pure $ viewRequest r
+
+viewRequest :: Request -> View CheckRequest ()
+viewRequest r = do
+  col ~ gap 10 $ do
+    el $ do
+      text "Host: "
+      text $ cs $ show r.host
+    el $ do
+      text "Path: "
+      text $ cs $ show r.path
+    el $ do
+      text "Query: "
+      text $ cs $ show r.query
+    el $ do
+      text "Cookies: "
+      text $ cs $ show r.cookies
+
+-- CLIENT -------------------------------------------------
+
+data Message = Message
+  { message :: Text
+  }
+  deriving (Generic, ToQuery)
+
+data ControlClient = ControlClient
+  deriving (Generic, ViewId)
+
+instance HyperView ControlClient es where
+  type Require ControlClient = '[CheckRequest]
+
+  data Action ControlClient
+    = SetQuery
+    | ClearQuery
+    deriving (Generic, ViewAction)
+
+  update SetQuery = do
+    setQuery $ Message "hello"
+    trigger CheckRequest Refresh
+    pure $ do
+      el "Updated Query String"
+      viewClient
+  update ClearQuery = do
+    clearQuery
+    trigger CheckRequest Refresh
+    pure viewClient
+
+viewClient :: View ControlClient ()
+viewClient = do
+  button SetQuery ~ btn $ "Set Query from another HyperView"
+  button ClearQuery ~ btn $ "Clear Query"
+
+-- RESPONSE -------------------------------------------------
+
+data ControlResponse = ControlResponse
+  deriving (Generic, ViewId)
+
+instance HyperView ControlResponse es where
+  data Action ControlResponse
+    = RedirectAsAction
+    | SetPageTitle
+    | RespondNotFound
+    | -- \| RespondEarlyView
+      RespondWithError
+    deriving (Generic, ViewAction)
+  update RedirectAsAction = do
+    redirect $ pathUri "/hello/redirected"
+  update SetPageTitle = do
+    pageTitle "Hello World!"
+    pure $ col ~ gap 10 $ do
+      el ~ bold $ "Set page title!"
+      responseView
+  update RespondNotFound = do
+    _ <- notFound
+    pure "This will not be rendered"
+  -- update RespondEarlyView = do
+  --   _ <- respondView ControlResponse "Responded early!"
+  --   pure "This will not be rendered"
+  update RespondWithError = do
+    _ <- respondError "Some custom error"
+    pure "This will not be rendered"
+
+responseView :: View ControlResponse ()
+responseView = do
+  row ~ gap 10 . flexWrap Wrap $ do
+    button RedirectAsAction ~ btn $ "Redirect Me"
+    button SetPageTitle ~ btn $ "Set Page Title"
+    button RespondNotFound ~ btn' Danger $ "Respond Not Found"
+    button RespondWithError ~ btn' Danger $ "Respond Error"
+
+source :: ModuleSource
+source = $(moduleSource)

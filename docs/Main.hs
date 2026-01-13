@@ -2,6 +2,7 @@
 
 module Main where
 
+import App.Route as Example
 import Control.Applicative ((<|>))
 import Control.Exception (SomeException, try)
 import Data.Char (isAlpha, isSpace)
@@ -11,7 +12,6 @@ import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Distribution.Simple.Utils (copyDirectoryRecursive)
 import Distribution.Verbosity (verbose)
-import App.Route as Example
 import System.Directory
 import System.FilePath
 import Web.Hyperbole.Data.URI
@@ -181,7 +181,7 @@ exampleBaseURI = [uri|https://hyperbole.live|]
 
 expandEmbed :: FilePath -> Text -> TopLevelDefinition -> IO [Text]
 expandEmbed src pfx def = do
-  source <- T.readFile $ "./examples/" <> src
+  source <- T.readFile $ "./demo/" <> src
   expanded <- requireTopLevel def (SourceCode $ T.lines source)
   pure $ fmap markupLine expanded
  where
@@ -201,6 +201,7 @@ expandEmbed src pfx def = do
     T.replace "\"" "\\\"" . highlightTermsLine
   markupLinePrefix line =
     pfx <> line
+
 
 highlightTermsLine :: Text -> Text
 highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln

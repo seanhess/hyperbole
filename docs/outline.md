@@ -1,7 +1,9 @@
+# TODO: ConcurrencyMode = Replace, etc
+# TODO: Documents
+# TODO: Routes
+
 Intro
 ------
-
-
 
 
 
@@ -20,7 +22,6 @@ More HyperViews
 * Unique ViewId
 * Nesting
 
-* [ ] Advanced (Trigger, Target)
 * [ ] Concurrency?
 
 
@@ -66,8 +67,6 @@ NEEDS SORTING
 * Forms
 * Data Lists
 * Concurrency
-* accessing `viewId`
-* ConcurrencyMode = Replace, etc
 
 Application
 ----------------
@@ -82,5 +81,3 @@ Hyperbole Effect
 
 Examples
 --------
-
-_random examples_

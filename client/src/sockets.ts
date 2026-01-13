@@ -56,6 +56,7 @@ export class SocketConnection {
     })
 
     sock.addEventListener('close', _ => {
+      console.log("CLOSE SOCKET")
       if (this.isConnected) {
         document.dispatchEvent(new Event("hyp-socket-disconnect"))
       }
