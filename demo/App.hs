@@ -132,7 +132,6 @@ exampleApp config users count chats = do
   runApp = runReader config . runTodosSession . runUsersIO users . runDebugIO . runConcurrent . runRandom . runOAuth2 config.oauth config.manager
 
   router :: forall es. (Hyperbole :> es, OAuth2 :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es, GenRandom :> es, Reader AppConfig :> es) => AppRoute -> Eff es Response
-  router Chat = runReader chats $ runPage Chat.page
   router Counter = runPage Counter.page
   router (Hello h) = runPage $ hello h
   router (Contacts (Contact uid)) = Contact.response uid
@@ -161,6 +160,7 @@ exampleApp config users count chats = do
   -- router (Intro ViewFunctions) = runPage IntroViewFunctions.page
   router CSS = runPage CSS.page
   router Interactivity = runPage Interactivity.page
+  router (Examples Chat) = runReader chats $ runPage Chat.page
   router (Examples OtherExamples) = runPage Examples.page
   router (Examples Todos) = runPage Todo.page
   router (Examples Tags) = runPage Tags.page

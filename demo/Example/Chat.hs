@@ -2,6 +2,7 @@
 
 module Example.Chat where
 
+import App.Route
 import Control.Monad (forM_, forever)
 import Data.Text (Text, unpack)
 import Effectful
@@ -12,6 +13,7 @@ import Example.Colors
 import Example.Style qualified as Style
 import Example.Style.Cyber (embed)
 import Example.Style.Cyber as Cyber (btn, font)
+import Example.View.Layout (layout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
@@ -19,8 +21,7 @@ import Web.Hyperbole
 
 page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar [(Username, Text)]) :> es) => Page es '[Content, Chats, Message]
 page = do
-  pure $ do
-    -- example Chat $ do
+  pure $ layout (Examples Chat) $ do
     el "Demonstrates server pushes"
     col ~ embed . Cyber.font $ do
       hyper Content $ contentView Nothing
@@ -86,18 +87,11 @@ instance (Concurrent :> es, Reader (TVar [(Username, Text)]) :> es, IOE :> es) =
   data Action Chats = Stream Username
     deriving (Generic, ViewAction)
 
-  -- it doesn't cancel the other stream if you do a new one, just keeps sending
-  -- type Concurrency Chats = Replace
-
   update (Stream u) = do
     forever streamChats
    where
     streamChats = do
-      -- this will get cancelled if the user leaves the page, and the socket connection disappears
-      -- TODO: how do you go about cancelling long-running actions in haskell? Throw an async exception?
-      --  you could track people's threadId and then kill them....
-      --
-      -- honestly this would be better with polling, and isn't that good without append/prepend...
+      -- this will get cancelled when the user leaves the page, on calling pushUpdate
       chats <- getChats
       liftIO $ putStrLn $ "CHATS => " <> unpack u <> " " <> show (length chats)
       pushUpdate $ chatsView u chats

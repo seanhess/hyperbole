@@ -5,6 +5,8 @@
 Improvements:
 * `ViewState` - built in threaded state, defaults to `()`
 * `Concurrency` Controls - `Drop` vs `Replace`
+* `pushUpdate` - serverside push an update to an arbitrary view
+* Long-running actions can be interrupted / cancelled
 * https://hyperbole.live now has inline documentation, code snippets, and live examples
 
 Breaking Changes:
