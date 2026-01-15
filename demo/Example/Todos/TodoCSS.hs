@@ -2,6 +2,7 @@
 
 module Example.Todos.TodoCSS (page) where
 
+import App.Route hiding (Filter)
 import Control.Monad (forM_)
 import Data.Bool (bool)
 import Data.Text qualified as T
@@ -47,7 +48,7 @@ page = do
         p "Double-click to edit a todo"
         p $ do
           span' "Go back to the "
-          a @ att "href" "/examples" $ "examples"
+          route (Examples OtherExamples) "examples"
 
 --- TodosView ----------------------------------------------------------------------------
 

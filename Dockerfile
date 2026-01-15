@@ -15,7 +15,7 @@ COPY --from=base /root/.config /root/.config
 ADD ./package.yaml .
 # ADD ./cabal.project .
 # ADD ./docs/docgen.cabal .
-# ADD ./examples/examples.cabal .
+# ADD ./demo/demo.cabal .
 RUN hpack
 RUN cabal update
 RUN cabal build --only-dependencies

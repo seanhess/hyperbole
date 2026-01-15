@@ -53,7 +53,6 @@ Examples
 The examples directory contains an app demonstrating many features. See them in action at [hyperbole.live](https://hyperbole.live)
 
 <a href="https://hyperbole.live">
-  <!--<img alt="Hyperbole Examples" src="https://github.com/seanhess/hyperbole/raw/main/examples/static/examples.png"/>-->
   <img alt="Hyperbole Examples" src="https://github.com/seanhess/hyperbole/raw/main/demo/static/examples.png"/>
 </a>
 

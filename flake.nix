@@ -1,5 +1,5 @@
 {
-  description = "hyperbole overlay, development and hyperbole-examples";
+  description = "hyperbole overlay, development and hyperbole-demo";
 
   nixConfig = {
     extra-substituters = [
@@ -32,7 +32,7 @@
     }:
     let
       packageName = "hyperbole";
-      examplesName = "hyperbole-examples";
+      demoName = "hyperbole-demo";
       src = nix-filter.lib {
         root = ./.;
         include = [
@@ -92,12 +92,12 @@
           overlays = [ self.overlays.default ];
         };
 
-        example-src = nix-filter.lib {
-          root = ./examples;
+        demo-src = nix-filter.lib {
+          root = ./demo;
           include = [
-            "Example"
+            "Demo"
             (nix-filter.lib.matchExt "hs")
-            ./examples/examples.cabal
+            ./demo/demo.cabal
             "docgen"
           ];
         };
@@ -113,7 +113,7 @@
             value = (
               pkgs.overriddenHaskellPackages."ghc${ghcVer}".extend (
                 hfinal: hprev: {
-                  ${examplesName} = hfinal.callCabal2nix examplesName example-src { };
+                  ${demoName} = hfinal.callCabal2nix demoName demo-src { };
                 }
               )
             );
@@ -158,7 +158,7 @@
         exe =
           version:
           pkgs.haskell.lib.overrideCabal
-            (pkgs.haskell.lib.justStaticExecutables self.packages.${system}."ghc${version}-${examplesName}")
+            (pkgs.haskell.lib.justStaticExecutables self.packages.${system}."ghc${version}-${demoName}")
             (drv: {
               # Added due to an issue building on macOS only
               postInstall = ''
@@ -173,7 +173,7 @@
         docker =
           version:
           pkgs.dockerTools.buildImage {
-            name = examplesName;
+            name = demoName;
             created = "now";
             tag = "latest";
             copyToRoot = pkgs.buildEnv {
@@ -183,20 +183,20 @@
                 pkgs.bash
                 (exe version)
                 (pkgs.runCommand "static-files" { } ''
-                  mkdir -p $out/example/static
+                  mkdir -p $out/demo/static
                   mkdir -p $out/client/dist
-                  cp -r ${./example/static}/* $out/example/static/
+                  cp -r ${./demo/static}/* $out/demo/static/
                   cp -r ${./client/dist}/* $out/client/dist
                 '')
               ];
               pathsToLink = [
                 "/bin"
-                "/example/static"
+                "/demo/static"
                 "/client/dist"
               ];
             };
             config = {
-              Entrypoint = [ "/bin/examples" ];
+              Entrypoint = [ "/bin/demo" ];
               WorkingDir = "/";
             };
           };
@@ -205,25 +205,25 @@
         # Rest of the output remains the same...
         checks = builtins.listToAttrs (
           map (version: {
-            name = "ghc${version}-check-${examplesName}";
-            value = pkgs.runCommand "ghc${version}-check-example" {
+            name = "ghc${version}-check-${demoName}";
+            value = pkgs.runCommand "ghc${version}-check-demo" {
               buildInputs = [
                 (exe version)
               ] ++ self.devShells.${system}."ghc${version}-shell".buildInputs;
-            } "type examples; type docgen; CABAL_CONFIG=/dev/null cabal --dry-run repl; touch $out";
+            } "type demo; type docgen; CABAL_CONFIG=/dev/null cabal --dry-run repl; touch $out";
           }) ghcVersions
         );
 
         apps =
           {
-            default = self.apps.${system}."ghc966-${examplesName}";
+            default = self.apps.${system}."ghc966-${demoName}";
           }
           // builtins.listToAttrs (
             map (version: {
-              name = "ghc${version}-${examplesName}";
+              name = "ghc${version}-${demoName}";
               value = {
                 type = "app";
-                program = "${exe version}/bin/examples";
+                program = "${exe version}/bin/demo";
               };
             }) ghcVersions
           );
@@ -236,8 +236,8 @@
           // builtins.listToAttrs (
             builtins.concatMap (version: [
               {
-                name = "ghc${version}-${examplesName}";
-                value = ghcPkgs."ghc${version}".${examplesName};
+                name = "ghc${version}-${demoName}";
+                value = ghcPkgs."ghc${version}".${demoName};
               }
               {
                 name = "ghc${version}-docker";
@@ -262,7 +262,7 @@
                 // {
                   packages = p: [
                     p.${packageName}
-                    p.${examplesName}
+                    p.${demoName}
                   ];
                 }
               );

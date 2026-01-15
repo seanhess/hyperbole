@@ -34,9 +34,9 @@ npx webpack
 Run examples
 
 ```
-# examples needs to have examples/static and client/dist as relative paths
+# demo needs to have demo/static and client/dist as relative paths
 cd <your-path-to>/hyperbole
-cabal run examples
+cabal run demo
 ```
 
 ### Tests

@@ -6,7 +6,7 @@ client/webpack.config.js
 client/package.json
 client/tsconfig.json
 docs/
-examples/
+demo/
 .dockerignore
 .github/workflows/haskell.yaml
 .github/workflows/packcheck.yaml
