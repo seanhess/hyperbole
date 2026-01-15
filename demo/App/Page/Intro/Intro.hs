@@ -56,6 +56,9 @@ page = do
 
         section' "But Why?" $ do
           markdocs $(embedFile "docs/intro.md")
+
+        section' "Documentation" $ do
+          markdocs $(embedFile "docs/intro-links.md")
  where
   scaleText :: (Styleable h) => CSS h -> CSS h
   scaleText =
