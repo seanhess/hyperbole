@@ -46,7 +46,7 @@ navigation :: View c () -> View c ()
 navigation chosenMenu = do
   nav ~ bg Dark . color White . flexCol . showMenuHover $ do
     row $ do
-      link [uri|https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html|] "HYPERBOLE" ~ bold . pad 20 . logo . width 220
+      link [uri|https://hackage.haskell.org/package/hyperbole|] "HYPERBOLE" ~ bold . pad 20 . logo . width 220
       space
       menuButton
     col ~ cls "menu" . onMobile (display None) . Cyber.font . Style.uppercase $ do
