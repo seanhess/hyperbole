@@ -40,6 +40,7 @@ data AppRoute
 instance Route AppRoute where
   baseRoute = Just Main
 
+
 findUser :: (Hyperbole :> es, Users :> es) => Int -> Eff es User
 findUser uid = do
   mu <- send (LoadUser uid)

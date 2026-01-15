@@ -23,6 +23,7 @@ source-repository head
 executable docgen
   main-is: Main.hs
   other-modules:
+      App.Route
       Paths_docgen
   autogen-modules:
       Paths_docgen

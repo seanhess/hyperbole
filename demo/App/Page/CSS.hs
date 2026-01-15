@@ -40,7 +40,7 @@ page = do
       CSS.example ~ embed
 
     section Transitions $ do
-      el "If an update changes the `transition` property of a view, it will automatically animate with CSS Transitions, avoiding having the server compute animation frames."
+      markdocs "If an update changes the `transition` property of a view, it will automatically animate with CSS Transitions, avoiding having the server compute animation frames."
       snippet $ do
         raw $(embedTopLevel "Example.CSS.Transitions" "viewSmall")
         raw "\n"
@@ -48,13 +48,11 @@ page = do
       example Transitions.source $ hyper Animate viewSmall
 
     section Tooltips $ do
-      el "For immediate feedback, create interactivity via Atomic CSS whenever possible."
+      markdocs "For immediate feedback, create interactivity via Atomic CSS whenever possible."
       example Tooltips.source tooltips
 
     section External $ do
-      el $ do
-        text "You can opt-out of Atomic CSS and use external classes with "
-        code "class_"
+      markdocs "You can opt-out of Atomic CSS and use external classes with `class_`"
       snippet $ do
         raw $(embedTopLevel "Example.CSS.External" "page")
       snippet $ do

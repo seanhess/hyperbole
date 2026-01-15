@@ -90,8 +90,6 @@ suppressMessages ex = do
 
 
 @
-#EMBED Example.Docs.App import Example.Docs.Page
-
 #EMBED Example.Docs.App type UserId
 
 #EMBED Example.Docs.App data AppRoute
@@ -99,6 +97,8 @@ suppressMessages ex = do
 #EMBED Example.Docs.App instance Route
 
 #EMBED Example.Docs.App router
+
+#EMBED Example.Docs.App app
 @
 -}
 routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response

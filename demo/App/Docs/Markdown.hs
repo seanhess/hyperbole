@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
@@ -13,10 +14,12 @@ import App.Docs.Snippet
 import App.Route
 import CMark
 import Data.Char (isSpace)
+import Data.Set
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
+import Example.Colors (magenta)
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Language.Haskell.TH
@@ -62,7 +65,7 @@ nodeToView (Node _mpos typ childs) = do
     PARAGRAPH -> el inner
     TEXT t -> text t
     CODE t -> do
-      inlineCode t ~ color hackageSymbolColor
+      inlineCode t
     HEADING lvl ->
       el ~ bold . headerLevel lvl $ inner
     LINK url _title ->
@@ -96,28 +99,27 @@ nodeToView (Node _mpos typ childs) = do
       2 -> fontSize 20
       _ -> fontSize 16
 
-  -- symbolColor = "#c2185b"
-  hackageSymbolColor :: HexColor
-  hackageSymbolColor = "#9e358f"
-
 hackageDocsURI :: URI
 hackageDocsURI = [uri|https://hackage-content.haskell.org/package/hyperbole-0.5.0/docs/Web-Hyperbole.html|]
 
 inlineCode :: Text -> View c ()
 inlineCode cd
-  | cd `elem` typeKeywords = linkSymbolDocs cd typeFrag
-  | cd `elem` valueKeywords = linkSymbolDocs cd valFrag
-  | otherwise = tag' True "code" $ text cd
+  | cd `elem` typeKeywords = linkSymbolDocs cd typeFrag ~ color hackageSymbolColor
+  | cd `elem` valueKeywords = linkSymbolDocs cd valFrag ~ color hackageSymbolColor
+  | otherwise = tag' True "code" ~ color magenta $ text cd
  where
   typeFrag t = "#t:" <> cs t
   valFrag v = "#v:" <> cs v
+
+  hackageSymbolColor :: HexColor
+  hackageSymbolColor = "#9e358f"
 
 linkSymbolDocs :: Text -> (Text -> String) -> View c ()
 linkSymbolDocs sym frag = do
   link (hackageDocsURI{uriFragment = frag sym}) @ att "target" "_blank" $ do
     tag' True "code" $ text sym
 
-typeKeywords :: [Text]
+typeKeywords :: Set Text
 typeKeywords =
   [ "Page"
   , "View"
@@ -135,13 +137,20 @@ typeKeywords =
   , "Request"
   , "Document"
   , "Path"
+  , "Route"
+  , "Eff"
+  , "Page"
+  , "Response"
+  , "FromForm"
+  , "Validated"
   ]
 
-valueKeywords :: [Text]
+valueKeywords :: Set Text
 valueKeywords =
   [ "context"
   , "update"
   , "form"
+  , "validate"
   , "hyper"
   , "request"
   , "viewId"
@@ -152,6 +161,29 @@ valueKeywords =
   , "runPage"
   , "document"
   , "routeRequest"
+  , "matchRoute"
+  , "liveApp"
+  , "pushUpdate"
+  , "onLoad"
+  , "session"
+  , "query"
+  , "setQuery"
+  , "setParam"
+  , "param"
+  , "modifyQuery"
+  , "saveSession"
+  , "deleteSession"
+  , "quickStartDocument"
+  , "search"
+  , "dropdown"
+  , "option"
+  , "button"
+  , "onClick"
+  , "onKeyDown"
+  , "onKeyUp"
+  , "onMouseEnter"
+  , "onMouseLeave"
+  , "onInput"
   ]
 
 embedFile :: FilePath -> Q Exp

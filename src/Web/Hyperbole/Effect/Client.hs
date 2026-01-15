@@ -14,8 +14,6 @@ import Web.Hyperbole.View (toAction, toViewId)
 
 {- | Trigger an action for an arbitrary 'HyperView'
 
-#EXAMPLE /advanced
-
 @
 #EMBED Example.Trigger instance HyperView Controls
 @
@@ -26,8 +24,6 @@ trigger vid act = do
 
 
 {- | Dispatch a custom javascript event. This is emitted on the current hyper view and bubbles up to the document
-
-#EXAMPLE /javascript
 
 @
 #EMBED Example.Javascript instance HyperView Message

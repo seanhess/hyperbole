@@ -51,14 +51,13 @@ messageView msg = do
 Documentation
 -------------
 
-Visit [hyperbole.live](https://hyperbole.live) for documentation and live examples
+Visit [hyperbole.live](https://hyperbole.live) for documentation and live examples. Also see the [Hackage Documentation](https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html)
 
 <a href="https://hyperbole.live">
   <img alt="Hyperbole Documentation" src="https://github.com/seanhess/hyperbole/raw/main/demo/static/demo-screenshot.jpg"/>
 </a>
 
 
-Also visit the [Hackage Documentation](https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html) for reference
 
 <!-- out of date!
 * [HaskRead](https://github.com/tusharad/Reddit-Clone-Haskell) - A Reddit Clone

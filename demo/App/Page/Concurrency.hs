@@ -3,26 +3,26 @@
 
 module App.Page.Concurrency where
 
+import App.Docs
 import App.Route
 import Control.Monad (forM_, when)
 import Data.Text (Text, pack)
-import App.Docs
 import Effectful
 import Example.Colors
 import Example.Effects.Debug
+import Example.Push qualified as Push
 import Example.Style.Cyber (btn, font)
 import Example.View.Inputs (progressBar)
 import Example.View.Layout (layout)
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Example.Push qualified as Push
 import Web.Hyperbole.Effect.GenRandom
 
 page :: (Hyperbole :> es, Debug :> es) => Page es '[Polling, LazyData, Progress, Push.Tasks]
 page = do
   pure $ layout Concurrency $ do
     section' "Concurrency" $ do
-      el "While individual HyperViews can only have one update in progress at a time, multiple HyperViews can overlap updates without issue"
+      markdocs "While individual `HyperView`s can only have one update in progress at a time, multiple `HyperView`s can overlap updates without issue"
       example source ~ font $ do
         hyper (Progress 1) $ viewProgressLoad 6
         hyper (Progress 2) $ viewProgressLoad 4
@@ -30,9 +30,7 @@ page = do
     -- hyper (Progress 4 200) viewProgressLoad
     -- hyper (Progress 5 250) viewProgressLoad
     section' "Lazy Loading" $ do
-      el $ do
-        text "Instead of preloading everything in our Page, a HyperView can load itself using "
-        code "onLoad"
+      markdocs "Instead of preloading everything in our `Page`, a `HyperView` can load itself using `onLoad`"
       example source $ do
         row ~ flexWrap Wrap . font . gap 10 $ do
           forM_ pretendTasks $ \taskId -> do
@@ -40,10 +38,7 @@ page = do
               hyper (LazyData taskId) viewTaskLoad
 
     section' "Polling" $ do
-      el $ do
-        text "By including an "
-        code "onLoad"
-        text "in every view update, we can poll the server after a given delay"
+      markdocs "By including an `onLoad` in every view update, we can poll the server after a given delay"
       example source $ hyper Polling viewInit
 
     section' "Push Updates" $ do
@@ -196,5 +191,3 @@ viewProgress prg
     Progress taskId <- viewId
     progressBar pct $ do
       el ~ grow $ text $ "Task" <> pack (show taskId)
-
-

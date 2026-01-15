@@ -39,33 +39,39 @@ instance ToColor AppColor where
   colorValue SecondaryLight = "#9D999C"
   -- colorValue Success = "67C837"
   colorValue Success = "#149e5a"
-  colorValue Danger = lightRed
+  colorValue Danger = midRed
   colorValue Warning = "#e1c915"
 
 lightRed :: HexColor
 lightRed = HexColor "#EC6458"
 
-darkRed :: HexColor
-darkRed = HexColor "#722C2A"
-
 midRed :: HexColor
 midRed = HexColor "#A03F38"
+
+darkRed :: HexColor
+darkRed = HexColor "#722C2A"
 
 cyan :: HexColor
 cyan = "#0FF"
 
+magenta :: HexColor
+magenta = "#E44072"
+
 light :: AppColor -> HexColor
 light PrimaryLight = "#a8c3e5"
+light Primary = colorValue PrimaryLight
+-- light Danger = "#ef8379"
+light Danger = lightRed
 light c = colorValue c
 
 hoverColor :: AppColor -> HexColor
 hoverColor = \case
-  Primary -> colorValue PrimaryLight
   White -> colorValue Light
-  c -> colorValue c
+  c -> light c
 
 contrastColor :: AppColor -> HexColor
 contrastColor = \case
   Primary -> colorValue White
   PrimaryLight -> colorValue White
+  Danger -> colorValue White
   _ -> colorValue Dark
