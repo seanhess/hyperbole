@@ -1,10 +1,10 @@
 # Revision history for hyperbole
 
-## NEXT
+## 0.6.0 -- 2026-01-15
 
-* Concurrency Controls - Drop vs Replace
-* ViewState
-* New shiny website
+* `ViewState` - built in threaded state
+* `Concurrency` Controls - `Drop` vs `Replace`
+* Shiny new documentation: https://hyperbole.live
 
 ## 0.5.0 -- 2025-09-26
 

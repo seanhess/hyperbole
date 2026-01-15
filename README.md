@@ -51,14 +51,14 @@ messageView msg = do
 Documentation
 -------------
 
-The demo directory contains an app demonstrating many features. See them in action at [hyperbole.live](https://hyperbole.live)
+Visit [hyperbole.live](https://hyperbole.live) for documentation and live examples
 
 <a href="https://hyperbole.live">
-  <img alt="Hyperbole Documentation" src="https://github.com/seanhess/hyperbole/raw/main/demo/static/demo-screenshot.png"/>
+  <img alt="Hyperbole Documentation" src="https://github.com/seanhess/hyperbole/raw/main/demo/static/demo-screenshot.jpg"/>
 </a>
 
 
-[Hackage Documentation](https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html)
+Also visit the [Hackage Documentation](https://hackage.haskell.org/package/hyperbole/docs/Web-Hyperbole.html) for reference
 
 <!-- out of date!
 * [HaskRead](https://github.com/tusharad/Reddit-Clone-Haskell) - A Reddit Clone
@@ -84,7 +84,7 @@ Add hyperbole and text as dependencies to the `.cabal` file:
     default-language: GHC2021
 ```
 
-Paste the above example into Main.hs, and run:
+Paste the above example into Main.hs, then run it:
 
     $ cabal run
 
@@ -98,9 +98,9 @@ Learn More
 <!--     <img src="https://github.com/seanhess/hyperbole/raw/main/docs/hackage.svg"> -->
 <!-- </a> -->
 
-* [Using NIX](./docs/nix.md)
 * [Local Development](./docs/dev.md)
 * [Comparison with Similar Frameworks](./docs/comparison.md)
+* [Using NIX](./docs/nix.md)
 
 In the Wild
 ---------------------
