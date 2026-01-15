@@ -143,6 +143,9 @@ typeKeywords =
   , "Response"
   , "FromForm"
   , "Validated"
+  , "Concurrency"
+  , "Replace"
+  , "Drop"
   ]
 
 valueKeywords :: Set Text
@@ -175,6 +178,8 @@ valueKeywords =
   , "deleteSession"
   , "quickStartDocument"
   , "search"
+  , "loading"
+  , "whenLoading"
   , "dropdown"
   , "option"
   , "button"

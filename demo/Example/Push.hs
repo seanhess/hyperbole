@@ -3,8 +3,8 @@
 
 module Example.Push where
 
-import Control.Monad (forM_)
 import App.Docs
+import Control.Monad (forM_)
 import Effectful
 import Example.Colors
 import Example.Effects.Debug

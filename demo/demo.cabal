@@ -33,10 +33,6 @@ executable demo
       App.Page.Application
       App.Page.Concurrency
       App.Page.CSS
-      App.Page.DataLists.Autocomplete
-      App.Page.DataLists.DataTable
-      App.Page.DataLists.Filter
-      App.Page.DataLists.LoadMore
       App.Page.Examples
       App.Page.Forms
       App.Page.HyperboleEffect
@@ -52,13 +48,23 @@ executable demo
       App.Style
       Example.Chat
       Example.Colors
+      Example.Concurrency.LazyLoading
+      Example.Concurrency.Overlap
+      Example.Concurrency.Polling
+      Example.Concurrency.Progress
+      Example.Concurrency.Tasks
       Example.Contact
       Example.Contacts
       Example.Counter
       Example.CSS.External
+      Example.CSS.Loading
       Example.CSS.Tooltips
       Example.CSS.Transitions
       Example.Data.ProgrammingLanguage
+      Example.DataLists.Autocomplete
+      Example.DataLists.DataTable
+      Example.DataLists.Filter
+      Example.DataLists.LoadMore
       Example.Docs.App
       Example.Docs.BasicPage
       Example.Docs.Client
@@ -107,6 +113,7 @@ executable demo
       Example.View.Icon
       Example.View.Inputs
       Example.View.Layout
+      Example.View.Loader
       Example.View.Menu
       Example.View.SortableTable
       Paths_demo

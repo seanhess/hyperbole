@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module App.Page.DataLists.DataTable where
+module Example.DataLists.DataTable where
 
 import App.Docs
 import App.Route as Route

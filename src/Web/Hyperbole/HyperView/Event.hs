@@ -24,7 +24,7 @@ eventName t = "data-on" <> t
 {- | Send the action after N milliseconds. Can be used to implement lazy loading or polling.
 
 @
-#EMBED App.Page.Concurrency viewTaskLoad
+#EMBED Example.Concurrency.LazyLoading viewTaskLoad
 @
 -}
 onLoad :: (ViewAction (Action id), Attributable a) => Action id -> DelayMs -> Attributes a -> Attributes a

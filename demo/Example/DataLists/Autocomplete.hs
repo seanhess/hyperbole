@@ -1,10 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module App.Page.DataLists.Autocomplete where
+module Example.DataLists.Autocomplete where
 
 import App.Docs
-import App.Page.DataLists.Filter as Filter (chosenView, clearButton, resultsTable)
 import App.Route as Route
 import Control.Monad (forM_)
 import Data.Text (Text)
@@ -12,6 +11,7 @@ import Data.Text qualified as T
 import Effectful
 import Example.Colors
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages, isMatchLanguage)
+import Example.DataLists.Filter as Filter (chosenView, clearButton, resultsTable)
 import Example.View.Layout
 import Safe (atMay)
 import Web.Atomic.CSS

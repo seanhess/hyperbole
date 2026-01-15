@@ -119,9 +119,9 @@ instance Styleable (View c a) where
 {- | Access the 'viewId' in a 'View' or 'update'
 
 @
-#EMBED App.Page.Concurrency data LazyData
+#EMBED Example.Concurrency.LazyLoading data LazyData
 
-#EMBED App.Page.Concurrency instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
+#EMBED Example.Concurrency.LazyLoading instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
 @
 -}
 class HasViewId m view where

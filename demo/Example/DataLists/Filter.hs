@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module App.Page.DataLists.Filter where
+module Example.DataLists.Filter where
 
 import App.Docs
 import App.Route as Route

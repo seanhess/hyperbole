@@ -9,10 +9,6 @@ import App.Docs.Page
 import App.Page.Application qualified as Application
 import App.Page.CSS qualified as CSS
 import App.Page.Concurrency qualified as Concurrency
-import App.Page.DataLists.Autocomplete qualified as Autocomplete
-import App.Page.DataLists.DataTable qualified as DataTable
-import App.Page.DataLists.Filter qualified as Filter
-import App.Page.DataLists.LoadMore qualified as LoadMore
 import App.Page.Examples qualified as Examples
 import App.Page.Forms qualified as Forms
 import App.Page.HyperboleEffect qualified as Hyp
@@ -56,6 +52,10 @@ import Example.Colors
 import Example.Contact qualified as Contact
 import Example.Contacts qualified as Contacts
 import Example.Counter qualified as Counter
+import Example.DataLists.Autocomplete qualified as Autocomplete
+import Example.DataLists.DataTable qualified as DataTable
+import Example.DataLists.Filter qualified as Filter
+import Example.DataLists.LoadMore qualified as LoadMore
 import Example.Effects.Debug as Debug
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users

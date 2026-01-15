@@ -18,7 +18,7 @@ disabled :: (Styleable h) => CSS h -> CSS h
 disabled =
   utility
     "disabled"
-    [ "opacity" :. "0.7"
+    [ "opacity" :. "0.5"
     , "pointer-events" :. "none"
     ]
 

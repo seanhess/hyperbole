@@ -1,4 +1,5 @@
 # TODO: ConcurrencyMode = Replace, etc
+# TODO: feedback - loading
 
 Intro
 ------

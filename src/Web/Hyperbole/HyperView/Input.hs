@@ -27,7 +27,7 @@ button action cnt = do
 #EXAMPLE /data/filter
 
 @
-#EMBED App.Page.DataLists.Filter familyDropdown
+#EMBED Example.DataLists.Filter familyDropdown
 @
 -}
 dropdown

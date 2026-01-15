@@ -1,12 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module App.Page.DataLists.LoadMore where
+module Example.DataLists.LoadMore where
 
 import App.Docs
-import App.Page.DataLists.Filter (viewFamily)
 import App.Route as Route
 import Effectful
 import Example.Data.ProgrammingLanguage (ProgrammingLanguage (..), allLanguages)
+import Example.DataLists.Filter (viewFamily)
 import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Web.Atomic.CSS

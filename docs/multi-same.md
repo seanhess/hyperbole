@@ -10,6 +10,6 @@ Now we can embed multiple `Message` `HyperView`s into the same `Page`. Each will
 
 This is especially useful if we put identifying information in our `ViewId`, such as a database id. The `viewId` function can give us access to that info:
 
-    #EMBED App.Page.DataLists.LoadMore data Languages
+    #EMBED Example.DataLists.LoadMore data Languages
 
-    #EMBED App.Page.DataLists.LoadMore instance HyperView Languages
+    #EMBED Example.DataLists.LoadMore instance HyperView Languages

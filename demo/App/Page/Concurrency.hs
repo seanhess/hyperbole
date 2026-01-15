@@ -4,190 +4,67 @@
 module App.Page.Concurrency where
 
 import App.Docs
-import App.Route
-import Control.Monad (forM_, when)
-import Data.Text (Text, pack)
+import App.Route qualified as Route
+import Control.Monad (forM_)
 import Effectful
-import Example.Colors
+import Example.Concurrency.LazyLoading as Lazy
+import Example.Concurrency.Overlap as Overlap
+import Example.Concurrency.Polling as Polling
+import Example.Concurrency.Progress as Progress
+import Example.Concurrency.Tasks
 import Example.Effects.Debug
 import Example.Push qualified as Push
-import Example.Style.Cyber (btn, font)
-import Example.View.Inputs (progressBar)
-import Example.View.Layout (layout)
+import Example.Style.Cyber (font)
+import Example.View.Layout (layoutSubnav)
+import Example.View.Loader as Loader
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.Effect.GenRandom
 
-page :: (Hyperbole :> es, Debug :> es) => Page es '[Polling, LazyData, Progress, Push.Tasks]
+data Section
+  = Concurrency
+  | OverlappingRequests
+  | LazyLoading
+  | Polling
+  | PushUpdates
+  deriving (Show, Eq, Enum, Bounded, PageAnchor)
+
+page :: (Hyperbole :> es, Debug :> es) => Page es '[Poller, LazyData, Progress, Push.Tasks, OverlapDrop, OverlapReplace]
 page = do
-  pure $ layout Concurrency $ do
-    section' "Concurrency" $ do
+  pure $ layoutSubnav @Section Route.Concurrency $ do
+    style Loader.css
+    section Concurrency $ do
       markdocs "While individual `HyperView`s can only have one update in progress at a time, multiple `HyperView`s can overlap updates without issue"
-      example source ~ font $ do
+      example Progress.source ~ font $ do
         hyper (Progress 1) $ viewProgressLoad 6
         hyper (Progress 2) $ viewProgressLoad 4
         hyper (Progress 3) $ viewProgressLoad 2
     -- hyper (Progress 4 200) viewProgressLoad
     -- hyper (Progress 5 250) viewProgressLoad
-    section' "Lazy Loading" $ do
+
+    section OverlappingRequests $ do
+      markdocs $(embedFile "docs/concurrency-overlap.md")
+
+      example $(moduleSourceNamed "Example.Concurrency.Overlap") $ do
+        hyper OverlapDrop $ viewTimeDrop Nothing
+        hyper OverlapReplace $ viewTimeReplace Nothing
+
+    section LazyLoading $ do
       markdocs "Instead of preloading everything in our `Page`, a `HyperView` can load itself using `onLoad`"
-      example source $ do
+      snippet $ raw $(embedTopLevel "Example.Concurrency.LazyLoading" "viewTaskLoad")
+      example Lazy.source $ do
         row ~ flexWrap Wrap . font . gap 10 $ do
           forM_ pretendTasks $ \taskId -> do
             el ~ border 1 . width 120 . pad 5 $ do
               hyper (LazyData taskId) viewTaskLoad
 
-    section' "Polling" $ do
+    section Polling $ do
       markdocs "By including an `onLoad` in every view update, we can poll the server after a given delay"
-      example source $ hyper Polling viewInit
+      snippet $ raw $(embedTopLevel "Example.Concurrency.Polling" "viewPoll")
+      example Polling.source $ do
+        hyper Poller viewInit
 
-    section' "Push Updates" $ do
-      markdocs "Actions can call `pushUpdate` to send an intermediate update to the view. This is simpler than polling"
+    section PushUpdates $ do
+      markdocs "Actions can call `pushUpdate` to send an intermediate update to the view. This can be simpler than polling. If another"
+      snippet $ raw $(embedTopLevel "Example.Push" "update")
       example Push.source $ do
         hyper Push.Tasks $ Push.taskView 0
- where
-  source = $(moduleSource)
-
------------------------------------------------------------
--- Simple Polling
------------------------------------------------------------
-
-data Polling = Polling
-  deriving (Generic, ViewId)
-
-instance (Debug :> es) => HyperView Polling es where
-  data Action Polling
-    = Reload Int
-    | Stop
-    | Pause Int
-    deriving (Generic, ViewAction)
-
-  -- to stop, return a view without an onLoad
-  update (Pause n) = do
-    pure $ viewPaused n
-  update Stop = do
-    pure viewStopped
-  update (Reload n) = do
-    pure $ viewPoll n
-
-viewInit :: View Polling ()
-viewInit = do
-  row $ do
-    button (Reload 1) "Start Polling" ~ btn
-
-viewStopped :: View Polling ()
-viewStopped = do
-  row $ do
-    button (Reload 1) "Restart Polling" ~ btn
-
-viewPaused :: Int -> View Polling ()
-viewPaused n = do
-  col ~ gap 10 $ do
-    row $ do
-      button (Reload n) "Resume" ~ btn
-    viewStatus n
-
-viewPoll :: Int -> View Polling ()
-viewPoll n = do
-  -- reload every 200ms + round trip delay
-  col @ onLoad (Reload (n + 1)) 250 ~ gap 10 . loading $ do
-    row ~ gap 5 $ do
-      button (Pause n) "Pause" ~ btn
-      button Stop "Stop" ~ btn
-    viewStatus n
-
-viewStatus :: Int -> View Polling ()
-viewStatus n = do
-  el $ do
-    text "Polling... "
-    text $ pack $ show n
-
------------------------------------------------------------
--- Lazy Loading Expensive Data
------------------------------------------------------------
-
-data LazyData = LazyData TaskId
-  deriving (Generic, ViewId)
-
-instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
-  data Action LazyData
-    = Details
-    deriving (Generic, ViewAction)
-
-  update Details = do
-    LazyData taskId <- viewId
-    task <- pretendLoadTask taskId
-    pure $ viewTaskDetails task
-
-viewTaskLoad :: View LazyData ()
-viewTaskLoad = do
-  -- 100ms after rendering, get the details
-  el @ onLoad Details 100 ~ bg GrayLight . textAlign AlignCenter $ do
-    text "..."
-
-viewTaskDetails :: Task -> View LazyData ()
-viewTaskDetails task = do
-  el ~ color Success . textAlign AlignCenter $ do
-    text task.details
-
--- Fake Tasks Effect ----------------------------------------
-
-type TaskId = Int
-
-data Task = Task
-  { taskId :: TaskId
-  , details :: Text
-  }
-
-pretendLoadTask :: (Debug :> es, GenRandom :> es) => TaskId -> Eff es Task
-pretendLoadTask taskId = do
-  randomDelay <- genRandom (100, 1000)
-  delay randomDelay
-
-  pure $ Task taskId $ pack (show taskId)
-
-pretendTasks :: [TaskId]
-pretendTasks = [1 .. 30]
-
------------------------------------------------------------
-
-type PercentPerTick = Int
-
-data Progress = Progress TaskId
-  deriving (Generic, ViewId)
-
-instance (Debug :> es, GenRandom :> es) => HyperView Progress es where
-  data Action Progress
-    = GoProgress PercentPerTick
-    deriving (Generic, ViewAction)
-
-  update (GoProgress progPerTick) = do
-    tick 0
-    pure $ viewProgress 100
-   where
-    tick current = do
-      -- pretend we did some work
-      -- this will not block other hyperviews from updating
-      delay 50
-      let total = current + progPerTick
-
-      when (total < 100) $ do
-        pushUpdate $ viewProgress total
-        tick total
-
-viewProgressLoad :: PercentPerTick -> View Progress ()
-viewProgressLoad p = el @ onLoad (GoProgress p) 50 $ none
-
-viewProgress :: Int -> View Progress ()
-viewProgress prg
-  | prg >= 100 = viewComplete
-  | otherwise = viewUpdating
- where
-  viewComplete = do
-    row ~ bg Success . color White . pad 5 $ "Complete"
-
-  viewUpdating = do
-    let pct = fromIntegral prg / 100
-    Progress taskId <- viewId
-    progressBar pct $ do
-      el ~ grow $ text $ "Task" <> pack (show taskId)

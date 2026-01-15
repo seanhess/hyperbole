@@ -2,9 +2,13 @@
 
 ## 0.6.0 -- 2026-01-15
 
-* `ViewState` - built in threaded state
+Improvements:
+* `ViewState` - built in threaded state, defaults to `()`
 * `Concurrency` Controls - `Drop` vs `Replace`
-* Shiny new documentation: https://hyperbole.live
+* https://hyperbole.live now has inline documentation, code snippets, and live examples
+
+Breaking Changes:
+* A few functions now require state, such as `trigger` and `target`
 
 ## 0.5.0 -- 2025-09-26
 
