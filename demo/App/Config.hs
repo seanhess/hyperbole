@@ -30,7 +30,7 @@ getAppConfigEnv = do
       { endpoint = fromMaybe (Endpoint [uri|http://localhost:3000|]) endpoint
       , manager
       , oauth = dummyOAuthConfig
-      , devMode = isNothing endpoint
+      , devMode = isNothing endpoint -- in dev mode if APP_ENDPOINT is not set (localhost)
       }
 
 type Key = String

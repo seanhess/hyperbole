@@ -34,7 +34,7 @@ import Control.Concurrent
   , putMVar
   , takeMVar
   )
-import Control.Monad (forever, (>=>))
+import Control.Monad (forever, when, (>=>))
 import Data.ByteString.Lazy qualified as BL
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import Data.Maybe (fromMaybe)
@@ -118,10 +118,9 @@ run = do
         devReload config $ exampleApp config users count chats
  where
   devReload :: AppConfig -> Application -> Application
-  devReload config = Wai.modifyResponse $ Wai.mapResponseHeaders $ \hs ->
-    if config.devMode
-      then ("Connection", "close") : hs
-      else hs
+  devReload config
+    | config.devMode = Wai.modifyResponse $ Wai.mapResponseHeaders $ \hs -> ("Connection", "Close") : hs
+    | otherwise = id
 
 exampleApp :: AppConfig -> UserStore -> TVar Int -> TVar [(Text, Text)] -> Application
 exampleApp config users count chats = do
@@ -198,12 +197,14 @@ exampleApp config users count chats = do
     mobileFriendly
     stylesheet "/cyber.css"
     script "/hyperbole.js"
-    script' scriptLiveReload
     stylesheet "/prism.css"
     script "/prism.js" @ att "defer" ""
     script "/docs.js" @ att "defer" ""
     style "html { scroll-behavior: smooth; }\n body { background-color: #e0e7f1; font-family: font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans\", Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\") }, button { font-family: 'Share Tech Mono'}"
     style cssEmbed
+
+    when config.devMode $ do
+      script' scriptLiveReload
 
   serverError :: ResponseError -> ServerError
   -- serverError NotFound = ServerError "NotFound" $ Cyber.cyberError "Custom Not Found!"
