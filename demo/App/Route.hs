@@ -34,7 +34,6 @@ data AppRoute
   | Errors
   | Javascript
   | Test
-  | Chat
   | ViewFunctions
   | Application
   deriving (Eq, Generic, Show)
@@ -104,6 +103,7 @@ data ExamplesRoute
   | Tags
   | OAuth2Authenticate
   | OAuth2
+  | Chat
   deriving (Eq, Generic, Show)
 instance Route ExamplesRoute where
   baseRoute = Just OtherExamples

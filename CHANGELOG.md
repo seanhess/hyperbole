@@ -3,9 +3,9 @@
 ## 0.6.0 -- 2026-01-15
 
 Improvements:
-* `ViewState` - built in threaded state, defaults to `()`
-* `Concurrency` Controls - `Drop` vs `Replace`
-* `pushUpdate` - serverside push an update to an arbitrary view
+* `ViewState` - built in threaded state, defaults to `()`, for folks who really miss Elm
+* `Concurrency` Controls - `Drop` vs `Replace` for overlapping updates
+* `pushUpdate` - server push an update to an arbitrary view
 * Long-running actions can be interrupted / cancelled
 * https://hyperbole.live now has inline documentation, code snippets, and live examples
 

@@ -10,7 +10,9 @@ import Web.Hyperbole
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Route
 
+
 type UserId = Int
+
 
 data AppRoute
   = Main
@@ -40,6 +42,7 @@ data AppRoute
 instance Route AppRoute where
   baseRoute = Just Main
 
+
 -- -- View Route
 -- data IntroRoute
 --   = IntroMain
@@ -59,6 +62,7 @@ data FormRoute
 instance Route FormRoute where
   baseRoute = Just FormSimple
 
+
 data DataRoute
   = DataLists
   | SortableTable
@@ -68,6 +72,7 @@ data DataRoute
   deriving (Eq, Generic, Show)
 instance Route DataRoute where
   baseRoute = Just DataLists
+
 
 -- data StateRoute
 --   = StateRoot
@@ -87,14 +92,17 @@ data ContactRoute
 instance Route ContactRoute where
   baseRoute = Just ContactsAll
 
+
   matchRoute [contactId] = do
     cid <- readMaybe $ unpack contactId
     pure $ Contact cid
   matchRoute [] = pure ContactsAll
   matchRoute other = genMatchRoute other.segments
 
+
   routePath (Contact uid) = routePath uid
   routePath ContactsAll = []
+
 
 data ExamplesRoute
   = OtherExamples
@@ -108,11 +116,13 @@ data ExamplesRoute
 instance Route ExamplesRoute where
   baseRoute = Just OtherExamples
 
+
 data Hello
   = Greet Text
   | Redirected
   | RedirectNow
   deriving (Eq, Generic, Route, Show)
+
 
 routeTitle :: AppRoute -> Text
 routeTitle (Hello _) = "Hello World"
@@ -138,6 +148,7 @@ routeTitle (Examples OAuth2) = "OAuth2"
 routeTitle (Examples OtherExamples) = "Examples"
 routeTitle (Examples e) = defaultTitle e
 routeTitle r = defaultTitle r
+
 
 defaultTitle :: (Show r) => r -> Text
 defaultTitle = cs . toWords . fromHumps . show
