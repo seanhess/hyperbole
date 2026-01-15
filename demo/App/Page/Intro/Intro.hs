@@ -17,22 +17,19 @@ import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types
 import Web.Hyperbole.Page (subPage)
 
--- import Example.Page.Counter qualified as Counter
-
 page :: (Hyperbole :> es) => Page es '[Message, Counter]
 page = do
   simple <- subPage Simple.page
-  -- counter <- subPage Counter.page
 
   pure $ layout Intro $ do
-    -- el ~ italic . fontSize 20 . pad (X 15) . border (X 3) . borderColor PrimaryLight $ "Create interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView"
-
     col ~ gap 20 $ do
       row ~ color cyan . bg Dark . pad 20 $ do
         space
-        col ~ gap 10 $ do
-          codeblock $ do
-            [i|╔═════════════════════════════════════════════════════════════════════════════╗
+        col ~ gap 10 . overflow Hidden $ do
+          row $ do
+            space
+            codeblock ~ scaleText $ do
+              [i|╔═════════════════════════════════════════════════════════════════════════════╗
 ║                                                                             ║
 ║  ██╗  ██╗██╗   ██╗██████╗ ███████╗██████╗ ██████╗  ██████╗ ██╗     ███████╗ ║
 ║  ██║  ██║╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔═══██╗██║     ██╔════╝ ║
@@ -42,6 +39,7 @@ page = do
 ║  ╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚══════╝╚══════╝ ║
 ╚═════════════════════════════════════════════════════════════════════════════╝
 |]
+            space
           el ~ fontSize 18 . Cyber.font . bold . textAlign AlignCenter $ do
             el "Create interactive HTML applications with type-safe serverside Haskell."
             el "Inspired by HTMX, Elm, and Phoenix LiveView"
@@ -58,3 +56,11 @@ page = do
 
         section' "But Why?" $ do
           markdocs $(embedFile "docs/intro.md")
+ where
+  scaleText :: (Styleable h) => CSS h -> CSS h
+  scaleText =
+    utility
+      "scale-text"
+      [ "font-size" :. "clamp(0.4rem, 1.5vw, 1rem)"
+      , "max-width" :. "100%"
+      ]

@@ -7,13 +7,13 @@ import Data.Char (isSpace)
 import Data.List qualified as L
 import Data.String (IsString)
 import Data.String.Conversions (cs)
-import System.FilePath ((</>))
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import System.Directory (doesFileExist, getCurrentDirectory)
+import System.FilePath ((</>))
 import Web.Atomic.CSS
 import Web.Hyperbole.View
 
@@ -29,7 +29,11 @@ codeblock t =
     tag' True "code" $ do
       raw t
  where
-  monoline = utility "monoline" ["line-height" :. "1"]
+  monoline =
+    utility
+      "monoline"
+      [ "line-height" :. "1"
+      ]
 
 rawMulti :: [Text] -> View c ()
 rawMulti = raw . T.stripEnd . T.unlines
@@ -140,10 +144,10 @@ localFile p = do
   unless b $ do
     fail $ "Could not find file: " <> show lpath <> " in working dir: " <> current
   pure lpath
-  where
-    addRelativeDemo wd rp
-      | "demo" `L.isSuffixOf` wd = rp
-      | otherwise = "demo" </> rp
+ where
+  addRelativeDemo wd rp
+    | "demo" `L.isSuffixOf` wd = rp
+    | otherwise = "demo" </> rp
 
 stripDir :: FilePath -> FilePath -> FilePath
 stripDir dir p =
