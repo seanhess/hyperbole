@@ -100,7 +100,7 @@ nodeToView (Node _mpos typ childs) = do
       _ -> fontSize 16
 
 hackageDocsURI :: URI
-hackageDocsURI = [uri|https://hackage-content.haskell.org/package/hyperbole-0.5.0/docs/Web-Hyperbole.html|]
+hackageDocsURI = [uri|https://hackage-content.haskell.org/package/hyperbole/docs/Web-Hyperbole.html|]
 
 inlineCode :: Text -> View c ()
 inlineCode cd
