@@ -23,7 +23,7 @@ Like [Elm](https://elm-lang.org/), it uses an `update` function to process actio
 
 Hyperbole depends heavily on the following frameworks:
 
-* [Effectful](https://hackage.haskell.org/package/effectful-core)
+* [Effectful](https://hackage.haskell.org/package/effectful)
 * [Atomic CSS](https://hackage.haskell.org/package/atomic-css)
 
 <!-- >  Accidentally learn to use extensible effects! -->

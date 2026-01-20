@@ -57,6 +57,9 @@ page = do
         section' "But Why?" $ do
           markdocs $(embedFile "docs/intro.md")
 
+        section' "When not to use Hyperbole?" $ do
+          markdocs $(embedFile "docs/intro-downsides.md")
+
         section' "Documentation" $ do
           markdocs $(embedFile "docs/intro-links.md")
  where

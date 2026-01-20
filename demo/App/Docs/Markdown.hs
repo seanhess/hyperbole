@@ -89,6 +89,7 @@ nodeToView (Node _mpos typ childs) = do
     HTML_BLOCK t -> raw t
     SOFTBREAK -> inner
     EMPH -> tag' True "span" ~ italic $ inner
+    STRONG -> tag' True "span" ~ bold $ inner
     x ->
       -- inner
       raw $ cs $ show x

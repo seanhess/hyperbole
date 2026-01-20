@@ -59,6 +59,7 @@ import Example.DataLists.LoadMore qualified as LoadMore
 import Example.Effects.Debug as Debug
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
+import Example.Scrollbars qualified as Scrollbars
 import Example.State.Effects qualified as Effects
 import Example.State.Query qualified as Query
 import Example.State.Sessions qualified as Sessions
@@ -168,6 +169,7 @@ exampleApp config users count chats = do
   router Javascript = redirect (routeUri Interactivity)
   router (Examples OAuth2) = runPage OAuth2.page
   router (Examples OAuth2Authenticate) = OAuth2.handleRedirect
+  router (Examples Scrollbars) = runPage Scrollbars.page
   router Simple = redirect (routeUri Intro)
   -- router Counter = redirect (routeUri $ State StateRoot)
   router Test = runPage Test.page

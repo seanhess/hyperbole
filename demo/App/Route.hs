@@ -104,6 +104,7 @@ data ExamplesRoute
   | OAuth2Authenticate
   | OAuth2
   | Chat
+  | Scrollbars
   deriving (Eq, Generic, Show)
 instance Route ExamplesRoute where
   baseRoute = Just OtherExamples

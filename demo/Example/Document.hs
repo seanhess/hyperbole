@@ -1,6 +1,5 @@
 module Example.Document where
 
-import Data.Text (Text)
 import Web.Hyperbole
 
 main :: IO ()

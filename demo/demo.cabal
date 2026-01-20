@@ -97,6 +97,7 @@ executable demo
       Example.Javascript
       Example.Push
       Example.Requests
+      Example.Scrollbars
       Example.Simple
       Example.State.Effects
       Example.State.Query

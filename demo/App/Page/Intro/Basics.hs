@@ -3,9 +3,9 @@
 
 module App.Page.Intro.Basics where
 
+import App.Docs
 import App.Route
 import Data.String.Interpolate (i)
-import App.Docs
 import Example.Counter (Counter)
 import Example.Docs.Interactive qualified as Interactive
 import Example.Docs.ViewFunctions qualified as ViewFunctions

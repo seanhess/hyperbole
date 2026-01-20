@@ -14,6 +14,7 @@ page = do
       col ~ gap 10 $ do
         card (Examples Tags) "Add and remove \"tags\" from via an input"
         card (Examples Chat) "Demonstrates server pushes"
+        card (Examples Scrollbars) "Layouts with internal scrollbars"
     -- card (Contacts ContactsAll) "Random "
 
     section' "Data Lists" $ do
