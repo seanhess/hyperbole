@@ -2,8 +2,6 @@
 
 module Main where
 
-import App.Route
-import Control.Applicative ((<|>))
 import Control.Exception (SomeException, try)
 import Data.Char (isAlpha, isSpace)
 import Data.String.Conversions (cs)
@@ -15,7 +13,8 @@ import Distribution.Verbosity (verbose)
 import System.Directory
 import System.FilePath
 import Web.Hyperbole.Data.URI
-import Web.Hyperbole.Route (matchRoute)
+-- import Control.Applicative ((<|>))
+-- import Web.Hyperbole.Route (matchRoute)
 
 
 main :: IO ()
@@ -109,12 +108,12 @@ data Macro
       { moduleName :: ModuleName
       , definition :: TopLevelDefinition
       }
-  | Example Path
+  -- | Example Path
   deriving (Eq)
 newtype SourceCode = SourceCode {lines :: [Text]}
 instance Show Macro where
+  -- show (Example p) = "Example " <> show p
   show (Embed mn def) = "Embed " <> show mn <> " " <> show def
-  show (Example p) = "Example " <> show p
 
 
 newtype ModuleName = ModuleName Text
@@ -138,18 +137,19 @@ expandLine line = do
       pure [line]
     Just (pre, Embed src def) -> do
       expandEmbed src pre def
-    Just (pre, Example src) -> do
-      expandExample src pre
  where
+  -- Just (pre, Example src) -> do
+  --   expandExample src pre
+
   parseMacro :: Text -> Maybe (Text, Macro)
   parseMacro inp = do
-    parseEmbed inp <|> parseExample inp
+    parseEmbed inp -- <|> parseExample inp
 
-  parseExample l = do
-    case T.splitOn "#EXAMPLE " l of
-      [prefix, src] -> do
-        pure (prefix, Example $ path src)
-      _ -> Nothing
+  -- parseExample l = do
+  --   case T.splitOn "#EXAMPLE " l of
+  --     [prefix, src] -> do
+  --       pure (prefix, Example $ path src)
+  --     _ -> Nothing
 
   parseEmbed l = do
     case T.splitOn "#EMBED " l of
@@ -166,18 +166,19 @@ expandLine line = do
 -- look it up as a URI...
 
 -- * #EXAMPLE /simple
-expandExample :: Path -> Text -> IO [Text]
-expandExample p prefix = do
-  let pre = if T.null prefix then "▶️ " else prefix
-  r <- appRoute
-  pure [pre <> "[" <> routeTitle r <> "](" <> uriToText (exampleBaseURI ./. p) <> ")"]
- where
-  appRoute :: IO AppRoute
-  appRoute = do
-    case matchRoute @AppRoute p of
-      Nothing -> fail $ "Could not find example: " <> cs (pathToText False p)
-      Just r -> pure r
 
+
+-- expandExample :: Path -> Text -> IO [Text]
+-- expandExample p prefix = do
+--   let pre = if T.null prefix then "▶️ " else prefix
+--   r <- appRoute
+--   pure [pre <> "[" <> routeTitle r <> "](" <> uriToText (exampleBaseURI ./. p) <> ")"]
+--  where
+--   appRoute :: IO AppRoute
+--   appRoute = do
+--     case matchRoute @AppRoute p of
+--       Nothing -> fail $ "Could not find example: " <> cs (pathToText False p)
+--       Just r -> pure r
 
 exampleBaseURI :: URI
 exampleBaseURI = [uri|https://hyperbole.live|]

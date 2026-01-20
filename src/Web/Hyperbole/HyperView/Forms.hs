@@ -126,8 +126,6 @@ class GenFields f (form :: (Type -> Type) -> Type) where
 
 {- | Generate FieldNames for a form
 
-#EXAMPLE /forms
-
 > #EMBED Example.Todos.Todo data TodoForm
 >
 > #EMBED Example.Todos.Todo todoForm

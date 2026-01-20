@@ -24,8 +24,6 @@ button action cnt = do
 
 {- | Type-safe dropdown. Sends (opt -> Action id) when selected. The default will be selected.
 
-#EXAMPLE /data/filter
-
 @
 #EMBED Example.DataLists.Filter familyDropdown
 @
