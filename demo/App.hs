@@ -105,25 +105,25 @@ run = do
   putStrLn $ "Starting Examples on http://localhost:" <> show port
 
   users <- Users.initUsers
-  (count, chats, config) <- runEff $ runEnvironment $ do
+  (count, room, config) <- runEff $ runEnvironment $ do
     c <- runConcurrent Effects.initCounter
-    ct <- runConcurrent Chat.initChats
+    room <- runConcurrent Chat.initChatRoom
     a <- getAppConfigEnv
-    pure (c, ct, a)
+    pure (c, room, a)
 
   cache <- clientCache
 
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
       Static.staticPolicy (addBase "demo/static") $ do
-        devReload config $ exampleApp config users count chats
+        devReload config $ exampleApp config users count room
  where
   devReload :: AppConfig -> Application -> Application
   devReload config
     | config.devMode = Wai.modifyResponse $ Wai.mapResponseHeaders $ \hs -> ("Connection", "Close") : hs
     | otherwise = id
 
-exampleApp :: AppConfig -> UserStore -> TVar Int -> TVar [(Text, Text)] -> Application
+exampleApp :: AppConfig -> UserStore -> TVar Int -> Chat.Room -> Application
 exampleApp config users count chats = do
   liveAppWith
     (ServerOptions (document documentHead) serverError)

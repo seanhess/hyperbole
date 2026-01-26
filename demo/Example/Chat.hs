@@ -4,11 +4,12 @@ module Example.Chat where
 
 import App.Route
 import Control.Monad (forM_, forever)
-import Data.Text (Text, unpack)
+import Data.Text (Text)
 import Effectful
-import Effectful.Concurrent (threadDelay)
+import Effectful.Concurrent
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
+import Effectful.State.Dynamic (get, modify)
 import Example.Colors
 import Example.Style qualified as Style
 import Example.Style.Cyber (embed)
@@ -16,13 +17,12 @@ import Example.Style.Cyber as Cyber (btn, font)
 import Example.View.Layout (layout)
 import Web.Atomic.CSS
 import Web.Hyperbole
+import Web.Hyperbole.Data.Encoded (Encoded (..), FromEncoded (..), ToEncoded (..))
 
--- import Example.View.Layout
-
-page :: (Hyperbole :> es, Concurrent :> es, Reader (TVar [(Username, Text)]) :> es) => Page es '[Content, Chats, Message]
+page :: (Hyperbole :> es, Concurrent :> es, Reader Room :> es) => Page es '[Content, Chats, NewMessage]
 page = do
   pure $ layout (Examples Chat) $ do
-    el "Demonstrates server pushes"
+    el "Demonstrates server pushes and concurrency. Open in two tabs with different usernames to test."
     col ~ embed . Cyber.font $ do
       hyper Content $ contentView Nothing
 
@@ -35,7 +35,7 @@ instance HyperView Content es where
   data Action Content = Login | Logout
     deriving (Generic, ViewAction)
 
-  type Require Content = '[Chats, Message]
+  type Require Content = '[Chats, NewMessage]
 
   update Login = do
     LoginForm u <- formData
@@ -63,78 +63,119 @@ contentView mu = do
           el ~ bold $ text u
           space
           button Logout ~ btn $ "logout"
-        hyper Chats $ chatsLoad u
-        hyper Message $ messageView u
+        hyperState Chats mempty $ chatsLoad u
+        hyperState NewMessage u messageView
 
--- Chats State Effect -------------------------------------
+-- Chat Room -------------------------------------
 
--- it's just not a very good use-case for it...
+data Message = Message
+  { sender :: Username
+  , body :: Text
+  }
+  deriving (Generic, ToParam, FromParam)
 
-initChats :: (Concurrent :> es) => Eff es (TVar [(Username, Text)])
-initChats = newTVarIO []
+newtype Room = Room (TChan Message)
+newtype Subscription = Subscription (TChan Message)
 
-getChats :: (Concurrent :> es, Reader (TVar [(Username, Text)]) :> es) => Eff es [(Username, Text)]
-getChats = do
-  var <- ask
-  readTVarIO var
+initChatRoom :: (Concurrent :> es) => Eff es Room
+initChatRoom = Room <$> newBroadcastTChanIO
 
---- Show Chat Updates -------------------------------
+subscribeChatRoom :: (Concurrent :> es) => Room -> Eff es Subscription
+subscribeChatRoom (Room chan) = fmap Subscription <$> atomically $ dupTChan chan
+
+waitMessage :: (Concurrent :> es) => Subscription -> Eff es Message
+waitMessage (Subscription chan) = atomically $ readTChan chan
+
+sendMessage :: (Concurrent :> es) => Room -> Message -> Eff es ()
+sendMessage (Room chan) msg = atomically $ writeTChan chan msg
+
+-- Encoding for message history since starting
+newtype AllMessages = AllMessages [Message]
+  deriving newtype (Semigroup, Monoid)
+
+instance ToEncoded AllMessages where
+  toEncoded (AllMessages ms) = Encoded "" (fmap toParam ms)
+instance FromEncoded AllMessages where
+  parseEncoded (Encoded _ ps) =
+    AllMessages <$> mapM parseParam ps
+
+--- Chat Updates ---------------------------------------------
 
 data Chats = Chats
-  deriving (ViewId, Generic)
+  deriving (Generic)
+instance ViewId Chats where
+  type ViewState Chats = AllMessages
 
-instance (Concurrent :> es, Reader (TVar [(Username, Text)]) :> es, IOE :> es) => HyperView Chats es where
+instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView Chats es where
   data Action Chats = Stream Username
     deriving (Generic, ViewAction)
 
+  -- we need to build up our own list of messages...
   update (Stream u) = do
-    forever streamChats
-   where
-    streamChats = do
-      -- this will get cancelled when the user leaves the page, on calling pushUpdate
-      chats <- getChats
-      liftIO $ putStrLn $ "CHATS => " <> unpack u <> " " <> show (length chats)
-      pushUpdate $ chatsView u chats
-      threadDelay 1000000
+    room <- ask
+    sub <- subscribeChatRoom room
 
+    sendMessage room $ Message u "I have arrived!"
+
+    forever (streamChats sub)
+   where
+    streamChats room = do
+      -- this will get cancelled when the user leaves the page, on calling pushUpdate
+      msg <- waitMessage room
+      modify $ addMessage msg
+      pushUpdate $ chatsView u
+
+allMessages :: View Chats AllMessages
+allMessages = do
+  AllMessages ms <- viewState
+  pure $ AllMessages $ reverse ms
+
+addMessage :: Message -> AllMessages -> AllMessages
+addMessage msg (AllMessages ms) = AllMessages $ msg : ms
+
+-- TODO: initial message or view that shows better, since we aren't loading history any more
 chatsLoad :: Username -> View Chats ()
 chatsLoad user = el @ onLoad (Stream user) 100 $ "..."
 
-chatsView :: Username -> [(Username, Text)] -> View Chats ()
-chatsView _user chats = do
+chatsView :: Username -> View Chats ()
+chatsView _user = do
+  AllMessages chats <- allMessages
   col ~ gap 5 . pad 5 . minHeight 400 . border 1 . bg GrayLight $ do
-    forM_ chats $ \(u, msg) -> do
+    forM_ chats $ \chat -> do
       el $ do
-        text u
+        text chat.sender
         text ": "
-        text msg
+        text chat.body
 
 --- New Chat Messages ------------------------------
 
-data Message = Message
-  deriving (ViewId, Generic)
+data NewMessage = NewMessage
+  deriving (Generic)
+instance ViewId NewMessage where
+  type ViewState NewMessage = Username
 
-instance (Concurrent :> es, Reader (TVar [(Username, Text)]) :> es, IOE :> es) => HyperView Message es where
-  data Action Message = NewMessage Username
+instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView NewMessage es where
+  data Action NewMessage = SendMessage
     deriving (Generic, ViewAction)
 
-  type Require Message = '[Chats]
+  -- type Require NewMessage = '[Chats]
 
-  update (NewMessage u) = do
+  update SendMessage = do
+    user <- get @Username
+    room <- ask
     MessageForm msg <- formData
-    cvar <- ask
-    atomically $ modifyTVar cvar $ \cs -> (u, msg) : cs
-
-    pure $ messageView u
+    sendMessage room $ Message user msg
+    -- NOTE: this doesn't show an update at all, but we are subscribed to the channel and will get a push like everyone else
+    pure messageView
 
 data MessageForm = MessageForm
   { message :: Text
   }
   deriving (Generic, FromForm)
 
-messageView :: Username -> View Message ()
-messageView u = do
-  form (NewMessage u) ~ flexRow . gap 10 $ do
+messageView :: View NewMessage ()
+messageView = do
+  form SendMessage ~ flexRow . gap 10 $ do
     field "message" $ do
       input TextInput @ placeholder "type your message here" . value "" . autofocus ~ Style.input . grow
     submit "Send" ~ btn

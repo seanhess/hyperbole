@@ -13,9 +13,8 @@ page = do
     section' "UI Demos" $ do
       col ~ gap 10 $ do
         card (Examples Tags) "Add and remove \"tags\" from via an input"
-        card (Examples Chat) "Demonstrates server pushes"
+        card (Examples Chat) "Demonstrates server pushes and concurrency. Open in multiple tabs"
         card (Examples Scrollbars) "Layouts with internal scrollbars"
-    -- card (Contacts ContactsAll) "Random "
 
     section' "Data Lists" $ do
       col ~ gap 10 $ do
