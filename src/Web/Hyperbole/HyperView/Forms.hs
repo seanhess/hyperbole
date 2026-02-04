@@ -250,7 +250,7 @@ input ft = do
 checkbox :: forall id a. Bool -> View (Input id a) ()
 checkbox isChecked = do
   inp :: Input id a <- viewId
-  tag "input" @ att "type" "checkbox" . name inp.inputName.value $ none @ checked isChecked
+  tag "input" @ att "type" "checkbox" . checked isChecked . name inp.inputName.value $ none
 
 
 -- NOTE: Radio is a special type of selection different from list type or
