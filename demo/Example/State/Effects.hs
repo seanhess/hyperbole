@@ -3,8 +3,8 @@
 
 module Example.State.Effects where
 
-import Data.Text (pack)
 import App.Docs
+import Data.Text (pack)
 import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
@@ -24,7 +24,9 @@ data Counter = Counter
 instance ViewId Counter where
   -- to avoid conflicts with other "Counter" ViewIds on example pages
   toViewId _ = Encoded "counter-effects" []
-  parseViewId _ = pure Counter
+
+  parseViewId (Encoded "counter-effects" _) = pure Counter
+  parseViewId _ = Left "expected constructor name"
 
 instance (Reader (TVar Int) :> es, Concurrent :> es) => HyperView Counter es where
   data Action Counter

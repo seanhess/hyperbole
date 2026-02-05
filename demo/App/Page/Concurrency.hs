@@ -14,7 +14,7 @@ import Example.Concurrency.Progress as Progress
 import Example.Concurrency.Tasks
 import Example.Effects.Debug
 import Example.Push qualified as Push
-import Example.Style.Cyber (font)
+import Example.Style.Cyber (btn, font)
 import Example.View.Layout (layoutSubnav)
 import Example.View.Loader as Loader
 import Web.Atomic.CSS
@@ -28,7 +28,7 @@ data Section
   | PushUpdates
   deriving (Show, Eq, Enum, Bounded, PageAnchor)
 
-page :: (Hyperbole :> es, Debug :> es) => Page es '[Poller, LazyData, Progress, Push.Tasks, OverlapDrop, OverlapReplace]
+page :: (Hyperbole :> es, Debug :> es) => Page es '[Poller, LazyData, Progress, Push.Tasks, OverlapDrop, OverlapReplace, LazyAll]
 page = do
   pure $ layoutSubnav @Section Route.Concurrency $ do
     style Loader.css
@@ -52,10 +52,7 @@ page = do
       markdocs "Instead of preloading everything in our `Page`, a `HyperView` can load itself using `onLoad`"
       snippet $ raw $(embedTopLevel "Example.Concurrency.LazyLoading" "viewTaskLoad")
       example Lazy.source $ do
-        row ~ flexWrap Wrap . font . gap 10 $ do
-          forM_ pretendTasks $ \taskId -> do
-            el ~ border 1 . width 120 . pad 5 $ do
-              hyper (LazyData taskId) viewTaskLoad
+        hyper LazyAll viewLazyAll
 
     section Polling $ do
       markdocs "By including an `onLoad` in every view update, we can poll the server after a given delay"
@@ -68,3 +65,25 @@ page = do
       snippet $ raw $(embedTopLevel "Example.Push" "update")
       example Push.source $ do
         hyper Push.Tasks $ Push.taskView 0
+
+data LazyAll = LazyAll
+  deriving (Generic, ViewId)
+
+instance HyperView LazyAll es where
+  data Action LazyAll
+    = ReloadAll
+    deriving (Generic, ViewAction)
+
+  type Require LazyAll = '[LazyData]
+
+  update _ = do
+    pure viewLazyAll
+
+viewLazyAll :: View LazyAll ()
+viewLazyAll = do
+  col ~ gap 10 $ do
+    row ~ flexWrap Wrap . font . gap 10 $ do
+      forM_ pretendTasks $ \taskId -> do
+        el ~ border 1 . width 120 . pad 5 $ do
+          hyper (LazyData taskId) viewTaskLoad
+    row $ button ReloadAll ~ btn $ "Reload"

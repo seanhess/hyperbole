@@ -63,6 +63,7 @@ import Example.Scrollbars qualified as Scrollbars
 import Example.State.Effects qualified as Effects
 import Example.State.Query qualified as Query
 import Example.State.Sessions qualified as Sessions
+import Example.State.ViewState qualified as ViewState
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Example.Tags qualified as Tags
@@ -172,7 +173,8 @@ exampleApp config users count chats = do
   router (Examples Scrollbars) = runPage Scrollbars.page
   router Simple = redirect (routeUri Intro)
   -- router Counter = redirect (routeUri $ State StateRoot)
-  router Test = runPage Test.page
+  router (Test TestMain) = runPage Test.page
+  router (Test TestState) = runPage ViewState.page
   router Main = do
     redirect (routeUri Intro)
 

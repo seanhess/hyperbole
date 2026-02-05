@@ -33,7 +33,7 @@ data AppRoute
   | Examples ExamplesRoute
   | Errors
   | Javascript
-  | Test
+  | Test TestRoute
   | ViewFunctions
   | Application
   deriving (Eq, Generic, Show)
@@ -108,6 +108,13 @@ data ExamplesRoute
   deriving (Eq, Generic, Show)
 instance Route ExamplesRoute where
   baseRoute = Just OtherExamples
+
+data TestRoute
+  = TestMain
+  | TestState
+  deriving (Eq, Generic, Show)
+instance Route TestRoute where
+  baseRoute = Just TestMain
 
 data Hello
   = Greet Text

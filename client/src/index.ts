@@ -117,8 +117,17 @@ function handleUpdate(res: Update): HyperView {
   // Patch the node
   const old: VNode = create(target)
   let next: VNode = create(update.content)
+  let atts = next.attributes as any
+
+  if (atts["id"] != target.id) {
+    console.error("Mismatched ViewId in update - ", atts["id"], " target:", target.id)
+    return
+  }
+
   let state = (next.attributes as any)["data-state"]
   next.attributes = old.attributes
+
+
   patch(next, old)
 
 
@@ -132,7 +141,10 @@ function handleUpdate(res: Update): HyperView {
   }
 
   // re-add state attribute 
-  newTarget.dataset.state = state
+  if (state == undefined || state == "()")
+    delete newTarget.dataset.state
+  else
+    newTarget.dataset.state = state
 
   // execute the metadata, anything that doesn't interrupt the dom update
   runMetadata(res.meta, newTarget)
