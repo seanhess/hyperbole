@@ -9,7 +9,7 @@ import Effectful
 import Effectful.Concurrent
 import Effectful.Concurrent.STM
 import Effectful.Reader.Dynamic
-import Effectful.State.Dynamic (get, modify)
+import Effectful.State.Dynamic (modify)
 import Example.Colors
 import Example.Style qualified as Style
 import Example.Style.Cyber (embed)
@@ -64,7 +64,7 @@ contentView mu = do
           space
           button Logout ~ btn $ "logout"
         hyperState Chats mempty $ chatsLoad u
-        hyperState NewMessage u messageView
+        hyper (NewMessage u) messageView
 
 -- Chat Room -------------------------------------
 
@@ -110,7 +110,6 @@ instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView Chats es 
   data Action Chats = Stream Username
     deriving (Generic, ViewAction)
 
-  -- we need to build up our own list of messages...
   update (Stream u) = do
     room <- ask
     sub <- subscribeChatRoom room
@@ -120,20 +119,23 @@ instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView Chats es 
     forever (streamChats sub)
    where
     streamChats room = do
-      -- this will get cancelled when the user leaves the page, on calling pushUpdate
+      -- Block until we receive a message from the duplicated channel
       msg <- waitMessage room
+
+      -- store all the messages we've seen in our view state
       modify $ addMessage msg
+
+      -- update the view
       pushUpdate $ chatsView u
+
+addMessage :: Message -> AllMessages -> AllMessages
+addMessage msg (AllMessages ms) = AllMessages $ msg : ms
 
 allMessages :: View Chats AllMessages
 allMessages = do
   AllMessages ms <- viewState
   pure $ AllMessages $ reverse ms
 
-addMessage :: Message -> AllMessages -> AllMessages
-addMessage msg (AllMessages ms) = AllMessages $ msg : ms
-
--- TODO: initial message or view that shows better, since we aren't loading history any more
 chatsLoad :: Username -> View Chats ()
 chatsLoad user = el @ onLoad (Stream user) 100 $ "..."
 
@@ -147,22 +149,18 @@ chatsView _user = do
         text ": "
         text chat.body
 
---- New Chat Messages ------------------------------
+--- New Message Form ------------------------------
 
-data NewMessage = NewMessage
-  deriving (Generic)
-instance ViewId NewMessage where
-  type ViewState NewMessage = Username
+data NewMessage = NewMessage Username
+  deriving (Generic, ViewId)
 
 instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView NewMessage es where
   data Action NewMessage = SendMessage
     deriving (Generic, ViewAction)
 
-  -- type Require NewMessage = '[Chats]
-
   update SendMessage = do
-    user <- get @Username
     room <- ask
+    NewMessage user <- viewId
     MessageForm msg <- formData
     sendMessage room $ Message user msg
     -- NOTE: this doesn't show an update at all, but we are subscribed to the channel and will get a push like everyone else
