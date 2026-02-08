@@ -6,7 +6,11 @@ import { ViewId, RequestId, EncodedAction, metaValue, Metadata } from "./message
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
 
-
+interface SocketConnectionEventMap {
+  "update": CustomEvent<Update>;
+  "response": CustomEvent<Update>;
+  "redirect": CustomEvent<Redirect>;
+}
 
 export class SocketConnection {
   socket: WebSocket
@@ -17,12 +21,16 @@ export class SocketConnection {
   queue: ActionMessage[] = []
   events: EventTarget
 
-  constructor() {
+  constructor(addr = defaultAddress) {
     this.events = new EventTarget()
+    const sock = new WebSocket(addr)
+    this.socket = sock
+    // Should we connect to the socket or not?
+    this.connect(addr, false)
   }
 
-  connect(addr = defaultAddress) {
-    const sock = new WebSocket(addr)
+  connect(addr = defaultAddress, createSocket = true) {
+    const sock = createSocket ? new WebSocket(addr) : this.socket
     this.socket = sock
 
     function onConnectError(ev: Event) {
@@ -88,7 +96,7 @@ export class SocketConnection {
 
   private runQueue() {
     // send all messages queued while disconnected 
-    let next: ActionMessage | null = this.queue.pop()
+    let next: ActionMessage | undefined = this.queue.pop()
     if (next) {
       console.log("runQueue: ", next)
       this.sendAction(next)
@@ -197,11 +205,14 @@ export class SocketConnection {
   //   })
   // }
 
-  addEventListener(e: string, cb: EventListenerOrEventListenerObject) {
-    this.events.addEventListener(e, cb)
+  addEventListener<K extends keyof SocketConnectionEventMap>(e: K, cb: (ev: SocketConnectionEventMap[K]) => void) {
+    this.events.addEventListener(e,
+      // @ts-ignore: HACK
+      cb
+    )
   }
 
-  dispatchEvent(e: Event) {
+  dispatchEvent<K extends keyof SocketConnectionEventMap>(e: SocketConnectionEventMap[K]) {
     this.events.dispatchEvent(e)
   }
 
