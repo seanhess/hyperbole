@@ -16,8 +16,8 @@ export function listenKeyup(cb: (target: HyperView, action: string) => void): vo
 export function listenKeyEvent(event: "keyup" | "keydown", cb: (target: HyperView, action: string) => void): void {
 
   document.addEventListener(event, function(e: KeyboardEvent) {
-    if (!(e.target instanceof HTMLInputElement)) {
-      console.error("listenKeyEvent event target is not HTMLInputElement: ", e.target)
+    if (!(e.target instanceof HTMLElement)) {
+      console.error("listenKeyEvent event target is not HTMLElement: ", e.target)
       return
     }
     let source = e.target
