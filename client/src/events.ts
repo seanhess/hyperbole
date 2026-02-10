@@ -187,18 +187,13 @@ export function listenInput(startedTyping: (target: HyperView) => void, cb: (tar
       return
     }
     let el = e.target
-    let source = el.closest<LiveInputElement>("[data-oninput]")
+    const source = el.closest<LiveInputElement>("[data-oninput]")
 
     if (!source) return
 
     let delay = parseInt(source.dataset.delay || "") || 250
     if (delay < 250) {
       console.warn("Input delay < 250 can result in poor performance.")
-    }
-
-    if (!source?.dataset.oninput) {
-      console.error("Missing onInput: ", source)
-      return
     }
 
     e.preventDefault()
@@ -213,8 +208,12 @@ export function listenInput(startedTyping: (target: HyperView) => void, cb: (tar
     startedTyping(target)
 
     if (!source.debouncedCallback) {
-      const action = encodedParam(source.dataset.oninput, source.value)
       source.debouncedCallback = debounce(() => {
+        if (!source.dataset.oninput) {
+          console.error("Missing onInput: ", source)
+          return
+        }
+        const action = encodedParam(source.dataset.oninput, source.value)
         cb(target, action)
       }, delay)
     }
