@@ -5,6 +5,7 @@ import { actionMessage, ActionMessage, Request, newRequest } from './action'
 import { ViewId, Metadata, parseMetadata, ViewState } from './message'
 import { setQuery } from "./browser"
 import { parseResponse, Response, LiveUpdate } from './response'
+import { ConcurrencyMode, HyperView, isHyperView } from "./hyperview"
 
 let PACKAGE = require('../package.json');
 
@@ -22,15 +23,6 @@ let addedRulesIndex = new Set();
 
 // Run an action in a given HyperView
 async function runAction(target: HyperView, action: string, form?: FormData) {
-  if (target === undefined) {
-    console.error("Undefined HyperView!", action)
-    return
-  }
-
-  if (action === undefined) {
-    console.error("Undefined Action!", target.id)
-    return
-  }
 
   if (target.activeRequest && !target.activeRequest?.isCancelled) {
     // Active Request!
@@ -40,7 +32,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     }
   }
 
-  target._timeout = setTimeout(() => {
+  target._timeout = window.setTimeout(() => {
     // add loading after 100ms, not right away
     // if it runs shorter than that we probably don't want to show the user any loading feedback
     target.classList.add("hyp-loading")
@@ -63,7 +55,7 @@ function handleRedirect(red: Redirect) {
   console.log("REDIRECT", red)
 
   // the other metdata doesn't apply, they are all specific to the page
-  applyCookies(red.meta.cookies)
+  applyCookies(red.meta.cookies ?? [])
 
   window.location.href = red.url
 }
@@ -72,6 +64,7 @@ function handleRedirect(red: Redirect) {
 function handleResponse(res: Update) {
   // console.log("Handle Response", res)
   let target = handleUpdate(res)
+  if (!target) return
 
   // clean up the request
   delete target.activeRequest
@@ -79,19 +72,18 @@ function handleResponse(res: Update) {
   target.classList.remove("hyp-loading")
 }
 
-function handleUpdate(res: Update): HyperView {
+function handleUpdate(res: Update): HyperView | undefined {
   // console.log("|UPDATE|", res)
 
   let targetViewId = res.targetViewId || res.viewId
-  let target = document.getElementById(targetViewId) as HyperView
+  let target = document.getElementById(targetViewId)
 
-
-  if (!target) {
-    console.error("Missing Update Target: ", targetViewId, res)
-    return target
+  if (!isHyperView(target)) {
+    console.error("Missing Update HyperView Target: ", targetViewId, res)
+    return
   }
 
-  if (res.requestId < target.activeRequest?.requestId) {
+  if (target.activeRequest?.requestId && res.requestId < target.activeRequest.requestId) {
     // this should only happen on Replace, since other requests should be dropped
     // but it's safe to assume we never want to apply an old requestId
     console.warn("Ignore Stale Action (" + res.requestId + ") vs (" + target.activeRequest.requestId + "): " + res.action)
@@ -117,14 +109,14 @@ function handleUpdate(res: Update): HyperView {
   // Patch the node
   const old: VNode = create(target)
   let next: VNode = create(update.content)
-  let atts = next.attributes as any
+  let atts = next.attributes
 
-  if (atts["id"] != target.id) {
+  if (atts["id"] !== target.id) {
     console.error("Mismatched ViewId in update - ", atts["id"], " target:", target.id)
     return
   }
 
-  let state = (next.attributes as any)["data-state"]
+  let state = atts["data-state"]
   next.attributes = old.attributes
 
 
@@ -133,22 +125,23 @@ function handleUpdate(res: Update): HyperView {
 
   // Emit relevant events
   let newTarget = document.getElementById(target.id)
-  dispatchContent(newTarget)
 
   if (!newTarget) {
     console.warn("Target Missing: ", target.id)
     return target
   }
 
+  dispatchContent(newTarget)
+
   // re-add state attribute 
-  if (state == undefined || state == "()")
+  if (state === undefined || state == "()")
     delete newTarget.dataset.state
   else
     newTarget.dataset.state = state
 
   // execute the metadata, anything that doesn't interrupt the dom update
   runMetadata(res.meta, newTarget)
-  applyCookies(res.meta.cookies)
+  applyCookies(res.meta.cookies ?? [])
 
   // now way for these to bubble)
   listenLoad(newTarget)
@@ -183,7 +176,7 @@ function runMetadata(meta: Metadata, target?: HTMLElement) {
     document.title = meta.pageTitle
   }
 
-  meta.events.forEach((remoteEvent) => {
+  meta.events?.forEach((remoteEvent) => {
     setTimeout(() => {
       let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
       let eventTarget = target || document
@@ -191,9 +184,9 @@ function runMetadata(meta: Metadata, target?: HTMLElement) {
     }, 10)
   })
 
-  meta.actions.forEach(([viewId, action]) => {
+  meta.actions?.forEach(([viewId, action]) => {
     setTimeout(() => {
-      let view = window.Hyperbole.hyperView(viewId)
+      let view = window.Hyperbole?.hyperView(viewId)
       if (view) {
         runAction(view, action)
       }
@@ -203,19 +196,19 @@ function runMetadata(meta: Metadata, target?: HTMLElement) {
 
 
 function fixInputs(target: HTMLElement) {
-  let focused = target.querySelector("[autofocus]") as HTMLInputElement
+  let focused = target.querySelector<HTMLInputElement>("[autofocus]")
   if (focused?.focus) {
     focused.focus()
   }
 
-  target.querySelectorAll("input[value]").forEach((input: HTMLInputElement) => {
+  target.querySelectorAll<HTMLInputElement>("input[value]").forEach((input) => {
     let val = input.getAttribute("value")
-    if (val !== undefined) {
+    if (val !== null) {
       input.value = val
     }
   })
 
-  target.querySelectorAll("input[type=checkbox]").forEach((checkbox: HTMLInputElement) => {
+  target.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((checkbox) => {
     let checked = checkbox.dataset.checked == "True"
     checkbox.checked = checked
   })
@@ -223,9 +216,11 @@ function fixInputs(target: HTMLElement) {
 
 function addCSS(src: HTMLStyleElement | null) {
   if (!src) return;
-  const rules: any = src.sheet.cssRules
-  for (const rule of rules) {
-    if (addedRulesIndex.has(rule.cssText) == false) {
+  const rules = src.sheet?.cssRules
+  if (!rules) return;
+  for (let i = 0; i < rules.length; i++) {
+    const rule = rules.item(i)
+    if (rule && addedRulesIndex.has(rule.cssText) == false && rootStyles.sheet) {
       rootStyles.sheet.insertRule(rule.cssText);
       addedRulesIndex.add(rule.cssText);
     }
@@ -237,13 +232,15 @@ function addCSS(src: HTMLStyleElement | null) {
 
 function init() {
   // metadata attached to initial page loads need to be executed
-  let meta = parseMetadata(document.getElementById("hyp.metadata").innerText)
+  let meta = parseMetadata(document.getElementById("hyp.metadata")?.innerText ?? "")
   // runMetadataImmediate(meta)
   runMetadata(meta)
 
-  rootStyles = document.body.querySelector('style')
+  const style = document.body.querySelector('style')
 
-  if (!rootStyles) {
+  if (style !== null) {
+    rootStyles = style
+  } else {
     console.warn("rootStyles missing from page, creating...")
     rootStyles = document.createElement("style")
     rootStyles.type = "text/css"
@@ -304,10 +301,10 @@ function init() {
 
 function enrichHyperViews(node: HTMLElement): void {
   // enrich all the hyperviews
-  node.querySelectorAll("[id]").forEach((element: HyperView) => {
+  node.querySelectorAll<HyperView>("[id]").forEach((element) => {
     element.runAction = function(action: string) {
-      runAction(this, action)
-    }.bind(element)
+      return runAction(element, action)
+    }
 
     element.concurrency = element.dataset.concurrency || "Drop"
 
@@ -331,10 +328,8 @@ document.addEventListener("DOMContentLoaded", init)
 
 
 
-// Should we connect to the socket or not?
 const sock = new SocketConnection()
-sock.connect()
-sock.addEventListener("update", (ev: CustomEvent<Update>) => handleUpdate(ev.detail))
+sock.addEventListener("update", (ev: CustomEvent<Update>) => { handleUpdate(ev.detail) })
 sock.addEventListener("response", (ev: CustomEvent<Update>) => handleResponse(ev.detail))
 sock.addEventListener("redirect", (ev: CustomEvent<Redirect>) => handleRedirect(ev.detail))
 
@@ -351,7 +346,7 @@ type VNode = {
 
   // An object whose key/value pairs are the attribute
   // name and value, respectively
-  attributes: [string: string]
+  attributes: { [key: string]:string | undefined }
 
   // Is set to `true` if a node is an `svg`, which tells
   // Omdomdom to treat it, and its children, as such
@@ -375,6 +370,11 @@ declare global {
   interface Window {
     Hyperbole?: HyperboleAPI;
   }
+  interface DocumentEventMap {
+    "hyp-load": CustomEvent;
+    "hyp-mouseenter": CustomEvent;
+    "hyp-mouseleave": CustomEvent;
+  }
 }
 
 export interface HyperboleAPI {
@@ -385,33 +385,18 @@ export interface HyperboleAPI {
   socket: SocketConnection
 }
 
-
-
-
-export interface HyperView extends HTMLElement {
-  runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
-  activeRequest?: Request
-  cancelActiveRequest(): void
-  concurrency: ConcurrencyMode
-  _timeout?: any
-}
-
-type ConcurrencyMode = string
-
-
 window.Hyperbole =
 {
   runAction: runAction,
   parseMetadata: parseMetadata,
   action: function(con, ...params: any[]) {
-    let ps = params.reduce((str, param) => str + " " + JSON.stringify(param), "")
-    return con + ps
+    return params.reduce((str, param) => str + " " + JSON.stringify(param), con);
   },
   hyperView: function(viewId) {
-    let element = document.getElementById(viewId) as any
-    if (!element?.runAction) {
+    let element = document.getElementById(viewId)
+    if (!isHyperView(element)) {
       console.error("Element id=" + viewId + " was not a HyperView")
-      return undefined
+      return
     }
     return element
   },

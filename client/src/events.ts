@@ -1,54 +1,77 @@
 
 import * as debounce from 'debounce'
 import { encodedParam } from './action'
+import { HyperView, isHyperView } from './hyperview'
 
 export type UrlFragment = string
 
-export function listenKeydown(cb: (target: HTMLElement, action: string) => void): void {
+export function listenKeydown(cb: (target: HyperView, action: string) => void): void {
   listenKeyEvent("keydown", cb)
 }
 
-export function listenKeyup(cb: (target: HTMLElement, action: string) => void): void {
+export function listenKeyup(cb: (target: HyperView, action: string) => void): void {
   listenKeyEvent("keyup", cb)
 }
 
-export function listenKeyEvent(event: string, cb: (target: HTMLElement, action: string) => void): void {
-  document.addEventListener(event.toLowerCase(), function(e: KeyboardEvent) {
-    let source = e.target as HTMLInputElement
+export function listenKeyEvent(event: "keyup" | "keydown", cb: (target: HyperView, action: string) => void): void {
+
+  document.addEventListener(event, function(e: KeyboardEvent) {
+    if (!(e.target instanceof HTMLElement)) {
+      console.error("listenKeyEvent event target is not HTMLElement: ", e.target)
+      return
+    }
+    let source = e.target
 
     let datasetKey = "on" + event + e.key
     let action = source.dataset[datasetKey]
     if (!action) return
 
     e.preventDefault()
-    cb(nearestTarget(source), action)
+    const target =  nearestTarget(source)
+    if (!target) {
+      console.error("Missing target: ", source)
+      return
+    }
+    cb(target, action)
   })
 }
 
-export function listenBubblingEvent(event: string, cb: (target: HTMLElement, action: string) => void): void {
+export function listenBubblingEvent(event: string, cb: (_target: HyperView, action: string) => void): void {
   document.addEventListener(event, function(e) {
-    let el = e.target as HTMLInputElement
+    if (!(e.target instanceof HTMLElement)) {
+      return
+    }
+    let el = e.target
 
     // clicks can fire on internal elements. Find the parent with a click handler
-    let source = el.closest("[data-on" + event + "]") as HTMLElement
+    let source = el.closest<HTMLElement>("[data-on" + event + "]")
     if (!source) return
 
     e.preventDefault()
     let target = nearestTarget(source)
-    cb(target, source.dataset["on" + event])
+    if (!target) {
+      console.error("Missing target: ", source)
+      return
+    }
+    const action = source.dataset["on" + event]
+    if (action === undefined) {
+      console.error("Missing action: ", source, event)
+      return
+    }
+    cb(target, action)
   })
 }
 
-export function listenClick(cb: (target: HTMLElement, action: string) => void): void {
+export function listenClick(cb: (target: HyperView, action: string) => void): void {
   listenBubblingEvent("click", cb)
 }
 
-export function listenDblClick(cb: (target: HTMLElement, action: string) => void): void {
+export function listenDblClick(cb: (target: HyperView, action: string) => void): void {
   listenBubblingEvent("dblclick", cb)
 }
 
 
-export function listenTopLevel(cb: (target: HTMLElement, action: string) => void): void {
+export function listenTopLevel(cb: (target: HyperView, action: string) => void): void {
   document.addEventListener("hyp-load", function(e: CustomEvent) {
     let action = e.detail.onLoad
     let target = e.detail.target
@@ -72,8 +95,8 @@ export function listenTopLevel(cb: (target: HTMLElement, action: string) => void
 export function listenLoad(node: HTMLElement): void {
 
   // it doesn't really matter WHO runs this except that it should have target
-  node.querySelectorAll("[data-onload]").forEach((load: HTMLElement) => {
-    let delay = parseInt(load.dataset.delay) || 0
+  node.querySelectorAll<HTMLElement>("[data-onload]").forEach((load) => {
+    let delay = parseInt(load.dataset.delay || "") || 0
     let onLoad = load.dataset.onload
     // console.log("load start", load.dataset.onLoad)
 
@@ -95,10 +118,10 @@ export function listenLoad(node: HTMLElement): void {
 }
 
 export function listenMouseEnter(node: HTMLElement): void {
-  node.querySelectorAll("[data-onmouseenter]").forEach((node: HTMLElement) => {
+  node.querySelectorAll<HTMLElement>("[data-onmouseenter]").forEach((node) => {
     let onMouseEnter = node.dataset.onmouseenter
 
-    let target = nearestTarget(node)
+    let target = nearestNonHyperViewTarget(node)
 
     node.onmouseenter = () => {
       const event = new CustomEvent("hyp-mouseenter", { bubbles: true, detail: { target, onMouseEnter } })
@@ -108,10 +131,10 @@ export function listenMouseEnter(node: HTMLElement): void {
 }
 
 export function listenMouseLeave(node: HTMLElement): void {
-  node.querySelectorAll("[data-onmouseleave]").forEach((node: HTMLElement) => {
+  node.querySelectorAll<HTMLElement>("[data-onmouseleave]").forEach((node) => {
     let onMouseLeave = node.dataset.onmouseleave
 
-    let target = nearestTarget(node)
+    let target = nearestNonHyperViewTarget(node)
 
     node.onmouseleave = () => {
       const event = new CustomEvent("hyp-mouseleave", { bubbles: true, detail: { target, onMouseLeave } })
@@ -121,21 +144,33 @@ export function listenMouseLeave(node: HTMLElement): void {
 }
 
 
-export function listenChange(cb: (target: HTMLElement, action: string) => void): void {
+export function listenChange(cb: (target: HyperView, action: string) => void): void {
   document.addEventListener("change", function(e) {
-    let el = e.target as HTMLElement
+    if (!(e.target instanceof HTMLElement)) {
+      console.error("listenChange event target is not HTMLElement: ", e.target)
+      return
+    }
+    let el = e.target
 
-    let source = el.closest("[data-onchange]") as HTMLInputElement
+    let source = el.closest<HTMLInputElement>("[data-onchange]")
 
     if (!source) return
     e.preventDefault()
 
-    if (source.value == null) {
+    if (source.value === null) {
       console.error("Missing input value:", source)
       return
     }
 
     let target = nearestTarget(source)
+    if (!target) {
+      console.error("Missing target: listenChange")
+      return
+    }
+    if (source.dataset.onchange === undefined) {
+      console.error("source.dataset.onchange is undefined")
+      return
+    }
     let action = encodedParam(source.dataset.onchange, source.value)
     cb(target, action)
   })
@@ -145,33 +180,40 @@ interface LiveInputElement extends HTMLInputElement {
   debouncedCallback?: Function;
 }
 
-export function listenInput(startedTyping: (target: HTMLElement) => void, cb: (target: HTMLElement, action: string) => void): void {
+export function listenInput(startedTyping: (target: HyperView) => void, cb: (target: HyperView, action: string) => void): void {
   document.addEventListener("input", function(e) {
-    let el = e.target as HTMLElement
-    let source = el.closest("[data-oninput]") as LiveInputElement
+    if (!(e.target instanceof HTMLElement)) {
+      console.error("listenInput event target is not HTMLElement: ", e.target)
+      return
+    }
+    let el = e.target
+    const source = el.closest<LiveInputElement>("[data-oninput]")
 
     if (!source) return
 
-    let delay = parseInt(source.dataset.delay) || 250
+    let delay = parseInt(source.dataset.delay || "") || 250
     if (delay < 250) {
       console.warn("Input delay < 250 can result in poor performance.")
     }
 
-    if (!source?.dataset.oninput) {
-      console.error("Missing onInput: ", source)
-      return
-    }
-
     e.preventDefault()
 
-    let target = nearestTarget(source)
+    const target = nearestTarget(source)
+    if (!target) {
+      console.error("Missing target: ", source)
+      return
+    }
 
     // I want to CANCEL the active request as soon as we start typing
     startedTyping(target)
 
     if (!source.debouncedCallback) {
       source.debouncedCallback = debounce(() => {
-        let action = encodedParam(source.dataset.oninput, source.value)
+        if (!source.dataset.oninput) {
+          console.error("Missing onInput: ", source)
+          return
+        }
+        const action = encodedParam(source.dataset.oninput, source.value)
         cb(target, action)
       }, delay)
     }
@@ -182,11 +224,16 @@ export function listenInput(startedTyping: (target: HTMLElement) => void, cb: (t
 
 
 
-export function listenFormSubmit(cb: (target: HTMLElement, action: string, form: FormData) => void): void {
+export function listenFormSubmit(cb: (target: HyperView, action: string, form: FormData) => void): void {
   document.addEventListener("submit", function(e) {
-    let form = e.target as HTMLFormElement
+    if (!(e.target instanceof HTMLFormElement)) {
+      console.error("listenFormSubmit event target is not HTMLFormElement: ", e.target)
+      return
+    }
+    let form = e.target
 
-    if (!form?.dataset.onsubmit) {
+
+    if (!form.dataset.onsubmit) {
       console.error("Missing onSubmit: ", form)
       return
     }
@@ -195,18 +242,33 @@ export function listenFormSubmit(cb: (target: HTMLElement, action: string, form:
 
     let target = nearestTarget(form)
     const formData = new FormData(form)
+    if (!target) {
+      console.error("Missing target: ", form)
+      return
+    }
     cb(target, form.dataset.onsubmit, formData)
   })
 }
 
 function nearestTargetId(node: HTMLElement): string | undefined {
-  let targetData = node.closest("[data-target]") as HTMLElement | undefined
+  let targetData = node.closest<HTMLElement>("[data-target]")
   return targetData?.dataset.target || node.closest("[id]")?.id
 }
 
-function nearestTarget(node: HTMLElement): HTMLElement {
+function nearestTarget(node: HTMLElement): HyperView | undefined {
+  const target = nearestNonHyperViewTarget(node)
+
+  if (!isHyperView(target)) {
+    console.error("Non HyperView target: ", target)
+    return
+  }
+
+  return target
+}
+
+function nearestNonHyperViewTarget(node: HTMLElement): HTMLElement | undefined {
   let targetId = nearestTargetId(node)
-  let target = document.getElementById(targetId)
+  let target = targetId && document.getElementById(targetId)
 
   if (!target) {
     console.error("Cannot find target: ", targetId, node)
