@@ -36,10 +36,9 @@ export function listenKeyEvent(event: "keyup" | "keydown", cb: (target: HyperVie
   })
 }
 
-export function listenBubblingEvent(event: string, cb: (target: HyperView, action: string) => void): void {
+export function listenBubblingEvent(event: string, cb: (_target: HyperView, action: string) => void): void {
   document.addEventListener(event, function(e) {
-    if (!(e.target instanceof HTMLInputElement)) {
-      console.error("listenBubblingEvent event target is not HTMLInputElement: ", e.target)
+    if (!(e.target instanceof HTMLElement)) {
       return
     }
     let el = e.target
