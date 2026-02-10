@@ -204,7 +204,7 @@ export function listenInput(startedTyping: (target: HyperView) => void, cb: (tar
 
     e.preventDefault()
 
-    let target = nearestTarget(source)
+    const target = nearestTarget(source)
     if (!target) {
       console.error("Missing target: ", source)
       return

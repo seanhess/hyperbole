@@ -41,7 +41,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     }
   }
 
-  target._timeout = setTimeout(() => {
+  target._timeout = window.setTimeout(() => {
     // add loading after 100ms, not right away
     // if it runs shorter than that we probably don't want to show the user any loading feedback
     target.classList.add("hyp-loading")
