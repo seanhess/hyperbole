@@ -23,15 +23,6 @@ let addedRulesIndex = new Set();
 
 // Run an action in a given HyperView
 async function runAction(target: HyperView, action: string, form?: FormData) {
-  if (target === undefined) {
-    console.error("Undefined HyperView!", action)
-    return
-  }
-
-  if (action === undefined) {
-    console.error("Undefined Action!", target.id)
-    return
-  }
 
   if (target.activeRequest && !target.activeRequest?.isCancelled) {
     // Active Request!

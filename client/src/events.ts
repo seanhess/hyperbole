@@ -121,7 +121,7 @@ export function listenMouseEnter(node: HTMLElement): void {
   node.querySelectorAll<HTMLElement>("[data-onmouseenter]").forEach((node) => {
     let onMouseEnter = node.dataset.onmouseenter
 
-    let target = nearestTarget(node)
+    let target = nearestNonHyperViewTarget(node)
 
     node.onmouseenter = () => {
       const event = new CustomEvent("hyp-mouseenter", { bubbles: true, detail: { target, onMouseEnter } })
@@ -134,7 +134,7 @@ export function listenMouseLeave(node: HTMLElement): void {
   node.querySelectorAll<HTMLElement>("[data-onmouseleave]").forEach((node) => {
     let onMouseLeave = node.dataset.onmouseleave
 
-    let target = nearestTarget(node)
+    let target = nearestNonHyperViewTarget(node)
 
     node.onmouseleave = () => {
       const event = new CustomEvent("hyp-mouseleave", { bubbles: true, detail: { target, onMouseLeave } })
@@ -257,16 +257,22 @@ function nearestTargetId(node: HTMLElement): string | undefined {
 }
 
 function nearestTarget(node: HTMLElement): HyperView | undefined {
+  const target = nearestNonHyperViewTarget(node)
+
+  if (!isHyperView(target)) {
+    console.error("Non HyperView target: ", target)
+    return
+  }
+
+  return target
+}
+
+function nearestNonHyperViewTarget(node: HTMLElement): HTMLElement | undefined {
   let targetId = nearestTargetId(node)
   let target = targetId && document.getElementById(targetId)
 
   if (!target) {
     console.error("Cannot find target: ", targetId, node)
-    return
-  }
-
-  if (!isHyperView(target)) {
-    console.error("Non HyperView target: ", target)
     return
   }
 
