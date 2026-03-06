@@ -232,6 +232,17 @@ spec = withMarkers ["encoded"] $ do
       print $ encode l
       decode @Sum (encode l) `shouldBe` Just l
 
+    -- Regression tests for https://github.com/seanhess/hyperbole/issues/187
+    -- A ViewId (or state) containing a list with newline characters must
+    -- encode/decode correctly.  Previously, desanitizeParamText blindly
+    -- replaced the JSON escape sequence "\\n" with a real newline, corrupting
+    -- the JSON and causing "No Handler for Event viewId".
+    it "list with newline character round-trips correctly (issue #187)" $ do
+      decode @Sum (encode (List ["\n"])) `shouldBe` Just (List ["\n"])
+
+    it "list with newline in multiple elements" $ do
+      decode @Sum (encode (List ["\n", "hello\nworld", "plain"])) `shouldBe` Just (List ["\n", "hello\nworld", "plain"])
+
     it "strings" $ do
       decode @Sum (encode (Str "")) `shouldBe` pure (Str "")
       decode @Sum (encode (Str " ")) `shouldBe` pure (Str " ")

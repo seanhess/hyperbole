@@ -34,6 +34,11 @@ data Product4 = Product4 Text Text Text Text
   deriving (Generic, Show, Eq, Read, ViewId)
 
 
+-- Regression test for https://github.com/seanhess/hyperbole/issues/187
+data MessageView = MessageView [Text]
+  deriving (Generic, Show, Eq, ViewId)
+
+
 newtype Id a = Id {fromId :: Text}
   deriving newtype (Eq, ToJSON, FromJSON, Ord, Show, ToParam, FromParam)
   deriving (Generic)
@@ -79,6 +84,18 @@ spec = withMarkers ["encoded"] $ do
       it "should roundtrip" $ do
         let vid = encodeViewId p
         decodeViewId vid `shouldBe` pure p
+
+    -- Regression tests for https://github.com/seanhess/hyperbole/issues/187
+    -- When a ViewId contains a list of Text with newline characters, the
+    -- encoded/decoded form must round-trip correctly.
+    describe "list with newline (issue #187)" $ do
+      it "roundtrips MessageView with single newline" $ do
+        let v = MessageView ["\n"]
+        decodeViewId (encodeViewId v) `shouldBe` pure v
+
+      it "roundtrips MessageView with newlines in multiple elements" $ do
+        let v = MessageView ["\n", "hello\nworld", "plain"]
+        decodeViewId (encodeViewId v) `shouldBe` pure v
 
 
 -- describe "Param Attributes" $ do

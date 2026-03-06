@@ -164,11 +164,33 @@ decodeParam = \case
   t -> ParamValue $ desanitizeParamText t
 
 
--- replace all underscores that are NOT "\\_" with spaces
+-- Param encoding scheme:
+--   Wire format must not contain bare spaces (field separator) or real newlines.
+--   We use backslash as the escape character:
+--     '\'  → "\\"    (escape backslash itself, so it cannot be confused with an escape prefix)
+--     '\n' → "\n"    (literal backslash + 'n', for real newline characters)
+--     '_'  → "\_"    (escape underscore, since bare underscore encodes space)
+--     ' '  → "_"     (encode space as underscore)
+--   Decoding is the single-pass reverse of the above.
+--
+-- The critical invariant: backslash is escaped FIRST on encode and unescaped
+-- LAST on decode.  This ensures that JSON escape sequences (e.g. the two chars
+-- '\' 'n' inside "[\"\n\"]") are treated as an escaped backslash followed by
+-- a plain 'n', not as the param newline escape.
+-- See: https://github.com/seanhess/hyperbole/issues/187
 
 desanitizeParamText :: Text -> Text
-desanitizeParamText =
-  T.replace "\\ " "_" . T.replace "_" " " . T.replace "\\n" "\n"
+desanitizeParamText = go
+ where
+  go t = case T.uncons t of
+    Nothing -> ""
+    Just ('\\', rest) -> case T.uncons rest of
+      Just ('\\', rest') -> T.cons '\\' (go rest')   -- \\ → \
+      Just ('n', rest')  -> T.cons '\n' (go rest')   -- \n → newline
+      Just ('_', rest')  -> T.cons '_' (go rest')    -- \_ → _
+      _                  -> T.cons '\\' (go rest)    -- bare backslash (shouldn't occur)
+    Just ('_', rest) -> T.cons ' ' (go rest)         -- _ → space
+    Just (c, rest)   -> T.cons c (go rest)            -- other chars verbatim
 
 
 --   | T.isSuffixOf "\\" seg = T.dropEnd 1 seg <> "_" <> txt
@@ -190,10 +212,14 @@ encodeParam (ParamValue t) =
     "" -> "|"
     _ -> sanitizeParamText t
  where
-  -- Q: Should we also sanitize \r\n?
+  -- Encode a param value for the wire format.
+  -- Backslash MUST be escaped first (before newline), otherwise a literal
+  -- backslash followed by 'n' in the input (e.g. from JSON encoding) would
+  -- be indistinguishable from the newline escape on the wire.
+  -- See: https://github.com/seanhess/hyperbole/issues/187
   sanitizeParamText :: Text -> Text
   sanitizeParamText =
-    T.replace " " "_" . T.replace "_" "\\_" . T.replace "\n" "\\n"
+    T.replace " " "_" . T.replace "_" "\\_" . T.replace "\n" "\\n" . T.replace "\\" "\\\\"
 
 
 -- decodeParamValue :: (FromParam a) => Text -> Either String a
