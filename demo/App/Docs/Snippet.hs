@@ -13,7 +13,7 @@ import Data.Text.IO qualified as T
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import System.Directory (doesFileExist, getCurrentDirectory)
-import System.FilePath ((</>))
+import System.FilePath (normalise, (</>))
 import Web.Atomic.CSS
 import Web.Hyperbole.View
 
@@ -162,7 +162,7 @@ newtype ModuleSource = ModuleSource FilePath
 moduleSource :: Q Exp
 moduleSource = do
   loc <- location
-  let path = loc_filename loc
+  let path = normalise $ loc_filename loc
   fp <- runIO $ localFile path
   lift fp
 

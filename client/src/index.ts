@@ -111,7 +111,7 @@ function handleUpdate(res: Update): HyperView | undefined {
   let next: VNode = create(update.content)
   let atts = next.attributes
 
-  if (atts["id"] !== target.id) {
+  if (!res.meta.error && atts["id"] != target.id) {
     console.error("Mismatched ViewId in update - ", atts["id"], " target:", target.id)
     return
   }
