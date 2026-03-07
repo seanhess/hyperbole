@@ -27,7 +27,7 @@ export function listenKeyEvent(event: "keyup" | "keydown", cb: (target: HyperVie
     if (!action) return
 
     e.preventDefault()
-    const target =  nearestTarget(source)
+    const target =  nearestHyperViewTarget(source)
     if (!target) {
       console.error("Missing target: ", source)
       return
@@ -48,7 +48,7 @@ export function listenBubblingEvent(event: string, cb: (_target: HyperView, acti
     if (!source) return
 
     e.preventDefault()
-    let target = nearestTarget(source)
+    let target = nearestHyperViewTarget(source)
     if (!target) {
       console.error("Missing target: ", source)
       return
@@ -103,7 +103,7 @@ export function listenLoad(node: HTMLElement): void {
     // load no longer exists!
     // we should clear the timeout or back out if the dom is replaced in the interem
     setTimeout(() => {
-      let target = nearestTarget(load)
+      let target = nearestHyperViewTarget(load)
       // console.log("load go", load.dataset.onLoad)
 
       if (load.dataset.onload != onLoad) {
@@ -121,7 +121,7 @@ export function listenMouseEnter(node: HTMLElement): void {
   node.querySelectorAll<HTMLElement>("[data-onmouseenter]").forEach((node) => {
     let onMouseEnter = node.dataset.onmouseenter
 
-    let target = nearestNonHyperViewTarget(node)
+    let target = nearestAnyTarget(node)
 
     node.onmouseenter = () => {
       const event = new CustomEvent("hyp-mouseenter", { bubbles: true, detail: { target, onMouseEnter } })
@@ -134,7 +134,7 @@ export function listenMouseLeave(node: HTMLElement): void {
   node.querySelectorAll<HTMLElement>("[data-onmouseleave]").forEach((node) => {
     let onMouseLeave = node.dataset.onmouseleave
 
-    let target = nearestNonHyperViewTarget(node)
+    let target = nearestAnyTarget(node)
 
     node.onmouseleave = () => {
       const event = new CustomEvent("hyp-mouseleave", { bubbles: true, detail: { target, onMouseLeave } })
@@ -162,7 +162,7 @@ export function listenChange(cb: (target: HyperView, action: string) => void): v
       return
     }
 
-    let target = nearestTarget(source)
+    let target = nearestHyperViewTarget(source)
     if (!target) {
       console.error("Missing target: listenChange")
       return
@@ -198,7 +198,7 @@ export function listenInput(startedTyping: (target: HyperView) => void, cb: (tar
 
     e.preventDefault()
 
-    const target = nearestTarget(source)
+    const target = nearestHyperViewTarget(source)
     if (!target) {
       console.error("Missing target: ", source)
       return
@@ -240,7 +240,7 @@ export function listenFormSubmit(cb: (target: HyperView, action: string, form: F
 
     e.preventDefault()
 
-    let target = nearestTarget(form)
+    let target = nearestHyperViewTarget(form)
     const formData = new FormData(form)
     if (!target) {
       console.error("Missing target: ", form)
@@ -255,8 +255,8 @@ function nearestTargetId(node: HTMLElement): string | undefined {
   return targetData?.dataset.target || node.closest("[id]")?.id
 }
 
-function nearestTarget(node: HTMLElement): HyperView | undefined {
-  const target = nearestNonHyperViewTarget(node)
+function nearestHyperViewTarget(node: HTMLElement): HyperView | undefined {
+  const target = nearestAnyTarget(node)
 
   if (!isHyperView(target)) {
     console.error("Non HyperView target: ", target)
@@ -266,7 +266,7 @@ function nearestTarget(node: HTMLElement): HyperView | undefined {
   return target
 }
 
-function nearestNonHyperViewTarget(node: HTMLElement): HTMLElement | undefined {
+function nearestAnyTarget(node: HTMLElement): HTMLElement | undefined {
   let targetId = nearestTargetId(node)
   let target = targetId && document.getElementById(targetId)
 
