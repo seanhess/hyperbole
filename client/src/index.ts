@@ -308,6 +308,8 @@ document.addEventListener("DOMContentLoaded", init)
 
 
 const sock = new SocketConnection()
+// Should we connect to the socket or not?
+sock.connect()
 sock.addEventListener("update", (ev: CustomEvent<Update>) => { handleUpdate(ev.detail) })
 sock.addEventListener("response", (ev: CustomEvent<Update>) => handleResponse(ev.detail))
 sock.addEventListener("redirect", (ev: CustomEvent<Redirect>) => handleRedirect(ev.detail))

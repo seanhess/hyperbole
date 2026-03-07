@@ -25,11 +25,9 @@ export class SocketConnection {
     this.events = new EventTarget()
     const sock = new WebSocket(addr)
     this.socket = sock
-    // Should we connect to the socket or not?
-    this.connect(addr, false)
   }
 
-  connect(addr = defaultAddress, createSocket = true) {
+  connect(addr = defaultAddress, createSocket = false) {
     const sock = createSocket ? new WebSocket(addr) : this.socket
     this.socket = sock
 
@@ -75,7 +73,7 @@ export class SocketConnection {
       // attempt to reconnect in 1s
       if (this.hasEverConnected) {
         console.log("Reconnecting in " + (this.reconnectDelay / 1000) + "s")
-        setTimeout(() => this.connect(addr), this.reconnectDelay)
+        setTimeout(() => this.connect(addr, true), this.reconnectDelay)
       }
 
       sock.removeEventListener('error', onSocketError)
