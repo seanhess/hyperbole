@@ -1,11 +1,11 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection, Update, Redirect } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
-import { actionMessage, ActionMessage, Request, newRequest } from './action'
-import { ViewId, Metadata, parseMetadata, ViewState } from './message'
+import { actionMessage, newRequest } from './action'
+import { ViewId, Metadata, parseMetadata } from './message'
 import { setQuery } from "./browser"
-import { parseResponse, Response, LiveUpdate } from './response'
-import { ConcurrencyMode, HyperView, isHyperView } from "./hyperview"
+import { parseResponse, LiveUpdate } from './response'
+import { dispatchContent, enrichHyperViews, HyperView, isHyperView } from "./hyperview"
 
 let PACKAGE = require('../package.json');
 
@@ -148,7 +148,7 @@ function handleUpdate(res: Update): HyperView | undefined {
   listenMouseEnter(newTarget)
   listenMouseLeave(newTarget)
   fixInputs(newTarget)
-  enrichHyperViews(newTarget)
+  enrichHyperViews(newTarget, runAction)
 
   return target
 }
@@ -254,7 +254,7 @@ function init() {
   listenLoad(document.body)
   listenMouseEnter(document.body)
   listenMouseLeave(document.body)
-  enrichHyperViews(document.body)
+  enrichHyperViews(document.body, runAction)
 
 
   listenClick(async function(target: HyperView, action: string) {
@@ -299,29 +299,8 @@ function init() {
 
 
 
-function enrichHyperViews(node: HTMLElement): void {
-  // enrich all the hyperviews
-  node.querySelectorAll<HyperView>("[id]").forEach((element) => {
-    element.runAction = function(action: string) {
-      return runAction(element, action)
-    }
 
-    element.concurrency = element.dataset.concurrency || "Drop"
 
-    element.cancelActiveRequest = function() {
-      if (element.activeRequest && !element.activeRequest?.isCancelled) {
-        element.activeRequest.isCancelled = true
-      }
-    }
-
-    dispatchContent(node)
-  })
-}
-
-function dispatchContent(node: HTMLElement): void {
-  let event = new Event("hyp-content", { bubbles: true })
-  node.dispatchEvent(event)
-}
 
 document.addEventListener("DOMContentLoaded", init)
 
