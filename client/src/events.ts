@@ -168,8 +168,8 @@ export function listenChange(cb: (target: HyperView, action: string) => void): v
       console.error("Missing target: listenChange")
       return
     }
-    if (source.dataset.onchange === undefined) {
-      console.error("source.dataset.onchange is undefined")
+    if (!source.dataset.onchange) {
+      console.error("Missing onchange: ", source)
       return
     }
     let action = encodedParam(source.dataset.onchange, source.value)
