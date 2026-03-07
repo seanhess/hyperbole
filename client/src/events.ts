@@ -17,7 +17,7 @@ export function listenKeyEvent(event: "keyup" | "keydown", cb: (target: HyperVie
 
   document.addEventListener(event, function(e: KeyboardEvent) {
     if (!(e.target instanceof HTMLElement)) {
-      console.error("listenKeyEvent event target is not HTMLElement: ", e.target)
+      console.warn("listenKeyEvent received event with non HTMLElment as EventTarget: %o", e)
       return
     }
     let source = e.target
@@ -39,6 +39,7 @@ export function listenKeyEvent(event: "keyup" | "keydown", cb: (target: HyperVie
 export function listenBubblingEvent(event: string, cb: (_target: HyperView, action: string) => void): void {
   document.addEventListener(event, function(e) {
     if (!(e.target instanceof HTMLElement)) {
+      console.warn("listenBubblingEvent received an event with non HTMLElment as EventTarget: %o", e)
       return
     }
     let el = e.target
@@ -147,7 +148,7 @@ export function listenMouseLeave(node: HTMLElement): void {
 export function listenChange(cb: (target: HyperView, action: string) => void): void {
   document.addEventListener("change", function(e) {
     if (!(e.target instanceof HTMLElement)) {
-      console.error("listenChange event target is not HTMLElement: ", e.target)
+      console.warn("listenChange received an event with non HTMLElment as EventTarget: %o", e)
       return
     }
     let el = e.target
@@ -183,7 +184,7 @@ interface LiveInputElement extends HTMLInputElement {
 export function listenInput(startedTyping: (target: HyperView) => void, cb: (target: HyperView, action: string) => void): void {
   document.addEventListener("input", function(e) {
     if (!(e.target instanceof HTMLElement)) {
-      console.error("listenInput event target is not HTMLElement: ", e.target)
+      console.warn("listenInput received an event with non HTMLElment as EventTarget: %o", e)
       return
     }
     let el = e.target
@@ -227,7 +228,7 @@ export function listenInput(startedTyping: (target: HyperView) => void, cb: (tar
 export function listenFormSubmit(cb: (target: HyperView, action: string, form: FormData) => void): void {
   document.addEventListener("submit", function(e) {
     if (!(e.target instanceof HTMLFormElement)) {
-      console.error("listenFormSubmit event target is not HTMLFormElement: ", e.target)
+      console.warn("listenFormSubmit received an event with non HTMLElment as EventTarget: %o", e)
       return
     }
     let form = e.target
