@@ -61,7 +61,7 @@ page = do
         hyper Poller viewInit
 
     section PushUpdates $ do
-      markdocs "Actions can call `pushUpdate` to send an intermediate update to the view. This can be simpler than polling. If another"
+      markdocs "Actions can call `pushUpdate` to send an intermediate update to the view. This can be simpler than polling."
       snippet $ raw $(embedTopLevel "Example.Push" "update")
       example Push.source $ do
         hyper Push.Tasks $ Push.taskView 0
