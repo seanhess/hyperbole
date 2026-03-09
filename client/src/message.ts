@@ -9,7 +9,7 @@ export type RequestId = number
 export type EncodedAction = string
 export type ViewState = string
 
-type RemoteEvent = { name: string, detail: any }
+type RemoteEvent = { name: string, detail: unknown }
 
 
 export function renderMetas(meta: Meta[]): string {
@@ -99,7 +99,7 @@ export function parseAction(input: string): [ViewId, string] {
   return [viewId, action]
 }
 
-function breakNextSegment(input: string): [string, string] | undefined {
+function breakNextSegment(input: string): [string, string] {
   let ix = input.indexOf('|')
   if (ix === -1) {
     let err = new Error("Bad Encoding, Expected Segment")

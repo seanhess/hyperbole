@@ -13,8 +13,8 @@ export type ResponseBody = string
 export function parseResponse(res: ResponseBody): LiveUpdate {
   const parser = new DOMParser()
   const doc = parser.parseFromString(res, 'text/html')
-  const css = doc.querySelector("style") as HTMLStyleElement
-  const content = doc.querySelector("div") as HTMLElement
+  const css = doc.querySelector<HTMLStyleElement>("style")
+  const content = doc.querySelector<HTMLElement>("div")
 
   return {
     content: content,
@@ -23,7 +23,7 @@ export function parseResponse(res: ResponseBody): LiveUpdate {
 }
 
 export type LiveUpdate = {
-  content: HTMLElement
+  content: HTMLElement | null
   css: HTMLStyleElement | null
 }
 
