@@ -1,9 +1,14 @@
 import { SocketConnection } from './sockets';
-import { Request } from './action';
 import { ViewId, Metadata } from './message';
+import { HyperView } from "./hyperview";
 declare global {
     interface Window {
         Hyperbole?: HyperboleAPI;
+    }
+    interface DocumentEventMap {
+        "hyp-load": CustomEvent;
+        "hyp-mouseenter": CustomEvent;
+        "hyp-mouseleave": CustomEvent;
     }
 }
 export interface HyperboleAPI {
@@ -13,12 +18,3 @@ export interface HyperboleAPI {
     parseMetadata(input: string): Metadata;
     socket: SocketConnection;
 }
-export interface HyperView extends HTMLElement {
-    runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>;
-    activeRequest?: Request;
-    cancelActiveRequest(): void;
-    concurrency: ConcurrencyMode;
-    _timeout?: any;
-}
-type ConcurrencyMode = string;
-export {};

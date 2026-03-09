@@ -6,7 +6,7 @@ export type Response = {
 export type ResponseBody = string;
 export declare function parseResponse(res: ResponseBody): LiveUpdate;
 export type LiveUpdate = {
-    content: HTMLElement;
+    content: HTMLElement | null;
     css: HTMLStyleElement | null;
 };
 export declare class FetchError extends Error {

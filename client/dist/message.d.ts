@@ -8,7 +8,7 @@ export type EncodedAction = string;
 export type ViewState = string;
 type RemoteEvent = {
     name: string;
-    detail: any;
+    detail: unknown;
 };
 export declare function renderMetas(meta: Meta[]): string;
 export type Metadata = {
