@@ -21,6 +21,12 @@ instance Session Woot where
   cookiePath = Just $ Path ["somepage"]
 
 
+data InsecureSession = InsecureSession Text
+  deriving (Generic, Show, ToEncoded, FromEncoded)
+instance Session InsecureSession where
+  cookieSecure = False
+
+
 spec :: Spec
 spec = do
   describe "Session" $ do
@@ -31,15 +37,19 @@ spec = do
   describe "sessionCookie" $ do
     it "should create cookie" $ do
       let woot = Woot "hello"
-      sessionCookie woot `shouldBe` Cookie (sessionKey @Woot) (cookiePath @Woot) (Just (toCookie woot))
+      sessionCookie woot `shouldBe` Cookie (sessionKey @Woot) (cookiePath @Woot) (Just (toCookie woot)) (cookieSecure @Woot)
 
   describe "render" $ do
     it "should parse cookies" $ do
-      Cookie.parse [("Woot", "Woot")] `shouldBe` Right (Cookie.fromList [Cookie "Woot" Nothing (Just (CookieValue "Woot"))])
+      Cookie.parse [("Woot", "Woot")] `shouldBe` Right (Cookie.fromList [Cookie "Woot" Nothing (Just (CookieValue "Woot")) True])
 
     it "should render cookie with root path" $ do
-      let cookie = Cookie "Woot" Nothing (Just (CookieValue "Woot"))
+      let cookie = Cookie "Woot" Nothing (Just (CookieValue "Woot")) True
       Cookie.render [] cookie `shouldBe` "Woot=Woot; SameSite=None; secure; path=/"
+
+    it "should render non-secure cookie" $ do
+      let cookie = Cookie "Woot" Nothing (Just (CookieValue "Woot")) False
+      Cookie.render [] cookie `shouldBe` "Woot=Woot; SameSite=Lax; path=/"
 
     it "should render complex cookie with included path" $ do
       let woot = Woot "hello world"
@@ -57,6 +67,11 @@ spec = do
       let cooks = Cookie.insert (sessionCookie prefs) mempty
       Just val <- pure $ Cookie.lookup (sessionKey @Preferences) cooks
       parseCookie val `shouldBe` Right prefs
+
+    it "should create non-secure cookie when cookieSecure is False" $ do
+      let insecure = InsecureSession "test"
+      let cookie = sessionCookie insecure
+      cookie.secure `shouldBe` False
 
 
 data Preferences = Preferences

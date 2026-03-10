@@ -42,6 +42,12 @@ class Session a where
   cookiePath = Nothing
 
 
+  -- | By default cookies are secure (HTTPS only). Set to False for local development or LAN usage
+  cookieSecure :: Bool
+  default cookieSecure :: Bool
+  cookieSecure = True
+
+
   -- | Encode type to a a cookie value
   toCookie :: a -> CookieValue
   default toCookie :: (ToEncoded a) => a -> CookieValue
@@ -113,7 +119,7 @@ modifySession_ f = do
 -- | Remove a single 'Session' from the browser cookies
 deleteSession :: forall a es. (Session a, Hyperbole :> es) => Eff es ()
 deleteSession = do
-  let cookie = Cookie (sessionKey @a) (cookiePath @a) Nothing
+  let cookie = Cookie (sessionKey @a) (cookiePath @a) Nothing (cookieSecure @a)
   modifyCookies $ Cookie.insert cookie
 
 
@@ -158,7 +164,7 @@ requestSessionCookies = do
 
 sessionCookie :: forall a. (Session a) => a -> Cookie
 sessionCookie a =
-  Cookie (sessionKey @a) (cookiePath @a) (Just $ toCookie a)
+  Cookie (sessionKey @a) (cookiePath @a) (Just $ toCookie a) (cookieSecure @a)
 
 
 -- | generic datatype name
