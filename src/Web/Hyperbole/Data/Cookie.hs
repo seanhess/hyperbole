@@ -19,6 +19,7 @@ data Cookie = Cookie
   { key :: Key
   , path :: Maybe Path
   , value :: Maybe CookieValue
+  , secure :: Bool
   }
   deriving (Show, Eq)
 
@@ -60,7 +61,9 @@ toList (Cookies m) = M.elems m
 render :: Path -> Cookie -> ByteString
 render requestPath cookie =
   let p = fromMaybe requestPath cookie.path
-   in cs cookie.key <> "=" <> value cookie.value <> "; SameSite=None; secure; path=" <> cs (uriToText (pathUri p))
+      secureFlag = if cookie.secure then "; secure" else ""
+      sameSite = if cookie.secure then "; SameSite=None" else "; SameSite=Lax"
+   in cs cookie.key <> "=" <> value cookie.value <> sameSite <> secureFlag <> "; path=" <> cs (uriToText (pathUri p))
  where
   value Nothing = "; expires=Thu, 01 Jan 1970 00:00:00 GMT"
   value (Just (CookieValue val)) = urlEncode True $ cs val
@@ -75,4 +78,4 @@ parse kvs = do
 parseValue :: ByteString -> ByteString -> Either String Cookie
 parseValue k val = do
   let cval = CookieValue $ cs $ urlDecode True val
-  pure $ Cookie (cs k) Nothing (Just $ cval)
+  pure $ Cookie (cs k) Nothing (Just $ cval) True
