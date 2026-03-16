@@ -6,6 +6,7 @@ module Web.Hyperbole.Application
   , liveAppWith
   , ServerOptions (..)
   , defaultErrorMessage
+  , defaultParseRequestBodyOptions
   , defaultError
   , socketApp
   , quickStartDocument
@@ -44,6 +45,7 @@ liveApp doc =
     ServerOptions
       { toDocument = doc
       , serverError = defaultError
+      , parseRequestBody = defaultParseRequestBodyOptions
       }
 
 

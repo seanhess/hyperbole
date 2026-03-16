@@ -90,6 +90,7 @@ executable demo
       Example.Effects.Todos
       Example.Effects.Users
       Example.Errors
+      Example.FormFileUpload
       Example.FormSimple
       Example.FormValidation
       Example.Interactivity.Events

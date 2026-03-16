@@ -11,7 +11,7 @@ export type ActionMessage = {
   requestId: RequestId
   state?: ViewState
   meta: Meta[]
-  form: URLSearchParams | undefined
+  form?: FormData
 }
 
 
@@ -23,15 +23,18 @@ export function actionMessage(id: ViewId, action: EncodedAction, state: ViewStat
     { key: "Query", value: window.location.search }
   ]
 
-  return { viewId: id, action, state, requestId: reqId, meta, form: toSearch(form) }
+  return { viewId: id, action, state, requestId: reqId, meta, form }
 }
 
 export function toSearch(form?: FormData): URLSearchParams | undefined {
   if (!form) return undefined
 
+
   const params = new URLSearchParams()
 
+  console.log("FORM DATA")
   form.forEach((value, key) => {
+    console.log(" ", key, "=", value)
     params.append(key, value as string)
   })
 
@@ -55,7 +58,8 @@ export function renderActionMessage(msg: ActionMessage): string {
   return [
     header.join('\n'),
     message.renderMetas(msg.meta),
-  ].join('\n') + renderForm(msg.form)
+  ].join('\n')
+  // Forms are submitted via fetch() + renderForm(msg.form)
 }
 
 

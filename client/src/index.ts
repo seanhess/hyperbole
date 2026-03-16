@@ -1,10 +1,11 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
-import { SocketConnection, Update, Redirect } from './sockets'
+import { SocketConnection } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
 import { actionMessage, newRequest } from './action'
 import { ViewId, Metadata, parseMetadata } from './message'
 import { setQuery } from "./browser"
-import { parseResponse, LiveUpdate } from './response'
+import { parseResponse, LiveUpdate, Redirect, Update, Response, BaseResponse, parseResponseDocument, documentUpdate } from './response'
+import { sendActionHttp } from './http'
 import { dispatchContent, enrichHyperViews, HyperView, isHyperView } from "./hyperview"
 
 let PACKAGE = require('../package.json');
@@ -46,7 +47,26 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   // Set the requestId
   target.activeRequest = req
 
-  sock.sendAction(msg)
+  if (!msg.form) {
+    // If we have a form, send via HTTP instead of socket
+    // NOTE: this disables push update!
+    sock.sendAction(msg)
+  }
+  else {
+    let res = await sendActionHttp(msg)
+    console.log("RESPONSE", res)
+
+    // TODO: redirect on http
+    // TODO: display errors!
+    switch (res.kind) {
+      case 'redirect':
+        console.log("TODO HANDLE REDIRECT")
+        break
+      case 'response':
+        handleResponse(res)
+        break;
+    }
+  }
 }
 
 
@@ -61,9 +81,9 @@ function handleRedirect(red: Redirect) {
 }
 
 // in-process update
-function handleResponse(res: Update) {
+function handleResponse(res: Response) {
   // console.log("Handle Response", res)
-  let target = handleUpdate(res)
+  let target = runUpdate(res.viewId, res)
   if (!target) return
 
   // clean up the request
@@ -72,10 +92,14 @@ function handleResponse(res: Update) {
   target.classList.remove("hyp-loading")
 }
 
-function handleUpdate(res: Update): HyperView | undefined {
+function handleUpdate(up: Update) {
+  runUpdate(up.targetViewId, up)
+}
+
+function runUpdate(targetViewId: ViewId, res: BaseResponse): HyperView | undefined {
   // console.log("|UPDATE|", res)
 
-  let targetViewId = res.targetViewId || res.viewId
+  // let targetViewId = res.targetViewId || res.viewId
   let target = document.getElementById(targetViewId)
 
   if (!isHyperView(target)) {
@@ -95,7 +119,8 @@ function handleUpdate(res: Update): HyperView | undefined {
     return target
   }
 
-  let update: LiveUpdate = parseResponse(res.body)
+  let update: LiveUpdate = documentUpdate(parseResponseDocument(res.body))
+
 
   if (!update.content) {
     console.error("Empty Response!", res.body)
@@ -310,8 +335,8 @@ document.addEventListener("DOMContentLoaded", init)
 const sock = new SocketConnection()
 // Should we connect to the socket or not?
 sock.connect()
-sock.addEventListener("update", (ev: CustomEvent<Update>) => { handleUpdate(ev.detail) })
-sock.addEventListener("response", (ev: CustomEvent<Update>) => handleResponse(ev.detail))
+sock.addEventListener("update", (ev: CustomEvent<Update>) => handleUpdate(ev.detail))
+sock.addEventListener("response", (ev: CustomEvent<Response>) => handleResponse(ev.detail))
 sock.addEventListener("redirect", (ev: CustomEvent<Redirect>) => handleRedirect(ev.detail))
 
 
@@ -327,7 +352,7 @@ type VNode = {
 
   // An object whose key/value pairs are the attribute
   // name and value, respectively
-  attributes: { [key: string]:string | undefined }
+  attributes: { [key: string]: string | undefined }
 
   // Is set to `true` if a node is an `svg`, which tells
   // Omdomdom to treat it, and its children, as such

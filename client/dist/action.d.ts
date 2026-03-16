@@ -5,7 +5,7 @@ export type ActionMessage = {
     requestId: RequestId;
     state?: ViewState;
     meta: Meta[];
-    form: URLSearchParams | undefined;
+    form?: FormData;
 };
 export declare function actionMessage(id: ViewId, action: EncodedAction, state: ViewState | undefined, reqId: RequestId, form?: FormData): ActionMessage;
 export declare function toSearch(form?: FormData): URLSearchParams | undefined;

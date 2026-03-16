@@ -23,12 +23,7 @@ export declare function toMetadata(meta: Meta[]): Metadata;
 export declare function parseMetadata(input: string): Metadata;
 export declare function metaValue(key: string, metas: Meta[]): string | undefined;
 export declare function metaValuesAll(key: string, metas: Meta[]): string[];
-export type SplitMessage = {
-    command: string;
-    metas: Meta[];
-    rest: string[];
-};
-export declare function splitMessage(message: string): SplitMessage;
+export declare function parseMetas(lines: string[]): Meta[];
 export declare function parseMeta(line: string): Meta | undefined;
 export declare function parseRemoteEvent(input: string): RemoteEvent;
 export declare function parseAction(input: string): [ViewId, string];

@@ -119,6 +119,7 @@ library
     , text >=1.2 && <3
     , time >=1.12 && <2
     , wai >=3.2 && <4
+    , wai-extra >=3.1.10 && <3.2
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
     , websockets >=0.12 && <0.14
@@ -182,6 +183,7 @@ test-suite test
     , text >=1.2 && <3
     , time >=1.12 && <2
     , wai >=3.2 && <4
+    , wai-extra >=3.1.10 && <3.2
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
     , websockets >=0.12 && <0.14

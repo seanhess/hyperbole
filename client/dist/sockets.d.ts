@@ -1,9 +1,9 @@
 import { ActionMessage } from './action';
-import { ResponseBody } from "./response";
-import { ViewId, RequestId, EncodedAction, Metadata } from "./message";
+import { Update, Redirect, Response } from "./response";
+import { Meta } from "./message";
 interface SocketConnectionEventMap {
     "update": CustomEvent<Update>;
-    "response": CustomEvent<Update>;
+    "response": CustomEvent<Response>;
     "redirect": CustomEvent<Redirect>;
 }
 export declare class SocketConnection {
@@ -22,21 +22,11 @@ export declare class SocketConnection {
     dispatchEvent<K extends keyof SocketConnectionEventMap>(e: SocketConnectionEventMap[K]): void;
     disconnect(): void;
 }
-export type Update = {
-    requestId: RequestId;
-    meta: Metadata;
-    viewId: ViewId;
-    targetViewId?: ViewId;
-    action: EncodedAction;
-    body: ResponseBody;
-};
-export type Redirect = {
-    requestId: RequestId;
-    meta: Metadata;
-    url: string;
-};
 export type MessageType = string;
-export declare class ProtocolError extends Error {
-    constructor(description: string, body: string);
-}
+export type SplitMessage = {
+    command: string;
+    metas: Meta[];
+    rest: string[];
+};
+export declare function splitMessage(msg: string): SplitMessage;
 export {};

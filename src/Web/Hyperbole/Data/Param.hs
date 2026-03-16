@@ -97,14 +97,6 @@ class FromParam a where
   parseParam = genericParseParam
 
 
-  decodeFormValue :: Maybe Text -> Either String a
-  decodeFormValue mval = do
-    case mval of
-      Nothing -> Left "missing form field value"
-      Just t -> do
-        parseParam $ ParamValue t
-
-
 -- decodeParamValue :: Text -> Either String a
 -- decodeParamValue = parseParam . decodeParam
 
@@ -165,11 +157,6 @@ instance FromParam Bool where
       other -> Left $ "Could not parse bool param: " <> cs other
 
 
-  decodeFormValue Nothing = pure False
-  decodeFormValue (Just t) =
-    parseParam $ ParamValue t
-
-
 instance FromParam Char where
   parseParam = parseQueryParam
 instance FromParam UTCTime where
@@ -205,11 +192,6 @@ instance {-# OVERLAPPABLE #-} (FromParam a) => FromParam (Maybe a) where
   parseParam t = Just <$> parseParam @a t
 
 
-  decodeFormValue Nothing = pure Nothing
-  decodeFormValue (Just t) = do
-    parseParam @(Maybe a) (ParamValue t)
-
-
 instance {-# OVERLAPS #-} FromParam (Maybe Text) where
   parseParam (ParamValue "~") = pure Nothing
   -- keep empty strings, the default instance discards them
@@ -217,10 +199,9 @@ instance {-# OVERLAPS #-} FromParam (Maybe Text) where
   parseParam t = Just <$> parseParam @Text t
 
 
-  decodeFormValue Nothing = pure Nothing
-  decodeFormValue (Just t) = do
-    parseParam @(Maybe Text) (ParamValue t)
-
+-- decodeFormValue Nothing = pure Nothing
+-- decodeFormValue (Just t) = do
+--   parseParam @(Maybe Text) (ParamValue t)
 
 instance (ToParam a, ToParam b) => ToParam (Either a b) where
   toParam (Left a) = toParam a

@@ -127,7 +127,7 @@ run = do
 exampleApp :: AppConfig -> UserStore -> TVar Int -> Chat.Room -> Application
 exampleApp config users count chats = do
   liveAppWith
-    (ServerOptions (document documentHead) serverError)
+    (ServerOptions (document documentHead) serverError defaultParseRequestBodyOptions)
     (runApp . routeRequest $ router)
  where
   runApp :: (Hyperbole :> es, IOE :> es) => Eff (OAuth2 : GenRandom : Concurrent : Debug : Users : Todos : Reader AppConfig : es) a -> Eff es a

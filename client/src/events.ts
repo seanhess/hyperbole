@@ -27,7 +27,7 @@ export function listenKeyEvent(event: "keyup" | "keydown", cb: (target: HyperVie
     if (!action) return
 
     e.preventDefault()
-    const target =  nearestHyperViewTarget(source)
+    const target = nearestHyperViewTarget(source)
     if (!target) {
       console.error("Missing target: ", source)
       return
@@ -225,7 +225,7 @@ export function listenInput(startedTyping: (target: HyperView) => void, cb: (tar
 
 
 
-export function listenFormSubmit(cb: (target: HyperView, action: string, form: FormData) => void): void {
+export function listenFormSubmit(cb: (target: HyperView, action: string, formData: FormData) => void): void {
   document.addEventListener("submit", function(e) {
     if (!(e.target instanceof HTMLFormElement)) {
       console.warn("listenFormSubmit received an event with non HTMLElment as EventTarget: %o", e)
@@ -244,7 +244,7 @@ export function listenFormSubmit(cb: (target: HyperView, action: string, form: F
     let target = nearestHyperViewTarget(form)
     const formData = new FormData(form)
     if (!target) {
-      console.error("Missing target: ", form)
+      console.error("Missing target: ", target)
       return
     }
     cb(target, form.dataset.onsubmit, formData)

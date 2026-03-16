@@ -1,10 +1,12 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.HyperView.Forms
   ( FromForm (..)
   , FromFormF (..)
+  , FromField (..)
   , GenFields (..)
   , fieldNames
   , FieldName (..)
@@ -23,7 +25,6 @@ module Web.Hyperbole.HyperView.Forms
   , textarea
   , submit
   , formData
-  , FormOptions (..)
   , Validated (..)
   , isInvalid
   , invalidText
@@ -31,40 +32,50 @@ module Web.Hyperbole.HyperView.Forms
   , Identity
 
     -- * Re-exports
-  , FE.FromFormKey
   , Generic
   , GFieldsGen (..)
   , GenField (..)
-  , Form (..)
   )
 where
 
+import Control.Applicative ((<|>))
+import Data.Aeson (Value)
 import Data.Bifunctor (first)
+import Data.ByteString qualified as BS
 import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
 import Data.Maybe (fromMaybe)
 import Data.String (IsString (..))
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
+import Data.Time.Clock (UTCTime)
+import Data.Word
 import Effectful
 import GHC.Generics
 import Text.Casing (kebab)
 import Web.Atomic.Types hiding (Selector)
-import Web.FormUrlEncoded (Form (..), FormOptions (..))
-import Web.FormUrlEncoded qualified as FE
 import Web.Hyperbole.Data.Param
+import Web.Hyperbole.Data.URI (URI)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView.Event (onSubmit)
 import Web.Hyperbole.HyperView.Input (Option (..), checked)
 import Web.Hyperbole.HyperView.Types
+import Web.Hyperbole.Types.Request
 import Web.Hyperbole.View
 
+
+-- import Web.FormUrlEncoded (Form (..), FormOptions (..))
+-- import Web.FormUrlEncoded qualified as FE
 
 ------------------------------------------------------------------------------
 -- FORM PARSING
 ------------------------------------------------------------------------------
+
+type Form = RequestBody
+type FormKey = BS.ByteString
+
 
 {- | Simple types that be decoded from form data
 
@@ -73,8 +84,8 @@ import Web.Hyperbole.View
 @
 -}
 class FromForm (form :: Type) where
-  fromForm :: FE.Form -> Either String form
-  default fromForm :: (Generic form, GFormParse (Rep form)) => FE.Form -> Either String form
+  fromForm :: Form -> Either String form
+  default fromForm :: (Generic form, GFormParse (Rep form)) => Form -> Either String form
   fromForm f = to <$> gFormParse f
 
 
@@ -85,8 +96,8 @@ class FromForm (form :: Type) where
 @
 -}
 class FromFormF (f :: (Type -> Type) -> Type) where
-  fromFormF :: FE.Form -> Either String (f Identity)
-  default fromFormF :: (Generic (f Identity), GFormParse (Rep (f Identity))) => FE.Form -> Either String (f Identity)
+  fromFormF :: Form -> Either String (f Identity)
+  default fromFormF :: (Generic (f Identity), GFormParse (Rep (f Identity))) => Form -> Either String (f Identity)
   fromFormF f = to <$> gFormParse f
 
 
@@ -99,9 +110,17 @@ instance (FromFormF form) => FromForm (form Identity) where
 -- | Parse a full type from a submitted form body
 formData :: forall form es. (FromForm form, Hyperbole :> es) => Eff es form
 formData = do
-  f <- formBody
-  let ef = fromForm @form f :: Either String form
+  b <- (.body) <$> request
+  let ef = fromForm @form b :: Either String form
   either parseError pure ef
+
+
+lookupField :: FormKey -> RequestBody -> Maybe FormField
+lookupField key req =
+  lookupParam <|> lookupFile
+ where
+  lookupParam = ParamField . ParamValue . cs <$> lookup key req.params
+  lookupFile = FileField <$> lookup key req.files
 
 
 ------------------------------------------------------------------------------
@@ -391,11 +410,77 @@ type instance Field (Either String) a = Either String a
 
 
 ------------------------------------------------------------------------------
+-- FormField
+------------------------------------------------------------------------------
+
+data FormField
+  = ParamField ParamValue
+  | FileField UploadedFile
+  deriving (Show, Eq)
+
+
+class FromField a where
+  parseField :: Maybe FormField -> Either String a
+  default parseField :: (FromParam a) => Maybe FormField -> Either String a
+  parseField = \case
+    Nothing ->
+      Left "Missing form field value"
+    Just (ParamField p) -> do
+      parseParam p
+    Just (FileField _) ->
+      Left "Cannot parse uploaded file as param"
+
+
+instance FromField ParamValue
+instance FromField Int
+instance FromField Integer
+instance FromField Float
+instance FromField Double
+instance FromField Text
+instance (FromParam a, FromParam b) => FromField (a, b)
+instance FromField Word
+instance FromField Word8
+instance FromField Word16
+instance FromField Word32
+instance FromField Word64
+instance FromField Bool where
+  parseField Nothing = pure False
+  parseField (Just (ParamField p)) = parseParam p
+  parseField (Just (FileField _)) = Left "Cannot parse file param as bool"
+instance FromField Char
+instance FromField UTCTime
+instance FromField Value
+instance FromField URI
+instance {-# OVERLAPS #-} FromField String
+instance {-# OVERLAPPABLE #-} (FromParam a) => FromField [a]
+instance {-# OVERLAPPABLE #-} (FromField a) => FromField (Maybe a) where
+  parseField Nothing = pure Nothing
+  parseField (Just a) = do
+    Just <$> parseField @a (Just a)
+instance (FromParam a, FromParam b) => FromField (Either a b)
+instance FromField UploadedFile where
+  parseField = \case
+    Nothing -> Left "Missing file upload"
+    Just (ParamField _) -> Left "Cannot parse form param as file upload"
+    Just (FileField f) ->
+      if f.fileContent == mempty && f.fileName == mempty
+        then Left "Empty file uploaded"
+        else pure f
+instance {-# OVERLAPS #-} FromField (Maybe UploadedFile) where
+  parseField = \case
+    Just (FileField f) -> do
+      if f.fileContent == mempty && f.fileName == mempty
+        then pure Nothing
+        else pure $ Just f
+    other -> parseField other
+
+
+------------------------------------------------------------------------------
 -- GENERIC FORM PARSE
 ------------------------------------------------------------------------------
 
 class GFormParse f where
-  gFormParse :: FE.Form -> Either String (f p)
+  gFormParse :: Form -> Either String (f p)
 
 
 instance (GFormParse f, GFormParse g) => GFormParse (f :*: g) where
@@ -415,12 +500,14 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
 
 -- TODO: need a bool instance?
 -- TODO: need a Maybe a instance?
-instance (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
+instance (Selector s, FromField a) => GFormParse (M1 S s (K1 R a)) where
   -- these CANNOT be json encoded, they are encoded by the browser
   gFormParse f = do
     let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
-    mt :: Maybe Text <- first cs $ FE.lookupMaybe (cs sel) f
-    a <- first (\err -> sel <> ": " <> err) $ decodeFormValue mt
+
+    -- some of the fields might not exist, and we can handle that in FromField
+    let mt :: Maybe FormField = lookupField (cs sel) f
+    a <- first (\err -> sel <> ": " <> err) $ parseField mt
     pure $ M1 . K1 $ a
 
 

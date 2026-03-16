@@ -62,6 +62,7 @@ dependencies:
   - atomic-css >= 0.2 && < 0.3
   - string-conversions >= 0.4 && <0.5
   - wai-websockets >= 3.0 && <4
+  - wai-extra >= 3.1.10 && <3.2
   - network >= 3.1 && <4
   - websockets >= 0.12 && <0.14
   - cookie >=0.4 && <0.6

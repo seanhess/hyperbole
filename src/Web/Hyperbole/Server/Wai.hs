@@ -19,6 +19,7 @@ import Effectful.Writer.Static.Local (tell)
 import Network.HTTP.Types (Header, HeaderName, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
+import Network.Wai.Parse qualified as Wai (lbsBackEnd, parseRequestBodyEx)
 import Web.Atomic (att, (@))
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
@@ -44,9 +45,11 @@ handleRequestWai
   -> Eff es Wai.ResponseReceived
 handleRequestWai options req respond actions = do
   -- NOTE: Remember, this is called for both updates AND for page loads
-  body <- liftIO $ Wai.consumeRequestBodyLazy req
+  -- TODO: What if they want to save files to disk instead of into memory?
+  -- then we couldn't use BL.ByteString as the type
+  (params, files) <- liftIO $ Wai.parseRequestBodyEx options.parseRequestBody Wai.lbsBackEnd req
   rq <- either throwIO pure $ do
-    fromWaiRequest req body
+    fromWaiRequest req $ RequestBody params files
   (res, client, rmts) <- runHyperboleWai rq actions
   liftIO $ sendResponse options rq client res rmts respond
 
@@ -139,7 +142,7 @@ messageFromBody inp = do
   first (\e -> InvalidMessage e (cs inp)) $ parseActionMessage (cs inp)
 
 
-fromWaiRequest :: Wai.Request -> BL.ByteString -> Either MessageError Request
+fromWaiRequest :: Wai.Request -> RequestBody -> Either MessageError Request
 fromWaiRequest wr body = do
   let pth = path $ cs $ Wai.rawPathInfo wr
       query = Wai.queryString wr
@@ -153,7 +156,7 @@ fromWaiRequest wr body = do
 
   pure $
     Request
-      { body = body
+      { body
       , path = pth
       , event
       , query

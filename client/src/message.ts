@@ -1,5 +1,5 @@
 
-import { takeWhileMap, dropWhile } from "./lib"
+import { takeWhileMap } from "./lib"
 
 
 
@@ -43,7 +43,7 @@ export function toMetadata(meta: Meta[]): Metadata {
 // viewId: meta.find(m => m.key == "VIEW-ID")?.value,
 
 export function parseMetadata(input: string): Metadata {
-  let metas = takeWhileMap(parseMeta, input.trim().split("\n"))
+  let metas = parseMetas(input.trim().split("\n"))
   return toMetadata(metas)
 }
 
@@ -56,23 +56,9 @@ export function metaValuesAll(key: string, metas: Meta[]): string[] {
   return metas.filter(m => m.key == key).map(m => m.value)
 }
 
-export type SplitMessage = {
-  command: string,
-  metas: Meta[],
-  rest: string[]
-}
 
-
-export function splitMessage(message: string): SplitMessage {
-  let lines = message.split("\n")
-  let command: string = lines[0]
-  let metas: Meta[] = takeWhileMap(parseMeta, lines.slice(1))
-  // console.log("Split Metadata", lines.length)
-  // console.log(" [0]", lines[0])
-  // console.log(" [1]", lines[1])
-  let rest = dropWhile(l => l == "", lines.slice(metas.length + 1))
-
-  return { command, metas, rest }
+export function parseMetas(lines: string[]): Meta[] {
+  return takeWhileMap(parseMeta, lines)
 }
 
 export function parseMeta(line: string): Meta | undefined {
@@ -108,4 +94,6 @@ function breakNextSegment(input: string): [string, string] {
   }
   return [input.slice(0, ix), input.slice(ix + 1)]
 }
+
+
 

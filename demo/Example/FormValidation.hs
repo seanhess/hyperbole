@@ -2,9 +2,9 @@
 
 module Example.FormValidation where
 
+import App.Docs
 import Data.Text (Text, pack)
 import Data.Text qualified as T
-import App.Docs
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
@@ -32,7 +32,7 @@ instance HyperView Signup es where
 
 -- Form Fields
 newtype User = User {username :: Text}
-  deriving newtype (FromParam)
+  deriving newtype (FromField)
 
 data UserForm f = UserForm
   { user :: Field f User

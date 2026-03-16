@@ -1,14 +1,15 @@
 import { ActionMessage, renderActionMessage } from './action'
-import { ResponseBody } from "./response"
+import { dropWhile } from "./lib"
+import { ResponseBody, Update, Redirect, Response, parseResponse, parseRedirect, requireMeta, parseUpdate } from "./response"
 import * as message from "./message"
-import { ViewId, RequestId, EncodedAction, metaValue, Metadata } from "./message"
+import { ViewId, RequestId, EncodedAction, metaValue, Metadata, Meta } from "./message"
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
 
 interface SocketConnectionEventMap {
   "update": CustomEvent<Update>;
-  "response": CustomEvent<Update>;
+  "response": CustomEvent<Response>;
   "redirect": CustomEvent<Redirect>;
 }
 
@@ -105,103 +106,23 @@ export class SocketConnection {
 
   // full responses will never be sent over!
   private onMessage(event: MessageEvent) {
-    let { command, metas, rest } = message.splitMessage(event.data)
+    let { command, metas, rest } = splitMessage(event.data)
     // console.log("MESSAGE", command, metas, rest)
-
-    let requestId = parseInt(requireMeta("RequestId"), 0)
-
-    function requireMeta(key: string): string {
-      let val = metaValue(key, metas)
-      if (!val) throw new ProtocolError("Missing Required Metadata: " + key, event.data)
-      return val
-    }
-
-    function parseResponse(rest: string[]): Update {
-      let viewId = requireMeta("ViewId")
-      let action = requireMeta("Action")
-      return {
-        requestId,
-        targetViewId: undefined,
-        viewId,
-        action,
-        meta: message.toMetadata(metas),
-        body: rest.join("\n"),
-      }
-    }
-
-    function parseUpdate(rest: string[]): Update {
-      let up = parseResponse(rest)
-      // add the TargetViewId
-      up.targetViewId = metaValue("TargetViewId", metas)
-      return up
-    }
-
-    function parseRedirect(rest: string[]): Redirect {
-      let url = rest[0]
-      return {
-        requestId,
-        meta: message.toMetadata(metas),
-        url
-      }
-    }
-
+    //
     switch (command) {
-
       case "|UPDATE|":
-        return this.dispatchEvent(new CustomEvent("update", { detail: parseUpdate(rest) }))
+        this.dispatchEvent(new CustomEvent<Update>("update", { detail: parseUpdate(metas, rest) }))
+        return
 
       case "|RESPONSE|":
-        return this.dispatchEvent(new CustomEvent("response", { detail: parseResponse(rest) }))
+        this.dispatchEvent(new CustomEvent<Response>("response", { detail: parseResponse(metas, rest) }))
+        return
 
       case "|REDIRECT|":
-        return this.dispatchEvent(new CustomEvent("redirect", { detail: parseRedirect(rest) }))
+        this.dispatchEvent(new CustomEvent<Redirect>("redirect", { detail: parseRedirect(metas, rest) }))
+        return
     }
   }
-
-
-  // so what if they send remote events in the page? trigger, redirect, page title, etc...
-  // we aren't connected yet on a page thing
-
-  // private async waitMessage(reqId: RequestId, id: ViewId): Promise<ParsedResponse> {
-  //   return new Promise((resolve, reject) => {
-  //     const onMessage = (event: MessageEvent) => {
-  //       let data: string = event.data
-  //       let lines = data.split("\n").slice(1)  // drop the command line
-  //
-  //       let parsed = splitMetadata(lines)
-  //       let metadata: Metadata = parsed.metadata
-  //
-  //       if (!metadata.requestId) {
-  //         console.error("Missing RequestId!", metadata, event.data)
-  //         return
-  //       }
-  //
-  //       if (metadata.requestId != reqId) {
-  //         // skip, it's not us!
-  //         return
-  //       }
-  //
-  //
-  //       // We have found our message. Remove the listener
-  //       this.socket.removeEventListener('message', onMessage)
-  //
-  //       // set the cookies. These happen automatically in http
-  //       metadata.cookies.forEach((cookie: string) => {
-  //         document.cookie = cookie
-  //       })
-  //
-  //       if (metadata.error) {
-  //         reject(new FetchError(id, metadata.error, parsed.rest.join('\n')))
-  //         return
-  //       }
-  //
-  //       resolve(parsed)
-  //     }
-  //
-  //     this.socket.addEventListener('message', onMessage)
-  //     this.socket.addEventListener('error', reject)
-  //   })
-  // }
 
   addEventListener<K extends keyof SocketConnectionEventMap>(e: K, cb: (ev: SocketConnectionEventMap[K]) => void) {
     this.events.addEventListener(e,
@@ -222,29 +143,26 @@ export class SocketConnection {
 }
 
 
-export type Update = {
-  requestId: RequestId
-  meta: Metadata
-  viewId: ViewId
-  targetViewId?: ViewId
-  action: EncodedAction
-  body: ResponseBody
-}
-
-export type Redirect = {
-  requestId: RequestId
-  meta: Metadata
-  url: string
-}
 
 export type MessageType = string
 
 
-// PARSING MESSAGE  ---------------------------------------
 
-export class ProtocolError extends Error {
-  constructor(description: string, body: string) {
-    super(description + "\n" + body)
-    this.name = "ProtocolError"
-  }
+export type SplitMessage = {
+  command: string,
+  metas: Meta[],
+  rest: string[]
+}
+
+
+export function splitMessage(msg: string): SplitMessage {
+  let lines = msg.split("\n")
+  let command: string = lines[0]
+  let metas: Meta[] = message.parseMetas(lines.slice(1))
+  // console.log("Split Metadata", lines.length)
+  // console.log(" [0]", lines[0])
+  // console.log(" [1]", lines[1])
+  let rest = dropWhile(l => l == "", lines.slice(metas.length + 1))
+
+  return { command, metas, rest }
 }
