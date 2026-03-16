@@ -147,6 +147,8 @@ typeKeywords =
   , "Concurrency"
   , "Replace"
   , "Drop"
+  , "RequestBody"
+  , "UploadedFile"
   ]
 
 valueKeywords :: Set Text
@@ -190,6 +192,7 @@ valueKeywords =
   , "onMouseEnter"
   , "onMouseLeave"
   , "onInput"
+  , "fileInput"
   ]
 
 embedFile :: FilePath -> Q Exp

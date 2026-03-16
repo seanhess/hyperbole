@@ -22,8 +22,9 @@ import {
   type EncodedAction,
 } from "./message"
 import { setQuery } from "./browser"
-import { parseResponse, type LiveUpdate } from "./response"
+import { parseResponseDocument, type LiveUpdate, type Response, type BaseResponse, documentUpdate } from "./response"
 import { dispatchContent, enrichHyperViews, type HyperView, isHyperView } from "./hyperview"
+import { sendActionHttp } from "./http"
 
 declare const __VERSION__: string
 
@@ -58,7 +59,26 @@ async function runAction(target: HyperView, action: string, body?: ActionBody) {
   // Set the requestId
   target.activeRequest = req
 
-  void sock.sendAction(msg)
+  if (!msg.form) {
+    // If we have a form, send via HTTP instead of socket
+    // NOTE: this disables push update!
+    sock.sendAction(msg)
+  }
+  else {
+    let res = await sendActionHttp(msg)
+    console.log("RESPONSE", res)
+
+    // TODO: redirect on http
+    // TODO: forward errors to view. Right now they throw!
+    switch (res.kind) {
+      case 'redirect':
+        console.log("TODO HANDLE REDIRECT")
+        break
+      case 'response':
+        handleResponse(res)
+        break;
+    }
+  }
 }
 
 function handleTrigger(trigger: Trigger) {
@@ -81,9 +101,9 @@ function handleRedirect(red: Redirect) {
 }
 
 // in-process update
-function handleResponse(res: Update) {
+function handleResponse(res: Response) {
   // console.log("Handle Response", res)
-  let target = handleUpdate(res)
+  let target = runUpdate(res.viewId, res)
   if (!target) return
 
   // clean up the request
@@ -92,10 +112,18 @@ function handleResponse(res: Update) {
   target.classList.remove("hyp-loading")
 }
 
-function handleUpdate(res: Update): HyperView | undefined {
+function handleUpdate(up: Update) {
+  if (!up.targetViewId) {
+    console.error("Missing Update targetViewId", up)
+    return
+  }
+  runUpdate(up.targetViewId, up)
+}
+
+function runUpdate(targetViewId: ViewId, res: BaseResponse): HyperView | undefined {
   // console.log("|UPDATE|", res)
 
-  let targetViewId = res.targetViewId || res.viewId
+  // let targetViewId = res.targetViewId || res.viewId
   let target = document.getElementById(targetViewId)
 
   if (!isHyperView(target)) {
@@ -121,7 +149,8 @@ function handleUpdate(res: Update): HyperView | undefined {
     return target
   }
 
-  let update: LiveUpdate = parseResponse(res.body)
+  let update: LiveUpdate = documentUpdate(parseResponseDocument(res.body))
+
 
   if (!update.content) {
     console.error("Empty Response!", res.body)
@@ -327,10 +356,8 @@ document.addEventListener("DOMContentLoaded", init)
 const sock = new SocketConnection()
 // Should we connect to the socket or not?
 sock.connect()
-sock.addEventListener("update", (ev: CustomEvent<Update>) => {
-  handleUpdate(ev.detail)
-})
-sock.addEventListener("response", (ev: CustomEvent<Update>) => handleResponse(ev.detail))
+sock.addEventListener("update", (ev: CustomEvent<Update>) => handleUpdate(ev.detail))
+sock.addEventListener("response", (ev: CustomEvent<Response>) => handleResponse(ev.detail))
 sock.addEventListener("redirect", (ev: CustomEvent<Redirect>) => handleRedirect(ev.detail))
 sock.addEventListener("trigger", (ev: CustomEvent<Trigger>) => handleTrigger(ev.detail))
 sock.addEventListener("event", (ev: CustomEvent<JSEvent>) => handleEvent(ev.detail))

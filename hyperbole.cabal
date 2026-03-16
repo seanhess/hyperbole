@@ -48,7 +48,6 @@ library
       Web.Hyperbole.Effect.Hyperbole
       Web.Hyperbole.Effect.OAuth2
       Web.Hyperbole.Effect.Query
-      Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Session
       Web.Hyperbole.HyperView
@@ -64,6 +63,7 @@ library
       Web.Hyperbole.Server.Message
       Web.Hyperbole.Server.Options
       Web.Hyperbole.Server.Socket
+      Web.Hyperbole.Server.Uploads
       Web.Hyperbole.Server.Wai
       Web.Hyperbole.TypeList
       Web.Hyperbole.Types.Client
@@ -116,11 +116,13 @@ library
     , network >=3.1 && <4
     , network-uri >=2.6.4.1 && <2.7
     , random >=1.2 && <2
+    , resourcet >=1.2 && <2
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
     , text >=1.2 && <3
     , time >=1.12 && <2
     , wai >=3.2 && <4
+    , wai-extra >=3.1.10 && <3.2
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
     , websockets >=0.12 && <0.14
@@ -180,12 +182,14 @@ test-suite test
     , network >=3.1 && <4
     , network-uri >=2.6.4.1 && <2.7
     , random >=1.2 && <2
+    , resourcet >=1.2 && <2
     , skeletest
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
     , text >=1.2 && <3
     , time >=1.12 && <2
     , wai >=3.2 && <4
+    , wai-extra >=3.1.10 && <3.2
     , wai-websockets >=3.0 && <4
     , warp >=3.3 && <4
     , websockets >=0.12 && <0.14

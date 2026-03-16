@@ -1,12 +1,19 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Web.Hyperbole.Server.Options where
+module Web.Hyperbole.Server.Options
+  ( ServerOptions (..)
+  , defaultErrorMessage
+  , defaultErrorBody
+  , defaultError
+  , defaultParseRequestBodyOptions
+  ) where
 
 import Data.Aeson (Value)
 import Data.ByteString.Lazy qualified as BL
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Network.Wai.Parse as Wai (ParseRequestBodyOptions, defaultParseRequestBodyOptions)
 import Web.Atomic.CSS
 import Web.Hyperbole.Data.Encoded (Encoded, encodedToText)
 import Web.Hyperbole.Types.Event
@@ -17,6 +24,7 @@ import Web.Hyperbole.View
 data ServerOptions = ServerOptions
   { toDocument :: BL.ByteString -> BL.ByteString
   , serverError :: ResponseError -> ServerError
+  , parseRequestBody :: ParseRequestBodyOptions
   }
 
 

@@ -38,9 +38,12 @@ export function actionMessage(
 export function toSearch(form?: FormData): URLSearchParams | undefined {
   if (!form) return undefined
 
+
   const params = new URLSearchParams()
 
+  console.log("FORM DATA")
   form.forEach((value, key) => {
+    console.log(" ", key, "=", value)
     params.append(key, value as string)
   })
 
@@ -56,7 +59,11 @@ export function renderActionMessage(msg: ActionMessage): string {
 
   header.push("RequestId: " + msg.requestId)
 
-  return [header.join("\n"), message.renderMetas(msg.meta)].join("\n") + renderForm(msg.body)
+  return [
+    header.join('\n'),
+    message.renderMetas(msg.meta),
+  ].join('\n')
+  // Forms are submitted via fetch() + renderForm(msg.form)
 }
 
 export function renderForm(body?: ActionBody): string {

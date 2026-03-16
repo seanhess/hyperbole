@@ -256,7 +256,7 @@ export function listenFormSubmit(
     let target = nearestHyperViewTarget(form)
     const formData = new FormData(form)
     if (!target) {
-      console.error("Missing target: ", form)
+      console.error("Missing target: ", target)
       return
     }
     cb(target, form.dataset.onsubmit, formData)

@@ -30,6 +30,7 @@ import Web.Hyperbole.Data.URI (path, uriToText)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Server.Options
+import Web.Hyperbole.Server.Uploads (withPostBody)
 import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event (Event (..), TargetViewId (..))
 import Web.Hyperbole.Types.Request
@@ -46,16 +47,17 @@ handleRequestWai
   -> Eff es Wai.ResponseReceived
 handleRequestWai options req respond actions = do
   -- NOTE: Remember, this is called for both updates AND for page loads
-  body <- liftIO $ Wai.consumeRequestBodyLazy req
-  rq <- either throwIO pure $ do
-    fromWaiRequest req body
-  (res, client, rmts) <- runHyperboleWai rq actions
-  liftIO $ sendResponse options rq client res rmts respond
+  withPostBody options.parseRequestBody req $ \params files -> do
+    rq <- either throwIO pure $ do
+      fromWaiRequest req $ RequestBody params files
+    (res, client, rmts) <- runHyperboleWai rq actions
+    liftIO $ sendResponse options rq client res rmts respond
 
 
 -- | Run the 'Hyperbole' effect to get a response
 runHyperboleWai
-  :: Request
+  :: (IOE :> es)
+  => Request
   -> Eff (Hyperbole : es) Response
   -> Eff es (Response, Client, [Remote])
 runHyperboleWai req = reinterpret (runHyperboleLocal req) $ \_ -> \case
@@ -87,7 +89,8 @@ sendResponse options req client res remotes respond = do
   response :: Metadata -> Response -> Wai.Response
   response metas = \case
     (Err err) ->
-      respondError (errStatus err) [] $ options.serverError err
+      -- don't send headers
+      respondError (errStatus err) [] metas $ options.serverError err
     (Response (ViewUpdate _ vw)) -> do
       respondHtml status200 (clientHeaders client) $ renderViewResponse metas vw
     (Redirect u) -> do
@@ -116,7 +119,7 @@ sendResponse options req client res remotes respond = do
   renderViewResponse metas (Body body) =
     addDocument $ renderLazyByteString (runViewContext metas () $ scriptMeta metas) <> "\n\n" <> body
 
-  respondError s hs serr = respondHtml s hs $ renderViewResponse (metaError serr.message) serr.body
+  respondError s hs metas serr = respondHtml s hs $ renderViewResponse (metaError serr.message <> metas) serr.body
   respondHtml s hs = Wai.responseLBS s (contentType ContentHtml : hs)
   -- respondText s hs = Wai.responseLBS s (contentType ContentText : hs)
 
@@ -144,7 +147,7 @@ messageFromBody inp = do
   first (\e -> InvalidMessage e (cs inp)) $ parseActionMessage (cs inp)
 
 
-fromWaiRequest :: Wai.Request -> BL.ByteString -> Either MessageError Request
+fromWaiRequest :: Wai.Request -> RequestBody -> Either MessageError Request
 fromWaiRequest wr body = do
   let pth = path $ cs $ Wai.rawPathInfo wr
       query = Wai.queryString wr
@@ -158,7 +161,7 @@ fromWaiRequest wr body = do
 
   pure $
     Request
-      { body = body
+      { body
       , path = pth
       , event
       , query

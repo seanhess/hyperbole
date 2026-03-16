@@ -1,5 +1,6 @@
 import { type ActionMessage, renderActionMessage } from "./action"
-import { type ResponseBody } from "./response"
+import { type ResponseBody, ProtocolError, type Response } from "./response"
+import { dropWhile } from "./lib"
 import * as message from "./message"
 import {
   type ViewId,
@@ -8,6 +9,7 @@ import {
   metaValue,
   type Metadata,
   type RemoteEvent,
+  type Meta,
 } from "./message"
 
 const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
@@ -15,7 +17,7 @@ const defaultAddress = `${protocol}//${window.location.host}${window.location.pa
 
 interface SocketConnectionEventMap {
   update: CustomEvent<Update>
-  response: CustomEvent<Update>
+  response: CustomEvent<Response>
   redirect: CustomEvent<Redirect>
   trigger: CustomEvent<Trigger>
   event: CustomEvent<JSEvent>
@@ -111,7 +113,7 @@ export class SocketConnection {
 
   // full responses will never be sent over!
   private onMessage(event: MessageEvent) {
-    let { command, metas, rest } = message.splitMessage(event.data)
+    let { command, metas, rest } = splitMessage(event.data)
     // console.log("MESSAGE", command, metas, rest)
 
     let requestId = parseInt(requireMeta("RequestId"), 0)
@@ -165,10 +167,12 @@ export class SocketConnection {
 
     switch (command) {
       case "|UPDATE|":
-        return this.dispatchEvent(new CustomEvent("update", { detail: parseUpdate(rest) }))
+        this.dispatchEvent(new CustomEvent<Update>("update", { detail: parseUpdate(rest) }))
+        return
 
       case "|RESPONSE|":
-        return this.dispatchEvent(new CustomEvent("response", { detail: parseResponse(rest) }))
+        this.dispatchEvent(new CustomEvent<Update>("response", { detail: parseResponse(rest) }))
+        return
 
       case "|REDIRECT|":
         return this.dispatchEvent(new CustomEvent("redirect", { detail: parseRedirect(rest) }))
@@ -284,11 +288,22 @@ export type JSEvent = {
 
 export type MessageType = string
 
-// PARSING MESSAGE  ---------------------------------------
 
-export class ProtocolError extends Error {
-  constructor(description: string, body: string) {
-    super(description + "\n" + body)
-    this.name = "ProtocolError"
-  }
+export type SplitMessage = {
+  command: string,
+  metas: Meta[],
+  rest: string[]
+}
+
+
+export function splitMessage(msg: string): SplitMessage {
+  let lines = msg.split("\n")
+  let command: string = lines[0]
+  let metas: Meta[] = message.parseMetas(lines.slice(1))
+  // console.log("Split Metadata", lines.length)
+  // console.log(" [0]", lines[0])
+  // console.log(" [1]", lines[1])
+  let rest = dropWhile(l => l == "", lines.slice(metas.length + 1))
+
+  return { command, metas, rest }
 }
