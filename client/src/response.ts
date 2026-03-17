@@ -53,7 +53,7 @@ export function parseUpdate(metas: Meta[], rest: string[]): Update {
 
   return {
     kind: 'update',
-    targetViewId: requireMeta(rest, metas, "TargetViewId"),
+    targetViewId: metaValue("TargetViewId", metas) || viewId,
     requestId,
     viewId,
     action,

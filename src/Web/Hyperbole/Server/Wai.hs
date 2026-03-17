@@ -86,7 +86,8 @@ sendResponse options req client res remotes respond = do
   response :: Metadata -> Response -> Wai.Response
   response metas = \case
     (Err err) ->
-      respondError (errStatus err) [] $ options.serverError err
+      -- don't send headers
+      respondError (errStatus err) [] metas $ options.serverError err
     (Response (ViewUpdate _ vw)) -> do
       respondHtml status200 (clientHeaders client) $ renderViewResponse metas vw
     (Redirect u) -> do
@@ -115,7 +116,7 @@ sendResponse options req client res remotes respond = do
   renderViewResponse metas (Body body) =
     addDocument $ renderLazyByteString (runViewContext metas () $ scriptMeta metas) <> "\n\n" <> body
 
-  respondError s hs serr = respondHtml s hs $ renderViewResponse (metaError serr.message) serr.body
+  respondError s hs metas serr = respondHtml s hs $ renderViewResponse (metaError serr.message <> metas) serr.body
   respondHtml s hs = Wai.responseLBS s (contentType ContentHtml : hs)
   -- respondText s hs = Wai.responseLBS s (contentType ContentText : hs)
 

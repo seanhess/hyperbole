@@ -27,9 +27,9 @@ export async function sendActionHttp(msg: ActionMessage): Promise<Response | Red
   let body = await res.text()
 
   // TODO: handle redirects. Check status code and do it
-  if (!res.ok) {
-    throw new FetchError(msg.viewId, "Invalid Status:" + res.status, body)
-  }
+  // if (!res.ok) {
+  //   throw new FetchError(msg.viewId, "Invalid Status:" + res.status, body)
+  // }
 
   const { metas, rest } = splitResponse(body)
   const response = parseResponse(metas, rest)

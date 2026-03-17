@@ -17,6 +17,7 @@ module Web.Hyperbole.HyperView.Forms
   , field
   , label
   , input
+  , fileInput
   , checkbox
   , radioGroup
   , radio
@@ -246,6 +247,12 @@ label :: Text -> View (Input id a) ()
 -}
 label :: View c () -> View c ()
 label = tag "label"
+
+
+fileInput :: forall id a. View (Input id a) ()
+fileInput = do
+  inp :: Input id a <- viewId
+  tag "input" @ att "type" "file" . name inp.inputName.value $ none
 
 
 -- | input for a 'field'

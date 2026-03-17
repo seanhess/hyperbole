@@ -6,12 +6,14 @@ import App.Docs
 import Data.ByteString.Lazy qualified as BL
 import Data.String.Conversions (cs)
 import Data.Text (Text)
+import Debug.Trace (traceM)
 import Example.Colors
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.Effect.Request (readUploadedFile)
+import Web.Hyperbole.Effect.Request (bodyFiles, readUploadedFile)
+import Web.Hyperbole.HyperView.Forms (fileInput)
 import Web.Hyperbole.Types.Request (FileInfo (..))
 
 -- TODO: should we error out on parse if they expect a file, but it is empty? Probably!
@@ -28,43 +30,64 @@ instance HyperView SubmitFiles es where
     deriving (Generic, ViewAction)
 
   update Submit = do
-    doc :: DocumentForm <- formData
-    cnt <- readUploadedFile doc.uploaded.file
-    pure $ uploadedFileView doc cnt
+    fs <- bodyFiles
+    traceM $ show fs
+    doc :: DocumentForm Identity <- formData
+    cnt <- readUploadedFile doc.required.file
+    pure $ submittedView doc cnt
 
-data DocumentForm = DocumentForm
-  { name :: Text
-  , uploaded :: FileInfo
+data DocumentForm f = DocumentForm
+  { name :: Field f Text
+  , required :: Field f FileInfo
+  , optional :: Field f (Maybe FileInfo)
   }
-  deriving (Generic, FromForm)
+  deriving (Generic, FromFormF, GenFields FieldName)
 
 -- and a view that displays an input for each field
 documentFormView :: View SubmitFiles ()
 documentFormView = do
+  let f = fieldNames @DocumentForm
   form Submit ~ gap 15 . pad 10 . flexCol $ do
     el ~ Style.h1 $ "Upload a document"
 
     -- Make sure these names match the field names used by FormParse / formData
-    field "name" $ do
+    field f.name $ do
       label $ do
         text "Your Name"
         input Username @ placeholder "Bob" ~ Style.input
 
-    field "file" $ do
+    field f.required $ do
       label $ do
-        tag "input" @ att "type" "file" . att "name" "file" $ none
+        text "Required File"
+        fileInput
+
+    field f.optional $ do
+      label $ do
+        text "Optional File"
+        fileInput
 
     submit "Submit" ~ btn
 
-uploadedFileView :: DocumentForm -> BL.ByteString -> View SubmitFiles ()
-uploadedFileView doc cnt = do
+submittedView :: DocumentForm Identity -> BL.ByteString -> View SubmitFiles ()
+submittedView doc cnt = do
   el ~ bold . color Success $ "Uploaded!"
 
   row ~ gap 5 $ do
     el "Your Name:"
     el $ text doc.name
 
-  let f = doc.uploaded
+  el ~ underline $ "Required"
+  uploadedFileView doc.required
+
+  row ~ gap 5 $ do
+    el "File Size:"
+    el $ text $ cs $ show $ BL.length cnt
+
+  el ~ underline $ "Optional"
+  maybe "Not Found" uploadedFileView doc.optional
+
+uploadedFileView :: FileInfo -> View SubmitFiles ()
+uploadedFileView f = do
   row ~ gap 5 $ do
     el "File Name:"
     el $ text $ cs f.fileName
@@ -76,7 +99,3 @@ uploadedFileView doc cnt = do
   row ~ gap 5 $ do
     el "File Source:"
     el $ text $ cs $ show f.file
-
-  row ~ gap 5 $ do
-    el "File Size:"
-    el $ text $ cs $ show $ BL.length cnt
