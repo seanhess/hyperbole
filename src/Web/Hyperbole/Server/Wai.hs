@@ -19,7 +19,6 @@ import Effectful.Writer.Static.Local (tell)
 import Network.HTTP.Types (Header, HeaderName, status200, status400, status401, status404, status500)
 import Network.Wai qualified as Wai
 import Network.Wai.Internal (ResponseReceived (..))
-import Network.Wai.Parse qualified as Wai (lbsBackEnd, parseRequestBodyEx)
 import Web.Atomic (att, (@))
 import Web.Cookie qualified
 import Web.Hyperbole.Data.Cookie (Cookie, Cookies)
@@ -29,6 +28,7 @@ import Web.Hyperbole.Data.URI (path, uriToText)
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Server.Message
 import Web.Hyperbole.Server.Options
+import Web.Hyperbole.Server.Uploads (withPostBody)
 import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event (Event (..), TargetViewId (..))
 import Web.Hyperbole.Types.Request
@@ -45,18 +45,17 @@ handleRequestWai
   -> Eff es Wai.ResponseReceived
 handleRequestWai options req respond actions = do
   -- NOTE: Remember, this is called for both updates AND for page loads
-  -- TODO: What if they want to save files to disk instead of into memory?
-  -- then we couldn't use BL.ByteString as the type
-  (params, files) <- liftIO $ Wai.parseRequestBodyEx options.parseRequestBody Wai.lbsBackEnd req
-  rq <- either throwIO pure $ do
-    fromWaiRequest req $ RequestBody params files
-  (res, client, rmts) <- runHyperboleWai rq actions
-  liftIO $ sendResponse options rq client res rmts respond
+  withPostBody options.parseRequestBody req $ \params files -> do
+    rq <- either throwIO pure $ do
+      fromWaiRequest req $ RequestBody params files
+    (res, client, rmts) <- runHyperboleWai rq actions
+    liftIO $ sendResponse options rq client res rmts respond
 
 
 -- | Run the 'Hyperbole' effect to get a response
 runHyperboleWai
-  :: Request
+  :: (IOE :> es)
+  => Request
   -> Eff (Hyperbole : es) Response
   -> Eff es (Response, Client, [Remote])
 runHyperboleWai req = reinterpret (runHyperboleLocal req) $ \_ -> \case
@@ -75,6 +74,8 @@ runHyperboleWai req = reinterpret (runHyperboleLocal req) $ \_ -> \case
     tell [RemoteAction vid act]
   TriggerEvent name dat -> do
     tell [RemoteEvent name dat]
+  ReadUploadedFile f -> do
+    liftIO $ BL.readFile f.filePath
 
 
 sendResponse :: ServerOptions -> Request -> Client -> Response -> [Remote] -> (Wai.Response -> IO ResponseReceived) -> IO Wai.ResponseReceived

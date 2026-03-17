@@ -415,7 +415,7 @@ type instance Field (Either String) a = Either String a
 
 data FormField
   = ParamField ParamValue
-  | FileField UploadedFile
+  | FileField FileInfo
   deriving (Show, Eq)
 
 
@@ -458,7 +458,7 @@ instance {-# OVERLAPPABLE #-} (FromField a) => FromField (Maybe a) where
   parseField (Just a) = do
     Just <$> parseField @a (Just a)
 instance (FromParam a, FromParam b) => FromField (Either a b)
-instance FromField UploadedFile where
+instance FromField FileInfo where
   parseField = \case
     Nothing -> Left "Missing file upload"
     Just (ParamField _) -> Left "Cannot parse form param as file upload"
@@ -466,7 +466,7 @@ instance FromField UploadedFile where
       if f.fileContent == mempty && f.fileName == mempty
         then Left "Empty file uploaded"
         else pure f
-instance {-# OVERLAPS #-} FromField (Maybe UploadedFile) where
+instance {-# OVERLAPS #-} FromField (Maybe FileInfo) where
   parseField = \case
     Just (FileField f) -> do
       if f.fileContent == mempty && f.fileName == mempty

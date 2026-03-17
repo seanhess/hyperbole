@@ -19,10 +19,14 @@ bodyParams = do
   pure r.body.params
 
 
-bodyFiles :: (Hyperbole :> es) => Eff es [File BL.ByteString]
+bodyFiles :: (Hyperbole :> es) => Eff es [FileParam]
 bodyFiles = do
   r <- request
   pure r.body.files
+
+
+readUploadedFile :: (Hyperbole :> es) => TempFile -> Eff es BL.ByteString
+readUploadedFile = send . ReadUploadedFile
 
 
 {- | Return the request path

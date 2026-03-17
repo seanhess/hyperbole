@@ -3,6 +3,7 @@
 module Web.Hyperbole.Effect.Hyperbole where
 
 import Data.Aeson (Value)
+import Data.ByteString.Lazy qualified as BL
 import Data.Text (Text)
 import Effectful
 import Effectful.Error.Static
@@ -25,6 +26,7 @@ data Hyperbole :: Effect where
   -- TODO: this should actually execute the other view, and send the response to the client
   TriggerAction :: TargetViewId -> Encoded -> Hyperbole m ()
   TriggerEvent :: Text -> Value -> Hyperbole m ()
+  ReadUploadedFile :: TempFile -> Hyperbole m BL.ByteString
 
 
 type instance DispatchOf Hyperbole = 'Dynamic

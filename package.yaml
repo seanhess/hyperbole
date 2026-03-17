@@ -61,6 +61,7 @@ dependencies:
   - warp >= 3.3 && <4
   - atomic-css >= 0.2 && < 0.3
   - string-conversions >= 0.4 && <0.5
+  - resourcet >= 1.2 && <2
   - wai-websockets >= 3.0 && <4
   - wai-extra >= 3.1.10 && <3.2
   - network >= 3.1 && <4

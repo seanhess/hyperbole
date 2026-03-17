@@ -63,6 +63,7 @@ library
       Web.Hyperbole.Server.Message
       Web.Hyperbole.Server.Options
       Web.Hyperbole.Server.Socket
+      Web.Hyperbole.Server.Uploads
       Web.Hyperbole.Server.Wai
       Web.Hyperbole.TypeList
       Web.Hyperbole.Types.Client
@@ -114,6 +115,7 @@ library
     , network >=3.1 && <4
     , network-uri >=2.6.4.1 && <2.7
     , random >=1.2 && <2
+    , resourcet >=1.2 && <2
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
     , text >=1.2 && <3
@@ -177,6 +179,7 @@ test-suite test
     , network >=3.1 && <4
     , network-uri >=2.6.4.1 && <2.7
     , random >=1.2 && <2
+    , resourcet >=1.2 && <2
     , skeletest
     , string-conversions ==0.4.*
     , string-interpolate ==0.3.*
