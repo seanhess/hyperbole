@@ -463,13 +463,13 @@ instance FromField FileInfo where
     Nothing -> Left "Missing file upload"
     Just (ParamField _) -> Left "Cannot parse form param as file upload"
     Just (FileField f) ->
-      if f.fileContent == mempty && f.fileName == mempty
+      if f.fileName == mempty
         then Left "Empty file uploaded"
         else pure f
 instance {-# OVERLAPS #-} FromField (Maybe FileInfo) where
   parseField = \case
     Just (FileField f) -> do
-      if f.fileContent == mempty && f.fileName == mempty
+      if f.fileName == mempty
         then pure Nothing
         else pure $ Just f
     other -> parseField other
@@ -498,8 +498,6 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
   gFormParse f = M1 <$> gFormParse f
 
 
--- TODO: need a bool instance?
--- TODO: need a Maybe a instance?
 instance (Selector s, FromField a) => GFormParse (M1 S s (K1 R a)) where
   -- these CANNOT be json encoded, they are encoded by the browser
   gFormParse f = do

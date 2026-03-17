@@ -57,7 +57,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
     console.log("RESPONSE", res)
 
     // TODO: redirect on http
-    // TODO: display errors!
+    // TODO: forward errors to view. Right now they throw!
     switch (res.kind) {
       case 'redirect':
         console.log("TODO HANDLE REDIRECT")

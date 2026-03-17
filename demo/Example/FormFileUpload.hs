@@ -11,7 +11,8 @@ import Example.Style qualified as Style
 import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.Types.Request (FileInfo (..), UploadedFile)
+import Web.Hyperbole.Effect.Request (readUploadedFile)
+import Web.Hyperbole.Types.Request (FileInfo (..))
 
 -- TODO: should we error out on parse if they expect a file, but it is empty? Probably!
 
@@ -28,11 +29,12 @@ instance HyperView SubmitFiles es where
 
   update Submit = do
     doc :: DocumentForm <- formData
-    pure $ uploadedFileView doc
+    cnt <- readUploadedFile doc.uploaded.file
+    pure $ uploadedFileView doc cnt
 
 data DocumentForm = DocumentForm
   { name :: Text
-  , file :: Maybe UploadedFile
+  , uploaded :: FileInfo
   }
   deriving (Generic, FromForm)
 
@@ -54,26 +56,27 @@ documentFormView = do
 
     submit "Submit" ~ btn
 
-uploadedFileView :: DocumentForm -> View SubmitFiles ()
-uploadedFileView doc = do
+uploadedFileView :: DocumentForm -> BL.ByteString -> View SubmitFiles ()
+uploadedFileView doc cnt = do
   el ~ bold . color Success $ "Uploaded!"
 
   row ~ gap 5 $ do
     el "Your Name:"
     el $ text doc.name
 
-  case doc.file of
-    Nothing ->
-      "No file uploaded!"
-    Just f -> do
-      row ~ gap 5 $ do
-        el "File Name:"
-        el $ text $ cs f.fileName
+  let f = doc.uploaded
+  row ~ gap 5 $ do
+    el "File Name:"
+    el $ text $ cs f.fileName
 
-      row ~ gap 5 $ do
-        el "File ContentType:"
-        el $ text $ cs f.fileContentType
+  row ~ gap 5 $ do
+    el "File ContentType:"
+    el $ text $ cs f.contentType
 
-      row ~ gap 5 $ do
-        el "File Size:"
-        el $ text $ cs $ show $ BL.length f.fileContent
+  row ~ gap 5 $ do
+    el "File Source:"
+    el $ text $ cs $ show f.file
+
+  row ~ gap 5 $ do
+    el "File Size:"
+    el $ text $ cs $ show $ BL.length cnt
