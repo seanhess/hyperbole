@@ -14,8 +14,6 @@ import Example.Style qualified as Style
 import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.HyperView.Forms (fileInput)
-import Web.Hyperbole.Types.Request (UploadedFile (..))
 
 source :: ModuleSource
 source = $(moduleSource)
@@ -40,14 +38,12 @@ data DocumentForm f = DocumentForm
   }
   deriving (Generic, FromFormF, GenFields FieldName)
 
--- and a view that displays an input for each field
 documentFormView :: View SubmitFiles ()
 documentFormView = do
   let f = fieldNames @DocumentForm
   form Submit ~ gap 15 . pad 10 . flexCol $ do
     el ~ Style.h1 $ "Upload a document"
 
-    -- Make sure these names match the field names used by FormParse / formData
     field f.name $ do
       label $ do
         text "Your Name"
@@ -55,12 +51,12 @@ documentFormView = do
 
     field f.required $ do
       label $ do
-        text "Required File"
+        text "Required"
         fileInput
 
     field f.optional $ do
       label $ do
-        text "Optional File"
+        text "Optional"
         fileInput
 
     submit "Submit" ~ btn

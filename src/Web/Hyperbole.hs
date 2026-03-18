@@ -39,6 +39,8 @@ module Web.Hyperbole
     -- ** Request #request#
   , request
   , Request (..)
+  , RequestBody (..)
+  , UploadedFile (..)
 
     -- ** Response #response#
   , respondError
@@ -126,6 +128,7 @@ module Web.Hyperbole
   , select
   , checked
   , textarea
+  , fileInput
   , submit
   , View.placeholder
   , InputType (..)
