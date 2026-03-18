@@ -74,8 +74,6 @@ runHyperboleWai req = reinterpret (runHyperboleLocal req) $ \_ -> \case
     tell [RemoteAction vid act]
   TriggerEvent name dat -> do
     tell [RemoteEvent name dat]
-  ReadUploadedFile f -> do
-    liftIO $ BL.readFile f.filePath
 
 
 sendResponse :: ServerOptions -> Request -> Client -> Response -> [Remote] -> (Wai.Response -> IO ResponseReceived) -> IO Wai.ResponseReceived

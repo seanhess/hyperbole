@@ -1,11 +1,14 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Test.FormSpec where
 
 import Data.Text (Text)
+import GHC.Exts (IsList (..))
 import Skeletest
 import Web.Hyperbole.HyperView.Forms
+import Web.Hyperbole.Types.Request
 
 
 data Example f = Example
@@ -31,6 +34,12 @@ data Flags = Flags
 data Todo = Todo
   {msg :: Text}
   deriving (Generic, FromForm, Show, Eq)
+
+
+instance IsList RequestBody where
+  type Item RequestBody = Param
+  fromList ps = RequestBody ps mempty
+  toList (RequestBody ps _) = ps
 
 
 spec :: Spec

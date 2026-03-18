@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Example.FormFileUpload where
 
@@ -6,17 +7,15 @@ import App.Docs
 import Data.ByteString.Lazy qualified as BL
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import Debug.Trace (traceM)
+import Effectful.FileSystem (FileSystem)
+import Effectful.FileSystem.IO.ByteString.Lazy qualified as FS
 import Example.Colors
 import Example.Style qualified as Style
 import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.Effect.Request (bodyFiles, readUploadedFile)
 import Web.Hyperbole.HyperView.Forms (fileInput)
-import Web.Hyperbole.Types.Request (FileInfo (..))
-
--- TODO: should we error out on parse if they expect a file, but it is empty? Probably!
+import Web.Hyperbole.Types.Request (UploadedFile (..))
 
 source :: ModuleSource
 source = $(moduleSource)
@@ -24,22 +23,20 @@ source = $(moduleSource)
 data SubmitFiles = SubmitFiles
   deriving (Generic, ViewId)
 
-instance HyperView SubmitFiles es where
+instance (FileSystem :> es) => HyperView SubmitFiles es where
   data Action SubmitFiles
     = Submit
     deriving (Generic, ViewAction)
 
   update Submit = do
-    fs <- bodyFiles
-    traceM $ show fs
     doc :: DocumentForm Identity <- formData
-    cnt <- readUploadedFile doc.required.file
+    cnt <- FS.readFile doc.required.filePath
     pure $ submittedView doc cnt
 
 data DocumentForm f = DocumentForm
   { name :: Field f Text
-  , required :: Field f FileInfo
-  , optional :: Field f (Maybe FileInfo)
+  , required :: Field f UploadedFile
+  , optional :: Field f (Maybe UploadedFile)
   }
   deriving (Generic, FromFormF, GenFields FieldName)
 
@@ -86,7 +83,7 @@ submittedView doc cnt = do
   el ~ underline $ "Optional"
   maybe "Not Found" uploadedFileView doc.optional
 
-uploadedFileView :: FileInfo -> View SubmitFiles ()
+uploadedFileView :: UploadedFile -> View SubmitFiles ()
 uploadedFileView f = do
   row ~ gap 5 $ do
     el "File Name:"
@@ -98,4 +95,4 @@ uploadedFileView f = do
 
   row ~ gap 5 $ do
     el "File Source:"
-    el $ text $ cs $ show f.file
+    el $ text $ cs $ show f.filePath

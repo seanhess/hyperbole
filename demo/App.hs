@@ -45,6 +45,7 @@ import Effectful
 import Effectful.Concurrent.STM
 import Effectful.Dispatch.Dynamic
 import Effectful.Environment (runEnvironment)
+import Effectful.FileSystem
 import Effectful.Reader.Dynamic
 import Effectful.State.Static.Local
 import Example.Chat qualified as Chat
@@ -130,10 +131,16 @@ exampleApp config users count chats = do
     (ServerOptions (document documentHead) serverError defaultParseRequestBodyOptions)
     (runApp . routeRequest $ router)
  where
-  runApp :: (Hyperbole :> es, IOE :> es) => Eff (OAuth2 : GenRandom : Concurrent : Debug : Users : Todos : Reader AppConfig : es) a -> Eff es a
-  runApp = runReader config . runTodosSession . runUsersIO users . runDebugIO . runConcurrent . runRandom . runOAuth2 config.oauth config.manager
+  runApp :: (Hyperbole :> es, IOE :> es, Concurrent :> es) => Eff (OAuth2 : GenRandom : Debug : Users : Todos : Reader AppConfig : FileSystem : es) a -> Eff es a
+  runApp =
+    runFileSystem
+      . runReader config
+      . runTodosSession
+      . runUsersIO users
+      . runDebugIO
+      . runRandom
+      . runOAuth2 config.oauth config.manager
 
-  router :: forall es. (Hyperbole :> es, OAuth2 :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es, GenRandom :> es, Reader AppConfig :> es) => AppRoute -> Eff es Response
   router Counter = runPage Counter.page
   router (Hello h) = runPage $ hello h
   router (Contacts (Contact uid)) = Contact.response uid

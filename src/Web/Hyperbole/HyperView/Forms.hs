@@ -58,7 +58,6 @@ import Web.Atomic.Types hiding (Selector)
 import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.URI (URI)
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView.Event (onSubmit)
 import Web.Hyperbole.HyperView.Input (Option (..), checked)
@@ -422,7 +421,7 @@ type instance Field (Either String) a = Either String a
 
 data FormField
   = ParamField ParamValue
-  | FileField FileInfo
+  | FileField UploadedFile
   deriving (Show, Eq)
 
 
@@ -465,7 +464,7 @@ instance {-# OVERLAPPABLE #-} (FromField a) => FromField (Maybe a) where
   parseField (Just a) = do
     Just <$> parseField @a (Just a)
 instance (FromParam a, FromParam b) => FromField (Either a b)
-instance FromField FileInfo where
+instance FromField UploadedFile where
   parseField = \case
     Nothing -> Left "Missing file upload"
     Just (ParamField _) -> Left "Cannot parse form param as file upload"
@@ -473,7 +472,7 @@ instance FromField FileInfo where
       if f.fileName == mempty
         then Left "Empty file uploaded"
         else pure f
-instance {-# OVERLAPS #-} FromField (Maybe FileInfo) where
+instance {-# OVERLAPS #-} FromField (Maybe UploadedFile) where
   parseField = \case
     Just (FileField f) -> do
       if f.fileName == mempty

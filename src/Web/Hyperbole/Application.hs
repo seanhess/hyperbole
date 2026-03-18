@@ -26,12 +26,12 @@ import Network.WebSockets (ConnectionException (..), PendingConnection, defaultC
 import Network.WebSockets qualified as WS
 import Web.Hyperbole.Document
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Request (reqPath)
 import Web.Hyperbole.Effect.Response (notFound)
 import Web.Hyperbole.Route
 import Web.Hyperbole.Server.Options
 import Web.Hyperbole.Server.Socket (RunningActions, handleRequestSocket)
 import Web.Hyperbole.Server.Wai (handleRequestWai)
+import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 
 
@@ -105,5 +105,5 @@ suppressMessages ex = do
 -}
 routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response
 routeRequest actions = do
-  pth <- reqPath
-  maybe notFound actions $ matchRoute pth
+  r <- request
+  maybe notFound actions $ matchRoute r.path

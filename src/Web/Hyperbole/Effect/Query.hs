@@ -9,8 +9,7 @@ import Effectful.Dispatch.Dynamic (send)
 import Web.Hyperbole.Data.Param (FromParam (..), Param, ToParam (..))
 import Web.Hyperbole.Data.QueryData (FromQuery (..), QueryData (..), ToQuery (..), queryData)
 import Web.Hyperbole.Data.QueryData qualified as QueryData
-import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
-import Web.Hyperbole.Effect.Request (request)
+import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..), request)
 import Web.Hyperbole.Types.Client (Client (..), clientSetQuery)
 import Web.Hyperbole.Types.Request hiding (Param)
 import Web.Hyperbole.Types.Response

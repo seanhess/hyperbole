@@ -6,8 +6,7 @@ module Web.Hyperbole.Types.Request
   , FileParam
   , File
   , RequestId (..)
-  , FileInfo (..)
-  , TempFile (..)
+  , UploadedFile (..)
   ) where
 
 import Data.ByteString qualified as BS
@@ -24,19 +23,15 @@ newtype Host = Host {text :: BS.ByteString}
   deriving (Show)
 
 
-newtype TempFile = TempFile {filePath :: FilePath}
-  deriving (Show, Eq)
-
-
-data FileInfo = FileInfo
-  { file :: TempFile
+data UploadedFile = UploadedFile
+  { filePath :: FilePath
   , fileName :: Text -- the original file name
   , contentType :: Text -- the mime type
   }
   deriving (Show, Eq)
 
 
-type FileParam = (BS.ByteString, FileInfo)
+type FileParam = (BS.ByteString, UploadedFile)
 
 
 data Request = Request
@@ -57,6 +52,7 @@ data RequestBody = RequestBody
   , files :: [FileParam]
   }
   deriving (Show)
+  
 
 
 newtype RequestId = RequestId Text

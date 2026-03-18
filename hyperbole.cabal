@@ -47,7 +47,6 @@ library
       Web.Hyperbole.Effect.Hyperbole
       Web.Hyperbole.Effect.OAuth2
       Web.Hyperbole.Effect.Query
-      Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Session
       Web.Hyperbole.HyperView

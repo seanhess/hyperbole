@@ -4,7 +4,6 @@ module Web.Hyperbole.Server.Socket where
 
 import Control.Monad (void)
 import Data.Bifunctor (bimap, first)
-import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as L
 import Data.Map (Map)
 import Data.Map qualified as M
@@ -68,8 +67,6 @@ runHyperboleSocket _opts conn req = reinterpret (runHyperboleLocal req) $ \_ -> 
     tell [RemoteAction vid act]
   TriggerEvent name dat -> do
     tell [RemoteEvent name dat]
-  ReadUploadedFile f -> do
-    liftIO $ BL.readFile f.filePath
 
 
 handleRequestSocket

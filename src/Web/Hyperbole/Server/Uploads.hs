@@ -5,9 +5,9 @@ import Data.String.Conversions (cs)
 import Effectful
 import Effectful.Exception (bracket)
 import Network.Wai qualified as Wai
-import Network.Wai.Parse (File, ParseRequestBodyOptions)
+import Network.Wai.Parse (File, FileInfo (..), ParseRequestBodyOptions)
 import Network.Wai.Parse qualified as Wai
-import Web.Hyperbole.Types.Request (FileInfo (..), FileParam, Param, TempFile (..))
+import Web.Hyperbole.Types.Request (FileParam, Param, UploadedFile (..))
 
 
 withPostBody :: (IOE :> es) => ParseRequestBodyOptions -> Wai.Request -> ([Param] -> [FileParam] -> Eff es a) -> Eff es a
@@ -25,6 +25,10 @@ withPostBody options req action = withUploadState $ \state -> do
   fileParam :: Wai.File FilePath -> FileParam
   fileParam (key, f) = (key, fileInfo f)
 
-  fileInfo :: Wai.FileInfo FilePath -> FileInfo
-  fileInfo Wai.FileInfo{fileName, fileContentType, fileContent} =
-    FileInfo (TempFile fileContent) (cs fileName) (cs fileContentType)
+  fileInfo :: Wai.FileInfo FilePath -> UploadedFile
+  fileInfo FileInfo{fileName, fileContentType, fileContent} =
+    UploadedFile
+      { filePath = fileContent
+      , fileName = cs fileName
+      , contentType = cs fileContentType
+      }

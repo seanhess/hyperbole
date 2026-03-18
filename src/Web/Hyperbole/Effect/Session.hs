@@ -14,8 +14,7 @@ import Web.Hyperbole.Data.Cookie as Cookie
 import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.URI (Path)
-import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
-import Web.Hyperbole.Effect.Request (request)
+import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..), request)
 import Web.Hyperbole.Types.Client (Client (..), clientModCookies)
 import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
