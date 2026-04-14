@@ -56,9 +56,9 @@ instance Monad (View ctx) where
   (>>=) :: forall a b. View ctx a -> (a -> View ctx b) -> View ctx b
   -- TEST: appending Empty
   View ea >>= famb = View $ do
-    a :: a <- (.value) <$> ea
-    let View eb :: View ctx b = famb a
-    eb
+    ha <- ea
+    let View eb = famb ha.value
+    (ha >>) <$> eb
 
 
 -- Context -----------------------------------------
