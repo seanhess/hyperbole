@@ -22,9 +22,8 @@ data Hyperbole :: Effect where
   PushUpdate :: ViewUpdate -> Hyperbole m ()
   ModClient :: (Client -> Client) -> Hyperbole m ()
   GetClient :: Hyperbole m Client
-  -- TODO: this should actually execute the other view, and send the response to the client
-  TriggerAction :: TargetViewId -> Encoded -> Hyperbole m ()
-  TriggerEvent :: Text -> Value -> Hyperbole m ()
+  PushTrigger :: TargetViewId -> Encoded -> Hyperbole m ()
+  PushEvent :: Text -> Value -> Hyperbole m ()
 
 
 type instance DispatchOf Hyperbole = 'Dynamic

@@ -6,7 +6,7 @@ export type ViewId = string;
 export type RequestId = number;
 export type EncodedAction = string;
 export type ViewState = string;
-type RemoteEvent = {
+export type RemoteEvent = {
     name: string;
     detail: unknown;
 };
@@ -16,7 +16,7 @@ export type Metadata = {
     error?: string;
     query?: string;
     events?: RemoteEvent[];
-    actions?: [ViewId, string][];
+    actions?: [ViewId, EncodedAction][];
     pageTitle?: string;
 };
 export declare function toMetadata(meta: Meta[]): Metadata;
@@ -32,4 +32,3 @@ export declare function splitMessage(message: string): SplitMessage;
 export declare function parseMeta(line: string): Meta | undefined;
 export declare function parseRemoteEvent(input: string): RemoteEvent;
 export declare function parseAction(input: string): [ViewId, string];
-export {};

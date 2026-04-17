@@ -9,7 +9,7 @@ export type RequestId = number
 export type EncodedAction = string
 export type ViewState = string
 
-type RemoteEvent = { name: string, detail: unknown }
+export type RemoteEvent = { name: string, detail: unknown }
 
 
 export function renderMetas(meta: Meta[]): string {
@@ -22,7 +22,7 @@ export type Metadata = {
   error?: string
   query?: string
   events?: RemoteEvent[]
-  actions?: [ViewId, string][],
+  actions?: [ViewId, EncodedAction][],
   pageTitle?: string
 }
 
