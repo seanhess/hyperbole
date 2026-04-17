@@ -107,7 +107,7 @@ library
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2
-    , http-api-data ==0.6.*
+    , http-api-data >=0.6 && <0.8
     , http-client ==0.7.*
     , http-client-tls ==0.3.*
     , http-types ==0.12.*
@@ -169,7 +169,7 @@ test-suite test
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2
-    , http-api-data ==0.6.*
+    , http-api-data >=0.6 && <0.8
     , http-client ==0.7.*
     , http-client-tls ==0.3.*
     , http-types ==0.12.*

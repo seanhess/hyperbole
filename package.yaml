@@ -54,7 +54,7 @@ dependencies:
   - random >= 1.2 && < 2
   - string-interpolate >= 0.3 && <0.4
   - file-embed >= 0.0.10 && <0.1
-  - http-api-data >= 0.6 && <0.7
+  - http-api-data >= 0.6 && <0.8
   - http-types >= 0.12 && <0.13
   - network-uri >=2.6.4.1 && <2.7
   - wai >= 3.2 && <4
