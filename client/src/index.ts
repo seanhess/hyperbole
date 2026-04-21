@@ -7,7 +7,7 @@ import { setQuery } from "./browser"
 import { parseResponse, LiveUpdate } from './response'
 import { dispatchContent, enrichHyperViews, HyperView, isHyperView } from "./hyperview"
 
-let PACKAGE = require('../package.json');
+import PACKAGE from '../package.json';
 
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
@@ -331,7 +331,7 @@ type VNode = {
 
   // Is set to `true` if a node is an `svg`, which tells
   // Omdomdom to treat it, and its children, as such
-  isSVGContext: Boolean
+  isSVGContext: boolean
 
   // The content of a "text" or "comment" node
   content: string

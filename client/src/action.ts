@@ -1,5 +1,4 @@
 
-import { takeWhileMap } from "./lib"
 import { Meta, ViewId, RequestId, EncodedAction, ViewState } from "./message"
 import * as message from "./message"
 

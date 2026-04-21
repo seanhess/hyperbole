@@ -138,8 +138,6 @@
         shellCommon = version: {
           inherit (pre-commit) shellHook;
           buildInputs = with pkgs.haskell.packages."ghc${version}"; [
-            pkgs.nodePackages_latest.webpack-cli
-            pkgs.nodePackages_latest.webpack
             pkgs.nodejs
             cabal-install
             haskell-language-server

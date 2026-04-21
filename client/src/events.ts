@@ -1,5 +1,5 @@
 
-import * as debounce from 'debounce'
+import debounce from 'debounce'
 import { encodedParam } from './action'
 import { HyperView, isHyperView } from './hyperview'
 

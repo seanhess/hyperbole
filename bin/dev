@@ -13,8 +13,7 @@ watch() {
 
 client() {
   cd client
-  # npx webpack -w --mode=development
-  npx webpack -w
+  npm run dev
 }
 
 # run tests once (so we don't forget!)
