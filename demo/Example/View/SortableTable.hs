@@ -33,7 +33,7 @@ dataTable =
 sortBtn :: (ViewAction (Action id)) => Text -> Action id -> Bool -> View id ()
 sortBtn lbl click isSelected = do
   button click ~ Style.link . flexRow . gap 0 $ do
-    el ~ selectedColumn $ (text lbl)
+    el ~ selectedColumn $ text lbl
     el ~ width 20 $ Icon.chevronDown
  where
   selectedColumn =
