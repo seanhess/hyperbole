@@ -1,7 +1,7 @@
 import { ActionMessage, renderActionMessage } from './action'
 import { ResponseBody } from "./response"
 import * as message from "./message"
-import { ViewId, RequestId, EncodedAction, metaValue, Metadata } from "./message"
+import { ViewId, RequestId, EncodedAction, metaValue, Metadata, RemoteEvent } from "./message"
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
@@ -10,6 +10,8 @@ interface SocketConnectionEventMap {
   "update": CustomEvent<Update>;
   "response": CustomEvent<Update>;
   "redirect": CustomEvent<Redirect>;
+  "trigger": CustomEvent<Trigger>;
+  "event": CustomEvent<JSEvent>;
 }
 
 export class SocketConnection {
@@ -145,6 +147,19 @@ export class SocketConnection {
       }
     }
 
+    function parseTrigger(rest: string[]): Trigger {
+      let { requestId, meta, viewId, action } = parseResponse(rest)
+      let [targetViewId, targetAction] = message.parseAction(requireMeta("Trigger"))
+      return { requestId, meta, viewId, action, targetViewId, targetAction }
+    }
+
+    function parseEvent(rest: string[]): JSEvent {
+      let { requestId, meta, viewId, action } = parseResponse(rest)
+      let event = message.parseRemoteEvent(requireMeta("Event"))
+      return { requestId, meta, viewId, action, event }
+    }
+
+
     switch (command) {
 
       case "|UPDATE|":
@@ -155,6 +170,15 @@ export class SocketConnection {
 
       case "|REDIRECT|":
         return this.dispatchEvent(new CustomEvent("redirect", { detail: parseRedirect(rest) }))
+
+      case "|TRIGGER|":
+        return this.dispatchEvent(new CustomEvent("trigger", { detail: parseTrigger(rest) }))
+
+      case "|EVENT|":
+        return this.dispatchEvent(new CustomEvent("event", { detail: parseEvent(rest) }))
+
+      default:
+        throw new ProtocolError("Unknown Server Command: " + command, event.data)
     }
   }
 
@@ -235,6 +259,23 @@ export type Redirect = {
   requestId: RequestId
   meta: Metadata
   url: string
+}
+
+export type Trigger = {
+  requestId: RequestId
+  meta: Metadata
+  viewId: ViewId
+  action: EncodedAction
+  targetViewId: ViewId
+  targetAction: string
+}
+
+export type JSEvent = {
+  requestId: RequestId
+  meta: Metadata
+  viewId: ViewId
+  action: EncodedAction
+  event: RemoteEvent
 }
 
 export type MessageType = string

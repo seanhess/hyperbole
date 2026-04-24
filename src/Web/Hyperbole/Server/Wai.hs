@@ -61,16 +61,19 @@ runHyperboleWai req = reinterpret (runHyperboleLocal req) $ \_ -> \case
     pure req
   RespondNow r -> do
     throwError_ r
-  PushUpdate _ -> do
-    -- ignore! you can't push updates using WAI
-    pure ()
   GetClient -> do
     get @Client
   ModClient f -> do
     modify @Client f
-  TriggerAction vid act -> do
+  PushUpdate _ -> do
+    -- ignore! you can't push updates using WAI
+    -- whatever you end up returning after all pushes will be what the user sees
+    pure ()
+  PushTrigger vid act -> do
+    -- deferred until the response
     tell [RemoteAction vid act]
-  TriggerEvent name dat -> do
+  PushEvent name dat -> do
+    -- deferred until the response
     tell [RemoteEvent name dat]
 
 

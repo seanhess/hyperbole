@@ -1,8 +1,8 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
-import { SocketConnection, Update, Redirect } from './sockets'
+import { SocketConnection, Update, Redirect, Trigger, JSEvent } from './sockets'
 import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
 import { actionMessage, newRequest } from './action'
-import { ViewId, Metadata, parseMetadata } from './message'
+import { ViewId, Metadata, parseMetadata, RemoteEvent, EncodedAction } from './message'
 import { setQuery } from "./browser"
 import { parseResponse, LiveUpdate } from './response'
 import { dispatchContent, enrichHyperViews, HyperView, isHyperView } from "./hyperview"
@@ -49,6 +49,14 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   sock.sendAction(msg)
 }
 
+function handleTrigger(trigger: Trigger) {
+  runTrigger(trigger.targetViewId, trigger.targetAction)
+}
+
+function handleEvent(ev: JSEvent) {
+  let target = document.getElementById(ev.viewId)
+  runRemoteEvent(ev.event, target)
+}
 
 // TODO: redirect concurrency
 function handleRedirect(red: Redirect) {
@@ -167,7 +175,7 @@ function applyCookies(cookies: string[]) {
   })
 }
 
-function runMetadata(meta: Metadata, target?: HTMLElement) {
+function runMetadata(meta: Metadata, target: HTMLElement | null) {
   if (meta.query != null) {
     setQuery(meta.query)
   }
@@ -177,21 +185,29 @@ function runMetadata(meta: Metadata, target?: HTMLElement) {
   }
 
   meta.events?.forEach((remoteEvent) => {
-    setTimeout(() => {
-      let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
-      let eventTarget = target || document
-      eventTarget.dispatchEvent(event)
-    }, 10)
+    runRemoteEvent(remoteEvent, target)
   })
 
   meta.actions?.forEach(([viewId, action]) => {
-    setTimeout(() => {
-      let view = window.Hyperbole?.hyperView(viewId)
-      if (view) {
-        runAction(view, action)
-      }
-    }, 10)
+    runTrigger(viewId, action)
   })
+}
+
+function runRemoteEvent(remoteEvent: RemoteEvent, target: HTMLElement | null) {
+  setTimeout(() => {
+    let event = new CustomEvent(remoteEvent.name, { bubbles: true, detail: remoteEvent.detail })
+    let eventTarget = target || document
+    eventTarget.dispatchEvent(event)
+  }, 10)
+}
+
+function runTrigger(viewId: ViewId, action: EncodedAction) {
+  setTimeout(() => {
+    let view = window.Hyperbole?.hyperView(viewId)
+    if (view) {
+      runAction(view, action)
+    }
+  }, 10)
 }
 
 
@@ -234,7 +250,7 @@ function init() {
   // metadata attached to initial page loads need to be executed
   let meta = parseMetadata(document.getElementById("hyp.metadata")?.innerText ?? "")
   // runMetadataImmediate(meta)
-  runMetadata(meta)
+  runMetadata(meta, null)
 
   const style = document.body.querySelector('style')
 
@@ -313,6 +329,8 @@ sock.connect()
 sock.addEventListener("update", (ev: CustomEvent<Update>) => { handleUpdate(ev.detail) })
 sock.addEventListener("response", (ev: CustomEvent<Update>) => handleResponse(ev.detail))
 sock.addEventListener("redirect", (ev: CustomEvent<Redirect>) => handleRedirect(ev.detail))
+sock.addEventListener("trigger", (ev: CustomEvent<Trigger>) => handleTrigger(ev.detail))
+sock.addEventListener("event", (ev: CustomEvent<JSEvent>) => handleEvent(ev.detail))
 
 
 
@@ -327,7 +345,7 @@ type VNode = {
 
   // An object whose key/value pairs are the attribute
   // name and value, respectively
-  attributes: { [key: string]:string | undefined }
+  attributes: { [key: string]: string | undefined }
 
   // Is set to `true` if a node is an `svg`, which tells
   // Omdomdom to treat it, and its children, as such
