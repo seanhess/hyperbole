@@ -1,10 +1,12 @@
 import { ActionMessage } from './action';
 import { ResponseBody } from "./response";
-import { ViewId, RequestId, EncodedAction, Metadata } from "./message";
+import { ViewId, RequestId, EncodedAction, Metadata, RemoteEvent } from "./message";
 interface SocketConnectionEventMap {
     "update": CustomEvent<Update>;
     "response": CustomEvent<Update>;
     "redirect": CustomEvent<Redirect>;
+    "trigger": CustomEvent<Trigger>;
+    "event": CustomEvent<JSEvent>;
 }
 export declare class SocketConnection {
     socket: WebSocket;
@@ -34,6 +36,21 @@ export type Redirect = {
     requestId: RequestId;
     meta: Metadata;
     url: string;
+};
+export type Trigger = {
+    requestId: RequestId;
+    meta: Metadata;
+    viewId: ViewId;
+    action: EncodedAction;
+    targetViewId: ViewId;
+    targetAction: string;
+};
+export type JSEvent = {
+    requestId: RequestId;
+    meta: Metadata;
+    viewId: ViewId;
+    action: EncodedAction;
+    event: RemoteEvent;
 };
 export type MessageType = string;
 export declare class ProtocolError extends Error {

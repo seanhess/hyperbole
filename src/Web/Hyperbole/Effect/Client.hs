@@ -20,7 +20,7 @@ import Web.Hyperbole.View (toAction, toViewId)
 -}
 trigger :: (HyperView id es, HyperViewHandled id view, Hyperbole :> es) => id -> Action id -> Eff (Reader view : es) ()
 trigger vid act = do
-  send $ TriggerAction (TargetViewId $ toViewId vid) (toAction act)
+  send $ PushTrigger (TargetViewId $ toViewId vid) (toAction act)
 
 
 {- | Dispatch a custom javascript event. This is emitted on the current hyper view and bubbles up to the document
@@ -40,7 +40,7 @@ function listenServerEvents() {
 -}
 pushEvent :: (ToJSON a, Hyperbole :> es) => Text -> a -> Eff es ()
 pushEvent nm a = do
-  send $ TriggerEvent nm (toJSON a)
+  send $ PushEvent nm (toJSON a)
 
 
 {- | Set the document title

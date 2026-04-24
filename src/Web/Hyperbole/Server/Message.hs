@@ -232,13 +232,15 @@ clientMetadata reqPath client =
 
 
 metaRemotes :: [Remote] -> Metadata
-metaRemotes rs = mconcat $ fmap meta rs
- where
-  meta = \case
-    RemoteAction (TargetViewId vid) act ->
-      metadata "Trigger" $ encodedToText vid <> "|" <> encodedToText act
-    RemoteEvent ev dat ->
-      metadata "Event" $ T.intercalate "|" [ev, cs $ Aeson.encode dat]
+metaRemotes = mconcat . fmap metaRemote
+
+
+metaRemote :: Remote -> Metadata
+metaRemote = \case
+  RemoteAction (TargetViewId vid) act ->
+    metadata "Trigger" $ encodedToText vid <> "|" <> encodedToText act
+  RemoteEvent ev dat ->
+    metadata "Event" $ T.intercalate "|" [ev, cs $ Aeson.encode dat]
 
 
 metaError :: Text -> Metadata
@@ -256,3 +258,4 @@ data ContentType
 data RenderedMessage
   = MessageHtml BL.ByteString
   | MessageText Text
+  | MessageNone

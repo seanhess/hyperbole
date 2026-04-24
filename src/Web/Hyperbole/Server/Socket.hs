@@ -3,6 +3,7 @@
 module Web.Hyperbole.Server.Socket where
 
 import Control.Monad (void)
+import Data.Aeson (Value)
 import Data.Bifunctor (first)
 import Data.List qualified as L
 import Data.Map (Map)
@@ -18,7 +19,6 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static (throwError_)
 import Effectful.Exception
 import Effectful.State.Static.Local as Local (get, modify)
-import Effectful.Writer.Static.Local (tell)
 import Network.HTTP.Types as HTTP (parseQuery)
 import Network.Wai qualified as Wai
 import Network.WebSockets (Connection)
@@ -56,16 +56,16 @@ runHyperboleSocket _opts conn req = reinterpret (runHyperboleLocal req) $ \_ -> 
     pure req
   RespondNow r -> do
     throwError_ r
-  PushUpdate (ViewUpdate vid vw) -> do
-    sendUpdate conn (targetViewMetadata vid <> requestMetadata req) vw
   GetClient -> do
     Local.get @Client
   ModClient f -> do
     Local.modify @Client f
-  TriggerAction vid act -> do
-    tell [RemoteAction vid act]
-  TriggerEvent name dat -> do
-    tell [RemoteEvent name dat]
+  PushUpdate (ViewUpdate vid vw) -> do
+    sendUpdate conn req vid vw
+  PushTrigger vid act -> do
+    sendTrigger conn req vid act
+  PushEvent name dat -> do
+    sendEvent conn req name dat
 
 
 handleRequestSocket
@@ -190,9 +190,19 @@ sendResponse conn meta (Body b) = do
   sendMessage "RESPONSE" conn meta (MessageHtml b)
 
 
-sendUpdate :: (IOE :> es) => Connection -> Metadata -> Body -> Eff es ()
-sendUpdate conn meta (Body b) = do
-  sendMessage "UPDATE" conn meta (MessageHtml b)
+sendUpdate :: (IOE :> es) => Connection -> Request -> TargetViewId -> Body -> Eff es ()
+sendUpdate conn req vid (Body b) = do
+  sendMessage "UPDATE" conn (requestMetadata req <> targetViewMetadata vid) (MessageHtml b)
+
+
+sendTrigger :: (IOE :> es) => Connection -> Request -> TargetViewId -> Encoded -> Eff es ()
+sendTrigger conn req vid act = do
+  sendRemote "TRIGGER" conn req $ RemoteAction vid act
+
+
+sendEvent :: (IOE :> es) => Connection -> Request -> Text -> Value -> Eff es ()
+sendEvent conn req nm val = do
+  sendRemote "EVENT" conn req $ RemoteEvent nm val
 
 
 sendRedirect :: (IOE :> es) => Connection -> Metadata -> URI -> Eff es ()
@@ -209,13 +219,19 @@ newtype Command = Command Text
   deriving newtype (IsString)
 
 
+sendRemote :: (IOE :> es) => Command -> Connection -> Request -> Remote -> Eff es ()
+sendRemote cmd conn req remote = do
+  sendMessage cmd conn (requestMetadata req <> metaRemote remote) MessageNone
+
+
 -- low level message. Use sendResponse
 sendMessage :: (MonadIO m) => Command -> Connection -> Metadata -> RenderedMessage -> m ()
 sendMessage (Command cmd) conn meta' msg = do
   let header = "|" <> cs cmd <> "|\n" <> cs (renderMetadata meta')
 
   let body = case msg of
-        MessageHtml html -> html
-        MessageText t -> cs t
+        MessageHtml html -> "\n\n" <> html
+        MessageText t -> "\n\n" <> cs t
+        MessageNone -> ""
 
-  liftIO $ WS.sendTextData conn (header <> "\n\n" <> body)
+  liftIO $ WS.sendTextData conn (header <> body)
