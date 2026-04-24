@@ -48,6 +48,7 @@ dependencies:
   - containers >= 0.6 && <1
   - casing >= 0.1.2 && <0.2
   - data-default >= 0.8 && <0.9
+  - deepseq
   - effectful >= 2.4 && <3
   - text >= 1.2 && <3
   - time >= 1.12 && <2

@@ -11,7 +11,7 @@ data ProgrammingLanguage = ProgrammingLanguage
   , features :: [TypeFeature]
   , description :: Text
   }
-  deriving (Generic, ToParam, FromParam)
+  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam)
 instance Eq ProgrammingLanguage where
   p1 == p2 = p1.name == p2.name
 

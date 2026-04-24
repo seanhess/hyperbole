@@ -11,11 +11,11 @@ import Data.Map.Strict qualified as M
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
+import Data.Text qualified as T
 import GHC.Exts (IsList (..))
 import GHC.Generics
 import Network.HTTP.Types (Query, QueryItem, renderQuery)
 import Network.HTTP.Types qualified as HTTP
-import Web.Hyperbole.Data.Encoded (decodeParam, encodeParam)
 import Web.Hyperbole.Data.Param
 import Prelude hiding (lookup)
 
@@ -78,15 +78,15 @@ elems :: QueryData -> [ParamValue]
 elems (QueryData m) = M.elems m
 
 
-render :: QueryData -> ByteString
+render :: QueryData -> Text
 render qd =
-  renderQuery False (HTTP.toQuery $ fromQueryData qd)
+  T.replace "%20" "+" $ cs $ renderQuery False (HTTP.toQuery $ fromQueryData qd)
 
 
-parse :: ByteString -> QueryData
+parse :: Text -> QueryData
 parse =
-  -- urlDecode True
-  queryData . HTTP.parseQuery
+  -- it already knows how to handle + signs on parse
+  queryData . HTTP.parseQuery . cs
 
 
 queryData :: Query -> QueryData
@@ -99,7 +99,7 @@ queryData q =
 
   fromParam :: Maybe ByteString -> ParamValue
   fromParam Nothing = jsonParam Null
-  fromParam (Just t) = decodeParam (cs t)
+  fromParam (Just t) = ParamValue (cs t)
 
 
 fromQueryData :: QueryData -> Query
@@ -111,7 +111,7 @@ fromQueryData q =
     (cs prm, Just $ toQueryValue pval)
 
   toQueryValue :: ParamValue -> ByteString
-  toQueryValue = cs . encodeParam
+  toQueryValue (ParamValue t) = cs t
 
 
 {- | Decode a type from a 'QueryData'. Missing fields are set to 'Data.Default.def'
