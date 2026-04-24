@@ -13,7 +13,8 @@ watch() {
 
 client() {
   cd client
-  npm run dev
+  npm run dev &
+  npm run check
 }
 
 # run tests once (so we don't forget!)
