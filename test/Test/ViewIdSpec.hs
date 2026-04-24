@@ -65,7 +65,7 @@ spec = withMarkers ["encoded"] $ do
 
     describe "has-string" $ do
       it "should not contain single quotes" $ do
-        encodeViewId (HasString "woot") `shouldBe` "HasString woot"
+        encodeViewId (HasString "woot") `shouldBe` "HasString \"woot\""
         containsSingleQuotes (encodeViewId (HasString "woot")) `shouldBe` False
 
       it "should roundtrip" $ do

@@ -43,12 +43,12 @@ classSpec = do
 
   describe "ToQuery" $ do
     it "encodes record" $ do
-      let r = Record 20 "hello world"
-      QueryData.render (toQuery r) `shouldBe` "age=20&msg=hello_world"
+      let r = Record 20 "hello world_go+big"
+      QueryData.render (toQuery r) `shouldBe` "age=20&msg=hello+world_go%2Bbig"
 
   describe "roundtrip" $ do
     it "round trips" $ do
-      let r = Record 20 "hello world"
+      let r = Record 20 "hello world_go+big"
       parseQuery (toQuery r) `shouldBe` Right r
 
 

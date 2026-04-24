@@ -97,4 +97,4 @@ data AppColor
   | PrimaryLight
   | Secondary
   | SecondaryLight
-  deriving (Show, Eq, Generic, ToParam, FromParam)
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)

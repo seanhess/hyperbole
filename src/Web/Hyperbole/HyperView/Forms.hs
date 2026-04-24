@@ -39,6 +39,7 @@ module Web.Hyperbole.HyperView.Forms
   )
 where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Bifunctor (first)
 import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
@@ -180,7 +181,7 @@ submit = tag "button" @ att "type" "submit"
 
 -- | Form FieldName. This is embeded as the name attribute, and refers to the key need to parse the form when submitted. See 'fieldNames'
 newtype FieldName a = FieldName {value :: Text}
-  deriving newtype (Show, IsString, FromParam, ToParam)
+  deriving newtype (Show, IsString, FromJSON, ToJSON)
 
 
 -- | Display a 'FormField'. See 'form' and 'Form'
@@ -218,8 +219,9 @@ data Input (id :: Type) (a :: Type) = Input
   , inputName :: FieldName a
   }
   deriving (Generic)
-instance (ViewId id, FromParam id, ToParam id) => ViewId (Input id a) where
+instance (ViewId id, FromJSON id) => ViewId (Input id a) where
   type ViewState (Input id a) = ViewState id
+  toViewId inp = toViewId inp.id
 
 
 {- | label for a 'field'
@@ -263,7 +265,7 @@ data Radio (id :: Type) (a :: Type) (opt :: Type) = Radio
   , defaultOption :: opt
   }
   deriving (Generic)
-instance (FromParam id, ToParam id, FromParam a, ToParam a, ToParam opt, FromParam opt) => ViewId (Radio id a opt) where
+instance (FromJSON id, FromJSON opt, ToJSON id, ToJSON opt) => ViewId (Radio id a opt) where
   type ViewState (Radio id a opt) = ViewState id
 
 

@@ -12,14 +12,13 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import System.Random (randomRIO)
 import Web.Hyperbole
-import Web.Hyperbole.Data.JSON
 
 type TodoId = Text
 
 newtype AllTodos = AllTodos (Map TodoId Todo)
   deriving (Generic)
   deriving newtype (ToJSON, FromJSON)
-  deriving (ToEncoded, FromEncoded) via (JSON AllTodos)
+  deriving anyclass (ToEncoded, FromEncoded)
 
 instance Session AllTodos where
   sessionKey = "todos"
