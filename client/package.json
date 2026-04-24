@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/hyperbole.js",
-    "dev": "esbuild src/index.ts --bundle --minify --sourcemap --watch --outfile=dist/hyperbole.js",
+    "dev": "esbuild src/index.ts --bundle --minify --sourcemap --watch=forever --outfile=dist/hyperbole.js",
     "check": "tsc --noEmit"
   },
   "author": "",
