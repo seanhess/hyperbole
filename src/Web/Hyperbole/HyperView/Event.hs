@@ -109,13 +109,7 @@ data Key
 
 -- | Serialize a constructor that expects a single input, like `data MyAction = GoSearch Text`
 toActionInput :: (ViewAction a) => (val -> a) -> Encoded
-toActionInput act =
-  -- laziness should let us drop the last item?
-  -- maybe... I bet it evaluates it strictly
-  let Encoded con vals = toAction (act undefined)
-   in if null vals
-        then Encoded con vals
-        else Encoded con (init vals)
+toActionInput act = toAction (act inputHole)
 
 
 -- | Internal

@@ -1,7 +1,9 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.View.Types where
 
+import Data.Aeson (FromJSON, GFromJSON, GToJSON, ToJSON, Zero)
 import Data.String (IsString (..))
 import Data.Text (Text, pack)
 import Effectful
@@ -11,7 +13,7 @@ import GHC.Generics
 import Web.Atomic.Html (Html (..))
 import Web.Atomic.Html qualified as Atomic
 import Web.Atomic.Types
-import Web.Hyperbole.Data.Encoded (decodeEither, encodedToText)
+import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Data.Param (FromParam, ToParam (..))
 import Web.Hyperbole.View.ViewId
 
@@ -69,7 +71,7 @@ instance Monad (View ctx) where
 
 newtype ChildView a = ChildView a
   deriving (Generic)
-instance (ViewId a, FromParam a, ToParam a) => ViewId (ChildView a) where
+instance (ViewId a, ToArgument a, FromArgument a) => ViewId (ChildView a) where
   type ViewState (ChildView a) = ViewState a
 
 

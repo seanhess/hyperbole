@@ -1,9 +1,13 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Web.Hyperbole.HyperView.Input where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Web.Atomic.Types
+import Web.Hyperbole.Data.Encoded (FromArgument, ToArgument)
 import Web.Hyperbole.Data.Param (FromParam, ParamValue (..), ToParam (..))
 import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..))
@@ -67,7 +71,7 @@ data Option id opt = Option
   deriving (Generic)
 
 
-instance (ToParam id, ToParam opt, FromParam id, FromParam opt) => ViewId (Option id opt) where
+instance (ToArgument id, ToArgument opt, FromArgument id, FromArgument opt) => ViewId (Option id opt) where
   type ViewState (Option id opt) = ViewState id
 
 

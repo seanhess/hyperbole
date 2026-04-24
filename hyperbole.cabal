@@ -37,7 +37,6 @@ library
       Web.Hyperbole.Application
       Web.Hyperbole.Data.Cookie
       Web.Hyperbole.Data.Encoded
-      Web.Hyperbole.Data.JSON
       Web.Hyperbole.Data.Param
       Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Data.URI
@@ -104,6 +103,7 @@ library
     , containers >=0.6 && <1
     , cookie >=0.4 && <0.6
     , data-default ==0.8.*
+    , deepseq
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2
@@ -166,6 +166,7 @@ test-suite test
     , containers >=0.6 && <1
     , cookie >=0.4 && <0.6
     , data-default ==0.8.*
+    , deepseq
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2
