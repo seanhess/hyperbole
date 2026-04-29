@@ -107,10 +107,6 @@ data Key
   deriving (Show, Read)
 
 
--- | Serialize a constructor that expects a single input, like `data MyAction = GoSearch Text`
-toActionInput :: (ViewAction a) => (val -> a) -> Encoded
-toActionInput act = toAction (act inputHole)
-
 
 -- | Internal
 dataTarget :: (ViewId id, Attributable a) => id -> Attributes a -> Attributes a

@@ -19,6 +19,7 @@ import App.Page.Intro.Intro qualified as Intro
 import App.Page.OAuth2 qualified as OAuth2
 import App.Page.SideEffects qualified as SideEffects
 import App.Page.State qualified as State
+import App.Page.Test qualified as Test
 import App.Page.ViewFunctions qualified as ViewFunctions
 import App.Route as Route
 import Control.Concurrent
@@ -69,7 +70,6 @@ import Example.State.ViewState qualified as ViewState
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Example.Tags qualified as Tags
-import Example.Test qualified as Test
 import Example.Todos.Todo qualified as Todo
 import Example.Todos.TodoCSS qualified as TodoCSS
 import Example.View.Layout as Layout (layout)
@@ -179,7 +179,6 @@ exampleApp config users count chats db = do
   router Simple = redirect (routeUri Intro)
   -- router Counter = redirect (routeUri $ State StateRoot)
   router (Test TestMain) = runPage Test.page
-  router (Test TestState) = runPage ViewState.page
   router Main = do
     redirect (routeUri Intro)
 

@@ -35,9 +35,9 @@ library
   exposed-modules:
       Web.Hyperbole
       Web.Hyperbole.Application
+      Web.Hyperbole.Data.Argument
       Web.Hyperbole.Data.Cookie
       Web.Hyperbole.Data.Encoded
-      Web.Hyperbole.Data.Param
       Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Data.URI
       Web.Hyperbole.Document
@@ -128,9 +128,9 @@ test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Test.ArgumentSpec
       Test.EncodedSpec
       Test.FormSpec
-      Test.ParamSpec
       Test.QuerySpec
       Test.RouteSpec
       Test.SessionSpec

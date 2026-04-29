@@ -45,8 +45,6 @@ import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types (hAccept, hContentType)
 import Network.URI (parseURI)
 import Text.Casing (quietSnake)
-import Web.Hyperbole.Data.Encoded
-import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.GenRandom
 import Web.Hyperbole.Effect.Hyperbole
@@ -130,7 +128,6 @@ getConfigEnv = do
 
 newtype Scopes = Scopes [Text]
   deriving (Show, Generic)
-  deriving anyclass (FromParam, ToParam)
 instance ToJSON Scopes where
   toJSON (Scopes ss) = String $ T.unwords ss
 instance FromJSON Scopes where
@@ -161,7 +158,7 @@ data AuthFlow = AuthFlow
   { redirect :: URI
   , state :: Token State
   }
-  deriving (Generic, FromEncoded, ToEncoded)
+  deriving (Generic, FromJSON, ToJSON)
 instance Session AuthFlow where
   sessionKey = "OAuth2AuthFlow"
   cookiePath = Just "/"
@@ -179,7 +176,7 @@ data Config = Config
 
 data TokenType
   = Bearer
-  deriving (Show, Read, Generic, ToParam, FromParam)
+  deriving (Show, Read, Generic)
 instance ToJSON TokenType where
   toJSON s = toJSON $ show s
 instance FromJSON TokenType where
@@ -194,7 +191,7 @@ data Authenticated = Authenticated
   , accessToken :: Token Access
   , refreshToken :: Maybe (Token Refresh)
   }
-  deriving (Generic, Show, ToParam, FromParam, ToEncoded, FromEncoded)
+  deriving (Generic, Show)
 instance FromJSON Authenticated where
   parseJSON = genericParseJSON defaultOptions{fieldLabelModifier = quietSnake}
 instance ToJSON Authenticated where

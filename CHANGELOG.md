@@ -1,5 +1,9 @@
 # Revision history for hyperbole
 
+- toActionInput inputs can be in any order in a constructor
+- Web.Hyperbole.Data.Param was unnecessary and removed. Everything uses ToJSON as an intermediate encoding
+- trigger is now pushed to the client instead of deferring, allowing triggers in the middle of long-running actions
+
 ## 0.6.0 -- 2026-01-15
 
 Improvements:

@@ -3,12 +3,15 @@
 
 module Web.Hyperbole.Data.QueryData where
 
-import Data.Aeson (Value (Null))
+import Control.Applicative ((<|>))
+import Data.Aeson (FromJSON (..), Result (..), ToJSON (..), Value (..), fromJSON)
+import Data.Aeson qualified as A
 import Data.ByteString (ByteString)
 import Data.Default (Default (..))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Maybe (fromMaybe)
+import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
 import Data.Text qualified as T
@@ -16,29 +19,52 @@ import GHC.Exts (IsList (..))
 import GHC.Generics
 import Network.HTTP.Types (Query, QueryItem, renderQuery)
 import Network.HTTP.Types qualified as HTTP
-import Web.Hyperbole.Data.Param
 import Prelude hiding (lookup)
 
 
+newtype Param = Param {text :: Text}
+  deriving newtype (Show, Eq, Ord, IsString)
+
+
 -- | Key-value store for query params and sessions
-newtype QueryData = QueryData (Map Param ParamValue)
+newtype QueryData = QueryData (Map Param Text)
   deriving (Show)
   deriving newtype (Monoid, Semigroup)
 
 
 instance IsList QueryData where
-  type Item QueryData = (Param, ParamValue)
+  type Item QueryData = (Param, Text)
   fromList = QueryData . fromList
   toList (QueryData m) = toList m
 
 
-singleton :: (ToParam a) => Param -> a -> QueryData
-singleton key a = QueryData $ M.singleton key (toParam a)
+parseParam :: (FromJSON a) => Value -> Either String a
+parseParam v =
+  case fromJSON v of
+    Success a -> pure a
+    Error e -> Left e
 
 
-insert :: (ToParam a) => Param -> a -> QueryData -> QueryData
+-- the "default" encoding uses unquoted strings
+encodeParam :: (ToJSON a) => a -> Text
+encodeParam a = do
+  case A.toJSON a of
+    String s -> cs s
+    val -> cs $ A.encode val
+
+
+decodeParam :: (FromJSON a) => Text -> Either String a
+decodeParam inp = maybe (Left $ "Could not decode Query Param: " <> cs inp) pure $ do
+  A.decode (cs inp) <|> A.decode (cs $ "\"" <> inp <> "\"")
+
+
+singleton :: (ToJSON a) => Param -> a -> QueryData
+singleton key a = QueryData $ M.singleton key (encodeParam a)
+
+
+insert :: (ToJSON a) => Param -> a -> QueryData -> QueryData
 insert p a (QueryData m) =
-  QueryData $ M.insert p (toParam a) m
+  QueryData $ M.insert p (encodeParam a) m
 
 
 insertAll :: (ToQuery a) => a -> QueryData -> QueryData
@@ -52,17 +78,17 @@ delete p (QueryData m) =
   QueryData $ M.delete p m
 
 
-lookup :: (FromParam a) => Param -> QueryData -> Maybe a
+lookup :: (FromJSON a) => Param -> QueryData -> Maybe a
 lookup k (QueryData m) = do
-  t <- M.lookup k m
-  either (const Nothing) pure $ parseParam t
+  t :: Text <- M.lookup k m
+  either (const Nothing) pure $ decodeParam t
 
 
-require :: (FromParam a) => Param -> QueryData -> Either String a
+require :: (FromJSON a) => Param -> QueryData -> Either String a
 require p (QueryData m) = do
   case M.lookup p m of
     Nothing -> Left $ "Missing Key: " <> cs p.text
-    Just val -> parseParam val
+    Just val -> decodeParam val
 
 
 filterKey :: (Param -> Bool) -> QueryData -> QueryData
@@ -74,7 +100,7 @@ member :: Param -> QueryData -> Bool
 member k (QueryData qd) = M.member k qd
 
 
-elems :: QueryData -> [ParamValue]
+elems :: QueryData -> [Text]
 elems (QueryData m) = M.elems m
 
 
@@ -93,25 +119,29 @@ queryData :: Query -> QueryData
 queryData q =
   fromList $ fmap fromQueryItem q
  where
-  fromQueryItem :: QueryItem -> (Param, ParamValue)
-  fromQueryItem (key, mval) =
+  fromQueryItem :: QueryItem -> (Param, Text)
+  fromQueryItem (key, mval) = do
     (Param (cs key), fromParam mval)
 
-  fromParam :: Maybe ByteString -> ParamValue
-  fromParam Nothing = jsonParam Null
-  fromParam (Just t) = ParamValue (cs t)
+  -- do we include fields that don't have a value? Sure
+  fromParam :: Maybe ByteString -> Text
+  fromParam Nothing = ""
+  fromParam (Just t) = cs t
 
 
+-- Now we have our own thing!
+-- 1. ALWAYS encode strings without quotes
+-- 2. How do you distinguish between numbers and strings then?
+
+-- problem: strings are always quoted
+-- if we unquote them, they might be a string like "30"
 fromQueryData :: QueryData -> Query
 fromQueryData q =
   fmap toQueryItem $ toList q
  where
-  toQueryItem :: (Param, ParamValue) -> QueryItem
+  toQueryItem :: (Param, Text) -> QueryItem
   toQueryItem (Param prm, pval) =
-    (cs prm, Just $ toQueryValue pval)
-
-  toQueryValue :: ParamValue -> ByteString
-  toQueryValue (ParamValue t) = cs t
+    (cs prm, Just $ cs pval)
 
 
 {- | Decode a type from a 'QueryData'. Missing fields are set to 'Data.Default.def'
@@ -187,7 +217,7 @@ instance (GFromQuery f) => GFromQuery (M1 C c f) where
   gParseQuery q = M1 <$> gParseQuery q
 
 
-instance {-# OVERLAPPABLE #-} (Selector s, FromParam a, Default a) => GFromQuery (M1 S s (K1 R a)) where
+instance {-# OVERLAPPABLE #-} (Selector s, FromJSON a, Default a) => GFromQuery (M1 S s (K1 R a)) where
   gParseQuery q = do
     let s = selName (undefined :: M1 S s (K1 R (f a)) p)
     let mval = lookup (Param $ pack s) q
@@ -219,7 +249,7 @@ instance (GToQuery f) => GToQuery (M1 C d f) where
   gToQuery (M1 f) = gToQuery f
 
 
-instance {-# OVERLAPPABLE #-} (Selector s, ToParam a, Eq a, Default a) => GToQuery (M1 S s (K1 R a)) where
+instance {-# OVERLAPPABLE #-} (Selector s, ToJSON a, Eq a, Default a) => GToQuery (M1 S s (K1 R a)) where
   gToQuery (M1 (K1 a))
     | a == def = mempty
     | otherwise =
@@ -235,7 +265,7 @@ instance {-# OVERLAPS #-} (Selector s) => GToQuery (M1 S s (K1 R Text)) where
         let sel = Param $ pack $ selName (undefined :: M1 S s (K1 R (f a)) p)
          in singleton sel a
 
--- instance {-# OVERLAPS #-} (Selector s, ToParam a, Eq a) => GToQuery (M1 S s (K1 R [a])) where
+-- instance {-# OVERLAPS #-} (Selector s, ToJSON a, Eq a) => GToQuery (M1 S s (K1 R [a])) where
 --   gToQuery (M1 (K1 a))
 --     | a == [] = mempty
 --     | otherwise =

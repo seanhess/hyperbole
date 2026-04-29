@@ -3,13 +3,11 @@
 module Test.EncodedSpec where
 
 import Data.Aeson (FromJSON (..), ToJSON (..), Value (..))
-import Data.String.Conversions (cs)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Skeletest
+import Web.Hyperbole.Data.Argument
 import Web.Hyperbole.Data.Encoded
-import Web.Hyperbole.Data.Param
-import Web.Hyperbole.HyperView.Event (toActionInput)
 
 
 -- TEST: QueryData underscores vs spaces
@@ -70,7 +68,7 @@ data Record = Record
   { one :: Int
   , two :: Text
   }
-  deriving (Generic, Show, ToJSON, FromJSON, Eq, ToEncoded, FromEncoded, ToParam, FromParam)
+  deriving (Generic, Show, ToJSON, FromJSON, Eq, ToEncoded, FromEncoded)
 
 
 data Product4 = Product4 Text Text Text Text deriving (Generic, Show, Eq, Read, FromEncoded, ToEncoded)
@@ -146,7 +144,7 @@ spec = withMarkers ["encoded"] $ do
       encode (Record 1 "two") `shouldBe` "Record 1 \"two\""
       -- but if it is nested it uses the JSON instance, obviously
       let r2 = Record 1 "two"
-      encode (RecordN r2) `shouldBe` "RecordN " <> encodeArgument (JSON $ toJSON r2)
+      encode (RecordN r2) `shouldBe` "RecordN " <> encodeFromArgument (JSON $ toJSON r2)
 
     it "no special case for nested constructors`" $ do
       encode A `shouldBe` "A"
@@ -185,7 +183,7 @@ spec = withMarkers ["encoded"] $ do
 
   describe "params" $ do
     it "encodes holes" $ do
-      encodeArgument Hole `shouldBe` "_"
+      encodeFromArgument Hole `shouldBe` "_"
 
   -- it "sanitizeText" $ do
   --   encodeParam "hello world" `shouldBe` "hello_world"

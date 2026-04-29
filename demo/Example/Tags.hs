@@ -17,7 +17,7 @@ page = do
       hyper Tags $ tagsView []
 
 newtype Tag = Tag Text
-  deriving newtype (ToParam, FromParam, Eq)
+  deriving newtype (ToJSON, FromJSON, Eq)
 
 data TagForm = TagForm
   { tag :: Text

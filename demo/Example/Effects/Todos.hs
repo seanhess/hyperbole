@@ -18,7 +18,6 @@ type TodoId = Text
 newtype AllTodos = AllTodos (Map TodoId Todo)
   deriving (Generic)
   deriving newtype (ToJSON, FromJSON)
-  deriving anyclass (ToEncoded, FromEncoded)
 
 instance Session AllTodos where
   sessionKey = "todos"
@@ -32,6 +31,7 @@ data Todo = Todo
   , completed :: Bool
   }
   deriving (Generic, ToJSON, FromJSON, ToParam, FromParam, SqlRow)
+  deriving (Generic, ToJSON, FromJSON)
 
 data Todos :: Effect where
   LoadAll :: Todos m [Todo]

@@ -1,34 +1,25 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.Data.Encoded where
 
-import Control.Applicative ((<|>))
-import Control.DeepSeq (NFData, force)
+import Control.DeepSeq (force)
 import Control.Exception (Exception, catch, evaluate, throw)
-import Data.Aeson (FromJSON (..), GFromJSON, GToJSON, Options (..), SumEncoding (..), ToJSON (..), Value (..), Zero, defaultOptions)
+import Data.Aeson (FromJSON (..), ToJSON (..), Value (..))
 import Data.Aeson qualified as A
-import Data.Aeson.KeyMap (KeyMap, (!?))
-import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.Parser (eitherDecodeWith, json)
-import Data.Aeson.Types (Parser)
 import Data.Attoparsec.ByteString qualified as AB
-import Data.Attoparsec.ByteString qualified as Atto
-import Data.Attoparsec.ByteString.Char8 (isSpace, sepBy, takeWhile1)
+import Data.Attoparsec.ByteString.Char8 (sepBy)
 import Data.Attoparsec.ByteString.Char8 qualified as AC
 import Data.Bifunctor (first)
-import Data.Char (isAlphaNum, isUpper)
-import Data.Maybe (fromMaybe)
 import Data.String (IsString)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import GHC.Generics
 import GHC.IO.Unsafe (unsafePerformIO)
-import GHC.IsList (fromList, toList)
+import Web.Hyperbole.Data.Argument
 
 
 newtype ConName = ConName {text :: Text}
@@ -65,12 +56,6 @@ instance FromJSON Encoded where
   parseJSON val = fail $ "Expected Encoded but got: " <> show val
 
 
-data Argument
-  = JSON Value
-  | Hole
-  deriving (Show, Eq, Ord, Generic, NFData)
-
-
 encode :: (ToEncoded a) => a -> Text
 encode a = encodedToText $ toEncoded a
 
@@ -88,54 +73,16 @@ decodeEither t = do
 -- | Basic Encoding
 encodedToText :: Encoded -> Text
 encodedToText (Encoded con values) =
-  T.intercalate " " (con.text : fmap encodeArgument values)
-
-
--- | JSON Encode argument, but alter it slightly to use raw strings for constructors without parameters, and switch to two-element sum encoding
-encodeArgument :: Argument -> Text
-encodeArgument = \case
-  (JSON (String s)) ->
-    if isConstructorName s
-      then s
-      else encodeValue $ String s
-  (JSON (Object km)) ->
-    simplifySumEncoding $ Object km
-  (JSON v) -> encodeValue v
-  Hole -> "_"
+  T.intercalate " " (con.text : fmap (cleanUnderscores . encodeFromArgument) values)
  where
-  encodeValue :: Value -> Text
-  encodeValue = cs . A.encode
-
-  isConstructorName :: Text -> Bool
-  isConstructorName "" = False
-  isConstructorName t =
-    isUpper (T.head t) && T.all isAlphaNum t
-
-  simplifySumEncoding :: Value -> Text
-  simplifySumEncoding (Object o) = fromMaybe (encodeValue $ Object o) $ do
-    innerProduct o <|> simpleTag o
-  simplifySumEncoding v = encodeValue v
-
-  innerProduct :: KeyMap Value -> Maybe Text
-  innerProduct o = do
-    String t <- o !? "tag"
-    c <- o !? "contents"
-    let contents = case c of
-          Array a -> T.intercalate " " $ toList $ fmap encodeValue a
-          other -> encodeValue other
-    pure $ "(" <> t <> " " <> contents <> ")"
-
-  simpleTag :: KeyMap Value -> Maybe Text
-  simpleTag o = do
-    t <- o !? "tag"
-    case t of
-      String s -> pure $ "(" <> s <> ")"
-      v -> pure $ encodeValue v
+  -- Javascript client uses " _" to check for holes
+  cleanUnderscores "_" = "_"
+  cleanUnderscores other = T.replace " _" " \\_" other
 
 
 encodedParseText :: Text -> Either String Encoded
 encodedParseText inp =
-  first cs $ AB.parseOnly encodedParser (cs inp)
+  first cs $ AB.parseOnly encodedParser (cs $ cleanUnderscores inp)
  where
   encodedParser :: AB.Parser Encoded
   encodedParser = do
@@ -143,6 +90,8 @@ encodedParseText inp =
     AC.skipSpace
     ps <- argumentParser `sepBy` AC.char ' '
     pure $ Encoded (ConName (cs con)) ps
+
+  cleanUnderscores = T.replace " \\_" " _"
 
 
 genericToEncoded :: (Generic a, GToEncoded (Rep a)) => a -> Encoded
@@ -213,65 +162,6 @@ instance FromEncoded Text where
 fromResult :: A.Result a -> Either String a
 fromResult (A.Success a) = pure a
 fromResult (A.Error e) = Left (cs e)
-
-
--------------------------------------------------------------------------------
--- ARGUMENT ENCODING
--------------------------------------------------------------------------------
-type ToArgument a = (ToJSON a)
-type FromArgument a = (FromJSON a)
-
-
--- newtype ParsedArgument a = ParsedArgument a
---
---
--- instance (FromArgument a) => FromJSON (ParsedArgument a) where
---   parseJSON v = ParsedArgument <$> A.genericParseJSON argumentOptions v
-
--- TODO: we want to control the JSON serialization. Right now it serializes as "[]" for unary constructors, and {contents, tag} for others
--- TODO: override with specific tags
---
-
--- data Tag = A | B | C | D deriving (Generic, ToJSON) - currently "A"
-
-argumentOptions :: A.Options
-argumentOptions = defaultOptions{sumEncoding = TwoElemArray}
-
-
-toArgument :: (ToArgument a) => a -> Argument
-toArgument = JSON . toJSON
-
-
-parseArgument :: forall a. (FromArgument a) => Argument -> Either String a
-parseArgument (JSON v) = do
-  case A.fromJSON v of
-    A.Success a -> pure a
-    A.Error e -> Left e
-parseArgument Hole = Left "Cannot parse Argument Hole"
-
-
-argumentParser :: Atto.Parser Argument
-argumentParser =
-  JSON <$> (json <|> constructor <|> innerProduct)
- where
-  innerProduct = do
-    _ <- AC.char '('
-    tag <- AC.takeWhile1 isAlphaNum
-    contents :: KeyMap Value <- innerContents <|> pure []
-    _ <- AC.char ')'
-    pure $ Object $ [("tag", String $ cs tag)] <> contents
-
-  innerContents = do
-    _ <- AC.char ' '
-    args <- json `sepBy` AC.space
-    pure $ case args of
-      [] -> []
-      [a] -> [("contents", a)]
-      as -> [("contents", Array $ fromList as)]
-
-  constructor = do
-    s <- AC.takeWhile1 isAlphaNum
-    pure $ String (cs s)
 
 
 -- Param encoding scheme:
@@ -363,7 +253,7 @@ instance (GToEncoded f) => GToEncoded (M1 S s f) where
   gToEncoded (M1 f) = gToEncoded f
 
 
-instance (ToArgument a) => GToEncoded (K1 R a) where
+instance (ToJSON a) => GToEncoded (K1 R a) where
   gToEncoded (K1 a) = do
     Encoded mempty [toArgumentWithHole a]
 
@@ -416,7 +306,7 @@ instance (GFromEncoded f) => GFromEncoded (M1 S s f) where
     pure (M1 a, rest)
 
 
-instance (FromArgument a) => GFromEncoded (K1 R a) where
+instance (FromJSON a) => GFromEncoded (K1 R a) where
   gParseEncoded (Encoded con vals) = do
     case vals of
       (param : rest) -> do
@@ -440,11 +330,14 @@ inputHole :: a
 inputHole = throw InputHole
 
 
-toArgumentWithHole :: (ToArgument a) => a -> Argument
+toArgumentWithHole :: (ToJSON a) => a -> Argument
 toArgumentWithHole a = do
+  -- You're not a real framework author if you don't use unsafePerformIO at least once
   unsafePerformIO $ do
     catch
       do
+        -- I don't really understand why I needed so many evaluates to pass all the tests in ViewActionSpec
+        -- but there you have it
         a' <- evaluate a
         evaluate $ force $ toArgument a'
       do \InputHole -> pure Hole

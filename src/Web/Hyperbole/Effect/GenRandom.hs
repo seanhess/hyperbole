@@ -10,7 +10,6 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import GHC.Generics (Generic)
 import System.Random (Random, randomRIO)
-import Web.Hyperbole.Data.Param (FromParam, ToParam)
 
 
 data GenRandom :: Effect where
@@ -54,5 +53,5 @@ genRandomList as = send $ GenRandomList as
 
 
 newtype Token a = Token {value :: Text}
-  deriving newtype (FromJSON, ToJSON, FromParam, ToParam, Eq, Show, Read, Ord)
+  deriving newtype (FromJSON, ToJSON, Eq, Show, Read, Ord)
   deriving (Generic)

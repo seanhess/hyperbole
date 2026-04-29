@@ -39,7 +39,7 @@ data Contacts = Contacts
 data Filter
   = Active
   | Inactive
-  deriving (Eq, Show, Read, Generic, ToJSON, FromJSON, ToParam, FromParam)
+  deriving (Eq, Show, Read, Generic, ToJSON, FromJSON)
 
 instance (Users :> es, Debug :> es) => HyperView Contacts es where
   data Action Contacts
