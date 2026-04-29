@@ -2,5 +2,3 @@ This site has detailed documentation with inline examples. Click the "source" li
 
 * [Github](https://github.com/seanhess/hyperbole) - Issues, source code
 * [Hackage](https://hackage.haskell.org/package/hyperbole) - Reference
-
-▶️ Continue to [[/basics]]

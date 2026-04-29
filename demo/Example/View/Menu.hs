@@ -5,25 +5,38 @@ module Example.View.Menu where
 import App.Docs
 import App.Route
 import Control.Monad (when)
+import Data.List (elemIndex)
 import Example.Colors (AppColor (..), cyan)
+import Safe (atMay)
 import Web.Atomic.CSS
 import Web.Hyperbole
+
+topLevelPages :: [AppRoute]
+topLevelPages =
+  [ Intro
+  , Basics
+  , Hyperviews
+  , Concurrency
+  , ViewFunctions
+  , SideEffects
+  , State
+  , CSS
+  , HyperboleEffect
+  , Application
+  , Forms FormSimple
+  , Interactivity
+  , Examples OtherExamples
+  ]
+
+nextPage :: AppRoute -> Maybe AppRoute
+nextPage rt = do
+  ix <- rt `elemIndex` topLevelPages
+  topLevelPages `atMay` (ix + 1)
 
 menu :: forall sections c. (PageAnchor sections) => AppRoute -> View c ()
 menu current = do
   col ~ color White $ do
-    docLink Intro
-    docLink Basics
-    docLink Hyperviews
-    docLink Concurrency
-    docLink ViewFunctions
-    docLink SideEffects
-    docLink State
-    docLink CSS
-    docLink HyperboleEffect
-    docLink Application
-    docLink (Forms FormSimple)
-    docLink Interactivity
+    mapM_ docLink (init topLevelPages)
     docLink' isExamples (Examples OtherExamples)
  where
   -- case current of

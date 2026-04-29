@@ -13,23 +13,29 @@ import Example.Colors (AppColor (..))
 import Example.Style qualified as Style
 import Example.Style.Cyber qualified as Cyber
 import Example.View.Icon as Icon (github, hamburger, haskell)
-import Example.View.Menu (menu)
+import Example.View.Menu (menu, nextPage)
 import Paths_demo (version)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
 layout :: AppRoute -> View c () -> View c ()
-layout rt = layout' (menu @() rt)
+layout rt = layout' rt (menu @() rt)
 
 layoutSubnav :: forall sections c. (PageAnchor sections) => AppRoute -> View c () -> View c ()
-layoutSubnav rt = layout' (menu @sections rt)
+layoutSubnav rt = layout' rt (menu @sections rt)
 
-layout' :: View c () -> View c () -> View c ()
-layout' chosenMenu contents =
+layout' :: AppRoute -> View c () -> View c () -> View c ()
+layout' rt chosenMenu contents =
   el ~ grow $ do
     navigation chosenMenu ~ position Fixed . zIndex 1 . onDesktop leftMenu . onMobile topMenu
     col ~ pad (TRBL 25 25 100 25) . gap 30 . onDesktop horizontal . onMobile vertical $ do
       contents
+      case nextPage rt of
+        Nothing -> none
+        Just nxt -> do
+          el $ do
+            text "▶️ Continue to "
+            link (routeUri nxt) ~ Style.link $ text $ routeTitle nxt
  where
   leftMenu = width menuWidth . left 0 . top 0 . bottom 0
   horizontal = margin (L menuWidth)
