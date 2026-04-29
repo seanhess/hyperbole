@@ -38,3 +38,8 @@ decodeAction t = do
   case parseAction =<< encodedParseText t of
     Left _ -> Nothing
     Right a -> pure a
+
+
+-- | Serialize a constructor that expects a single input, like `data MyAction = GoSearch Text`
+toActionInput :: (ViewAction a) => (val -> a) -> Encoded
+toActionInput act = toAction (act inputHole)

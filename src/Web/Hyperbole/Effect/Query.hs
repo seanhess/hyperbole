@@ -1,13 +1,13 @@
 module Web.Hyperbole.Effect.Query where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.ByteString qualified as BS
 import Data.Default (Default (..))
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
 import Effectful
 import Effectful.Dispatch.Dynamic (send)
-import Web.Hyperbole.Data.Param (FromParam (..), Param, ToParam (..))
-import Web.Hyperbole.Data.QueryData (FromQuery (..), QueryData (..), ToQuery (..), queryData)
+import Web.Hyperbole.Data.QueryData (FromQuery (..), Param (..), QueryData (..), ToQuery (..), queryData)
 import Web.Hyperbole.Data.QueryData qualified as QueryData
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.Effect.Request (request)
@@ -63,7 +63,7 @@ clearQuery =
 #EMBED Example.Docs.Params page'
 @
 -}
-param :: (FromParam a, Hyperbole :> es) => Param -> Eff es a
+param :: (FromJSON a, Hyperbole :> es) => Param -> Eff es a
 param p = do
   q <- queryParams
   case QueryData.require p q of
@@ -78,7 +78,7 @@ param p = do
 #EMBED Example.Docs.SideEffects page
 @
 -}
-lookupParam :: (FromParam a, Hyperbole :> es) => Param -> Eff es (Maybe a)
+lookupParam :: (FromJSON a, Hyperbole :> es) => Param -> Eff es (Maybe a)
 lookupParam p = do
   QueryData.lookup p <$> queryParams
 
@@ -89,7 +89,7 @@ lookupParam p = do
 #EMBED Example.Docs.Params instance HyperView Message
 @
 -}
-setParam :: (ToParam a, Hyperbole :> es) => Param -> a -> Eff es ()
+setParam :: (ToJSON a, Hyperbole :> es) => Param -> a -> Eff es ()
 setParam key a = do
   modifyQueryData (QueryData.insert key a)
 

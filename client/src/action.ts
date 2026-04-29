@@ -74,14 +74,6 @@ export function newRequest(): Request {
 
 // Sanitized Encoding ------------------------------------
 
-export function encodedParam(action: string, param: string): string {
-  return action + " " + sanitizeParam(param)
-}
-
-function sanitizeParam(param: string): string {
-  if (param == "") {
-    return "|"
-  }
-
-  return param.replace(/_/g, "\\_").replace(/\s+/g, "_")
+export function encodedAction(action: string, param: string): string {
+  return action.replace(" _", " " + param)
 }

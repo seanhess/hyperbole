@@ -2,6 +2,9 @@
 
 module Web.Hyperbole.HyperView.Hyper where
 
+import Data.Aeson (ToJSON)
+import Data.Aeson qualified as A
+import Data.String.Conversions (cs)
 import Web.Atomic.Types
 import Web.Hyperbole.Data.Encoded as Encoded
 import Web.Hyperbole.HyperView.Handled (HyperViewHandled)
@@ -27,7 +30,7 @@ hyper vid = hyperState vid ()
 
 hyperState
   :: forall id ctx
-   . (HyperViewHandled id ctx, ViewId id, ToEncoded (ViewState id), ConcurrencyValue (Concurrency id))
+   . (HyperViewHandled id ctx, ViewId id, ToJSON (ViewState id), ConcurrencyValue (Concurrency id))
   => id
   -> ViewState id
   -> View id ()
@@ -35,7 +38,7 @@ hyperState
 hyperState = hyperUnsafe
 
 
-hyperUnsafe :: forall id ctx. (ViewId id, ViewState id ~ ViewState id, ToEncoded (ViewState id), ConcurrencyValue (Concurrency id)) => id -> ViewState id -> View id () -> View ctx ()
+hyperUnsafe :: forall id ctx. (ViewId id, ViewState id ~ ViewState id, ToJSON (ViewState id), ConcurrencyValue (Concurrency id)) => id -> ViewState id -> View id () -> View ctx ()
 hyperUnsafe vid st vw = do
   tag "div" @ att "id" (encodedToText $ toViewId vid) . state . concurrency $
     runViewContext vid st vw
@@ -46,6 +49,7 @@ hyperUnsafe vid st vw = do
       Replace -> att "data-concurrency" (encode Replace)
 
   state =
-    if encode st == mempty
-      then id
-      else att "data-state" (encode st)
+    let enc = A.encode st
+     in if enc == mempty
+          then id
+          else att "data-state" (cs enc)
