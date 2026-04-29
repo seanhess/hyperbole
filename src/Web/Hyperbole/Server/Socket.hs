@@ -108,7 +108,7 @@ handleRequestSocket opts actions wreq conn eff = do
       _ <- waitCatch a
       clearRunningAction req.requestId req.event
  where
-  addRunningAction :: (IOE :> es, Concurrent :> es) => Async () -> RequestId -> Maybe (Event TargetViewId Encoded Encoded) -> Eff es ()
+  addRunningAction :: (IOE :> es, Concurrent :> es) => Async () -> RequestId -> Maybe (Event TargetViewId Encoded Value) -> Eff es ()
   addRunningAction a (RequestId reqId) = \case
     Nothing -> pure ()
     Just (Event vid act _) -> do
@@ -123,7 +123,7 @@ handleRequestSocket opts actions wreq conn eff = do
           liftIO $ putStrLn $ "CANCEL (" <> cs reqId <> ") " <> cs (encodedToText vid.encoded) <> ": " <> cs (encodedToText actold)
           cancel aold
 
-  clearRunningAction :: (IOE :> es, Concurrent :> es) => RequestId -> Maybe (Event TargetViewId Encoded Encoded) -> Eff es ()
+  clearRunningAction :: (IOE :> es, Concurrent :> es) => RequestId -> Maybe (Event TargetViewId Encoded Value) -> Eff es ()
   clearRunningAction (RequestId _) = \case
     Nothing -> pure ()
     Just (Event vid _ _) -> do
@@ -139,7 +139,7 @@ handleRequestSocket opts actions wreq conn eff = do
   receiveMessage :: (IOE :> es) => Eff es Message
   receiveMessage = do
     t <- receiveText conn
-    case parseActionMessage t of
+    case parseActionMessage (cs t) of
       Left e -> throwIO $ InvalidMessage e t
       Right msg -> pure msg
 

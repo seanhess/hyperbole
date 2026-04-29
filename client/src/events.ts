@@ -1,6 +1,6 @@
 
 import debounce from 'debounce'
-import { encodedParam } from './action'
+import { encodedAction } from './action'
 import { HyperView, isHyperView } from './hyperview'
 
 export type UrlFragment = string
@@ -27,7 +27,7 @@ export function listenKeyEvent(event: "keyup" | "keydown", cb: (target: HyperVie
     if (!action) return
 
     e.preventDefault()
-    const target =  nearestHyperViewTarget(source)
+    const target = nearestHyperViewTarget(source)
     if (!target) {
       console.error("Missing target: ", source)
       return
@@ -172,7 +172,8 @@ export function listenChange(cb: (target: HyperView, action: string) => void): v
       console.error("Missing onchange: ", source)
       return
     }
-    let action = encodedParam(source.dataset.onchange, source.value)
+    // these are encoded directly as JSON-arguemnts
+    let action = encodedAction(source.dataset.onchange, source.value)
     cb(target, action)
   })
 }
@@ -214,7 +215,8 @@ export function listenInput(startedTyping: (target: HyperView) => void, cb: (tar
           console.error("Missing onInput: ", source)
           return
         }
-        const action = encodedParam(source.dataset.oninput, source.value)
+        // we need to create a string argument
+        const action = encodedAction(source.dataset.oninput, JSON.stringify(source.value))
         cb(target, action)
       }, delay)
     }

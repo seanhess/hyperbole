@@ -1,10 +1,13 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Web.Hyperbole.HyperView.Input where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Web.Atomic.Types
-import Web.Hyperbole.Data.Param (FromParam, ParamValue (..), ToParam (..))
+import Web.Hyperbole.Data.Argument (encodeArgument)
 import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
@@ -45,13 +48,13 @@ dropdown act defOpt options = do
 -- | An option for a 'dropdown' or 'select'
 option
   :: forall opt id
-   . (ViewAction (Action id), Eq opt, ToParam opt)
+   . (ViewAction (Action id), Eq opt, ToJSON opt)
   => opt
   -> Text
   -> View (Option id opt) ()
 option opt cnt = do
   os :: Option id opt <- viewId
-  tag "option" @ att "value" (toParam opt).value @ selected (os.defaultOption == opt) $ text cnt
+  tag "option" @ att "value" (encodeArgument opt) @ selected (os.defaultOption == opt) $ text cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
@@ -67,7 +70,7 @@ data Option id opt = Option
   deriving (Generic)
 
 
-instance (ToParam id, ToParam opt, FromParam id, FromParam opt) => ViewId (Option id opt) where
+instance (ToJSON id, ToJSON opt, FromJSON id, FromJSON opt) => ViewId (Option id opt) where
   type ViewState (Option id opt) = ViewState id
 
 

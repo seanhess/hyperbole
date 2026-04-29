@@ -5,7 +5,9 @@
 module Test.QuerySpec where
 
 import Data.Function ((&))
+import Data.String.Conversions (cs)
 import Data.Text (Text)
+import Network.HTTP.Types qualified as HTTP
 import Skeletest
 import Skeletest.Predicate qualified as P
 import Web.Hyperbole hiding (Number)
@@ -27,7 +29,9 @@ data Record = Record
   { age :: Int
   , msg :: Text
   }
-  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam, Eq, FromQuery, ToQuery)
+  deriving (Generic, ToJSON, FromJSON, Eq, FromQuery, ToQuery)
+instance Default Record where
+  def = Record 0 ""
 
 
 classSpec :: Spec
@@ -43,12 +47,12 @@ classSpec = do
 
   describe "ToQuery" $ do
     it "encodes record" $ do
-      let r = Record 20 "hello world"
-      QueryData.render (toQuery r) `shouldBe` "age=20&msg=hello_world"
+      let r = Record 20 "hello world_go+big"
+      QueryData.render (toQuery r) `shouldBe` "age=20&msg=hello+world_go%2Bbig"
 
   describe "roundtrip" $ do
     it "round trips" $ do
-      let r = Record 20 "hello world"
+      let r = Record 20 "hello world_go+big"
       parseQuery (toQuery r) `shouldBe` Right r
 
 
@@ -70,9 +74,12 @@ renderSpec = do
     let q = mempty & QueryData.insert @Text "msg" "bob&henry=fast"
     QueryData.render q `shouldBe` "msg=bob%26henry%3Dfast"
 
-  -- it "handles underscores" $ do
-  --   QueryData.render [(Param "msg", ParamValue "hello_world" $ String "hello_world")] `shouldBe` "msg=hello%5C_world"
-  --   QueryData.render [(Param "msg", ParamValue "hello world" $ String "hello world")] `shouldBe` "msg=hello_world"
+  it "should roundtrip spaces" $ do
+    let msg = "hello world"
+    let q = mempty & QueryData.insert @Text "msg" msg
+    let out = QueryData.render q
+    let q' = QueryData.parse out
+    QueryData.lookup "msg" q' `shouldBe` Just msg
 
   it "should roundtrip special characters" $ do
     let msg = "bob&henry=fast"
@@ -82,17 +89,12 @@ renderSpec = do
     QueryData.lookup "msg" q' `shouldBe` Just msg
 
 
--- it "should preserve plusses" $ do
---   let QueryData q = QueryData $ M.fromList [("items", "one+two")]
---   print $ HTTP.toQuery $ M.toList q
---   QueryData.render (QueryData q) `shouldBe` "items=one+two"
-
 data Filters = Filters
   { term :: Text
   , isActive :: Bool
   , another :: Maybe Text
   }
-  deriving (Eq, Show)
+  deriving (Generic, Eq, Show)
 
 
 instance ToQuery Filters where
@@ -111,41 +113,34 @@ instance FromQuery Filters where
     pure Filters{..}
 
 
-data Filters' = Filters'
-  { term :: Text
-  , isActive :: Bool
-  }
-  deriving (Generic, Eq, ToJSON, FromJSON, FromParam, ToParam)
-instance Default Filters' where
-  def = Filters' "" False
-
-
 data Nested = Nested
-  { filters :: Filters'
+  { record :: Record
+  , awesome :: Bool
   }
-  deriving (Generic, ToQuery, FromQuery)
+  deriving (Generic, ToQuery, FromQuery, Eq)
 
-
--- instance ToQuery Nested where
---   toQuery n =
---     mempty & QueryData.insert "filters" (JSON n.filters)
---
---
--- instance FromQuery Nested where
---   parseQuery q =
---     mempty & QueryData.insert "filters" (JSON n.filters)
 
 multiSpec :: Spec
 multiSpec = do
   describe "Roundtrip" $ do
     it "should parse from querydata" $ do
       let f = Filters "hello world" False Nothing
-      let out = QueryData.render (toQuery f)
-      let q = QueryData.parse out
-      parseQuery q `shouldBe` Right f
+      roundTrip f
 
     it "should work with Just" $ do
       let f = Filters "hello_world" False (Just "hello")
-      let out = QueryData.render (toQuery f)
-      let q = QueryData.parse out
-      parseQuery q `shouldBe` Right f
+      roundTrip f
+
+    it "integers, special characters, spaces" $ do
+      let r = Record 30 "hello world_this+is"
+      roundTrip r
+
+    it "nested JSON records" $ do
+      let r = Record 30 "hello world_this+is"
+      let n = Nested r True
+      roundTrip n
+ where
+  roundTrip val = do
+    let out = QueryData.render (toQuery val)
+    let q = QueryData.parse out
+    parseQuery q `shouldBe` Right val

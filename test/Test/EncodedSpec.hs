@@ -6,8 +6,8 @@ import Data.Aeson (FromJSON (..), ToJSON (..), Value (..))
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Skeletest
+import Web.Hyperbole.Data.Argument
 import Web.Hyperbole.Data.Encoded
-import Web.Hyperbole.Data.Param
 
 
 -- TEST: QueryData underscores vs spaces
@@ -15,25 +15,24 @@ import Web.Hyperbole.Data.Param
 data One = One
   -- toJSON automatically delegates to the child's ToJSON instance
   -- when it ought to be enought to delegate to the Generic instance!
-  deriving (Generic, Eq, ToEncoded, FromEncoded, ToParam, FromParam)
+  deriving (Generic, Eq, ToEncoded, FromEncoded, ToJSON, FromJSON)
 
 
 data Tag = A | B | C | D
-  deriving (Generic, Eq, ToEncoded, ToParam, FromParam)
+  deriving (Generic, Eq, ToEncoded, ToJSON, FromJSON)
 
 
 data Two = Two | Two2 Int
   deriving (Generic, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded)
 
 
--- Custom Param Encoding
-instance ToParam Two where
-  toParam Two = "Two"
-  toParam other = genericToParam other
-instance FromParam Two where
-  parseParam "Two" = pure Two
-  parseParam other = genericParseParam other
-
+-- -- Custom Param Encoding
+-- instance ToParam Two where
+--   toParam Two = "Two"
+--   toParam other = genericToParam other
+-- instance FromParam Two where
+--   parseParam "Two" = pure Two
+--   parseParam other = genericParseParam other
 
 data Sum
   = Sumthing
@@ -50,7 +49,14 @@ data Nested
   | RecordN Record
   | RecordEx Record Int
   | Tag Tag
+  | NProd SubProduct
   deriving (Generic, ToEncoded, FromEncoded, Eq)
+
+
+data SubProduct
+  = MoreThanOne Int
+  | AnotherOne Text Int
+  deriving (Generic, Eq, ToJSON, FromJSON)
 
 
 data Product
@@ -62,7 +68,7 @@ data Record = Record
   { one :: Int
   , two :: Text
   }
-  deriving (Generic, Show, ToJSON, FromJSON, Eq, ToEncoded, FromEncoded, ToParam, FromParam)
+  deriving (Generic, Show, ToJSON, FromJSON, Eq, ToEncoded, FromEncoded)
 
 
 data Product4 = Product4 Text Text Text Text deriving (Generic, Show, Eq, Read, FromEncoded, ToEncoded)
@@ -76,38 +82,37 @@ spec = withMarkers ["encoded"] $ do
 
     it "should encode multi tags" $ do
       genericToEncoded Two `shouldBe` Encoded "Two" []
-      genericToEncoded (Two2 3) `shouldBe` Encoded "Two2" [jsonParam $ Number 3]
-      genericToEncoded (Gogo One) `shouldBe` Encoded "Gogo" [toParam One]
+      genericToEncoded (Two2 3) `shouldBe` Encoded "Two2" [JSON $ Number 3]
+      genericToEncoded (Gogo One) `shouldBe` Encoded "Gogo" [toArgument One]
 
     it "should encode sum tags" $ do
-      genericToEncoded (CTwo Two) `shouldBe` Encoded "CTwo" [toParam Two]
+      genericToEncoded (CTwo Two) `shouldBe` Encoded "CTwo" [toArgument Two]
 
     it "basic" $ do
-      genericToEncoded (Gogo One) `shouldBe` Encoded "Gogo" [toParam One]
+      genericToEncoded (Gogo One) `shouldBe` Encoded "Gogo" [toArgument One]
 
     it "product" $ do
-      genericToEncoded (Product "one" 2 True) `shouldBe` Encoded "Product" [toParam @Text "one", toParam @Int 2, toParam True]
+      genericToEncoded (Product "one" 2 True) `shouldBe` Encoded "Product" [toArgument @Text "one", toArgument @Int 2, toArgument True]
 
     it "product4" $ do
       let prod = Product4 "one" "two" "three" "four"
-      genericToEncoded prod `shouldBe` Encoded "Product4" (fmap toParam ["one" :: Text, "two", "three", "four"])
+      genericToEncoded prod `shouldBe` Encoded "Product4" (fmap toArgument ["one" :: Text, "two", "three", "four"])
 
   describe "genericParseEncoded" $ do
     it "product4" $ do
-      genericParseEncoded (Encoded "Product4" (fmap toParam ["one" :: Text, "two", "three", "four"])) `shouldBe` Right (Product4 "one" "two" "three" "four")
+      genericParseEncoded (Encoded "Product4" (fmap toArgument ["one" :: Text, "two", "three", "four"])) `shouldBe` Right (Product4 "one" "two" "three" "four")
 
     it "sum" $ do
       genericParseEncoded @Sum (Encoded "Sumthing" []) `shouldBe` Right Sumthing
-      genericParseEncoded @Sum (Encoded "Num" [toParam @Int 2]) `shouldBe` Right (Num 2)
-      genericParseEncoded @Sum (Encoded "Str" [toParam @Text "OK"]) `shouldBe` Right (Str "OK")
+      genericParseEncoded @Sum (Encoded "Num" [toArgument @Int 2]) `shouldBe` Right (Num 2)
+      genericParseEncoded @Sum (Encoded "Str" [toArgument @Text "OK"]) `shouldBe` Right (Str "OK")
 
-      genericParseEncoded @Sum (Encoded "COne" [toParam One]) `shouldBe` Right (COne One)
-      genericParseEncoded @Sum (Encoded "CTwo" [toParam Two]) `shouldBe` Right (CTwo Two)
+      genericParseEncoded @Sum (Encoded "COne" [toArgument One]) `shouldBe` Right (COne One)
+      genericParseEncoded @Sum (Encoded "CTwo" [toArgument Two]) `shouldBe` Right (CTwo Two)
 
   describe "toEncoded" $ do
     it "encodes numbers as text" $ do
-      -- no, this is right, but when we go to decode, we pick up the json instance...
-      toEncoded (Num 1) `shouldBe` Encoded "Num" [jsonParam $ Number 1]
+      toEncoded (Num 1) `shouldBe` Encoded "Num" [toArgument @Int 1]
 
   describe "toText" $ do
     it "should encode single tags" $ do
@@ -118,29 +123,28 @@ spec = withMarkers ["encoded"] $ do
       encodedParseText "One" `shouldBe` Right (Encoded "One" [])
 
     it "parses numbers" $ do
-      encodedParseText "Num 1" `shouldBe` Right (Encoded "Num" [jsonParam $ Number 1])
+      encodedParseText "Num 1" `shouldBe` Right (Encoded "Num" [JSON $ Number 1])
 
   describe "encode" $ do
     it "should encode single tags" $ do
       encode One `shouldBe` "One"
 
-    it "encodes strings" $ do
-      encode (Str "hello world") `shouldBe` "Str hello_world"
-      -- but then how is it going to know the difference between the two?
-      encode (Str " ") `shouldBe` "Str _"
-      encode (Str "") `shouldBe` "Str |"
-      encode (Str "_") `shouldBe` "Str \\_"
-      encode (Str "\n") `shouldBe` "Str \\n"
-      encode (Str "hello_world") `shouldBe` "Str hello\\_world"
-      encode (Str "hello+world") `shouldBe` "Str hello+world"
-      encode (Str "hello\nworld") `shouldBe` "Str hello\\nworld"
+    it "encodes strings as JSON" $ do
+      encode (Str "hello world") `shouldBe` "Str \"hello world\""
+      encode (Str " ") `shouldBe` "Str \" \""
+      encode (Str "") `shouldBe` "Str \"\""
+      encode (Str "_") `shouldBe` "Str \"_\""
+      encode (Str "\n") `shouldBe` "Str \"\\n\""
+      encode (Str "hello_world") `shouldBe` "Str \"hello_world\""
+      encode (Str "hello+world") `shouldBe` "Str \"hello+world\""
+      encode (Str "hello\nworld") `shouldBe` "Str \"hello\\nworld\""
 
     it "should encode records`" $ do
       -- no field names for ourselves
-      encode (Record 1 "two") `shouldBe` "Record 1 two"
+      encode (Record 1 "two") `shouldBe` "Record 1 \"two\""
       -- but if it is nested it uses the JSON instance, obviously
       let r2 = Record 1 "two"
-      encode (RecordN r2) `shouldBe` "RecordN " <> encodeParam (jsonParam r2)
+      encode (RecordN r2) `shouldBe` "RecordN " <> encodeFromArgument (JSON $ toJSON r2)
 
     it "no special case for nested constructors`" $ do
       encode A `shouldBe` "A"
@@ -148,15 +152,19 @@ spec = withMarkers ["encoded"] $ do
 
     it "should encode sum" $ do
       encode (Num 1) `shouldBe` "Num 1"
-      encode (Str "hello world") `shouldBe` "Str hello_world"
+      encode (Str "hello world") `shouldBe` "Str \"hello world\""
 
-    it "should encode prodcuts" $ do
-      encode (Product "hello world" 2 True) `shouldBe` "Product hello_world 2 true"
+    it "should encode products" $ do
+      encode (Product "hello world" 2 True) `shouldBe` "Product \"hello world\" 2 true"
 
     it "encodes more constructors" $ do
-      encode (CTwo (Two2 3)) `shouldBe` "CTwo [\"Two2\",3]"
-      encode (CTwo Two) `shouldBe` "CTwo Two" -- uses the custom toparam instance
+      encode (CTwo (Two2 3)) `shouldBe` "CTwo (Two2 3)" -- uses custom tuple constructor
+      encode (CTwo Two) `shouldBe` "CTwo (Two)" -- uses the custom simpleTag
       encode (COne One) `shouldBe` "COne []"
+      encode (NProd (AnotherOne "hi" 3)) `shouldBe` "NProd (AnotherOne \"hi\" 3)"
+
+    it "encodes input holes" $ do
+      encode (Str inputHole) `shouldBe` "Str _"
 
   describe "decode" $ do
     it "should encode single tags" $ do
@@ -164,39 +172,42 @@ spec = withMarkers ["encoded"] $ do
 
     it "should decode nested sum" $ do
       decodeEither "Num 1" `shouldBe` Right (Num 1)
-      decodeEither "Str str" `shouldBe` Right (Str "str")
-      decodeEither "Str hello_world" `shouldBe` Right (Str "hello world")
+      decodeEither "Str \"str\"" `shouldBe` Right (Str "str")
+      decodeEither "Str \"hello world\"" `shouldBe` Right (Str "hello world")
 
     it "no special case for nested constructors`" $ do
-      decode "Tag A" `shouldBe` Just (Tag A)
+      decodeEither "Tag A" `shouldBe` Right (Tag A)
 
     it "decodes strings" $ do
-      decode "Str |" `shouldBe` pure (Str "")
+      decode "Str \"\"" `shouldBe` pure (Str "")
 
   describe "params" $ do
-    it "sanitizeText" $ do
-      encodeParam "hello world" `shouldBe` "hello_world"
-      encodeParam "hello_world" `shouldBe` "hello\\_world"
-      encodeParam "hello\nworld" `shouldBe` "hello\\nworld"
+    it "encodes holes" $ do
+      encodeFromArgument Hole `shouldBe` "_"
 
-    it "desanitizeText" $ do
-      decodeParam "hello_world" `shouldBe` "hello world"
-      decodeParam "hello\\_world" `shouldBe` "hello_world"
-      decodeParam "hello\\nworld" `shouldBe` "hello\nworld"
+  -- it "sanitizeText" $ do
+  --   encodeParam "hello world" `shouldBe` "hello_world"
+  --   encodeParam "hello_world" `shouldBe` "hello\\_world"
+  --   encodeParam "hello\nworld" `shouldBe` "hello\\nworld"
+  --
+  -- it "desanitizeText" $ do
+  --   decodeParam "hello_world" `shouldBe` "hello world"
+  --   decodeParam "hello\\_world" `shouldBe` "hello_world"
+  --   decodeParam "hello\\nworld" `shouldBe` "hello\nworld"
 
-    -- TODO: Add more edge cases to check if "\n" is escaped properly.
-    it "edge cases" $ do
-      encodeParam "" `shouldBe` "|"
-      encodeParam " " `shouldBe` "_"
-      encodeParam "  " `shouldBe` "__"
-
-      encodeParam "_" `shouldBe` "\\_"
-      encodeParam "__" `shouldBe` "\\_\\_"
-
-      decodeParam "|" `shouldBe` ""
-      decodeParam "_" `shouldBe` " "
-      decodeParam "\\_" `shouldBe` "_"
-      decodeParam "\\_\\_" `shouldBe` "__"
+  -- TODO: Add more edge cases to check if "\n" is escaped properly.
+  -- it "edge cases" $ do
+  --   encodeParam "" `shouldBe` "\"\""
+  --   encodeParam " " `shouldBe` "\"_\""
+  --   encodeParam "  " `shouldBe` "\"__\""
+  --
+  --   encodeParam "_" `shouldBe` "\"\\_\""
+  --   encodeParam "__" `shouldBe` "\"\\_\\_\""
+  --
+  --   decodeParam "|" `shouldBe` ParamValue "|"
+  --   decodeParam "_" `shouldBe` ParamValue "_"
+  --   decodeParam "\\_" `shouldBe` "_"
+  --   decodeParam "\\_\\_" `shouldBe` "__"
 
   describe "round trip" $ do
     it "records" $ do
@@ -213,8 +224,12 @@ spec = withMarkers ["encoded"] $ do
       decode t `shouldBe` Just r
 
     it "special case constructors" $ do
-      decode (encode (CTwo Two)) `shouldBe` Just (CTwo Two)
+      decodeEither (encode (CTwo Two)) `shouldBe` Right (CTwo Two)
       decode (encode (Tag B)) `shouldBe` Just (Tag B)
+
+    it "special case products" $ do
+      decodeEither (encode (CTwo (Two2 3))) `shouldBe` Right (CTwo (Two2 3))
+      decodeEither (encode (NProd (AnotherOne "HI" 3))) `shouldBe` Right (NProd (AnotherOne "HI" 3))
 
     it "big product" $ do
       let p = Product4 "hello world" "two_times" "three" "four"
@@ -229,8 +244,11 @@ spec = withMarkers ["encoded"] $ do
 
     it "encodes lists`" $ do
       let l = List ["hello, world", "", "+,|<[]"]
-      print $ encode l
       decode @Sum (encode l) `shouldBe` Just l
+
+    it "encodes newlines in strings" $ do
+      let s = Str "hello\nworld"
+      decode @Sum (encode s) `shouldBe` Just s
 
     -- Regression tests for https://github.com/seanhess/hyperbole/issues/187
     -- A ViewId (or state) containing a list with newline characters must

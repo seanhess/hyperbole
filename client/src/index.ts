@@ -11,7 +11,7 @@ import PACKAGE from '../package.json';
 
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole " + PACKAGE.version + "b")
+console.log("Hyperbole " + PACKAGE.version + "c")
 
 
 let rootStyles: HTMLStyleElement;
