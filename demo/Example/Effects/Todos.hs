@@ -30,8 +30,7 @@ data Todo = Todo
   , task :: Text
   , completed :: Bool
   }
-  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam, SqlRow)
-  deriving (Generic, ToJSON, FromJSON)
+  deriving (Generic, ToJSON, FromJSON, SqlRow)
 
 data Todos :: Effect where
   LoadAll :: Todos m [Todo]
@@ -88,7 +87,7 @@ data FilterTodo
   = FilterAll
   | Active
   | Completed
-  deriving (Eq, Generic, ToJSON, FromJSON, ToParam, FromParam)
+  deriving (Eq, Generic, ToJSON, FromJSON)
 
 -----------------------------------------------------------------------
 -- Session: store todos in a cookie
