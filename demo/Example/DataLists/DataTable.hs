@@ -32,7 +32,7 @@ data SortField
   = SortName
   | SortDescription
   | SortFamily
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, ToParam, FromParam)
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 
 instance HyperView Languages es where
   data Action Languages

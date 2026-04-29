@@ -2,6 +2,7 @@
 
 module Web.Hyperbole.Types.Response where
 
+import Data.Aeson (Value)
 import Data.ByteString.Lazy qualified as BL
 import Data.String (IsString (..))
 import Data.String.Conversions (cs)
@@ -32,7 +33,7 @@ data ResponseError
   | ErrServer Text
   | ErrCustom ServerError
   | ErrInternal
-  | ErrNotHandled (Event TargetViewId Encoded Encoded)
+  | ErrNotHandled (Event TargetViewId Encoded Value)
   | ErrAuth Text
 instance Show ResponseError where
   show = \case

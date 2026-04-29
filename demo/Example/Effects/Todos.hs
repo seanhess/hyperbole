@@ -18,7 +18,6 @@ type TodoId = Text
 newtype AllTodos = AllTodos (Map TodoId Todo)
   deriving (Generic)
   deriving newtype (ToJSON, FromJSON)
-  deriving anyclass (ToEncoded, FromEncoded)
 
 instance Session AllTodos where
   sessionKey = "todos"
@@ -88,7 +87,7 @@ data FilterTodo
   = FilterAll
   | Active
   | Completed
-  deriving (Eq, Generic, ToJSON, FromJSON, ToParam, FromParam)
+  deriving (Eq, Generic, ToJSON, FromJSON)
 
 -----------------------------------------------------------------------
 -- Session: store todos in a cookie

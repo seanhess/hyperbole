@@ -2,6 +2,7 @@
 
 module Test.SessionSpec where
 
+import Data.Aeson qualified as A
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Network.HTTP.Types (urlEncode)
@@ -16,13 +17,13 @@ import Web.Hyperbole.Effect.Session (sessionCookie)
 -- import Skeletest.Predicate qualified as P
 
 data Woot = Woot Text
-  deriving (Generic, Show, ToEncoded, FromEncoded)
+  deriving (Generic, Show, ToJSON, FromJSON)
 instance Session Woot where
   cookiePath = Just $ Path ["somepage"]
 
 
 data InsecureSession = InsecureSession Text
-  deriving (Generic, Show, ToEncoded, FromEncoded)
+  deriving (Generic, Show, ToJSON, FromJSON)
 instance Session InsecureSession where
   cookieSecure = False
 
@@ -32,7 +33,7 @@ spec = do
   describe "Session" $ do
     it "should encode cookie" $ do
       let woot = Woot "hello"
-      toCookie woot `shouldBe` CookieValue (cs $ Encoded.encode woot)
+      toCookie woot `shouldBe` CookieValue (cs $ A.encode woot)
 
   describe "sessionCookie" $ do
     it "should create cookie" $ do
@@ -54,13 +55,13 @@ spec = do
     it "should render complex cookie with included path" $ do
       let woot = Woot "hello world"
       let cookie = sessionCookie woot
-      Cookie.render [] cookie `shouldBe` "Woot=" <> urlEncode True (cs $ Encoded.encode woot) <> "; SameSite=None; secure; path=/somepage"
+      Cookie.render [] cookie `shouldBe` "Woot=" <> urlEncode True (cs $ A.encode woot) <> "; SameSite=None; secure; path=/somepage"
 
   describe "Session class" $ do
     it "should encode class" $ do
       let prefs = Preferences "hello" Warning
       let cooks = Cookie.insert (sessionCookie prefs) mempty
-      Cookie.lookup (sessionKey @Preferences) cooks `shouldBe` Just (CookieValue $ cs $ Encoded.encode prefs)
+      Cookie.lookup (sessionKey @Preferences) cooks `shouldBe` Just (CookieValue $ cs $ A.encode prefs)
 
     it "should decode class" $ do
       let prefs = Preferences "hello" Warning
@@ -78,7 +79,7 @@ data Preferences = Preferences
   { message :: Text
   , color :: AppColor
   }
-  deriving (Generic, Eq, Show, ToEncoded, FromEncoded, Session)
+  deriving (Generic, Eq, Show, ToJSON, FromJSON, Session)
 instance Default Preferences where
   def = Preferences "_" White
 

@@ -6,9 +6,8 @@ import GHC.Generics
 import Skeletest
 import Skeletest.Predicate qualified as P
 import Web.Hyperbole (FromJSON, ToJSON)
+import Web.Hyperbole.Data.Argument
 import Web.Hyperbole.Data.Encoded
-import Web.Hyperbole.Data.Param
-import Web.Hyperbole.HyperView.Event (toActionInput)
 import Web.Hyperbole.View
 
 
@@ -17,7 +16,7 @@ data Simple = Simple
 
 
 data Product = Product String Int
-  deriving (Generic, Show, Eq, ViewAction, Read, ToJSON, FromJSON, ToEncoded, FromEncoded, ToParam, FromParam)
+  deriving (Generic, Show, Eq, ViewAction, Read, ToJSON, FromJSON, ToEncoded, FromEncoded)
 
 
 data Product' = Product' HasText Int
@@ -46,11 +45,11 @@ data Compound = Compound Product
 
 
 data HasText = HasText Text
-  deriving (Generic, Show, Eq, Read, ViewAction, ToJSON, FromJSON, FromEncoded, ToEncoded, ToParam, FromParam)
+  deriving (Generic, Show, Eq, Read, ViewAction, ToJSON, FromJSON, FromEncoded, ToEncoded)
 
 
 newtype Term = Term Text
-  deriving newtype (Eq, Show, ToJSON, FromJSON, Read, ToParam, FromParam)
+  deriving newtype (Eq, Show, ToJSON, FromJSON, Read)
 
 
 spec :: Spec

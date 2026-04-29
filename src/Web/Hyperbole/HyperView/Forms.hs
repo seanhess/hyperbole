@@ -53,7 +53,7 @@ import Text.Casing (kebab)
 import Web.Atomic.Types hiding (Selector)
 import Web.FormUrlEncoded (Form (..), FormOptions (..))
 import Web.FormUrlEncoded qualified as FE
-import Web.Hyperbole.Data.Param
+import Web.Hyperbole.Data.Argument
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Request
 import Web.Hyperbole.Effect.Response (parseError)
@@ -273,13 +273,13 @@ radioGroup :: opt -> View (Radio id a opt) () -> View (Input id a) ()
 radioGroup defOpt = runChildView (\(inp :: Input id a) -> Radio inp.id inp.inputName defOpt)
 
 
-radio :: forall id a opt. (Eq opt, ToParam opt) => opt -> View (Radio id a opt) ()
+radio :: forall id a opt. (Eq opt, ToJSON opt) => opt -> View (Radio id a opt) ()
 radio val = do
   rd :: Radio id a opt <- viewId
   tag "input"
     @ att "type" "radio"
     . name rd.inputName.value
-    . value (toParam val).value
+    . value (encodeArgument val)
     . checked (rd.defaultOption == val)
     $ none
 
@@ -415,23 +415,78 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
   gFormParse f = M1 <$> gFormParse f
 
 
--- TODO: need a bool instance?
--- TODO: need a Maybe a instance?
-instance (Selector s, FromParam a) => GFormParse (M1 S s (K1 R a)) where
-  -- these CANNOT be json encoded, they are encoded by the browser
+instance (Selector s, GFieldParse f) => GFormParse (M1 S s f) where
   gFormParse f = do
     let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
     mt :: Maybe Text <- first cs $ FE.lookupMaybe (cs sel) f
-    a <- first (\err -> sel <> ": " <> err) $ decodeFormValue mt
-    pure $ M1 . K1 $ a
+    x :: f p <- gFieldParse sel mt
+    pure $ M1 x
 
 
--- instance {-# OVERLAPPING #-} (Selector s, FromParam a) => GFormParse (M1 S s (K1 R (Maybe a))) where
---   gFormParse f = do
---     let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
---     mt :: Maybe Text <- first cs $ FE.lookupMaybe (cs sel) f
---     ma :: Maybe a <- maybe (pure Nothing) (parseParam . decodeParam) mt
---     pure $ M1 . K1 $ ma
+class GFieldParse f where
+  gFieldParse :: String -> Maybe Text -> Either String (f p)
+
+
+instance {-# OVERLAPPABLE #-} (FromJSON a) => GFieldParse (K1 R a) where
+  gFieldParse sel Nothing = Left $ "Missing form field: " <> sel
+  gFieldParse _ (Just t) = K1 <$> decodeArgument t
+
+
+instance {-# OVERLAPS #-} (FromJSON a) => GFieldParse (K1 R (Maybe a)) where
+  gFieldParse _ Nothing = pure $ K1 Nothing
+  gFieldParse _ (Just "") = pure $ K1 Nothing -- an empty string should be Nothing unless overriden
+  gFieldParse _ (Just t) = K1 <$> decodeArgument t
+
+
+instance {-# OVERLAPS #-} GFieldParse (K1 R Bool) where
+  gFieldParse _ Nothing = pure $ K1 False
+  gFieldParse sel (Just t) = do
+    K1 <$> case t of
+      "on" -> pure True
+      "off" -> pure False
+      "" -> pure False
+      "false" -> pure False
+      "true" -> pure True
+      other -> Left $ "Could not parse bool field: " <> sel <> " = " <> cs other
+
+
+instance {-# OVERLAPS #-} GFieldParse (K1 R (Maybe Text)) where
+  gFieldParse _ Nothing = pure $ K1 Nothing
+  gFieldParse sel inp = do
+    K1 t <- gFieldParse @(K1 R Text) sel inp
+    pure $ K1 $ Just t
+
+
+instance {-# OVERLAPS #-} GFieldParse (K1 R Text) where
+  gFieldParse _ Nothing = pure $ K1 ""
+  gFieldParse _ (Just "") = pure $ K1 ""
+  gFieldParse _ (Just t) = K1 <$> decodeArgument ("\"" <> t <> "\"")
+
+
+instance {-# OVERLAPS #-} GFieldParse (K1 R Int) where
+  gFieldParse _ Nothing = pure $ K1 0
+  gFieldParse _ (Just "") = do
+    pure $ K1 0
+  gFieldParse _ (Just t) = K1 <$> decodeArgument t
+
+
+instance {-# OVERLAPS #-} GFieldParse (K1 R Integer) where
+  gFieldParse _ Nothing = pure $ K1 0
+  gFieldParse _ (Just "") = pure $ K1 0
+  gFieldParse _ (Just t) = K1 <$> decodeArgument t
+
+
+instance {-# OVERLAPS #-} GFieldParse (K1 R Float) where
+  gFieldParse _ Nothing = pure $ K1 0
+  gFieldParse _ (Just "") = pure $ K1 0
+  gFieldParse _ (Just t) = K1 <$> decodeArgument t
+
+
+instance {-# OVERLAPS #-} GFieldParse (K1 R Double) where
+  gFieldParse _ Nothing = pure $ K1 0
+  gFieldParse _ (Just "") = pure $ K1 0
+  gFieldParse _ (Just t) = K1 <$> decodeArgument t
+
 
 ------------------------------------------------------------------------------
 -- GENERIC GENERATE FIELDS

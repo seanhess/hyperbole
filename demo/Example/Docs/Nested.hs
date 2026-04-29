@@ -16,7 +16,7 @@ data Todo = Todo
   { task :: Text
   , completed :: Bool
   }
-  deriving (Generic, ToParam, FromParam)
+  deriving (Generic, ToJSON, FromJSON)
 
 data AllTodos = AllTodos
   deriving (Generic, ViewId)
