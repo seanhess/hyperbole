@@ -56,6 +56,8 @@ import Example.DataLists.Autocomplete qualified as Autocomplete
 import Example.DataLists.DataTable qualified as DataTable
 import Example.DataLists.Filter qualified as Filter
 import Example.DataLists.LoadMore qualified as LoadMore
+import Example.Effects.Database (DB, initTodosDatabase, runTodosSelda)
+import Example.Effects.Database qualified as TodosDB
 import Example.Effects.Debug as Debug
 import Example.Effects.Todos (Todos, runTodosSession)
 import Example.Effects.Users as Users
@@ -112,28 +114,30 @@ run = do
     a <- getAppConfigEnv
     pure (c, room, a)
 
+  db <- initTodosDatabase
+
   cache <- clientCache
 
   Warp.run port $
     Static.staticPolicyWithOptions cache (addBase "client/dist") $
       Static.staticPolicy (addBase "demo/static") $ do
-        devReload config $ exampleApp config users count room
+        devReload config $ exampleApp config users count room db
  where
   devReload :: AppConfig -> Application -> Application
   devReload config
     | config.devMode = Wai.modifyResponse $ Wai.mapResponseHeaders $ \hs -> ("Connection", "Close") : hs
     | otherwise = id
 
-exampleApp :: AppConfig -> UserStore -> TVar Int -> Chat.Room -> Application
-exampleApp config users count chats = do
+exampleApp :: AppConfig -> UserStore -> TVar Int -> Chat.Room -> DB -> Application
+exampleApp config users count chats db = do
   liveAppWith
     (ServerOptions (document documentHead) serverError)
     (runApp . routeRequest $ router)
  where
-  runApp :: (Hyperbole :> es, IOE :> es) => Eff (OAuth2 : GenRandom : Concurrent : Debug : Users : Todos : Reader AppConfig : es) a -> Eff es a
-  runApp = runReader config . runTodosSession . runUsersIO users . runDebugIO . runConcurrent . runRandom . runOAuth2 config.oauth config.manager
+  runApp :: (Hyperbole :> es, IOE :> es) => Eff (OAuth2 : GenRandom : Concurrent : Debug : Users : Reader AppConfig : es) a -> Eff es a
+  runApp = runReader config . runUsersIO users . runDebugIO . runConcurrent . runRandom . runOAuth2 config.oauth config.manager
 
-  router :: forall es. (Hyperbole :> es, OAuth2 :> es, Todos :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es, GenRandom :> es, Reader AppConfig :> es) => AppRoute -> Eff es Response
+  router :: forall es. (Hyperbole :> es, OAuth2 :> es, Users :> es, Debug :> es, Concurrent :> es, IOE :> es, GenRandom :> es, Reader AppConfig :> es) => AppRoute -> Eff es Response
   router Counter = runPage Counter.page
   router (Hello h) = runPage $ hello h
   router (Contacts (Contact uid)) = Contact.response uid
@@ -164,9 +168,10 @@ exampleApp config users count chats = do
   router Interactivity = runPage Interactivity.page
   router (Examples Chat) = runReader chats $ runPage Chat.page
   router (Examples OtherExamples) = runPage Examples.page
-  router (Examples Todos) = runPage Todo.page
+  router (Examples Todos) = runTodosSession $ runPage Todo.page
+  router (Examples TodosCSS) = runTodosSession $ runPage TodoCSS.page
+  router (Examples TodosDB) = runTodosSelda db $ runPage TodosDB.page
   router (Examples Tags) = runPage Tags.page
-  router (Examples TodosCSS) = runPage TodoCSS.page
   router Javascript = redirect (routeUri Interactivity)
   router (Examples OAuth2) = runPage OAuth2.page
   router (Examples OAuth2Authenticate) = OAuth2.handleRedirect

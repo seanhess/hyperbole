@@ -100,6 +100,7 @@ data ExamplesRoute
   = OtherExamples
   | Todos
   | TodosCSS -- A version using the CSS from TodoMVC project
+  | TodosDB -- A version using a database runner
   | Tags
   | OAuth2Authenticate
   | OAuth2
@@ -140,8 +141,9 @@ routeTitle (Forms FormSimple) = "Forms"
 routeTitle (Forms FormValidation) = "Form Validation"
 routeTitle (Data d) = defaultTitle d
 routeTitle Errors = "Error Handling"
-routeTitle (Examples Todos) = "TodoMVC"
-routeTitle (Examples TodosCSS) = "TodoMVC (CSS version)"
+routeTitle (Examples Todos) = "Todos"
+-- routeTitle (Examples TodosDB) = "TodoMVC (SQLite Database)"
+-- routeTitle (Examples TodosCSS) = "TodoMVC (CSS version)"
 routeTitle (Examples OAuth2) = "OAuth2"
 routeTitle (Examples OtherExamples) = "Examples"
 routeTitle (Examples e) = defaultTitle e

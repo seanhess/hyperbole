@@ -10,6 +10,6 @@ The following `HyperView` uses a `Reader` to get a message set at the applicatio
 
     #EMBED Example.Docs.SideEffects instance (Concurrent
 
-Then make sure to add the effect when you run your application
+Then make sure to add the effect when you run your application or page
 
     #EMBED Example.Docs.SideEffects app

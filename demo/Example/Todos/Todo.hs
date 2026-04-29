@@ -9,6 +9,7 @@ import App.Route qualified as Route
 import Control.Monad (forM_)
 import Data.Text (Text, pack)
 import Effectful
+import Effectful.Dispatch.Dynamic
 import Example.Colors
 import Example.Effects.Todos (FilterTodo (..), Todo (..), TodoId, Todos, runTodosSession)
 import Example.Effects.Todos qualified as Todos
@@ -30,7 +31,7 @@ page = do
 -- Keep this, it's used for documentation (+ usable via the REPL, see main below)
 simplePage :: (Todos :> es) => Page es '[AllTodos, TodoView]
 simplePage = do
-  todos <- Todos.loadAll
+  todos <- send Todos.LoadAll
   pure $ do
     hyper AllTodos $ todosView FilterAll todos
 

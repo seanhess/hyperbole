@@ -5,7 +5,9 @@ module Example.Effects.Todos where
 
 import Data.Map (Map)
 import Data.Map.Strict qualified as M
-import Data.Text (Text, pack)
+import Data.String.Conversions (cs)
+import Data.Text (Text)
+import Database.Selda (SqlRow)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import System.Random (randomRIO)
@@ -30,7 +32,7 @@ data Todo = Todo
   , task :: Text
   , completed :: Bool
   }
-  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam)
+  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam, SqlRow)
 
 data Todos :: Effect where
   LoadAll :: Todos m [Todo]
@@ -38,37 +40,6 @@ data Todos :: Effect where
   Remove :: TodoId -> Todos m ()
   Create :: Text -> Todos m TodoId
 type instance DispatchOf Todos = 'Dynamic
-runTodosSession
-  :: forall es a
-   . (Hyperbole :> es, IOE :> es)
-  => Eff (Todos : es) a
-  -> Eff es a
-runTodosSession = interpret $ \_ -> \case
-  LoadAll -> do
-    AllTodos todos <- session
-    pure $ M.elems todos
-  Save todo -> do
-    modifySession_ $ insert todo
-  Remove todoId -> do
-    modifySession_ $ delete todoId
-  Create task -> do
-    todoId <- randomId
-    let todo = Todo todoId task False
-    modifySession_ $ insert todo
-    pure todoId
- where
-  randomId :: (IOE :> es) => Eff es Text
-  randomId = do
-    n <- randomRIO @Int (0, 9999999)
-    pure $ "todo-" <> pack (show n)
-
-  insert :: Todo -> AllTodos -> AllTodos
-  insert todo (AllTodos m) =
-    AllTodos (M.insert todo.id todo m)
-
-  delete :: TodoId -> AllTodos -> AllTodos
-  delete todoId (AllTodos m) =
-    AllTodos (M.delete todoId m)
 
 loadAll :: (Todos :> es) => Eff es [Todo]
 loadAll = send LoadAll
@@ -119,3 +90,39 @@ data FilterTodo
   | Active
   | Completed
   deriving (Eq, Generic, ToJSON, FromJSON, ToParam, FromParam)
+
+-----------------------------------------------------------------------
+-- Session: store todos in a cookie
+-----------------------------------------------------------------------
+
+runTodosSession
+  :: forall es a
+   . (Hyperbole :> es, IOE :> es)
+  => Eff (Todos : es) a
+  -> Eff es a
+runTodosSession = interpret $ \_ -> \case
+  LoadAll -> do
+    AllTodos todos <- session
+    pure $ M.elems todos
+  Save todo -> do
+    modifySession_ $ insert todo
+  Remove todoId -> do
+    modifySession_ $ delete todoId
+  Create task -> do
+    todoId <- randomId
+    let todo = Todo todoId task False
+    modifySession_ $ insert todo
+    pure todoId
+ where
+  insert :: Todo -> AllTodos -> AllTodos
+  insert todo (AllTodos m) =
+    AllTodos (M.insert todo.id todo m)
+
+  delete :: TodoId -> AllTodos -> AllTodos
+  delete todoId (AllTodos m) =
+    AllTodos (M.delete todoId m)
+
+randomId :: (IOE :> es) => Eff es TodoId
+randomId = do
+  n <- randomRIO @Int (0, 9999999)
+  pure $ "todo-" <> cs (show n)

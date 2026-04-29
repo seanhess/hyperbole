@@ -29,6 +29,7 @@ page = do
     section' "Reference Implementations" $ do
       card (Examples Todos) "using Atomic CSS"
       card (Examples TodosCSS) "using external classes"
+      card (Examples TodosDB) "using Sqlite Database instead of sessions"
  where
   card r cnt = do
     row ~ gap 5 $ do

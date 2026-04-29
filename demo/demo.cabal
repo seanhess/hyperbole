@@ -86,6 +86,7 @@ executable demo
       Example.Docs.UniqueViewId
       Example.Docs.ViewFunctions
       Example.Document
+      Example.Effects.Database
       Example.Effects.Debug
       Example.Effects.Todos
       Example.Effects.Users
@@ -156,6 +157,8 @@ executable demo
     , network-uri
     , random
     , safe
+    , selda
+    , selda-sqlite
     , string-conversions
     , string-interpolate
     , template-haskell
