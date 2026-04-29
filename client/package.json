@@ -7,19 +7,18 @@
     "client": "client"
   },
   "scripts": {
-    "build": "npx webpack"
+    "build": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/hyperbole.js",
+    "dev": "esbuild src/index.ts --bundle --minify --sourcemap --watch=forever --outfile=dist/hyperbole.js",
+    "check": "tsc --noEmit --preserveWatchOutput --watch"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "ts-loader": "^9.4.1",
-    "typescript": "^4.8.3",
-    "uglify": "^0.1.5",
-    "webpack": "^5.88.2",
-    "webpack-cli": "^4.10.0"
+    "esbuild": "^0.28.0",
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "omdomdom": "^0.3.2",
-    "debounce": "^2.2.0"
+    "debounce": "^3.0.0"
   }
 }

@@ -17,8 +17,8 @@ interface SocketConnectionEventMap {
 export class SocketConnection {
   socket: WebSocket
 
-  hasEverConnected: Boolean = false
-  isConnected: Boolean = false
+  hasEverConnected: boolean = false
+  isConnected: boolean = false
   reconnectDelay: number = 0
   queue: ActionMessage[] = []
   events: EventTarget

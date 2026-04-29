@@ -28,7 +28,14 @@ Build JavaScript client
 
 ```
 cd client
-npx webpack
+npm run build
+```
+
+Watch for changes during development
+
+```
+cd client
+npm run dev
 ```
 
 Run examples
