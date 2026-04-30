@@ -1,126 +1,130 @@
-import { ActionMessage, renderActionMessage } from './action'
-import { ResponseBody } from "./response"
-import * as message from "./message"
-import { ViewId, RequestId, EncodedAction, metaValue, Metadata, RemoteEvent } from "./message"
+import { type ActionMessage, renderActionMessage } from "./action";
+import { type ResponseBody } from "./response";
+import * as message from "./message";
+import {
+  type ViewId,
+  type RequestId,
+  type EncodedAction,
+  metaValue,
+  type Metadata,
+  type RemoteEvent,
+} from "./message";
 
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
+const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`;
 
 interface SocketConnectionEventMap {
-  "update": CustomEvent<Update>;
-  "response": CustomEvent<Update>;
-  "redirect": CustomEvent<Redirect>;
-  "trigger": CustomEvent<Trigger>;
-  "event": CustomEvent<JSEvent>;
+  update: CustomEvent<Update>;
+  response: CustomEvent<Update>;
+  redirect: CustomEvent<Redirect>;
+  trigger: CustomEvent<Trigger>;
+  event: CustomEvent<JSEvent>;
 }
 
 export class SocketConnection {
-  socket: WebSocket
+  socket: WebSocket;
 
-  hasEverConnected: boolean = false
-  isConnected: boolean = false
-  reconnectDelay: number = 0
-  queue: ActionMessage[] = []
-  events: EventTarget
+  hasEverConnected: boolean = false;
+  isConnected: boolean = false;
+  reconnectDelay: number = 0;
+  queue: ActionMessage[] = [];
+  events: EventTarget;
 
   constructor(addr = defaultAddress) {
-    this.events = new EventTarget()
-    const sock = new WebSocket(addr)
-    this.socket = sock
+    this.events = new EventTarget();
+    const sock = new WebSocket(addr);
+    this.socket = sock;
   }
 
   connect(addr = defaultAddress, createSocket = false) {
-    const sock = createSocket ? new WebSocket(addr) : this.socket
-    this.socket = sock
+    const sock = createSocket ? new WebSocket(addr) : this.socket;
+    this.socket = sock;
 
     function onConnectError(ev: Event) {
-      console.error("Connect Error", ev)
+      console.error("Connect Error", ev);
     }
 
     function onSocketError(ev: Event) {
-      console.error("Socket Error", ev)
+      console.error("Socket Error", ev);
     }
 
-
     // initial connection errors
-    sock.addEventListener('error', onConnectError)
+    sock.addEventListener("error", onConnectError);
 
-    sock.addEventListener('open', (_event) => {
-      console.log("Websocket Connected")
+    sock.addEventListener("open", (_event) => {
+      console.log("Websocket Connected");
 
       if (this.hasEverConnected) {
-        document.dispatchEvent(new Event("hyp-socket-reconnect"))
+        document.dispatchEvent(new Event("hyp-socket-reconnect"));
       }
 
-      this.isConnected = true
-      this.hasEverConnected = true
-      this.reconnectDelay = 1000
-      sock.removeEventListener('error', onConnectError)
-      sock.addEventListener('error', onSocketError)
+      this.isConnected = true;
+      this.hasEverConnected = true;
+      this.reconnectDelay = 1000;
+      sock.removeEventListener("error", onConnectError);
+      sock.addEventListener("error", onSocketError);
 
-      document.dispatchEvent(new Event("hyp-socket-connect"))
+      document.dispatchEvent(new Event("hyp-socket-connect"));
 
-      this.runQueue()
-    })
+      this.runQueue();
+    });
 
-    sock.addEventListener('close', _ => {
-      console.log("CLOSE SOCKET")
+    sock.addEventListener("close", (_) => {
+      console.log("CLOSE SOCKET");
       if (this.isConnected) {
-        document.dispatchEvent(new Event("hyp-socket-disconnect"))
+        document.dispatchEvent(new Event("hyp-socket-disconnect"));
       }
 
-      this.isConnected = false
-      sock.removeEventListener('error', onSocketError)
+      this.isConnected = false;
+      sock.removeEventListener("error", onSocketError);
 
       // attempt to reconnect in 1s
       if (this.hasEverConnected) {
-        console.log("Reconnecting in " + (this.reconnectDelay / 1000) + "s")
-        setTimeout(() => this.connect(addr, true), this.reconnectDelay)
+        console.log("Reconnecting in " + this.reconnectDelay / 1000 + "s");
+        setTimeout(() => this.connect(addr, true), this.reconnectDelay);
       }
 
-      sock.removeEventListener('error', onSocketError)
-    })
+      sock.removeEventListener("error", onSocketError);
+    });
 
-    sock.addEventListener('message', ev => this.onMessage(ev))
+    sock.addEventListener("message", (ev) => this.onMessage(ev));
   }
 
   async sendAction(action: ActionMessage) {
     if (this.isConnected) {
-      let msg = renderActionMessage(action)
-      this.socket.send(msg)
-    }
-    else {
-      this.queue.push(action)
+      let msg = renderActionMessage(action);
+      this.socket.send(msg);
+    } else {
+      this.queue.push(action);
     }
   }
 
   private runQueue() {
-    // send all messages queued while disconnected 
-    let next: ActionMessage | undefined = this.queue.pop()
+    // send all messages queued while disconnected
+    let next: ActionMessage | undefined = this.queue.pop();
     if (next) {
-      console.log("runQueue: ", next)
-      this.sendAction(next)
-      this.runQueue()
+      console.log("runQueue: ", next);
+      void this.sendAction(next);
+      this.runQueue();
     }
   }
 
-
   // full responses will never be sent over!
   private onMessage(event: MessageEvent) {
-    let { command, metas, rest } = message.splitMessage(event.data)
+    let { command, metas, rest } = message.splitMessage(event.data);
     // console.log("MESSAGE", command, metas, rest)
 
-    let requestId = parseInt(requireMeta("RequestId"), 0)
+    let requestId = parseInt(requireMeta("RequestId"), 0);
 
     function requireMeta(key: string): string {
-      let val = metaValue(key, metas)
-      if (!val) throw new ProtocolError("Missing Required Metadata: " + key, event.data)
-      return val
+      let val = metaValue(key, metas);
+      if (!val) throw new ProtocolError("Missing Required Metadata: " + key, event.data);
+      return val;
     }
 
     function parseResponse(rest: string[]): Update {
-      let viewId = requireMeta("ViewId")
-      let action = requireMeta("Action")
+      let viewId = requireMeta("ViewId");
+      let action = requireMeta("Action");
       return {
         requestId,
         targetViewId: undefined,
@@ -128,60 +132,57 @@ export class SocketConnection {
         action,
         meta: message.toMetadata(metas),
         body: rest.join("\n"),
-      }
+      };
     }
 
     function parseUpdate(rest: string[]): Update {
-      let up = parseResponse(rest)
+      let up = parseResponse(rest);
       // add the TargetViewId
-      up.targetViewId = metaValue("TargetViewId", metas)
-      return up
+      up.targetViewId = metaValue("TargetViewId", metas);
+      return up;
     }
 
     function parseRedirect(rest: string[]): Redirect {
-      let url = rest[0]
+      let url = rest[0];
       return {
         requestId,
         meta: message.toMetadata(metas),
-        url
-      }
+        url,
+      };
     }
 
     function parseTrigger(rest: string[]): Trigger {
-      let { requestId, meta, viewId, action } = parseResponse(rest)
-      let [targetViewId, targetAction] = message.parseAction(requireMeta("Trigger"))
-      return { requestId, meta, viewId, action, targetViewId, targetAction }
+      let { requestId, meta, viewId, action } = parseResponse(rest);
+      let [targetViewId, targetAction] = message.parseAction(requireMeta("Trigger"));
+      return { requestId, meta, viewId, action, targetViewId, targetAction };
     }
 
     function parseEvent(rest: string[]): JSEvent {
-      let { requestId, meta, viewId, action } = parseResponse(rest)
-      let event = message.parseRemoteEvent(requireMeta("Event"))
-      return { requestId, meta, viewId, action, event }
+      let { requestId, meta, viewId, action } = parseResponse(rest);
+      let event = message.parseRemoteEvent(requireMeta("Event"));
+      return { requestId, meta, viewId, action, event };
     }
-
 
     switch (command) {
-
       case "|UPDATE|":
-        return this.dispatchEvent(new CustomEvent("update", { detail: parseUpdate(rest) }))
+        return this.dispatchEvent(new CustomEvent("update", { detail: parseUpdate(rest) }));
 
       case "|RESPONSE|":
-        return this.dispatchEvent(new CustomEvent("response", { detail: parseResponse(rest) }))
+        return this.dispatchEvent(new CustomEvent("response", { detail: parseResponse(rest) }));
 
       case "|REDIRECT|":
-        return this.dispatchEvent(new CustomEvent("redirect", { detail: parseRedirect(rest) }))
+        return this.dispatchEvent(new CustomEvent("redirect", { detail: parseRedirect(rest) }));
 
       case "|TRIGGER|":
-        return this.dispatchEvent(new CustomEvent("trigger", { detail: parseTrigger(rest) }))
+        return this.dispatchEvent(new CustomEvent("trigger", { detail: parseTrigger(rest) }));
 
       case "|EVENT|":
-        return this.dispatchEvent(new CustomEvent("event", { detail: parseEvent(rest) }))
+        return this.dispatchEvent(new CustomEvent("event", { detail: parseEvent(rest) }));
 
       default:
-        throw new ProtocolError("Unknown Server Command: " + command, event.data)
+        throw new ProtocolError("Unknown Server Command: " + command, event.data);
     }
   }
-
 
   // so what if they send remote events in the page? trigger, redirect, page title, etc...
   // we aren't connected yet on a page thing
@@ -227,65 +228,67 @@ export class SocketConnection {
   //   })
   // }
 
-  addEventListener<K extends keyof SocketConnectionEventMap>(e: K, cb: (ev: SocketConnectionEventMap[K]) => void) {
-    this.events.addEventListener(e,
+  addEventListener<K extends keyof SocketConnectionEventMap>(
+    e: K,
+    cb: (ev: SocketConnectionEventMap[K]) => void,
+  ) {
+    this.events.addEventListener(
+      e,
       // @ts-ignore: HACK
-      cb
-    )
+      cb,
+    );
   }
 
   dispatchEvent<K extends keyof SocketConnectionEventMap>(e: SocketConnectionEventMap[K]) {
-    this.events.dispatchEvent(e)
+    this.events.dispatchEvent(e);
   }
 
   disconnect() {
-    this.isConnected = false
-    this.hasEverConnected = false
-    this.socket.close()
+    this.isConnected = false;
+    this.hasEverConnected = false;
+    this.socket.close();
   }
 }
 
-
 export type Update = {
-  requestId: RequestId
-  meta: Metadata
-  viewId: ViewId
-  targetViewId?: ViewId
-  action: EncodedAction
-  body: ResponseBody
-}
+  requestId: RequestId;
+  meta: Metadata;
+  viewId: ViewId;
+  targetViewId?: ViewId;
+  action: EncodedAction;
+  body: ResponseBody;
+};
 
 export type Redirect = {
-  requestId: RequestId
-  meta: Metadata
-  url: string
-}
+  requestId: RequestId;
+  meta: Metadata;
+  url: string;
+};
 
 export type Trigger = {
-  requestId: RequestId
-  meta: Metadata
-  viewId: ViewId
-  action: EncodedAction
-  targetViewId: ViewId
-  targetAction: string
-}
+  requestId: RequestId;
+  meta: Metadata;
+  viewId: ViewId;
+  action: EncodedAction;
+  targetViewId: ViewId;
+  targetAction: string;
+};
 
 export type JSEvent = {
-  requestId: RequestId
-  meta: Metadata
-  viewId: ViewId
-  action: EncodedAction
-  event: RemoteEvent
-}
+  requestId: RequestId;
+  meta: Metadata;
+  viewId: ViewId;
+  action: EncodedAction;
+  event: RemoteEvent;
+};
 
-export type MessageType = string
-
+export type MessageType = string;
 
 // PARSING MESSAGE  ---------------------------------------
 
 export class ProtocolError extends Error {
   constructor(description: string, body: string) {
-    super(description + "\n" + body)
-    this.name = "ProtocolError"
+    super(description + "\n" + body);
+    this.name = "ProtocolError";
   }
 }

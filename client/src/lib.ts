@@ -1,16 +1,12 @@
-
-
 export function takeWhileMap<T, A>(pred: (val: T) => A | undefined, lines: T[]): A[] {
-  var output = []
+  var output = [];
   for (var line of lines) {
-    let a = pred(line)
-    if (a)
-      output.push(a)
-    else
-      break;
+    let a = pred(line);
+    if (a) output.push(a);
+    else break;
   }
 
-  return output
+  return output;
 }
 
 export function dropWhile<T, A>(pred: (val: T) => A | undefined, lines: T[]): T[] {
@@ -20,4 +16,3 @@ export function dropWhile<T, A>(pred: (val: T) => A | undefined, lines: T[]): T[
   }
   return lines.slice(index);
 }
-
