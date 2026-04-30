@@ -37,6 +37,7 @@ data Sum
   | SubG Int Something
   | SubH Int Int
   | SubI Something Int
+  | SubJ Text Int
   deriving (Generic, Show, Eq, ViewAction)
 
 
@@ -50,6 +51,14 @@ data HasText = HasText Text
 
 newtype Term = Term Text
   deriving newtype (Eq, Show, ToJSON, FromJSON, Read)
+
+
+data NumberPair = NumberPair {a :: Int, b :: Int}
+  deriving (Show, Generic, ToJSON, FromJSON)
+
+
+data Nested = Nested NumberPair
+  deriving (Generic, ViewAction)
 
 
 spec :: Spec
@@ -83,6 +92,30 @@ spec = withMarkers ["encoded"] $ do
       it "Out-of-order constructors" $ do
         toActionInput (`SubH` 2) `shouldBe` Encoded "SubH" [Hole, JSON (Number 2)]
         toActionInput (`SubI` 3) `shouldBe` Encoded "SubI" [Hole, JSON (Number 3)]
+
+      it "Nested Product" $ do
+        toActionInput (Nested . NumberPair 0) `shouldBe` Encoded "Nested" []
+
+    describe "encoded argument holes" $ do
+      it "Constructor Text" $ do
+        encodedToText (toActionInput SubC) `shouldBe` "SubC |>_<|"
+
+      it "Constructor newtype Term" $ do
+        encodedToText (toActionInput (SubE . Term)) `shouldBe` "SubE |>_<|"
+
+      it "Partially applied constructors" $ do
+        encodedToText (toActionInput (SubG 2)) `shouldBe` "SubG 2 |>_<|"
+
+      it "Out-of-order constructors" $ do
+        encodedToText (toActionInput (`SubH` 2)) `shouldBe` "SubH |>_<| 2"
+        encodedToText (toActionInput (`SubI` 3)) `shouldBe` "SubI |>_<| 3"
+
+      it "Nested Product" $ do
+        encodedToText (toAction $ Nested $ NumberPair 12 34) `shouldBe` "Nested {\"a\":12,\"b\":34}"
+        encodedToText (toActionInput (Nested . NumberPair 0)) `shouldBe` "Nested {\"a\":12,\"b\":\"|><|\"}"
+
+      it "Escapes underscores" $ do
+        encodedToText (toActionInput (SubJ "hello _ world")) `shouldBe` "SubJ \"hello _ world\" |>_<|"
 
     describe "parseAction" $ do
       it "simple" $ parseAction (Encoded "Simple" []) `shouldBe` pure Simple

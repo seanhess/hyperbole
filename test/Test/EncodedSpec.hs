@@ -47,6 +47,7 @@ data Sum
 data Nested
   = Gogo One
   | RecordN Record
+  | RecordM RecordMaybe
   | RecordEx Record Int
   | Tag Tag
   | NProd SubProduct
@@ -67,6 +68,13 @@ data Product
 data Record = Record
   { one :: Int
   , two :: Text
+  }
+  deriving (Generic, Show, ToJSON, FromJSON, Eq, ToEncoded, FromEncoded)
+
+
+data RecordMaybe = RecordMaybe
+  { one :: Int
+  , two :: Maybe Text
   }
   deriving (Generic, Show, ToJSON, FromJSON, Eq, ToEncoded, FromEncoded)
 
@@ -161,10 +169,19 @@ spec = withMarkers ["encoded"] $ do
       encode (CTwo (Two2 3)) `shouldBe` "CTwo (Two2 3)" -- uses custom tuple constructor
       encode (CTwo Two) `shouldBe` "CTwo (Two)" -- uses the custom simpleTag
       encode (COne One) `shouldBe` "COne []"
+
+    it "encodes nested products" $ do
       encode (NProd (AnotherOne "hi" 3)) `shouldBe` "NProd (AnotherOne \"hi\" 3)"
 
+    it "encodes nested records" $ do
+      encode (RecordN (Record 3 "hello")) `shouldBe` "RecordN {\"one\":3,\"two\":\"hello\"}"
+
+    it "encodes nested records with nothing as null" $ do
+      encode (RecordM (RecordMaybe 3 Nothing)) `shouldBe` "RecordM {\"one\":3,\"two\":null}"
+
     it "encodes input holes" $ do
-      encode (Str inputHole) `shouldBe` "Str _"
+      encode (Str inputHole) `shouldBe` "Str |>_<|"
+      encode (RecordEx (Record 3 "hello") inputHole) `shouldBe` "RecordEx {\"one\":3,\"two\":\"hello\"} |>_<|"
 
   describe "decode" $ do
     it "should encode single tags" $ do
@@ -183,7 +200,7 @@ spec = withMarkers ["encoded"] $ do
 
   describe "params" $ do
     it "encodes holes" $ do
-      encodeFromArgument Hole `shouldBe` "_"
+      encodeFromArgument Hole `shouldBe` "|>_<|"
 
   -- it "sanitizeText" $ do
   --   encodeParam "hello world" `shouldBe` "hello_world"
