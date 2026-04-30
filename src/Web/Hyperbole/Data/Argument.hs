@@ -88,7 +88,7 @@ encodeArgument a = encodeFromArgument $ toArgument a
 encodeFromArgument :: Argument -> Text
 encodeFromArgument = \case
   JSON v -> encodeJSON v
-  Hole -> "_"
+  Hole -> "|>_<|"
 
 
 encodeJSON :: Value -> Text

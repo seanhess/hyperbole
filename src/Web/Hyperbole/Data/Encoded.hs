@@ -73,16 +73,12 @@ decodeEither t = do
 -- | Basic Encoding
 encodedToText :: Encoded -> Text
 encodedToText (Encoded con values) =
-  T.intercalate " " (con.text : fmap (cleanUnderscores . encodeFromArgument) values)
- where
-  -- Javascript client uses " _" to check for holes
-  cleanUnderscores "_" = "_"
-  cleanUnderscores other = T.replace " _" " \\_" other
+  T.intercalate " " (con.text : fmap encodeFromArgument values)
 
 
 encodedParseText :: Text -> Either String Encoded
 encodedParseText inp =
-  first cs $ AB.parseOnly encodedParser (cs $ cleanUnderscores inp)
+  first cs $ AB.parseOnly encodedParser (cs inp)
  where
   encodedParser :: AB.Parser Encoded
   encodedParser = do
@@ -90,8 +86,6 @@ encodedParseText inp =
     AC.skipSpace
     ps <- argumentParser `sepBy` AC.char ' '
     pure $ Encoded (ConName (cs con)) ps
-
-  cleanUnderscores = T.replace " \\_" " _"
 
 
 genericToEncoded :: (Generic a, GToEncoded (Rep a)) => a -> Encoded
