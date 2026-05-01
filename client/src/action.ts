@@ -75,5 +75,5 @@ export function newRequest(): Request {
 // Sanitized Encoding ------------------------------------
 
 export function encodedAction(action: string, param: string): string {
-  return action.replace(" _", " " + param)
+  return action.replace("|>_<|", param)
 }

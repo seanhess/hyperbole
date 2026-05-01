@@ -18,7 +18,7 @@ instance Eq ProgrammingLanguage where
 data LanguageFamily
   = Functional
   | ObjectOriented
-  deriving (Eq, Show, ToJSON, FromJSON, Ord, Generic)
+  deriving (Eq, Show, ToJSON, FromJSON, Ord, Generic, UserInput)
 
 data TypeFeature
   = Dynamic
