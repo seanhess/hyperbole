@@ -1,4 +1,5 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLists #-}
 
@@ -131,6 +132,25 @@ encodeJSON = \case
     case t of
       String s -> pure $ "(" <> s <> ")"
       v -> pure $ encodeValue v
+
+
+class UserInput a where
+  parseInput :: Text -> Either String a
+  default parseInput :: (FromJSON a) => Text -> Either String a
+  parseInput = decodeArgument
+
+
+instance UserInput Text where
+  parseInput = pure
+
+
+instance {-# OVERLAPPABLE #-} (UserInput a) => UserInput (Maybe a) where
+  parseInput "" = pure Nothing
+  parseInput t = Just <$> parseInput @a t
+
+
+instance {-# OVERLAPS #-} UserInput (Maybe Text) where
+  parseInput = pure . Just
 
 
 -- Input Holes -----------------------------------------------
