@@ -1,5 +1,5 @@
-import { readFileSync } from "fs";
-const pkg = JSON.parse(readFileSync("./package.json", "utf-8"));
+import { readFileSync } from "fs"
+const pkg = JSON.parse(readFileSync("./package.json", "utf-8"))
 
 /** @type {import('vite').UserConfig} */
 export default {
@@ -20,4 +20,4 @@ export default {
     sourcemap: true,
     minify: "oxc",
   },
-};
+}
