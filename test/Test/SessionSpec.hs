@@ -9,7 +9,6 @@ import Network.HTTP.Types (urlEncode)
 import Skeletest
 import Web.Hyperbole
 import Web.Hyperbole.Data.Cookie as Cookie
-import Web.Hyperbole.Data.Encoded qualified as Encoded
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Session (sessionCookie)
 

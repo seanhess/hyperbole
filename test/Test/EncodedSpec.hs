@@ -180,8 +180,8 @@ spec = withMarkers ["encoded"] $ do
       encode (RecordM (RecordMaybe 3 Nothing)) `shouldBe` "RecordM {\"one\":3,\"two\":null}"
 
     it "encodes input holes" $ do
-      encode (Str inputHole) `shouldBe` "Str |>_<|"
-      encode (RecordEx (Record 3 "hello") inputHole) `shouldBe` "RecordEx {\"one\":3,\"two\":\"hello\"} |>_<|"
+      encode (Str expectInput) `shouldBe` "Str |>_<|"
+      encode (RecordEx (Record 3 "hello") expectInput) `shouldBe` "RecordEx {\"one\":3,\"two\":\"hello\"} |>_<|"
 
   describe "decode" $ do
     it "should encode single tags" $ do
@@ -200,7 +200,7 @@ spec = withMarkers ["encoded"] $ do
 
   describe "params" $ do
     it "encodes holes" $ do
-      encodeFromArgument Hole `shouldBe` "|>_<|"
+      encodeFromArgument holeArg `shouldBe` "|>_<|"
 
   -- it "sanitizeText" $ do
   --   encodeParam "hello world" `shouldBe` "hello_world"

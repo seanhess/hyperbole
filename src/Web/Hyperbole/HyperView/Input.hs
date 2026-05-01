@@ -8,6 +8,7 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 import Web.Atomic.Types
 import Web.Hyperbole.Data.Argument (encodeArgument)
+import Web.Hyperbole.Data.Encoded (UserInput)
 import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
@@ -33,7 +34,7 @@ button action cnt = do
 -}
 dropdown
   :: forall opt id
-   . (ViewAction (Action id))
+   . (ViewAction (Action id), UserInput opt)
   => (opt -> Action id)
   -> opt -- default option
   -> View (Option id opt) ()
