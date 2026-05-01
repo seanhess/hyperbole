@@ -1,8 +1,11 @@
-
-import { Meta, ViewId, RequestId, EncodedAction, ViewState } from "./message"
+import {
+  type Meta,
+  type ViewId,
+  type RequestId,
+  type ViewState,
+  type EncodedAction,
+} from "./message"
 import * as message from "./message"
-
-
 
 export type ActionMessage = {
   viewId: ViewId
@@ -13,13 +16,16 @@ export type ActionMessage = {
   form: URLSearchParams | undefined
 }
 
-
-
-
-export function actionMessage(id: ViewId, action: EncodedAction, state: ViewState | undefined, reqId: RequestId, form?: FormData): ActionMessage {
+export function actionMessage(
+  id: ViewId,
+  action: EncodedAction,
+  state: ViewState | undefined,
+  reqId: RequestId,
+  form?: FormData,
+): ActionMessage {
   let meta: Meta[] = [
     { key: "Cookie", value: decodeURI(document.cookie) },
-    { key: "Query", value: window.location.search }
+    { key: "Query", value: window.location.search },
   ]
 
   return { viewId: id, action, state, requestId: reqId, meta, form: toSearch(form) }
@@ -38,12 +44,7 @@ export function toSearch(form?: FormData): URLSearchParams | undefined {
 }
 
 export function renderActionMessage(msg: ActionMessage): string {
-  let header = [
-    "|ACTION|",
-    "ViewId: " + msg.viewId,
-    "Action: " + msg.action,
-  ]
-
+  let header = ["|ACTION|", "ViewId: " + msg.viewId, "Action: " + msg.action]
 
   if (msg.state) {
     header.push("State: " + msg.state)
@@ -51,12 +52,8 @@ export function renderActionMessage(msg: ActionMessage): string {
 
   header.push("RequestId: " + msg.requestId)
 
-  return [
-    header.join('\n'),
-    message.renderMetas(msg.meta),
-  ].join('\n') + renderForm(msg.form)
+  return [header.join("\n"), message.renderMetas(msg.meta)].join("\n") + renderForm(msg.form)
 }
-
 
 export function renderForm(form: URLSearchParams | undefined): string {
   if (!form) return ""
@@ -75,12 +72,10 @@ export function newRequest(): Request {
   return { requestId, isCancelled: false }
 }
 
-
-
 // Sanitized Encoding ------------------------------------
 
 export function encodedParam(action: string, param: string): string {
-  return action + ' ' + sanitizeParam(param)
+  return action + " " + sanitizeParam(param)
 }
 
 function sanitizeParam(param: string): string {

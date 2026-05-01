@@ -1,7 +1,4 @@
-
-import { ViewId, Metadata } from './message'
-
-
+import { type ViewId, type Metadata } from "./message"
 
 export type Response = {
   meta: Metadata
@@ -12,13 +9,13 @@ export type ResponseBody = string
 
 export function parseResponse(res: ResponseBody): LiveUpdate {
   const parser = new DOMParser()
-  const doc = parser.parseFromString(res, 'text/html')
+  const doc = parser.parseFromString(res, "text/html")
   const css = doc.querySelector<HTMLStyleElement>("style")
   const content = doc.querySelector<HTMLElement>("div")
 
   return {
     content: content,
-    css: css
+    css: css,
   }
 }
 
@@ -26,7 +23,6 @@ export type LiveUpdate = {
   content: HTMLElement | null
   css: HTMLStyleElement | null
 }
-
 
 export class FetchError extends Error {
   viewId: ViewId

@@ -1,9 +1,10 @@
 client/*.d.ts
 client/src/
-client/dist/*.d.ts
-client/package-lock.json
-client/webpack.config.js
+client/vite.config.js
+client/.oxfmtrc.json
+client/.oxlintrc.json
 client/package.json
+client/package-lock.json
 client/tsconfig.json
 docs/
 demo/

@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-empty-file
 // import { ActionMessage, ParsedResponse } from './action'
 // import { Response, FetchError } from "./response"
 
@@ -33,7 +34,6 @@
 //
 //   return response
 // }
-
 
 // export function parseMetadataHttp(inp: string): ParsedResponse {
 //   let lines = inp.split("\n")

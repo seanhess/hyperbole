@@ -1,4 +1,3 @@
-
 export function setQuery(query: string) {
   if (query != currentQuery()) {
     if (query != "") query = "?" + query
@@ -9,6 +8,6 @@ export function setQuery(query: string) {
 }
 
 function currentQuery(): string {
-  const query = window.location.search;
-  return query.startsWith('?') ? query.substring(1) : query;
+  const query = window.location.search
+  return query.startsWith("?") ? query.substring(1) : query
 }

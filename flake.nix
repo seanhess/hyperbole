@@ -16,6 +16,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixpkgs.url = "nixpkgs/nixos-unstable";
+    nixpkgs-node.url = "nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter/main";
     atomic-css.url = "github:seanhess/atomic-css";
@@ -25,6 +26,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-node,
       nix-filter,
       flake-utils,
       pre-commit-hooks,
@@ -91,6 +93,7 @@
           inherit system;
           overlays = [ self.overlays.default ];
         };
+        pkgs-node = import nixpkgs-node { inherit system; };
 
         demo-src = nix-filter.lib {
           root = ./demo;
@@ -138,7 +141,7 @@
         shellCommon = version: {
           inherit (pre-commit) shellHook;
           buildInputs = with pkgs.haskell.packages."ghc${version}"; [
-            pkgs.nodejs
+            pkgs-node.nodejs_24
             cabal-install
             haskell-language-server
             fourmolu

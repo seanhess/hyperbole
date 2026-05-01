@@ -1,33 +1,44 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
-import { SocketConnection, Update, Redirect, Trigger, JSEvent } from './sockets'
-import { listenChange, listenClick, listenDblClick, listenFormSubmit, listenLoad, listenTopLevel, listenInput, listenKeydown, listenKeyup, listenMouseEnter, listenMouseLeave } from './events'
-import { actionMessage, newRequest } from './action'
-import { ViewId, Metadata, parseMetadata, RemoteEvent, EncodedAction } from './message'
+import { SocketConnection, type Update, type Redirect, type Trigger, type JSEvent } from "./sockets"
+import {
+  listenChange,
+  listenClick,
+  listenDblClick,
+  listenFormSubmit,
+  listenLoad,
+  listenTopLevel,
+  listenInput,
+  listenKeydown,
+  listenKeyup,
+  listenMouseEnter,
+  listenMouseLeave,
+} from "./events"
+import { actionMessage, newRequest } from "./action"
+import {
+  type ViewId,
+  type Metadata,
+  parseMetadata,
+  type RemoteEvent,
+  type EncodedAction,
+} from "./message"
 import { setQuery } from "./browser"
-import { parseResponse, LiveUpdate } from './response'
-import { dispatchContent, enrichHyperViews, HyperView, isHyperView } from "./hyperview"
+import { parseResponse, type LiveUpdate } from "./response"
+import { dispatchContent, enrichHyperViews, type HyperView, isHyperView } from "./hyperview"
 
-import PACKAGE from '../package.json';
-
+declare const __VERSION__: string
 
 // console.log("VERSION 2", INIT_PAGE, INIT_STATE)
-console.log("Hyperbole " + PACKAGE.version + "b")
+console.log("Hyperbole " + __VERSION__ + "b")
 
-
-let rootStyles: HTMLStyleElement;
-let addedRulesIndex = new Set();
-
-
-
-
+let rootStyles: HTMLStyleElement
+let addedRulesIndex = new Set()
 
 // Run an action in a given HyperView
 async function runAction(target: HyperView, action: string, form?: FormData) {
-
   if (target.activeRequest && !target.activeRequest?.isCancelled) {
     // Active Request!
     if (target.concurrency == "Drop") {
-      console.warn("Drop action overlapping with active request (" + target.activeRequest + ")", action)
+      console.warn("Drop action overlapping with active request", target.activeRequest, action)
       return
     }
   }
@@ -46,7 +57,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   // Set the requestId
   target.activeRequest = req
 
-  sock.sendAction(msg)
+  void sock.sendAction(msg)
 }
 
 function handleTrigger(trigger: Trigger) {
@@ -94,10 +105,16 @@ function handleUpdate(res: Update): HyperView | undefined {
   if (target.activeRequest?.requestId && res.requestId < target.activeRequest.requestId) {
     // this should only happen on Replace, since other requests should be dropped
     // but it's safe to assume we never want to apply an old requestId
-    console.warn("Ignore Stale Action (" + res.requestId + ") vs (" + target.activeRequest.requestId + "): " + res.action)
+    console.warn(
+      "Ignore Stale Action (" +
+        res.requestId +
+        ") vs (" +
+        target.activeRequest.requestId +
+        "): " +
+        res.action,
+    )
     return target
-  }
-  else if (target.activeRequest?.isCancelled) {
+  } else if (target.activeRequest?.isCancelled) {
     console.warn("Cancelled request", target.activeRequest?.requestId)
     delete target.activeRequest
     return target
@@ -113,7 +130,6 @@ function handleUpdate(res: Update): HyperView | undefined {
   // First, update the stylesheet
   addCSS(update.css)
 
-
   // Patch the node
   const old: VNode = create(target)
   let next: VNode = create(update.content)
@@ -127,9 +143,7 @@ function handleUpdate(res: Update): HyperView | undefined {
   let state = atts["data-state"]
   next.attributes = old.attributes
 
-
   patch(next, old)
-
 
   // Emit relevant events
   let newTarget = document.getElementById(target.id)
@@ -141,11 +155,9 @@ function handleUpdate(res: Update): HyperView | undefined {
 
   dispatchContent(newTarget)
 
-  // re-add state attribute 
-  if (state === undefined || state == "()")
-    delete newTarget.dataset.state
-  else
-    newTarget.dataset.state = state
+  // re-add state attribute
+  if (state === undefined || state == "()") delete newTarget.dataset.state
+  else newTarget.dataset.state = state
 
   // execute the metadata, anything that doesn't interrupt the dom update
   runMetadata(res.meta, newTarget)
@@ -205,11 +217,10 @@ function runTrigger(viewId: ViewId, action: EncodedAction) {
   setTimeout(() => {
     let view = window.Hyperbole?.hyperView(viewId)
     if (view) {
-      runAction(view, action)
+      void runAction(view, action)
     }
   }, 10)
 }
-
 
 function fixInputs(target: HTMLElement) {
   let focused = target.querySelector<HTMLInputElement>("[autofocus]")
@@ -231,20 +242,17 @@ function fixInputs(target: HTMLElement) {
 }
 
 function addCSS(src: HTMLStyleElement | null) {
-  if (!src) return;
+  if (!src) return
   const rules = src.sheet?.cssRules
-  if (!rules) return;
+  if (!rules) return
   for (let i = 0; i < rules.length; i++) {
     const rule = rules.item(i)
     if (rule && addedRulesIndex.has(rule.cssText) == false && rootStyles.sheet) {
-      rootStyles.sheet.insertRule(rule.cssText);
-      addedRulesIndex.add(rule.cssText);
+      rootStyles.sheet.insertRule(rule.cssText)
+      addedRulesIndex.add(rule.cssText)
     }
   }
 }
-
-
-
 
 function init() {
   // metadata attached to initial page loads need to be executed
@@ -252,7 +260,7 @@ function init() {
   // runMetadataImmediate(meta)
   runMetadata(meta, null)
 
-  const style = document.body.querySelector('style')
+  const style = document.body.querySelector("style")
 
   if (style !== null) {
     rootStyles = style
@@ -263,8 +271,8 @@ function init() {
     document.body.appendChild(rootStyles)
   }
 
-  listenTopLevel(async function(target: HyperView, action: string) {
-    runAction(target, action)
+  listenTopLevel(async function (target: HyperView, action: string) {
+    void runAction(target, action)
   })
 
   listenLoad(document.body)
@@ -272,34 +280,33 @@ function init() {
   listenMouseLeave(document.body)
   enrichHyperViews(document.body, runAction)
 
-
-  listenClick(async function(target: HyperView, action: string) {
+  listenClick(async function (target: HyperView, action: string) {
     // console.log("CLICK", target.id, action)
-    runAction(target, action)
+    void runAction(target, action)
   })
 
-  listenDblClick(async function(target: HyperView, action: string) {
+  listenDblClick(async function (target: HyperView, action: string) {
     // console.log("DBLCLICK", target.id, action)
-    runAction(target, action)
+    void runAction(target, action)
   })
 
-  listenKeydown(async function(target: HyperView, action: string) {
+  listenKeydown(async function (target: HyperView, action: string) {
     // console.log("KEYDOWN", target.id, action)
-    runAction(target, action)
+    void runAction(target, action)
   })
 
-  listenKeyup(async function(target: HyperView, action: string) {
+  listenKeyup(async function (target: HyperView, action: string) {
     // console.log("KEYUP", target.id, action)
-    runAction(target, action)
+    void runAction(target, action)
   })
 
-  listenFormSubmit(async function(target: HyperView, action: string, form: FormData) {
+  listenFormSubmit(async function (target: HyperView, action: string, form: FormData) {
     // console.log("FORM", target.id, action, form)
-    runAction(target, action, form)
+    void runAction(target, action, form)
   })
 
-  listenChange(async function(target: HyperView, action: string) {
-    runAction(target, action)
+  listenChange(async function (target: HyperView, action: string) {
+    void runAction(target, action)
   })
 
   function onStartedTyping(target: HyperView) {
@@ -308,33 +315,23 @@ function init() {
     }
   }
 
-  listenInput(onStartedTyping, async function(target: HyperView, action: string) {
-    runAction(target, action)
+  listenInput(onStartedTyping, async function (target: HyperView, action: string) {
+    void runAction(target, action)
   })
 }
 
-
-
-
-
-
 document.addEventListener("DOMContentLoaded", init)
-
-
-
 
 const sock = new SocketConnection()
 // Should we connect to the socket or not?
 sock.connect()
-sock.addEventListener("update", (ev: CustomEvent<Update>) => { handleUpdate(ev.detail) })
+sock.addEventListener("update", (ev: CustomEvent<Update>) => {
+  handleUpdate(ev.detail)
+})
 sock.addEventListener("response", (ev: CustomEvent<Update>) => handleResponse(ev.detail))
 sock.addEventListener("redirect", (ev: CustomEvent<Redirect>) => handleRedirect(ev.detail))
 sock.addEventListener("trigger", (ev: CustomEvent<Trigger>) => handleTrigger(ev.detail))
 sock.addEventListener("event", (ev: CustomEvent<JSEvent>) => handleEvent(ev.detail))
-
-
-
-
 
 type VNode = {
   // One of three value types are used:
@@ -361,18 +358,14 @@ type VNode = {
   node: Node
 }
 
-
-
-
-
 declare global {
   interface Window {
-    Hyperbole?: HyperboleAPI;
+    Hyperbole?: HyperboleAPI
   }
   interface DocumentEventMap {
-    "hyp-load": CustomEvent;
-    "hyp-mouseenter": CustomEvent;
-    "hyp-mouseleave": CustomEvent;
+    "hyp-load": CustomEvent
+    "hyp-mouseenter": CustomEvent
+    "hyp-mouseleave": CustomEvent
   }
 }
 
@@ -384,14 +377,13 @@ export interface HyperboleAPI {
   socket: SocketConnection
 }
 
-window.Hyperbole =
-{
+window.Hyperbole = {
   runAction: runAction,
   parseMetadata: parseMetadata,
-  action: function(con, ...params: any[]) {
-    return params.reduce((str, param) => str + " " + JSON.stringify(param), con);
+  action: function (con, ...params: any[]) {
+    return params.reduce((str, param) => str + " " + JSON.stringify(param), con)
   },
-  hyperView: function(viewId) {
+  hyperView: function (viewId) {
     let element = document.getElementById(viewId)
     if (!isHyperView(element)) {
       console.error("Element id=" + viewId + " was not a HyperView")
@@ -399,5 +391,5 @@ window.Hyperbole =
     }
     return element
   },
-  socket: sock
+  socket: sock,
 }

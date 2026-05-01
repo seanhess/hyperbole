@@ -1,19 +1,15 @@
-
 import { takeWhileMap, dropWhile } from "./lib"
 
-
-
-export type Meta = { key: string, value: string }
+export type Meta = { key: string; value: string }
 export type ViewId = string
 export type RequestId = number
 export type EncodedAction = string
 export type ViewState = string
 
-export type RemoteEvent = { name: string, detail: unknown }
-
+export type RemoteEvent = { name: string; detail: unknown }
 
 export function renderMetas(meta: Meta[]): string {
-  return meta.map(m => m.key + ": " + m.value).join('\n')
+  return meta.map((m) => m.key + ": " + m.value).join("\n")
 }
 
 export type Metadata = {
@@ -22,15 +18,13 @@ export type Metadata = {
   error?: string
   query?: string
   events?: RemoteEvent[]
-  actions?: [ViewId, EncodedAction][],
+  actions?: [ViewId, EncodedAction][]
   pageTitle?: string
 }
 
-
 export function toMetadata(meta: Meta[]): Metadata {
-
   return {
-    cookies: meta.filter(m => m.key == "Cookie").map(m => m.value),
+    cookies: meta.filter((m) => m.key == "Cookie").map((m) => m.value),
     // redirect: metaValue("Redirect", meta),
     error: metaValue("Error", meta),
     query: metaValue("Query", meta),
@@ -47,21 +41,19 @@ export function parseMetadata(input: string): Metadata {
   return toMetadata(metas)
 }
 
-
 export function metaValue(key: string, metas: Meta[]): string | undefined {
-  return metas.find(m => m.key == key)?.value
+  return metas.find((m) => m.key == key)?.value
 }
 
 export function metaValuesAll(key: string, metas: Meta[]): string[] {
-  return metas.filter(m => m.key == key).map(m => m.value)
+  return metas.filter((m) => m.key == key).map((m) => m.value)
 }
 
 export type SplitMessage = {
-  command: string,
-  metas: Meta[],
+  command: string
+  metas: Meta[]
   rest: string[]
 }
-
 
 export function splitMessage(message: string): SplitMessage {
   let lines = message.split("\n")
@@ -70,27 +62,26 @@ export function splitMessage(message: string): SplitMessage {
   // console.log("Split Metadata", lines.length)
   // console.log(" [0]", lines[0])
   // console.log(" [1]", lines[1])
-  let rest = dropWhile(l => l == "", lines.slice(metas.length + 1))
+  let rest = dropWhile((l) => l == "", lines.slice(metas.length + 1))
 
   return { command, metas, rest }
 }
 
 export function parseMeta(line: string): Meta | undefined {
-  let match = line.match(/^(\w+)\: (.*)$/)
+  let match = line.match(/^(\w+): (.*)$/)
   if (match) {
     return {
       key: match[1],
-      value: match[2]
+      value: match[2],
     }
   }
 }
-
 
 export function parseRemoteEvent(input: string): RemoteEvent {
   let [name, data] = breakNextSegment(input)
   return {
     name,
-    detail: JSON.parse(data)
+    detail: JSON.parse(data),
   }
 }
 
@@ -100,7 +91,7 @@ export function parseAction(input: string): [ViewId, string] {
 }
 
 function breakNextSegment(input: string): [string, string] {
-  let ix = input.indexOf('|')
+  let ix = input.indexOf("|")
   if (ix === -1) {
     let err = new Error("Bad Encoding, Expected Segment")
     err.message = input
@@ -108,4 +99,3 @@ function breakNextSegment(input: string): [string, string] {
   }
   return [input.slice(0, ix), input.slice(ix + 1)]
 }
-

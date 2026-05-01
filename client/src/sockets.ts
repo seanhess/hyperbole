@@ -1,17 +1,24 @@
-import { ActionMessage, renderActionMessage } from './action'
-import { ResponseBody } from "./response"
+import { type ActionMessage, renderActionMessage } from "./action"
+import { type ResponseBody } from "./response"
 import * as message from "./message"
-import { ViewId, RequestId, EncodedAction, metaValue, Metadata, RemoteEvent } from "./message"
+import {
+  type ViewId,
+  type RequestId,
+  type EncodedAction,
+  metaValue,
+  type Metadata,
+  type RemoteEvent,
+} from "./message"
 
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
 const defaultAddress = `${protocol}//${window.location.host}${window.location.pathname}`
 
 interface SocketConnectionEventMap {
-  "update": CustomEvent<Update>;
-  "response": CustomEvent<Update>;
-  "redirect": CustomEvent<Redirect>;
-  "trigger": CustomEvent<Trigger>;
-  "event": CustomEvent<JSEvent>;
+  update: CustomEvent<Update>
+  response: CustomEvent<Update>
+  redirect: CustomEvent<Redirect>
+  trigger: CustomEvent<Trigger>
+  event: CustomEvent<JSEvent>
 }
 
 export class SocketConnection {
@@ -41,11 +48,10 @@ export class SocketConnection {
       console.error("Socket Error", ev)
     }
 
-
     // initial connection errors
-    sock.addEventListener('error', onConnectError)
+    sock.addEventListener("error", onConnectError)
 
-    sock.addEventListener('open', (_event) => {
+    sock.addEventListener("open", (_event) => {
       console.log("Websocket Connected")
 
       if (this.hasEverConnected) {
@@ -55,55 +61,53 @@ export class SocketConnection {
       this.isConnected = true
       this.hasEverConnected = true
       this.reconnectDelay = 1000
-      sock.removeEventListener('error', onConnectError)
-      sock.addEventListener('error', onSocketError)
+      sock.removeEventListener("error", onConnectError)
+      sock.addEventListener("error", onSocketError)
 
       document.dispatchEvent(new Event("hyp-socket-connect"))
 
       this.runQueue()
     })
 
-    sock.addEventListener('close', _ => {
+    sock.addEventListener("close", (_) => {
       console.log("CLOSE SOCKET")
       if (this.isConnected) {
         document.dispatchEvent(new Event("hyp-socket-disconnect"))
       }
 
       this.isConnected = false
-      sock.removeEventListener('error', onSocketError)
+      sock.removeEventListener("error", onSocketError)
 
       // attempt to reconnect in 1s
       if (this.hasEverConnected) {
-        console.log("Reconnecting in " + (this.reconnectDelay / 1000) + "s")
+        console.log("Reconnecting in " + this.reconnectDelay / 1000 + "s")
         setTimeout(() => this.connect(addr, true), this.reconnectDelay)
       }
 
-      sock.removeEventListener('error', onSocketError)
+      sock.removeEventListener("error", onSocketError)
     })
 
-    sock.addEventListener('message', ev => this.onMessage(ev))
+    sock.addEventListener("message", (ev) => this.onMessage(ev))
   }
 
   async sendAction(action: ActionMessage) {
     if (this.isConnected) {
       let msg = renderActionMessage(action)
       this.socket.send(msg)
-    }
-    else {
+    } else {
       this.queue.push(action)
     }
   }
 
   private runQueue() {
-    // send all messages queued while disconnected 
+    // send all messages queued while disconnected
     let next: ActionMessage | undefined = this.queue.pop()
     if (next) {
       console.log("runQueue: ", next)
-      this.sendAction(next)
+      void this.sendAction(next)
       this.runQueue()
     }
   }
-
 
   // full responses will never be sent over!
   private onMessage(event: MessageEvent) {
@@ -143,7 +147,7 @@ export class SocketConnection {
       return {
         requestId,
         meta: message.toMetadata(metas),
-        url
+        url,
       }
     }
 
@@ -159,9 +163,7 @@ export class SocketConnection {
       return { requestId, meta, viewId, action, event }
     }
 
-
     switch (command) {
-
       case "|UPDATE|":
         return this.dispatchEvent(new CustomEvent("update", { detail: parseUpdate(rest) }))
 
@@ -181,7 +183,6 @@ export class SocketConnection {
         throw new ProtocolError("Unknown Server Command: " + command, event.data)
     }
   }
-
 
   // so what if they send remote events in the page? trigger, redirect, page title, etc...
   // we aren't connected yet on a page thing
@@ -227,10 +228,14 @@ export class SocketConnection {
   //   })
   // }
 
-  addEventListener<K extends keyof SocketConnectionEventMap>(e: K, cb: (ev: SocketConnectionEventMap[K]) => void) {
-    this.events.addEventListener(e,
+  addEventListener<K extends keyof SocketConnectionEventMap>(
+    e: K,
+    cb: (ev: SocketConnectionEventMap[K]) => void,
+  ) {
+    this.events.addEventListener(
+      e,
       // @ts-ignore: HACK
-      cb
+      cb,
     )
   }
 
@@ -244,7 +249,6 @@ export class SocketConnection {
     this.socket.close()
   }
 }
-
 
 export type Update = {
   requestId: RequestId
@@ -279,7 +283,6 @@ export type JSEvent = {
 }
 
 export type MessageType = string
-
 
 // PARSING MESSAGE  ---------------------------------------
 
