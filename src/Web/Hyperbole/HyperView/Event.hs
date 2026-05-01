@@ -4,6 +4,7 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Text.Casing (kebab)
 import Web.Atomic.Types
+import Web.Hyperbole.Data.Argument
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.HyperView.Handled
 import Web.Hyperbole.HyperView.Types

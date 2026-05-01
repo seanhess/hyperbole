@@ -258,20 +258,3 @@ instance (FromJSON a) => GFromEncoded (K1 R a) where
       [] -> Left $ "Missing parameters for Encoded Constructor:" <> cs con.text
 
 
-class UserInput a where
-  parseInput :: Text -> Either String a
-  default parseInput :: (FromJSON a) => Text -> Either String a
-  parseInput = decodeArgument
-
-
-instance UserInput Text where
-  parseInput = pure
-
-
-instance {-# OVERLAPPABLE #-} (UserInput a) => UserInput (Maybe a) where
-  parseInput "" = pure Nothing
-  parseInput t = Just <$> parseInput @a t
-
-
-instance {-# OVERLAPS #-} UserInput (Maybe Text) where
-  parseInput = pure . Just

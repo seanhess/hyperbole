@@ -30,7 +30,7 @@ data Todo = Todo
   , task :: Text
   , completed :: Bool
   }
-  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam, FromRow, ToRow)
+  deriving (Generic, ToJSON, FromJSON, FromRow, ToRow)
 
 data Todos :: Effect where
   LoadAll :: Todos m [Todo]
