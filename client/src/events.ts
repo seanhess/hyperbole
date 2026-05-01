@@ -1,6 +1,6 @@
 import debounce from 'debounce'
 import { encodedAction } from './action'
-import { HyperView, isHyperView } from './hyperview'
+import { isHyperView, type HyperView } from './hyperview'
 
 export type UrlFragment = string
 

@@ -260,10 +260,8 @@ instance (FromJSON a) => GFromEncoded (K1 R a) where
 
 class UserInput a where
   parseInput :: Text -> Either String a
-  default parseInput :: (Generic a, GFromEncoded (Rep a)) => Text -> Either String a
-  parseInput t = do
-    enc <- encodedParseText t
-    genericParseEncoded enc
+  default parseInput :: (FromJSON a) => Text -> Either String a
+  parseInput = decodeArgument
 
 
 instance UserInput Text where
