@@ -1,5 +1,8 @@
+{-# LANGUAGE BlockArguments #-}
+
 module Test.ViewActionSpec where
 
+import Control.Exception (catch)
 import Data.Aeson (Value (..))
 import Data.Text (Text)
 import GHC.Generics
@@ -24,7 +27,13 @@ data Product' = Product' HasText Int
 
 
 data Something = Something
-  deriving (Generic, ToJSON, FromJSON, Show, Eq)
+  deriving (Generic, Show, ToJSON, FromJSON, UserInput, Eq)
+
+
+-- If you want another type as an input, you must implement UserInput. We don't automatically parse integers from search fields
+newtype NumInput = NumInput Int
+  deriving (Generic, Show, Eq)
+  deriving anyclass (UserInput, FromJSON, ToJSON)
 
 
 data Sum
@@ -35,9 +44,9 @@ data Sum
   | SubE Term
   | SubF Something
   | SubG Int Something
-  | SubH Int Int
+  | SubH NumInput Int
   | SubI Something Int
-  | SubJ Text Int
+  | SubJ Text NumInput
   deriving (Generic, Show, Eq, ViewAction)
 
 
@@ -53,7 +62,7 @@ newtype Term = Term Text
   deriving newtype (Eq, Show, ToJSON, FromJSON, Read)
 
 
-data NumberPair = NumberPair {a :: Int, b :: Int}
+data NumberPair = NumberPair {a :: Int, b :: NumInput}
   deriving (Show, Generic, ToJSON, FromJSON)
 
 
@@ -73,30 +82,49 @@ spec = withMarkers ["encoded"] $ do
         let p = Product "hello world" 123
         toAction (Compound p) `shouldBe` Encoded "Compound" [toArgument p]
 
-    describe "toActionInput" $ do
+    withMarkers ["focus"] $ describe "toActionInput" $ do
       it "Constructor Text" $ do
-        toActionInput SubC `shouldBe` Encoded "SubC" [Hole]
+        toActionInput SubC `shouldBe` Encoded "SubC" [holeArg]
 
       it "Constructor (Maybe Text)" $ do
-        toActionInput (SubD . Just) `shouldBe` Encoded "SubD" [Hole]
+        toActionInput SubD `shouldBe` Encoded "SubD" [holeArg]
+
+      it "Constructor (Con . Just)" $ do
+        catch
+          do
+            toActionInput (SubD . Just) `shouldBe` Encoded "SubD" [holeArg]
+            failTest "Should have thrown error about constructor being too complex"
+          do \ExpectedInput -> pure ()
 
       it "Constructor newtype Term" $ do
-        toActionInput (SubE . Term) `shouldBe` Encoded "SubE" [Hole]
+        toActionInput (SubE . Term) `shouldBe` Encoded "SubE" [holeArg]
 
       it "renders data constructors" $ do
-        toActionInput SubF `shouldBe` Encoded "SubF" [Hole]
+        toActionInput SubF `shouldBe` Encoded "SubF" [holeArg]
 
       it "Partially applied constructors" $ do
-        toActionInput (SubG 2) `shouldBe` Encoded "SubG" [JSON (Number 2), Hole]
+        toActionInput (SubG 2) `shouldBe` Encoded "SubG" [JSON (Number 2), holeArg]
 
       it "Out-of-order constructors" $ do
-        toActionInput (`SubH` 2) `shouldBe` Encoded "SubH" [Hole, JSON (Number 2)]
-        toActionInput (`SubI` 3) `shouldBe` Encoded "SubI" [Hole, JSON (Number 3)]
+        toActionInput (`SubH` 2) `shouldBe` Encoded "SubH" [holeArg, JSON (Number 2)]
+        toActionInput (`SubI` 3) `shouldBe` Encoded "SubI" [holeArg, JSON (Number 3)]
 
       it "Nested Product" $ do
-        toActionInput (Nested . NumberPair 0) `shouldBe` Encoded "Nested" []
+        catch
+          do
+            toActionInput (Nested . NumberPair 0) `shouldNotBe` Encoded "Nested" [holeArg]
+            failTest "Should have thrown error about constructor being too complex"
+          do \ExpectedInput -> pure ()
 
-    describe "encoded argument holes" $ do
+    -- This should be a compiler error!
+    -- it "Funky Constructors" $ do
+    --   catch
+    --     do
+    --       toActionInput (SumB . (* 10)) `shouldNotBe` Encoded "SumB" [holeArg]
+    --       failTest "Should have thrown error about constructor being too complex"
+    --     do \ExpectedInput -> pure ()
+
+    withMarkers ["focus"] $ describe "encoded argument holes" $ do
       it "Constructor Text" $ do
         encodedToText (toActionInput SubC) `shouldBe` "SubC |>_<|"
 
@@ -111,11 +139,20 @@ spec = withMarkers ["encoded"] $ do
         encodedToText (toActionInput (`SubI` 3)) `shouldBe` "SubI |>_<| 3"
 
       it "Nested Product" $ do
-        encodedToText (toAction $ Nested $ NumberPair 12 34) `shouldBe` "Nested {\"a\":12,\"b\":34}"
-        encodedToText (toActionInput (Nested . NumberPair 0)) `shouldBe` "Nested {\"a\":12,\"b\":\"|><|\"}"
+        -- this throws now
+        -- encodedToText (toActionInput (Nested . NumberPair 0)) `shouldBe` "Nested {\"a\":12,\"b\":\"|><|\"}"
+        encodedToText (toAction $ Nested $ NumberPair 12 (NumInput 34)) `shouldBe` "Nested {\"a\":12,\"b\":34}"
 
       it "Escapes underscores" $ do
         encodedToText (toActionInput (SubJ "hello _ world")) `shouldBe` "SubJ \"hello _ world\" |>_<|"
+
+    -- Compiler error
+    -- it "doesn't try to encode impossible constructors" $ do
+    --   catch
+    --     do
+    --       encodedToText (toActionInput (SumB . (* 10))) `shouldNotBe` "SumB |>_<|"
+    --       failTest "Should have thrown error about constructor being too complex"
+    --     do \ExpectedInput -> pure ()
 
     describe "parseAction" $ do
       it "simple" $ parseAction (Encoded "Simple" []) `shouldBe` pure Simple

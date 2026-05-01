@@ -5,8 +5,6 @@
 
 module Web.Hyperbole.Data.Encoded where
 
-import Control.DeepSeq (force)
-import Control.Exception (Exception, catch, evaluate, throw)
 import Data.Aeson (FromJSON (..), ToJSON (..), Value (..))
 import Data.Aeson qualified as A
 import Data.Attoparsec.ByteString qualified as AB
@@ -18,7 +16,6 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import GHC.Generics
-import GHC.IO.Unsafe (unsafePerformIO)
 import Web.Hyperbole.Data.Argument
 
 
@@ -158,56 +155,6 @@ fromResult (A.Success a) = pure a
 fromResult (A.Error e) = Left (cs e)
 
 
--- Param encoding scheme:
---   Wire format must not contain bare spaces (field separator) or real newlines.
---   We use backslash as the escape character:
---     '\'  → "\\"    (escape backslash itself, so it cannot be confused with an escape prefix)
---     '\n' → "\n"    (literal backslash + 'n', for real newline characters)
---     '_'  → "\_"    (escape underscore, since bare underscore encodes space)
---     ' '  → "_"     (encode space as underscore)
---   Decoding is the single-pass reverse of the above.
---
--- The critical invariant: backslash is escaped FIRST on encode and unescaped
--- LAST on decode.  This ensures that JSON escape sequences (e.g. the two chars
--- '\' 'n' inside "[\"\n\"]") are treated as an escaped backslash followed by
--- a plain 'n', not as the param newline escape.
--- See: https://github.com/seanhess/hyperbole/issues/187
-
--- desanitizeParamText :: Text -> Text
--- desanitizeParamText = go
---  where
---   go t = case T.uncons t of
---     Nothing -> ""
---     Just ('\\', rest) -> case T.uncons rest of
---       Just ('\\', rest') -> T.cons '\\' (go rest') -- \\ → \
---       Just ('n', rest') -> T.cons '\n' (go rest') -- \n → newline
---       Just ('_', rest') -> T.cons '_' (go rest') -- \_ → _
---       _ -> T.cons '\\' (go rest) -- bare backslash (shouldn't occur)
---     Just ('_', rest) -> T.cons ' ' (go rest) -- _ → space
---     Just (c, rest) -> T.cons c (go rest) -- other chars verbatim
-
---   | T.isSuffixOf "\\" seg = T.dropEnd 1 seg <> "_" <> txt
---   | otherwise = seg <> " " <> txt
-
--- foldr join "" $
--- where
---
--- join "" "" = " "
--- join "" " " = " "
--- join seg "" = seg
--- join seg txt
---   | T.isSuffixOf "\\" seg = T.dropEnd 1 seg <> "_" <> txt
---   | otherwise = seg <> " " <> txt
-
--- decodeParamValue :: (FromParam a) => Text -> Either String a
--- decodeParamValue = parseParam . decodeParam
-
--- decodeParam :: Text -> ParamValue
--- decodeParam inp = do
---   case A.eitherDecode (cs inp) of
---     Left _ -> paramFromText inp
---     Right v -> ParamValue inp v
-
 -------------------------------------------------------------------------------
 -- GENERICS
 -------------------------------------------------------------------------------
@@ -229,7 +176,6 @@ instance (GToEncoded f, GToEncoded g) => GToEncoded (f :*: g) where
 
 
 instance GToEncoded U1 where
-  -- WARNING: not sure if this will work
   gToEncoded U1 = mempty
 
 
@@ -249,7 +195,8 @@ instance (GToEncoded f) => GToEncoded (M1 S s f) where
 
 instance (ToJSON a) => GToEncoded (K1 R a) where
   gToEncoded (K1 a) = do
-    Encoded mempty [toArgumentWithHole a]
+    let JSON val = toArgument a
+    Encoded mempty [JSON val]
 
 
 -- GFromEncoded: Generic ViewAction Decoding
@@ -311,27 +258,22 @@ instance (FromJSON a) => GFromEncoded (K1 R a) where
       [] -> Left $ "Missing parameters for Encoded Constructor:" <> cs con.text
 
 
--- Input Holes -----------------------------------------------
--- Serializing a function is impossible. To simulate it, we need to fully apply the constructor with a "hole" for any expected inputs
--- This hole needs to be any type, so we pretend to have one with `throw`
--- later, when we convert a type to ParamValue, we catch it and serialize a placeholder
-
-data InputHole = InputHole
-  deriving (Show, Eq, Exception)
-
-
-inputHole :: a
-inputHole = throw InputHole
+class UserInput a where
+  parseInput :: Text -> Either String a
+  default parseInput :: (Generic a, GFromEncoded (Rep a)) => Text -> Either String a
+  parseInput t = do
+    enc <- encodedParseText t
+    genericParseEncoded enc
 
 
-toArgumentWithHole :: (ToJSON a) => a -> Argument
-toArgumentWithHole a = do
-  -- You're not a real framework author if you don't use unsafePerformIO at least once
-  unsafePerformIO $ do
-    catch
-      do
-        -- I don't really understand why I needed so many evaluates to pass all the tests in ViewActionSpec
-        -- but there you have it
-        a' <- evaluate a
-        evaluate $ force $ toArgument a'
-      do \InputHole -> pure Hole
+instance UserInput Text where
+  parseInput = pure
+
+
+instance {-# OVERLAPPABLE #-} (UserInput a) => UserInput (Maybe a) where
+  parseInput "" = pure Nothing
+  parseInput t = Just <$> parseInput @a t
+
+
+instance {-# OVERLAPS #-} UserInput (Maybe Text) where
+  parseInput = pure . Just

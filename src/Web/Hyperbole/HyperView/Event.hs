@@ -62,7 +62,7 @@ onInput a delay = do
 -- WARNING: no way to do this generically right now, because toActionInput is specialized to Text
 --   the change event DOES assume that the target has a string value
 --   but, that doesn't let us implement dropdown
-onChange :: (ViewAction (Action id), Attributable a) => (value -> Action id) -> Attributes a -> Attributes a
+onChange :: (ViewAction (Action id), Attributable a, UserInput value) => (value -> Action id) -> Attributes a -> Attributes a
 onChange a = do
   att (eventName "change") (encodedToText $ toActionInput a)
 
@@ -105,7 +105,6 @@ data Key
   | Shift
   | OtherKey Text
   deriving (Show, Read)
-
 
 
 -- | Internal

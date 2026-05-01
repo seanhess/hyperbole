@@ -5,9 +5,7 @@
 module Test.QuerySpec where
 
 import Data.Function ((&))
-import Data.String.Conversions (cs)
 import Data.Text (Text)
-import Network.HTTP.Types qualified as HTTP
 import Skeletest
 import Skeletest.Predicate qualified as P
 import Web.Hyperbole hiding (Number)
