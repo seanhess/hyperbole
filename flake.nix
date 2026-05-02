@@ -19,7 +19,7 @@
     nixpkgs-node.url = "nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter/main";
-    atomic-css.url = "github:seanhess/atomic-css";
+    atomic-css.url = "github:sectore/atomic-css/fix/ghc";
   };
 
   outputs =
@@ -54,28 +54,17 @@
 
       overlay = final: prev: {
         overriddenHaskellPackages = {
-          ghc982 = (prev.overriddenHaskellPackages.ghc982 or prev.haskell.packages.ghc982).override (old: {
+          ghc984 = (prev.overriddenHaskellPackages.ghc984 or prev.haskell.packages.ghc984).override (old: {
             overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
               hfinal: hprev: {
                 "${packageName}" = hfinal.callCabal2nix packageName src { };
-                http-api-data = hfinal.http-api-data_0_6_1;
-                uuid-types = hfinal.uuid-types_1_0_6;
-                effectful = hfinal.effectful_2_5_0_0;
-                effectful-core = hfinal.effectful-core_2_5_0_0;
-                scotty = hfinal.scotty_0_22;
-                data-default = hfinal.callHackage "data-default" "0.8.0.0" { };
               }
             );
           });
-          ghc966 = (prev.overriddenHaskellPackages.ghc966 or prev.haskell.packages.ghc966).override (old: {
+          ghc967 = (prev.overriddenHaskellPackages.ghc967 or prev.haskell.packages.ghc967).override (old: {
             overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
               hfinal: hprev: {
                 "${packageName}" = hfinal.callCabal2nix packageName src { };
-                effectful = hfinal.effectful_2_5_0_0;
-                effectful-core = hfinal.effectful-core_2_5_0_0;
-                http-api-data = hfinal.http-api-data_0_6_1;
-                uuid-types = hfinal.uuid-types_1_0_6;
-                data-default = hfinal.callHackage "data-default" "0.8.0.0" { };
               }
             );
           });
@@ -106,8 +95,8 @@
         };
 
         ghcVersions = [
-          "966"
-          "982"
+          "967"
+          "984"
         ];
 
         ghcPkgs = builtins.listToAttrs (
@@ -210,65 +199,63 @@
             value = pkgs.runCommand "ghc${version}-check-demo" {
               buildInputs = [
                 (exe version)
-              ] ++ self.devShells.${system}."ghc${version}-shell".buildInputs;
+              ]
+              ++ self.devShells.${system}."ghc${version}-shell".buildInputs;
             } "type demo; type docgen; CABAL_CONFIG=/dev/null cabal --dry-run repl; touch $out";
           }) ghcVersions
         );
 
-        apps =
-          {
-            default = self.apps.${system}."ghc966-${demoName}";
-          }
-          // builtins.listToAttrs (
-            map (version: {
+        apps = {
+          default = self.apps.${system}."ghc967-${demoName}";
+        }
+        // builtins.listToAttrs (
+          map (version: {
+            name = "ghc${version}-${demoName}";
+            value = {
+              type = "app";
+              program = "${exe version}/bin/demo";
+            };
+          }) ghcVersions
+        );
+
+        packages = {
+          default = self.packages.${system}."ghc984-${packageName}";
+          docker = self.packages.${system}."ghc984-docker";
+        }
+        // builtins.listToAttrs (
+          builtins.concatMap (version: [
+            {
               name = "ghc${version}-${demoName}";
-              value = {
-                type = "app";
-                program = "${exe version}/bin/demo";
-              };
-            }) ghcVersions
-          );
+              value = ghcPkgs."ghc${version}".${demoName};
+            }
+            {
+              name = "ghc${version}-docker";
+              value = docker version;
+            }
+            {
+              name = "ghc${version}-${packageName}";
+              value = ghcPkgs."ghc${version}".${packageName};
+            }
+          ]) ghcVersions
+        );
 
-        packages =
-          {
-            default = self.packages.${system}."ghc982-${packageName}";
-            docker = self.packages.${system}."ghc982-docker";
-          }
-          // builtins.listToAttrs (
-            builtins.concatMap (version: [
-              {
-                name = "ghc${version}-${demoName}";
-                value = ghcPkgs."ghc${version}".${demoName};
+        devShells = {
+          default = self.devShells.${system}.ghc984-shell;
+        }
+        // builtins.listToAttrs (
+          map (version: {
+            name = "ghc${version}-shell";
+            value = ghcPkgs."ghc${version}".shellFor (
+              shellCommon version
+              // {
+                packages = p: [
+                  p.${packageName}
+                  p.${demoName}
+                ];
               }
-              {
-                name = "ghc${version}-docker";
-                value = docker version;
-              }
-              {
-                name = "ghc${version}-${packageName}";
-                value = ghcPkgs."ghc${version}".${packageName};
-              }
-            ]) ghcVersions
-          );
-
-        devShells =
-          {
-            default = self.devShells.${system}.ghc982-shell;
-          }
-          // builtins.listToAttrs (
-            map (version: {
-              name = "ghc${version}-shell";
-              value = ghcPkgs."ghc${version}".shellFor (
-                shellCommon version
-                // {
-                  packages = p: [
-                    p.${packageName}
-                    p.${demoName}
-                  ];
-                }
-              );
-            }) ghcVersions
-          );
+            );
+          }) ghcVersions
+        );
       }
     );
 }
