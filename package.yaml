@@ -26,8 +26,8 @@ ghc-options:
   - -fdefer-typed-holes
 
 tested-with:
-  - GHC == 9.8.2
-  - GHC == 9.6.6
+  - GHC == 9.8.4
+  - GHC == 9.6.7
 
 default-extensions:
   - OverloadedStrings
