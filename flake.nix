@@ -18,7 +18,7 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter/main";
-    atomic-css.url = "github:sectore/atomic-css/fix/ghc";
+    atomic-css.url = "github:seanhess/atomic-css";
   };
 
   outputs =

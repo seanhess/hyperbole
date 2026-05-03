@@ -8,16 +8,15 @@
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1777727684,
+        "lastModified": 1777831207,
         "narHash": "sha256-lKK6i0zLwGWsNS7e7V2Hdj+CYk/whpNo4198U/rbvQk=",
-        "owner": "sectore",
+        "owner": "seanhess",
         "repo": "atomic-css",
-        "rev": "f56f5ea251da52fbe1290ea9c6c29295145f5b54",
+        "rev": "4722971b91128659bf1d032aa5b2c42026c4d548",
         "type": "github"
       },
       "original": {
-        "owner": "sectore",
-        "ref": "fix/ghc",
+        "owner": "seanhess",
         "repo": "atomic-css",
         "type": "github"
       }
