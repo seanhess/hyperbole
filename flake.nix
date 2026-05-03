@@ -139,7 +139,7 @@
           withHoogle = true;
           doBenchmark = true;
           CABAL_CONFIG = "/dev/null";
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.libz ];
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.zlib ];
         };
 
         exe =
