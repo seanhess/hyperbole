@@ -147,6 +147,7 @@ typeKeywords =
   , "Concurrency"
   , "Replace"
   , "Drop"
+  , "UserInput"
   ]
 
 valueKeywords :: Set Text

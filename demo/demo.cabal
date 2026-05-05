@@ -96,6 +96,7 @@ executable demo
       Example.FormValidation
       Example.Interactivity.Events
       Example.Interactivity.Inputs
+      Example.Interactivity.Search
       Example.Javascript
       Example.Push
       Example.Requests
