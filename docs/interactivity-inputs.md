@@ -1,4 +1,6 @@
-We've seen `button` in quite a few examples. Hyperbole provides a few other high-level inputs to easily tie interactivity to an `Action`, such as `search`, `dropdown`, and `option`
+Hyperbole provides a few other high-level inputs to tie interactivity to an `Action`, such as `dropdown`, and `option`. Notice how we again use a partially-applied constructor, this time with a custom `UserInput`
+
+    #EMBED Example.Interactivity.Inputs instance HyperView Dropper
 
     #EMBED Example.Interactivity.Inputs data Planet
 

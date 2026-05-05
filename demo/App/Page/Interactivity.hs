@@ -6,6 +6,7 @@ import App.Docs
 import App.Route hiding (Javascript)
 import Example.Interactivity.Events
 import Example.Interactivity.Inputs
+import Example.Interactivity.Search
 import Example.Javascript as Javascript
 import Example.View.Layout
 import Web.Hyperbole
@@ -16,13 +17,16 @@ data Sections
   | Javascript
   deriving (Show, Bounded, Enum, PageAnchor)
 
-page :: (Hyperbole :> es) => Page es '[Boxes, JBoxes, Message, TryEvents, Dropper]
+page :: (Hyperbole :> es) => Page es '[Boxes, JBoxes, Message, TryEvents, Dropper, CustomText]
 page = do
   pure $ layoutSubnav @Sections Interactivity $ do
     -- NOTE: only include javascript on the pages you need it
     script "custom.js"
 
     section Inputs $ do
+      markdocs $(embedFile "docs/interactivity-search.md")
+      example $(moduleSourceNamed "Example.Interactivity.Search") $ hyper CustomText (viewCustom "")
+
       markdocs $(embedFile "docs/interactivity-inputs.md")
       example $(moduleSourceNamed "Example.Interactivity.Inputs") $ hyper Dropper (selectPlanet Nothing)
 
