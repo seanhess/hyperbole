@@ -111,6 +111,10 @@
 
         pre-commit = pre-commit-hooks.lib.${system}.run {
           src = src;
+          excludes = [
+            "^client/node_modules/"
+            "^client/dist/"
+          ];
           hooks = {
             hlint.enable = true;
             fourmolu.enable = true;
@@ -121,11 +125,35 @@
               args = [ "--no-telemetry" ];
             };
             check-merge-conflicts.enable = true;
+            # `oxlint` uses the lockfile-pinned version here (`pre-commit-hooks` may provide a different one)
+            oxlint = {
+              enable = true;
+              name = "oxlint";
+              entry = "npm run --prefix client lint";
+              language = "system";
+              files = "^client/";
+              pass_filenames = false;
+            };
+            # `oxfmt` uses the lockfile-pinned version here (`pre-commit-hooks` may provide a different one)
+            oxfmt = {
+              enable = true;
+              name = "oxfmt (check)";
+              entry = "npm run --prefix client fmt";
+              language = "system";
+              files = "^client/";
+              pass_filenames = false;
+            };
           };
         };
 
         shellCommon = version: {
-          inherit (pre-commit) shellHook;
+          shellHook = ''
+            ${pre-commit.shellHook}
+            # `oxlint`/`oxfmt` hooks require lockfile-pinned binaries from `node_modules`
+            if [ ! -d "client/node_modules" ]; then
+              npm install --prefix client
+            fi
+          '';
           buildInputs = with pkgs.haskell.packages."ghc${version}"; [
             pkgs.nodejs_24
             cabal-install
