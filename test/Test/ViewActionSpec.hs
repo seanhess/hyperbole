@@ -27,13 +27,13 @@ data Product' = Product' HasText Int
 
 
 data Something = Something
-  deriving (Generic, Show, ToJSON, FromJSON, UserInput, Eq)
+  deriving (Generic, Show, ToJSON, FromJSON, Eq)
 
 
 -- If you want another type as an input, you must implement UserInput. We don't automatically parse integers from search fields
 newtype NumInput = NumInput Int
   deriving (Generic, Show, Eq)
-  deriving anyclass (UserInput, FromJSON, ToJSON)
+  deriving anyclass (FromJSON, ToJSON)
 
 
 data Sum

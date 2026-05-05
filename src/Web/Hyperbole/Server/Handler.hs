@@ -12,7 +12,7 @@ import Effectful.Reader.Dynamic
 import Effectful.State.Dynamic
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Response (hyperView, respondError)
+import Web.Hyperbole.Effect.Response (hyperView, parseError, respondError)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
@@ -81,13 +81,17 @@ loadPageResponse run = do
 
 
 -- despite not needing any effects, this must be in Eff es to get `es` on the RHS
-decodeEvent :: forall id es. (HyperView id es, FromJSON (ViewState id)) => Event TargetViewId Encoded Value -> Eff es (Maybe (Event id (Action id) (ViewState id)))
+decodeEvent :: forall id es. (HyperView id es, FromJSON (ViewState id), Hyperbole :> es) => Event TargetViewId Encoded Value -> Eff es (Maybe (Event id (Action id) (ViewState id)))
 decodeEvent (Event (TargetViewId ti) eact est) =
-  pure $ either (const Nothing) Just $ do
-    vid <- parseViewId ti
-    act <- parseAction eact
-    st <- parseState est
-    pure $ Event vid act st
+  -- First, parse the view id. These should be unique on each page
+  case parseViewId ti of
+    Left _ -> pure Nothing
+    Right vid -> do
+      -- Then if parsing the state or action fails, throw an erro
+      either parseError (pure . Just) $ do
+        act <- parseAction eact
+        st <- parseState est
+        pure $ Event vid act st
 
 
 parseState :: (FromJSON a) => Value -> Either String a
