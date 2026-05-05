@@ -56,8 +56,7 @@ dependencies:
   - cmark
   - directory
   - filepath
-  - selda-sqlite
-  - selda
+  - sqlite-simple
   - safe
 
 executables:
