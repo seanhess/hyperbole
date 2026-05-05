@@ -15,7 +15,7 @@ jobs:
   build-cache:
     runs-on: ubuntu-latest
     container:
-      image: haskell:9.8.2
+      image: haskell:9.8.4
     steps: 
       - uses: actions/checkout@v4
 
@@ -54,7 +54,7 @@ jobs:
     needs: build-cache
     runs-on: ubuntu-latest
     container:
-      image: haskell:9.8.2
+      image: haskell:9.8.4
     steps: 
       - uses: actions/checkout@v4
 
@@ -89,10 +89,10 @@ jobs:
       - name: Test
         run: cabal test
 
-  # build-966:
+  # build-967:
   #   runs-on: ubuntu-latest
   #   container:
-  #     image: haskell:9.6.6
+  #     image: haskell:9.6.7
   #   steps: *cabal-test
 
 

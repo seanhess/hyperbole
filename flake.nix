@@ -16,7 +16,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    nixpkgs-node.url = "nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter/main";
     atomic-css.url = "github:seanhess/atomic-css";
@@ -26,7 +25,6 @@
     {
       self,
       nixpkgs,
-      nixpkgs-node,
       nix-filter,
       flake-utils,
       pre-commit-hooks,
@@ -54,28 +52,17 @@
 
       overlay = final: prev: {
         overriddenHaskellPackages = {
-          ghc982 = (prev.overriddenHaskellPackages.ghc982 or prev.haskell.packages.ghc982).override (old: {
+          ghc984 = (prev.overriddenHaskellPackages.ghc984 or prev.haskell.packages.ghc984).override (old: {
             overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
               hfinal: hprev: {
                 "${packageName}" = hfinal.callCabal2nix packageName src { };
-                http-api-data = hfinal.http-api-data_0_6_1;
-                uuid-types = hfinal.uuid-types_1_0_6;
-                effectful = hfinal.effectful_2_5_0_0;
-                effectful-core = hfinal.effectful-core_2_5_0_0;
-                scotty = hfinal.scotty_0_22;
-                data-default = hfinal.callHackage "data-default" "0.8.0.0" { };
               }
             );
           });
-          ghc966 = (prev.overriddenHaskellPackages.ghc966 or prev.haskell.packages.ghc966).override (old: {
+          ghc967 = (prev.overriddenHaskellPackages.ghc967 or prev.haskell.packages.ghc967).override (old: {
             overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
               hfinal: hprev: {
                 "${packageName}" = hfinal.callCabal2nix packageName src { };
-                effectful = hfinal.effectful_2_5_0_0;
-                effectful-core = hfinal.effectful-core_2_5_0_0;
-                http-api-data = hfinal.http-api-data_0_6_1;
-                uuid-types = hfinal.uuid-types_1_0_6;
-                data-default = hfinal.callHackage "data-default" "0.8.0.0" { };
               }
             );
           });
@@ -93,7 +80,6 @@
           inherit system;
           overlays = [ self.overlays.default ];
         };
-        pkgs-node = import nixpkgs-node { inherit system; };
 
         demo-src = nix-filter.lib {
           root = ./demo;
@@ -106,8 +92,8 @@
         };
 
         ghcVersions = [
-          "966"
-          "982"
+          "967"
+          "984"
         ];
 
         ghcPkgs = builtins.listToAttrs (
@@ -169,7 +155,7 @@
             fi
           '';
           buildInputs = with pkgs.haskell.packages."ghc${version}"; [
-            pkgs-node.nodejs_24
+            pkgs.nodejs_24
             cabal-install
             haskell-language-server
             fourmolu
@@ -181,7 +167,7 @@
           withHoogle = true;
           doBenchmark = true;
           CABAL_CONFIG = "/dev/null";
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.libz ];
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.zlib ];
         };
 
         exe =
@@ -245,7 +231,7 @@
         );
 
         apps = {
-          default = self.apps.${system}."ghc966-${demoName}";
+          default = self.apps.${system}."ghc967-${demoName}";
         }
         // builtins.listToAttrs (
           map (version: {
@@ -258,8 +244,8 @@
         );
 
         packages = {
-          default = self.packages.${system}."ghc982-${packageName}";
-          docker = self.packages.${system}."ghc982-docker";
+          default = self.packages.${system}."ghc984-${packageName}";
+          docker = self.packages.${system}."ghc984-docker";
         }
         // builtins.listToAttrs (
           builtins.concatMap (version: [
@@ -279,7 +265,7 @@
         );
 
         devShells = {
-          default = self.devShells.${system}.ghc982-shell;
+          default = self.devShells.${system}.ghc984-shell;
         }
         // builtins.listToAttrs (
           map (version: {
