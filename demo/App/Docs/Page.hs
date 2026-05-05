@@ -59,6 +59,10 @@ sourceLink p =
   sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/main/demo/|]
   sourceUrl = sourceUrlBase ./. p
 
+sourceTag :: (Styleable h) => CSS h -> CSS h
+sourceTag =
+  pad (XY 8 2) . bg PrimaryLight . color White . hover (bg Primary)
+
 example :: ModuleSource -> View c () -> View c ()
 example (ModuleSource e) = example' (path $ cs e)
 
@@ -66,7 +70,7 @@ example' :: Path -> View c () -> View c ()
 example' p cnt = do
   el ~ stack . Cyber.font $ do
     col ~ Cyber.embed $ cnt
-    sourceLink p ~ popup (TR (-10) 0) . pad (XY 8 2) . bg PrimaryLight . color White . hover (bg Primary) -- . pad (TRBL 0 20 0 10) . border (L 3) . borderColor PrimaryLight . Cyber.clip 10
+    sourceLink p ~ sourceTag . popup (TR (-10) 0)
 
 -- section :: AppRoute -> View c () -> View c ()
 -- section r = section' (routeTitle r)
