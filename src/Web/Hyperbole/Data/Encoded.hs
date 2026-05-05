@@ -247,6 +247,11 @@ instance (GFromEncoded f) => GFromEncoded (M1 S s f) where
     pure (M1 a, rest)
 
 
+-- how can we *sometimes* parse it as user input?
+-- we can branch here based on something the client sends?
+-- wrap it in user input instead?
+-- newtype Input a = Input a
+-- then I can overload it here.
 instance (FromJSON a) => GFromEncoded (K1 R a) where
   gParseEncoded (Encoded con vals) = do
     case vals of
@@ -256,5 +261,3 @@ instance (FromJSON a) => GFromEncoded (K1 R a) where
           Right a -> pure (K1 a, rest)
           Left e -> Left (cs e)
       [] -> Left $ "Missing parameters for Encoded Constructor:" <> cs con.text
-
-

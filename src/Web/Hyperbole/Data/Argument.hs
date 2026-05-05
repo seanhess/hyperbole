@@ -134,24 +134,23 @@ encodeJSON = \case
       v -> pure $ encodeValue v
 
 
-class UserInput a where
-  parseInput :: Text -> Either String a
-  default parseInput :: (FromJSON a) => Text -> Either String a
-  parseInput = decodeArgument
-
-
-instance UserInput Text where
-  parseInput = pure
-
-
-instance {-# OVERLAPPABLE #-} (UserInput a) => UserInput (Maybe a) where
-  parseInput "" = pure Nothing
-  parseInput t = Just <$> parseInput @a t
-
-
-instance {-# OVERLAPS #-} UserInput (Maybe Text) where
-  parseInput = pure . Just
-
+-- class UserInput a where
+--   parseInput :: Text -> Either String a
+--   default parseInput :: (FromJSON a) => Text -> Either String a
+--   parseInput = decodeArgument
+--
+--
+-- instance UserInput Text where
+--   parseInput = pure
+--
+--
+-- instance {-# OVERLAPPABLE #-} (FromJSON a) => UserInput (Maybe a) where
+--   parseInput "" = pure Nothing
+--   parseInput t = pure $ A.decode (cs t)
+--
+--
+-- instance {-# OVERLAPS #-} UserInput (Maybe Text) where
+--   parseInput = pure . Just
 
 -- Input Holes -----------------------------------------------
 -- Serializing a function is impossible. To simulate it, we need to fully apply the constructor with a "hole" for any expected inputs

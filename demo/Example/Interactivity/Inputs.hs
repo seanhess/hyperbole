@@ -12,7 +12,7 @@ data Planet
   | Venus
   | Earth
   | Mars
-  deriving (Generic, ToJSON, FromJSON, Eq, Show, UserInput)
+  deriving (Generic, ToJSON, FromJSON, Eq, Show)
 
 instance HyperView Dropper es where
   data Action Dropper
