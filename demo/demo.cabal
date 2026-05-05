@@ -43,6 +43,7 @@ executable demo
       App.Page.OAuth2
       App.Page.SideEffects
       App.Page.State
+      App.Page.Test
       App.Page.ViewFunctions
       App.Route
       App.Style
@@ -95,6 +96,7 @@ executable demo
       Example.FormValidation
       Example.Interactivity.Events
       Example.Interactivity.Inputs
+      Example.Interactivity.Search
       Example.Javascript
       Example.Push
       Example.Requests
@@ -108,7 +110,6 @@ executable demo
       Example.Style
       Example.Style.Cyber
       Example.Tags
-      Example.Test
       Example.Todos.Todo
       Example.Todos.TodoCSS
       Example.Trigger

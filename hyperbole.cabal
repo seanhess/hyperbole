@@ -35,10 +35,9 @@ library
   exposed-modules:
       Web.Hyperbole
       Web.Hyperbole.Application
+      Web.Hyperbole.Data.Argument
       Web.Hyperbole.Data.Cookie
       Web.Hyperbole.Data.Encoded
-      Web.Hyperbole.Data.JSON
-      Web.Hyperbole.Data.Param
       Web.Hyperbole.Data.QueryData
       Web.Hyperbole.Data.URI
       Web.Hyperbole.Document
@@ -104,6 +103,7 @@ library
     , containers >=0.6 && <1
     , cookie >=0.4 && <0.6
     , data-default ==0.8.*
+    , deepseq
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2
@@ -128,9 +128,9 @@ test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Test.ArgumentSpec
       Test.EncodedSpec
       Test.FormSpec
-      Test.ParamSpec
       Test.QuerySpec
       Test.RouteSpec
       Test.SessionSpec
@@ -166,6 +166,7 @@ test-suite test
     , containers >=0.6 && <1
     , cookie >=0.4 && <0.6
     , data-default ==0.8.*
+    , deepseq
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2

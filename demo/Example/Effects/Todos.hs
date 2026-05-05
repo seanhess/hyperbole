@@ -12,14 +12,12 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import System.Random (randomRIO)
 import Web.Hyperbole
-import Web.Hyperbole.Data.JSON
 
 type TodoId = Text
 
 newtype AllTodos = AllTodos (Map TodoId Todo)
   deriving (Generic)
   deriving newtype (ToJSON, FromJSON)
-  deriving (ToEncoded, FromEncoded) via (JSON AllTodos)
 
 instance Session AllTodos where
   sessionKey = "todos"
@@ -32,7 +30,7 @@ data Todo = Todo
   , task :: Text
   , completed :: Bool
   }
-  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam, FromRow, ToRow)
+  deriving (Generic, ToJSON, FromJSON, FromRow, ToRow)
 
 data Todos :: Effect where
   LoadAll :: Todos m [Todo]
@@ -89,7 +87,7 @@ data FilterTodo
   = FilterAll
   | Active
   | Completed
-  deriving (Eq, Generic, ToJSON, FromJSON, ToParam, FromParam)
+  deriving (Eq, Generic, ToJSON, FromJSON)
 
 -----------------------------------------------------------------------
 -- Session: store todos in a cookie

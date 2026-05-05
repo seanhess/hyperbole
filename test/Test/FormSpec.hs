@@ -34,7 +34,7 @@ data Todo = Todo
 
 
 spec :: Spec
-spec = withMarkers ["param"] $ do
+spec = do
   describe "forms" $ do
     it "should parse a form" $ do
       case fromForm @(Example Identity) [("message", "hello"), ("age", "23"), ("whatever", "")] of

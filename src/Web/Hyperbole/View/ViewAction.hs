@@ -4,6 +4,7 @@ module Web.Hyperbole.View.ViewAction where
 
 import Data.Text (Text)
 import GHC.Generics
+import Web.Hyperbole.Data.Argument
 import Web.Hyperbole.Data.Encoded as Encoded
 
 
@@ -38,3 +39,8 @@ decodeAction t = do
   case parseAction =<< encodedParseText t of
     Left _ -> Nothing
     Right a -> pure a
+
+
+-- | Serialize a constructor that expects a single input, like `data MyAction = GoSearch Text`
+toActionInput :: (ViewAction a, UserInput val) => (val -> a) -> Encoded
+toActionInput act = toAction (act expectInput)

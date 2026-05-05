@@ -137,10 +137,9 @@ module Web.Hyperbole
 
     -- * Query Param Encoding #query-param#
   , QueryData
-  , ToParam (..)
-  , FromParam (..)
   , ToEncoded
   , FromEncoded
+  , UserInput
 
     -- * Advanced #advanced#
   , target
@@ -182,8 +181,8 @@ import Network.Wai.Handler.Warp as Warp (run)
 import Web.Atomic.CSS ()
 import Web.Atomic.Types ()
 import Web.Hyperbole.Application
+import Web.Hyperbole.Data.Argument (UserInput (..))
 import Web.Hyperbole.Data.Encoded (FromEncoded, ToEncoded)
-import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.QueryData
 import Web.Hyperbole.Document
 import Web.Hyperbole.Effect.Client
@@ -207,5 +206,3 @@ import Web.Hyperbole.View.Embed
 
 Please visit https://hyperbole.live for documentation and examples
 -}
-
--- TODO: NSO link

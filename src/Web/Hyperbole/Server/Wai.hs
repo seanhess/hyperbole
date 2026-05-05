@@ -3,6 +3,8 @@
 
 module Web.Hyperbole.Server.Wai where
 
+import Data.Aeson (Value)
+import Data.Aeson qualified as A
 import Data.Bifunctor (first)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
@@ -166,14 +168,14 @@ fromWaiRequest wr body = do
       , requestId
       }
  where
-  lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded Encoded)
+  lookupEvent :: [Header] -> Maybe (Event TargetViewId Encoded Value)
   lookupEvent headers = do
     viewIdText <- cs <$> L.lookup "Hyp-ViewId" headers
     actText <- cs <$> L.lookup "Hyp-Action" headers
     stText <- cs <$> L.lookup "Hyp-State" headers
     act <- decode actText
     viewId <- TargetViewId <$> decode viewIdText
-    st <- decode stText
+    st <- A.decode stText
     pure $ Event viewId act st
 
 

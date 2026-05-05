@@ -19,7 +19,7 @@ data AppColor
   | PrimaryLight
   | Secondary
   | SecondaryLight
-  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON, ToParam, FromParam)
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 
 instance Default AppColor where
   def = White

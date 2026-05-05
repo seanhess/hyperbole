@@ -1,14 +1,14 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.Data.Encoded where
 
 import Data.Aeson (FromJSON (..), ToJSON (..), Value (..))
 import Data.Aeson qualified as A
 import Data.Attoparsec.ByteString qualified as AB
-import Data.Attoparsec.ByteString qualified as Atto
-import Data.Attoparsec.ByteString.Char8 (isSpace, sepBy, takeWhile1)
+import Data.Attoparsec.ByteString.Char8 (sepBy)
 import Data.Attoparsec.ByteString.Char8 qualified as AC
 import Data.Bifunctor (first)
 import Data.String (IsString)
@@ -16,7 +16,7 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import GHC.Generics
-import Web.Hyperbole.Data.Param
+import Web.Hyperbole.Data.Argument
 
 
 newtype ConName = ConName {text :: Text}
@@ -28,12 +28,13 @@ instance Monoid ConName where
   mempty = ConName ""
 
 
-{- | Pretty Human Readable top-levelencoding for ViewAction and ViewId
+{- | Human Readable top-level encoding for ViewAction and ViewId
 For simple Sum and Product types it is equivalent to the Show/Read instance
 
 MyConstructor 1 2 3
+OtherConstructor "hello" 2
 -}
-data Encoded = Encoded ConName [ParamValue]
+data Encoded = Encoded ConName [Argument]
   deriving (Show, Eq, Ord)
 
 
@@ -69,7 +70,7 @@ decodeEither t = do
 -- | Basic Encoding
 encodedToText :: Encoded -> Text
 encodedToText (Encoded con values) =
-  T.intercalate " " (con.text : fmap encodeParam values)
+  T.intercalate " " (con.text : fmap encodeFromArgument values)
 
 
 encodedParseText :: Text -> Either String Encoded
@@ -80,7 +81,7 @@ encodedParseText inp =
   encodedParser = do
     con <- AC.takeTill AC.isSpace
     AC.skipSpace
-    ps <- paramParser `sepBy` AC.char ' '
+    ps <- argumentParser `sepBy` AC.char ' '
     pure $ Encoded (ConName (cs con)) ps
 
 
@@ -111,12 +112,12 @@ instance ToEncoded Encoded where
   toEncoded = id
 instance ToEncoded () where
   toEncoded _ = mempty
-instance ToEncoded ParamValue where
-  toEncoded p = Encoded mempty [toParam p]
+instance ToEncoded Argument where
+  toEncoded a = Encoded mempty [a]
 instance ToEncoded Int where
-  toEncoded = toEncoded . toParam
+  toEncoded n = toEncoded $ JSON (Number $ fromIntegral n)
 instance ToEncoded Text where
-  toEncoded = toEncoded . toParam
+  toEncoded t = toEncoded $ JSON (String t)
 
 
 -- | Custom Encoding for embedding into web documents. Noteably used for 'ViewId' and 'ViewAction'
@@ -130,106 +131,29 @@ instance FromEncoded Encoded where
   parseEncoded = pure
 instance FromEncoded () where
   parseEncoded _ = pure ()
-instance FromEncoded ParamValue where
-  parseEncoded (Encoded _ ps) = do
-    case ps of
-      [p] -> parseParam p
-      _ -> Left $ "Expected single param value [param] but got: " <> show ps
+instance FromEncoded Argument where
+  parseEncoded (Encoded _ as) = do
+    case as of
+      [a] -> pure a
+      _ -> Left $ "Expected single argument value [arg] but got: " <> show as
 instance FromEncoded Int where
-  parseEncoded enc = parseEncoded enc >>= parseParam
+  parseEncoded enc = do
+    arg <- parseEncoded @Argument enc
+    case arg of
+      JSON (Number a) -> pure $ round a
+      other -> Left $ "Expected Int but got " <> show other
 instance FromEncoded Text where
-  parseEncoded enc = parseEncoded enc >>= parseParam
+  parseEncoded enc = do
+    arg <- parseEncoded @Argument enc
+    case arg of
+      JSON (String t) -> pure t
+      other -> Left $ "Expected Text but got " <> show other
 
 
 fromResult :: A.Result a -> Either String a
 fromResult (A.Success a) = pure a
 fromResult (A.Error e) = Left (cs e)
 
-
--------------------------------------------------------------------------------
--- PARAM ENCODING
--------------------------------------------------------------------------------
--- Params need to be sanitized and escaped, because we want to use spaces to separate our params
--- Data.Param by default does not sanitize spaces
-
-paramParser :: Atto.Parser ParamValue
-paramParser = do
-  t <- takeWhile1 (not . isSpace)
-  pure $ decodeParam $ cs t
-
-
-decodeParam :: Text -> ParamValue
-decodeParam = \case
-  "|" -> ParamValue ""
-  t -> ParamValue $ desanitizeParamText t
-
-
--- Param encoding scheme:
---   Wire format must not contain bare spaces (field separator) or real newlines.
---   We use backslash as the escape character:
---     '\'  → "\\"    (escape backslash itself, so it cannot be confused with an escape prefix)
---     '\n' → "\n"    (literal backslash + 'n', for real newline characters)
---     '_'  → "\_"    (escape underscore, since bare underscore encodes space)
---     ' '  → "_"     (encode space as underscore)
---   Decoding is the single-pass reverse of the above.
---
--- The critical invariant: backslash is escaped FIRST on encode and unescaped
--- LAST on decode.  This ensures that JSON escape sequences (e.g. the two chars
--- '\' 'n' inside "[\"\n\"]") are treated as an escaped backslash followed by
--- a plain 'n', not as the param newline escape.
--- See: https://github.com/seanhess/hyperbole/issues/187
-
-desanitizeParamText :: Text -> Text
-desanitizeParamText = go
- where
-  go t = case T.uncons t of
-    Nothing -> ""
-    Just ('\\', rest) -> case T.uncons rest of
-      Just ('\\', rest') -> T.cons '\\' (go rest')   -- \\ → \
-      Just ('n', rest')  -> T.cons '\n' (go rest')   -- \n → newline
-      Just ('_', rest')  -> T.cons '_' (go rest')    -- \_ → _
-      _                  -> T.cons '\\' (go rest)    -- bare backslash (shouldn't occur)
-    Just ('_', rest) -> T.cons ' ' (go rest)         -- _ → space
-    Just (c, rest)   -> T.cons c (go rest)            -- other chars verbatim
-
-
---   | T.isSuffixOf "\\" seg = T.dropEnd 1 seg <> "_" <> txt
---   | otherwise = seg <> " " <> txt
-
--- foldr join "" $
--- where
---
--- join "" "" = " "
--- join "" " " = " "
--- join seg "" = seg
--- join seg txt
---   | T.isSuffixOf "\\" seg = T.dropEnd 1 seg <> "_" <> txt
---   | otherwise = seg <> " " <> txt
-
-encodeParam :: ParamValue -> Text
-encodeParam (ParamValue t) =
-  case t of
-    "" -> "|"
-    _ -> sanitizeParamText t
- where
-  -- Encode a param value for the wire format.
-  -- Backslash MUST be escaped first (before newline), otherwise a literal
-  -- backslash followed by 'n' in the input (e.g. from JSON encoding) would
-  -- be indistinguishable from the newline escape on the wire.
-  -- See: https://github.com/seanhess/hyperbole/issues/187
-  sanitizeParamText :: Text -> Text
-  sanitizeParamText =
-    T.replace " " "_" . T.replace "_" "\\_" . T.replace "\n" "\\n" . T.replace "\\" "\\\\"
-
-
--- decodeParamValue :: (FromParam a) => Text -> Either String a
--- decodeParamValue = parseParam . decodeParam
-
--- decodeParam :: Text -> ParamValue
--- decodeParam inp = do
---   case A.eitherDecode (cs inp) of
---     Left _ -> paramFromText inp
---     Right v -> ParamValue inp v
 
 -------------------------------------------------------------------------------
 -- GENERICS
@@ -252,7 +176,6 @@ instance (GToEncoded f, GToEncoded g) => GToEncoded (f :*: g) where
 
 
 instance GToEncoded U1 where
-  -- WARNING: not sure if this will work
   gToEncoded U1 = mempty
 
 
@@ -270,14 +193,16 @@ instance (GToEncoded f) => GToEncoded (M1 S s f) where
   gToEncoded (M1 f) = gToEncoded f
 
 
-instance (ToParam a) => GToEncoded (K1 R a) where
-  gToEncoded (K1 a) = Encoded mempty [toParam a]
+instance (ToJSON a) => GToEncoded (K1 R a) where
+  gToEncoded (K1 a) = do
+    let JSON val = toArgument a
+    Encoded mempty [JSON val]
 
 
 -- GFromEncoded: Generic ViewAction Decoding
 
 class GFromEncoded f where
-  gParseEncoded :: Encoded -> Either String (f p, [ParamValue])
+  gParseEncoded :: Encoded -> Either String (f p, [Argument])
 
 
 instance (GFromEncoded f, GFromEncoded g) => GFromEncoded (f :+: g) where
@@ -287,7 +212,7 @@ instance (GFromEncoded f, GFromEncoded g) => GFromEncoded (f :+: g) where
     case (el, er) of
       (Right (l, lvals), _) -> pure (L1 l, lvals)
       (_, Right (r, rvals)) -> pure (R1 r, rvals)
-      (Left _, Left _) ->
+      (Left _e1, Left _e2) ->
         Left $ "No matching sum constructor: " <> cs con.text <> " " <> cs (show vals)
 
 
@@ -322,12 +247,14 @@ instance (GFromEncoded f) => GFromEncoded (M1 S s f) where
     pure (M1 a, rest)
 
 
-instance (FromParam a) => GFromEncoded (K1 R a) where
+instance (FromJSON a) => GFromEncoded (K1 R a) where
   gParseEncoded (Encoded con vals) = do
     case vals of
       (param : rest) -> do
-        case parseParam param of
+        case parseArgument param of
           -- consume one param
           Right a -> pure (K1 a, rest)
           Left e -> Left (cs e)
       [] -> Left $ "Missing parameters for Encoded Constructor:" <> cs con.text
+
+

@@ -2,6 +2,7 @@
 
 module Web.Hyperbole.Server.Options where
 
+import Data.Aeson (Value)
 import Data.ByteString.Lazy qualified as BL
 import Data.String.Conversions (cs)
 import Data.Text (Text)
@@ -44,7 +45,7 @@ defaultError = \case
     let msg = defaultErrorMessage err
      in ServerError msg (defaultErrorBody msg)
  where
-  errNotHandled :: Event TargetViewId Encoded Encoded -> ServerError
+  errNotHandled :: Event TargetViewId Encoded Value -> ServerError
   errNotHandled ev =
     ServerError "Action Not Handled" $ Body $ renderLazyByteString $ do
       el $ do
