@@ -52,6 +52,15 @@
 
       overlay = final: prev: {
         overriddenHaskellPackages = {
+          ghc9103 = (prev.overriddenHaskellPackages.ghc9103 or prev.haskell.packages.ghc9103).override (old: {
+            overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
+              hfinal: hprev: {
+                "${packageName}" = hfinal.callCabal2nix packageName src { };
+                # `atomic-css` upstream overlay does not support `ghc910x` currently
+                atomic-css = hfinal.callCabal2nix "atomic-css" atomic-css { };
+              }
+            );
+          });
           ghc984 = (prev.overriddenHaskellPackages.ghc984 or prev.haskell.packages.ghc984).override (old: {
             overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
               hfinal: hprev: {
@@ -94,6 +103,7 @@
         ghcVersions = [
           "967"
           "984"
+          "9103"
         ];
 
         ghcPkgs = builtins.listToAttrs (
@@ -231,7 +241,7 @@
         );
 
         apps = {
-          default = self.apps.${system}."ghc967-${demoName}";
+          default = self.apps.${system}."ghc9103-${demoName}";
         }
         // builtins.listToAttrs (
           map (version: {
@@ -244,8 +254,8 @@
         );
 
         packages = {
-          default = self.packages.${system}."ghc984-${packageName}";
-          docker = self.packages.${system}."ghc984-docker";
+          default = self.packages.${system}."ghc9103-${packageName}";
+          docker = self.packages.${system}."ghc9103-docker";
         }
         // builtins.listToAttrs (
           builtins.concatMap (version: [
@@ -265,7 +275,7 @@
         );
 
         devShells = {
-          default = self.devShells.${system}.ghc984-shell;
+          default = self.devShells.${system}.ghc9103-shell;
         }
         // builtins.listToAttrs (
           map (version: {
