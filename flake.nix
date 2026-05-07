@@ -52,6 +52,26 @@
 
       overlay = final: prev: {
         overriddenHaskellPackages = {
+          ghc9124 = (prev.overriddenHaskellPackages.ghc9124 or prev.haskell.packages.ghc9124).override (old: {
+            overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
+              hfinal: hprev: {
+                "${packageName}" = hfinal.callCabal2nix packageName src { };
+                # `atomic-css` upstream overlay does not support `ghc912x` currently
+                atomic-css = hfinal.callCabal2nix "atomic-css" atomic-css { };
+                # `selda-sqlite-0.1.7.3` requires `time < 1.13`, but `ghc9124` ships a newer one
+                selda-sqlite = prev.haskell.lib.doJailbreak hprev.selda-sqlite;
+              }
+            );
+          });
+          ghc9103 = (prev.overriddenHaskellPackages.ghc9103 or prev.haskell.packages.ghc9103).override (old: {
+            overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
+              hfinal: hprev: {
+                "${packageName}" = hfinal.callCabal2nix packageName src { };
+                # `atomic-css` upstream overlay does not support `ghc910x` currently
+                atomic-css = hfinal.callCabal2nix "atomic-css" atomic-css { };
+              }
+            );
+          });
           ghc984 = (prev.overriddenHaskellPackages.ghc984 or prev.haskell.packages.ghc984).override (old: {
             overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
               hfinal: hprev: {
@@ -59,13 +79,13 @@
               }
             );
           });
-          ghc967 = (prev.overriddenHaskellPackages.ghc967 or prev.haskell.packages.ghc967).override (old: {
-            overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
-              hfinal: hprev: {
-                "${packageName}" = hfinal.callCabal2nix packageName src { };
-              }
-            );
-          });
+          # ghc967 = (prev.overriddenHaskellPackages.ghc967 or prev.haskell.packages.ghc967).override (old: {
+          #   overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
+          #     hfinal: hprev: {
+          #       "${packageName}" = hfinal.callCabal2nix packageName src { };
+          #     }
+          #   );
+          # });
         };
       };
 
@@ -81,19 +101,43 @@
           overlays = [ self.overlays.default ];
         };
 
+        # DON'T include symlink `docs` (demo/docs -> ../docs)
+        # as Nix (or `nix-filter`) can't handle it properly and will error instead
+        # `docs` will be merged in `demo-docs-src` later on
         demo-src = nix-filter.lib {
           root = ./demo;
           include = [
-            "Demo"
+            "App"
+            "Example"
             (nix-filter.lib.matchExt "hs")
             ./demo/demo.cabal
-            "docgen"
           ];
         };
 
+        docgen-src = nix-filter.lib {
+          root = ./docs;
+          include = [
+            (nix-filter.lib.matchExt "hs")
+            (nix-filter.lib.matchExt "md")
+            ./docs/docgen.cabal
+          ];
+        };
+
+        # Merges filtered `demo` + `docs` sources into `$out`.
+        # Needed to solve `demo/docs` -> `../docs` symlink issue Nix has before.
+        # Named "demo" so the store path is `/nix/store/<hash>-demo`.
+        # That's what the `demo` expects to resolve source files. Check `demo/App/Docs/Snippet.hs` -> `localFile`
+        demo-docs-src = pkgs.runCommand "demo" { } ''
+          mkdir -p $out/docs
+          cp -rL ${demo-src}/. $out/
+          cp -rL ${docgen-src}/. $out/docs/
+        '';
+
         ghcVersions = [
-          "967"
+          # "967"
           "984"
+          "9103"
+          "9124"
         ];
 
         ghcPkgs = builtins.listToAttrs (
@@ -102,7 +146,8 @@
             value = (
               pkgs.overriddenHaskellPackages."ghc${ghcVer}".extend (
                 hfinal: hprev: {
-                  ${demoName} = hfinal.callCabal2nix demoName demo-src { };
+                  ${demoName} = hfinal.callCabal2nix demoName demo-docs-src { };
+                  docgen = hfinal.callCabal2nix "docgen" docgen-src { };
                 }
               )
             );
@@ -224,6 +269,8 @@
             value = pkgs.runCommand "ghc${version}-check-demo" {
               buildInputs = [
                 (exe version)
+                # required to resolve `type docgen` in the check script
+                (pkgs.haskell.lib.justStaticExecutables ghcPkgs."ghc${version}".docgen)
               ]
               ++ self.devShells.${system}."ghc${version}-shell".buildInputs;
             } "type demo; type docgen; CABAL_CONFIG=/dev/null cabal --dry-run repl; touch $out";
@@ -231,7 +278,7 @@
         );
 
         apps = {
-          default = self.apps.${system}."ghc967-${demoName}";
+          default = self.apps.${system}."ghc9103-${demoName}";
         }
         // builtins.listToAttrs (
           map (version: {
@@ -244,8 +291,8 @@
         );
 
         packages = {
-          default = self.packages.${system}."ghc984-${packageName}";
-          docker = self.packages.${system}."ghc984-docker";
+          default = self.packages.${system}."ghc9103-${packageName}";
+          docker = self.packages.${system}."ghc9103-docker";
         }
         // builtins.listToAttrs (
           builtins.concatMap (version: [
@@ -265,7 +312,7 @@
         );
 
         devShells = {
-          default = self.devShells.${system}.ghc984-shell;
+          default = self.devShells.${system}.ghc9103-shell;
         }
         // builtins.listToAttrs (
           map (version: {
