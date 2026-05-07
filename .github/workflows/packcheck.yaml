@@ -100,6 +100,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: ci
+            command: cabal
+            runner: ubuntu-latest
+            ghc_version: 9.12.4
+            cabal_project: cabal.project
 
           - name: ci
             command: cabal

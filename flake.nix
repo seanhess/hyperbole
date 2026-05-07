@@ -52,6 +52,17 @@
 
       overlay = final: prev: {
         overriddenHaskellPackages = {
+          ghc9124 = (prev.overriddenHaskellPackages.ghc9124 or prev.haskell.packages.ghc9124).override (old: {
+            overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
+              hfinal: hprev: {
+                "${packageName}" = hfinal.callCabal2nix packageName src { };
+                # `atomic-css` upstream overlay does not support `ghc912x` currently
+                atomic-css = hfinal.callCabal2nix "atomic-css" atomic-css { };
+                # `selda-sqlite-0.1.7.3` requires `time < 1.13`, but `ghc9124` ships a newer one
+                selda-sqlite = prev.haskell.lib.doJailbreak hprev.selda-sqlite;
+              }
+            );
+          });
           ghc9103 = (prev.overriddenHaskellPackages.ghc9103 or prev.haskell.packages.ghc9103).override (old: {
             overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
               hfinal: hprev: {
@@ -126,6 +137,7 @@
           # "967"
           "984"
           "9103"
+          "9124"
         ];
 
         ghcPkgs = builtins.listToAttrs (
