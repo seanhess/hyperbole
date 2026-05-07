@@ -68,13 +68,13 @@
               }
             );
           });
-          ghc967 = (prev.overriddenHaskellPackages.ghc967 or prev.haskell.packages.ghc967).override (old: {
-            overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
-              hfinal: hprev: {
-                "${packageName}" = hfinal.callCabal2nix packageName src { };
-              }
-            );
-          });
+          # ghc967 = (prev.overriddenHaskellPackages.ghc967 or prev.haskell.packages.ghc967).override (old: {
+          #   overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
+          #     hfinal: hprev: {
+          #       "${packageName}" = hfinal.callCabal2nix packageName src { };
+          #     }
+          #   );
+          # });
         };
       };
 
@@ -90,18 +90,40 @@
           overlays = [ self.overlays.default ];
         };
 
+        # DON'T include symlink `docs` (demo/docs -> ../docs)
+        # as Nix (or `nix-filter`) can't handle it properly and will error instead
+        # `docs` will be merged in `demo-docs-src` later on
         demo-src = nix-filter.lib {
           root = ./demo;
           include = [
-            "Demo"
+            "App"
+            "Example"
             (nix-filter.lib.matchExt "hs")
             ./demo/demo.cabal
-            "docgen"
           ];
         };
 
+        docgen-src = nix-filter.lib {
+          root = ./docs;
+          include = [
+            (nix-filter.lib.matchExt "hs")
+            (nix-filter.lib.matchExt "md")
+            ./docs/docgen.cabal
+          ];
+        };
+
+        # Merges filtered `demo` + `docs` sources into `$out`.
+        # Needed to solve `demo/docs` -> `../docs` symlink issue Nix has before.
+        # Named "demo" so the store path is `/nix/store/<hash>-demo`.
+        # That's what the `demo` expects to resolve source files. Check `demo/App/Docs/Snippet.hs` -> `localFile`
+        demo-docs-src = pkgs.runCommand "demo" { } ''
+          mkdir -p $out/docs
+          cp -rL ${demo-src}/. $out/
+          cp -rL ${docgen-src}/. $out/docs/
+        '';
+
         ghcVersions = [
-          "967"
+          # "967"
           "984"
           "9103"
         ];
@@ -112,7 +134,8 @@
             value = (
               pkgs.overriddenHaskellPackages."ghc${ghcVer}".extend (
                 hfinal: hprev: {
-                  ${demoName} = hfinal.callCabal2nix demoName demo-src { };
+                  ${demoName} = hfinal.callCabal2nix demoName demo-docs-src { };
+                  docgen = hfinal.callCabal2nix "docgen" docgen-src { };
                 }
               )
             );
@@ -234,6 +257,8 @@
             value = pkgs.runCommand "ghc${version}-check-demo" {
               buildInputs = [
                 (exe version)
+                # required to resolve `type docgen` in the check script
+                (pkgs.haskell.lib.justStaticExecutables ghcPkgs."ghc${version}".docgen)
               ]
               ++ self.devShells.${system}."ghc${version}-shell".buildInputs;
             } "type demo; type docgen; CABAL_CONFIG=/dev/null cabal --dry-run repl; touch $out";
