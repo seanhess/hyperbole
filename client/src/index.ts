@@ -1,7 +1,8 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection, type Update, type Redirect, type Trigger, type JSEvent } from "./sockets"
 import {
-  listenChange,
+  listenChangeRaw,
+  listenChangeDropdown,
   listenClick,
   listenDblClick,
   listenFormSubmit,
@@ -107,11 +108,11 @@ function handleUpdate(res: Update): HyperView | undefined {
     // but it's safe to assume we never want to apply an old requestId
     console.warn(
       "Ignore Stale Action (" +
-        res.requestId +
-        ") vs (" +
-        target.activeRequest.requestId +
-        "): " +
-        res.action,
+      res.requestId +
+      ") vs (" +
+      target.activeRequest.requestId +
+      "): " +
+      res.action,
     )
     return target
   } else if (target.activeRequest?.isCancelled) {
@@ -271,7 +272,7 @@ function init() {
     document.body.appendChild(rootStyles)
   }
 
-  listenTopLevel(async function (target: HyperView, action: string) {
+  listenTopLevel(async function(target: HyperView, action: string) {
     void runAction(target, action)
   })
 
@@ -280,32 +281,36 @@ function init() {
   listenMouseLeave(document.body)
   enrichHyperViews(document.body, runAction)
 
-  listenClick(async function (target: HyperView, action: string) {
+  listenClick(async function(target: HyperView, action: string) {
     // console.log("CLICK", target.id, action)
     void runAction(target, action)
   })
 
-  listenDblClick(async function (target: HyperView, action: string) {
+  listenDblClick(async function(target: HyperView, action: string) {
     // console.log("DBLCLICK", target.id, action)
     void runAction(target, action)
   })
 
-  listenKeydown(async function (target: HyperView, action: string) {
+  listenKeydown(async function(target: HyperView, action: string) {
     // console.log("KEYDOWN", target.id, action)
     void runAction(target, action)
   })
 
-  listenKeyup(async function (target: HyperView, action: string) {
+  listenKeyup(async function(target: HyperView, action: string) {
     // console.log("KEYUP", target.id, action)
     void runAction(target, action)
   })
 
-  listenFormSubmit(async function (target: HyperView, action: string, form: FormData) {
+  listenFormSubmit(async function(target: HyperView, action: string, form: FormData) {
     // console.log("FORM", target.id, action, form)
     void runAction(target, action, form)
   })
 
-  listenChange(async function (target: HyperView, action: string) {
+  listenChangeRaw(async function(target: HyperView, action: string) {
+    void runAction(target, action)
+  })
+
+  listenChangeDropdown(async function(target: HyperView, action: string) {
     void runAction(target, action)
   })
 
@@ -315,7 +320,7 @@ function init() {
     }
   }
 
-  listenInput(onStartedTyping, async function (target: HyperView, action: string) {
+  listenInput(onStartedTyping, async function(target: HyperView, action: string) {
     void runAction(target, action)
   })
 }
@@ -380,10 +385,10 @@ export interface HyperboleAPI {
 window.Hyperbole = {
   runAction: runAction,
   parseMetadata: parseMetadata,
-  action: function (con, ...params: any[]) {
+  action: function(con, ...params: any[]) {
     return params.reduce((str, param) => str + " " + JSON.stringify(param), con)
   },
-  hyperView: function (viewId) {
+  hyperView: function(viewId) {
     let element = document.getElementById(viewId)
     if (!isHyperView(element)) {
       console.error("Element id=" + viewId + " was not a HyperView")

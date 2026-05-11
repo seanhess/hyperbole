@@ -1,8 +1,7 @@
 module Example.Interactivity.Search where
 
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import Effectful
-import Example.Style.Cyber as Style
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
 
