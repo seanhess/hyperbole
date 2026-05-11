@@ -5,7 +5,6 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Text.Casing (kebab)
 import Web.Atomic.Types
-import Web.Hyperbole.Data.Argument
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.HyperView.Handled
 import Web.Hyperbole.HyperView.Types
@@ -61,12 +60,15 @@ onInput a delay = do
   att (eventName "input") (encodedToText $ toActionInput a) . att "data-delay" (cs $ show delay)
 
 
--- WARNING: no way to do this generically right now, because toActionInput is specialized to Text
---   the change event DOES assume that the target has a string value
---   but, that doesn't let us implement dropdown
-onChange :: (ViewAction (Action id), Attributable a, FromJSON value) => (value -> Action id) -> Attributes a -> Attributes a
+onChange :: (ViewAction (Action id), Attributable a) => (Text -> Action id) -> Attributes a -> Attributes a
 onChange a = do
   att (eventName "change") (encodedToText $ toActionInput a)
+
+
+-- | Specialized version of onChange that does not JSON encode the input, since dropdown options are alreay Data.Encoded
+onDropdown' :: (ViewAction (Action id), Attributable a, FromJSON value) => (value -> Action id) -> Attributes a -> Attributes a
+onDropdown' a = do
+  att (eventName "dropdown") (encodedToText $ toActionInput a)
 
 
 onSubmit :: (ViewAction (Action id), Attributable a) => Action id -> Attributes a -> Attributes a

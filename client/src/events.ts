@@ -154,7 +154,21 @@ export function listenMouseLeave(node: HTMLElement): void {
   })
 }
 
-export function listenChange(cb: (target: HyperView, action: string) => void): void {
+export function listenChangeRaw(cb: (target: HyperView, action: string) => void): void {
+  listenChangeValue("onchange", (target, constructor, value) => {
+    let action = encodedAction(constructor, JSON.stringify(value))
+    cb(target, action)
+  })
+}
+
+export function listenChangeDropdown(cb: (target: HyperView, action: string) => void): void {
+  listenChangeValue("ondropdown", (target, constructor, value) => {
+    let action = encodedAction(constructor, value)
+    cb(target, action)
+  })
+}
+
+export function listenChangeValue(event: string, cb: (target: HyperView, constructor: string, value: string) => void): void {
   document.addEventListener("change", function(e) {
     if (!(e.target instanceof HTMLElement)) {
       console.warn("listenChange received an event with non HTMLElment as EventTarget: %o", e)
@@ -162,28 +176,29 @@ export function listenChange(cb: (target: HyperView, action: string) => void): v
     }
     let el = e.target
 
-    let source = el.closest<HTMLInputElement>("[data-onchange]")
+    let source = el.closest<HTMLInputElement>("[data-" + event + "]")
 
     if (!source) return
     e.preventDefault()
 
     if (source.value === null) {
-      console.error("Missing input value:", source)
+      console.error("Missing input value:", event, source)
       return
     }
 
     let target = nearestHyperViewTarget(source)
     if (!target) {
-      console.error("Missing target: listenChange")
+      console.error("Missing target: listenChange", event)
       return
     }
-    if (!source.dataset.onchange) {
-      console.error("Missing onchange: ", source)
+
+    if (!source.dataset[event]) {
+      console.error("Missing onchange: ", event, source)
       return
     }
+
     // these are encoded directly as JSON-arguemnts
-    let action = encodedAction(source.dataset.onchange, source.value)
-    cb(target, action)
+    cb(target, source.dataset[event], source.value)
   })
 }
 

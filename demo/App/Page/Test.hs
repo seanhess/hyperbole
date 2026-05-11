@@ -4,19 +4,20 @@ module App.Page.Test where
 
 import App.Docs
 import App.Route
-import Data.Aeson (FromJSON (..), Value (..))
+import Control.Monad (forM_)
 import Data.String.Conversions
 import Data.Text (Text)
 import Example.View.Layout
 import Text.Read (readMaybe)
 import Web.Atomic.CSS
 import Web.Hyperbole hiding (Number)
+import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView.Event
 
 source :: ModuleSource
 source = $(moduleSource)
 
-page :: (Hyperbole :> es) => Page es '[FunkyEncodings, NumInput, StrInput]
+page :: (Hyperbole :> es) => Page es '[FunkyEncodings, Changes]
 page = do
   pure $ layout (Test TestMain) $ do
     section' "Encodings" $ do
@@ -24,10 +25,7 @@ page = do
         hyper FunkyEncodings viewFunkyEncodings
 
       example source $ do
-        hyper NumInput (viewNumInput Nothing)
-
-      example source $ do
-        hyper StrInput (viewStrInput "")
+        hyper Changes (viewChanges "" Nothing)
 
 -- Encoding Tests
 
@@ -36,7 +34,7 @@ data FunkyEncodings = FunkyEncodings
 
 data Options
   = Something
-  | Multi Int
+  | Multi Text Int
   deriving (Generic, ToJSON, FromJSON, Show, Eq)
 
 instance HyperView FunkyEncodings es where
@@ -65,9 +63,9 @@ viewFunkyEncodings = do
 
   dropdown Opts Something ~ border 1 $ do
     option Something "Something"
-    option (Multi 1) "One"
-    option (Multi 2) "Two"
-    option (Multi 3) "Three"
+    option (Multi "" 1) "One"
+    option (Multi "" 2) "Two"
+    option (Multi "" 3) "Three"
 
   search (\s -> Funky 18 s "last one") 250 ~ border 1 . pad 5
 
@@ -82,48 +80,61 @@ newtype UserNum = UserNum Int
 -- Something |>this is a test<|
 -- Something |>Venus<|
 -- Something |>Multi 33<|
-instance FromJSON UserNum where
-  parseJSON (Number n) = pure $ UserNum $ round n
-  parseJSON (String t) =
-    case readMaybe (cs t) of
-      Nothing -> fail $ "not an integer: " <> cs t
-      Just n -> pure $ UserNum n
-  parseJSON _other = fail "OTHER"
+-- instance FromJSON UserNum where
+--   parseJSON (Number n) = pure $ UserNum $ round n
+--   parseJSON (String t) =
+--     case readMaybe (cs t) of
+--       Nothing -> fail $ "not an integer: " <> cs t
+--       Just n -> pure $ UserNum n
+--   parseJSON _other = fail "OTHER"
 
 ---------------------------------------------------
 
-data NumInput = NumInput
+data Changes = Changes
   deriving (Generic, ViewId)
 
-instance HyperView NumInput es where
-  data Action NumInput
-    = GoNum Int Text UserNum
+instance HyperView Changes es where
+  data Action Changes
+    = GoNum Int Text Text
+    | GoInput Text
+    | GoOption Options
+    | GoNuMOption Int
     deriving (Generic, ViewAction)
 
-  update (GoNum _ _ (UserNum mn)) = do
-    pure $ viewNumInput $ Just mn
-
-viewNumInput :: Maybe Int -> View NumInput ()
-viewNumInput mn = do
-  row ~ gap 10 $ do
-    tag "input" @ onChange (GoNum 55 "hello world") . placeholder "Enter an integer" ~ border 1 . pad 10 $ none
-    case mn of
-      Nothing -> "_"
-      Just n -> el $ text $ cs $ show n
-
-data StrInput = StrInput
-  deriving (Generic, ViewId)
-
-instance HyperView StrInput es where
-  data Action StrInput
-    = GoInput Text
-    deriving (Generic, ViewAction)
-
+  update (GoNum _ _ t) = do
+    n <- parseNum t
+    pure $ viewChanges "" (Just n)
+   where
+    parseNum t' = do
+      case readMaybe (cs t') of
+        Nothing -> parseError "Nope"
+        Just n -> pure n
   update (GoInput t) = do
-    pure $ viewStrInput t
+    pure $ viewChanges t Nothing
+  update (GoOption o) = do
+    pure $ el $ text $ cs $ show o
+  update (GoNuMOption n) = do
+    pure $ el $ text $ cs $ show n
 
-viewStrInput :: Text -> View StrInput ()
-viewStrInput inp = do
-  row ~ gap 10 $ do
-    tag "input" @ onChange GoInput . placeholder "Enter some text" ~ border 1 . pad 10 $ none
-    el $ text inp
+viewChanges :: Text -> Maybe Int -> View Changes ()
+viewChanges inp mn = do
+  col ~ gap 10 $ do
+    row ~ gap 10 $ do
+      tag "input" @ onChange (GoNum 55 "hello world") . placeholder "Enter an integer" ~ border 1 . pad 10 $ none
+      case mn of
+        Nothing -> "_"
+        Just n -> el $ text $ cs $ show n
+
+    row ~ gap 10 $ do
+      tag "input" @ onChange GoInput . placeholder "Enter some text" ~ border 1 . pad 10 $ none
+      el $ text inp
+
+    dropdown GoOption Something ~ border 1 $ do
+      option Something "Something"
+      option (Multi "one" 1) "One"
+      option (Multi "two!" 2) "Two"
+      option (Multi "hello world" 3) "Three"
+
+    dropdown GoNuMOption 0 ~ border 1 $ do
+      forM_ [0 .. 10] $ \n -> do
+        option n (cs $ show n)

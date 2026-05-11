@@ -8,7 +8,7 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 import Web.Atomic.Types
 import Web.Hyperbole.Data.Argument (encodeArgument)
-import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
+import Web.Hyperbole.HyperView.Event (DelayMs, onClick, onDropdown', onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
 import Web.Hyperbole.View
@@ -41,7 +41,7 @@ dropdown
 dropdown act defOpt options = do
   st :: ViewState id <- viewState
   i :: id <- viewId
-  tag "select" @ onChange act $ do
+  tag "select" @ onDropdown' act $ do
     runViewContext (Option i defOpt) st options
 
 
