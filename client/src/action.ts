@@ -75,9 +75,3 @@ export function newRequest(): Request {
   let requestId = ++globalRequestId
   return { requestId, isCancelled: false }
 }
-
-// Sanitized Encoding ------------------------------------
-
-export function encodedAction(action: string, param: string): string {
-  return action.replace("|>_<|", param)
-}

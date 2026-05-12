@@ -179,10 +179,6 @@ spec = withMarkers ["encoded"] $ do
     it "encodes nested records with nothing as null" $ do
       encode (RecordM (RecordMaybe 3 Nothing)) `shouldBe` "RecordM {\"one\":3,\"two\":null}"
 
-    it "encodes input holes" $ do
-      encode (Str expectInput) `shouldBe` "Str |>_<|"
-      encode (RecordEx (Record 3 "hello") expectInput) `shouldBe` "RecordEx {\"one\":3,\"two\":\"hello\"} |>_<|"
-
   describe "decode" $ do
     it "should encode single tags" $ do
       decode "One" `shouldBe` Just One
@@ -199,90 +195,87 @@ spec = withMarkers ["encoded"] $ do
       decode "Str \"\"" `shouldBe` pure (Str "")
 
   describe "params" $ do
-    it "encodes holes" $ do
-      encodeFromArgument holeArg `shouldBe` "|>_<|"
+    -- it "sanitizeText" $ do
+    --   encodeParam "hello world" `shouldBe` "hello_world"
+    --   encodeParam "hello_world" `shouldBe` "hello\\_world"
+    --   encodeParam "hello\nworld" `shouldBe` "hello\\nworld"
+    --
+    -- it "desanitizeText" $ do
+    --   decodeParam "hello_world" `shouldBe` "hello world"
+    --   decodeParam "hello\\_world" `shouldBe` "hello_world"
+    --   decodeParam "hello\\nworld" `shouldBe` "hello\nworld"
 
-  -- it "sanitizeText" $ do
-  --   encodeParam "hello world" `shouldBe` "hello_world"
-  --   encodeParam "hello_world" `shouldBe` "hello\\_world"
-  --   encodeParam "hello\nworld" `shouldBe` "hello\\nworld"
-  --
-  -- it "desanitizeText" $ do
-  --   decodeParam "hello_world" `shouldBe` "hello world"
-  --   decodeParam "hello\\_world" `shouldBe` "hello_world"
-  --   decodeParam "hello\\nworld" `shouldBe` "hello\nworld"
+    -- TODO: Add more edge cases to check if "\n" is escaped properly.
+    -- it "edge cases" $ do
+    --   encodeParam "" `shouldBe` "\"\""
+    --   encodeParam " " `shouldBe` "\"_\""
+    --   encodeParam "  " `shouldBe` "\"__\""
+    --
+    --   encodeParam "_" `shouldBe` "\"\\_\""
+    --   encodeParam "__" `shouldBe` "\"\\_\\_\""
+    --
+    --   decodeParam "|" `shouldBe` ParamValue "|"
+    --   decodeParam "_" `shouldBe` ParamValue "_"
+    --   decodeParam "\\_" `shouldBe` "_"
+    --   decodeParam "\\_\\_" `shouldBe` "__"
 
-  -- TODO: Add more edge cases to check if "\n" is escaped properly.
-  -- it "edge cases" $ do
-  --   encodeParam "" `shouldBe` "\"\""
-  --   encodeParam " " `shouldBe` "\"_\""
-  --   encodeParam "  " `shouldBe` "\"__\""
-  --
-  --   encodeParam "_" `shouldBe` "\"\\_\""
-  --   encodeParam "__" `shouldBe` "\"\\_\\_\""
-  --
-  --   decodeParam "|" `shouldBe` ParamValue "|"
-  --   decodeParam "_" `shouldBe` ParamValue "_"
-  --   decodeParam "\\_" `shouldBe` "_"
-  --   decodeParam "\\_\\_" `shouldBe` "__"
+    describe "round trip" $ do
+      it "records" $ do
+        let enc = genericToEncoded (Record 1 "two")
+        genericParseEncoded enc `shouldBe` Right (Record 1 "two")
 
-  describe "round trip" $ do
-    it "records" $ do
-      let enc = genericToEncoded (Record 1 "two")
-      genericParseEncoded enc `shouldBe` Right (Record 1 "two")
+      it "product" $ do
+        decode (encode (Product "hello world" 2 False)) `shouldBe` Just (Product "hello world" 2 False)
+        decode (encode (Product "bob" (-2) True)) `shouldBe` Just (Product "bob" (-2) True)
 
-    it "product" $ do
-      decode (encode (Product "hello world" 2 False)) `shouldBe` Just (Product "hello world" 2 False)
-      decode (encode (Product "bob" (-2) True)) `shouldBe` Just (Product "bob" (-2) True)
+      it "nested product with records" $ do
+        let r = RecordEx (Record 2 "three") 33
+        let t = encode r
+        decode t `shouldBe` Just r
 
-    it "nested product with records" $ do
-      let r = RecordEx (Record 2 "three") 33
-      let t = encode r
-      decode t `shouldBe` Just r
+      it "special case constructors" $ do
+        decodeEither (encode (CTwo Two)) `shouldBe` Right (CTwo Two)
+        decode (encode (Tag B)) `shouldBe` Just (Tag B)
 
-    it "special case constructors" $ do
-      decodeEither (encode (CTwo Two)) `shouldBe` Right (CTwo Two)
-      decode (encode (Tag B)) `shouldBe` Just (Tag B)
+      it "special case products" $ do
+        decodeEither (encode (CTwo (Two2 3))) `shouldBe` Right (CTwo (Two2 3))
+        decodeEither (encode (NProd (AnotherOne "HI" 3))) `shouldBe` Right (NProd (AnotherOne "HI" 3))
 
-    it "special case products" $ do
-      decodeEither (encode (CTwo (Two2 3))) `shouldBe` Right (CTwo (Two2 3))
-      decodeEither (encode (NProd (AnotherOne "HI" 3))) `shouldBe` Right (NProd (AnotherOne "HI" 3))
+      it "big product" $ do
+        let p = Product4 "hello world" "two_times" "three" "four"
+        decode (encode p) `shouldBe` Just p
 
-    it "big product" $ do
-      let p = Product4 "hello world" "two_times" "three" "four"
-      decode (encode p) `shouldBe` Just p
+      it "empty strings" $ do
+        decode (encode $ Str "") `shouldBe` Just (Str "")
 
-    it "empty strings" $ do
-      decode (encode $ Str "") `shouldBe` Just (Str "")
+      it "special characters" $ do
+        let str = "hello+world \"bob_lives\""
+        decode (encode $ Str str) `shouldBe` Just (Str str)
 
-    it "special characters" $ do
-      let str = "hello+world \"bob_lives\""
-      decode (encode $ Str str) `shouldBe` Just (Str str)
+      it "encodes lists`" $ do
+        let l = List ["hello, world", "", "+,|<[]"]
+        decode @Sum (encode l) `shouldBe` Just l
 
-    it "encodes lists`" $ do
-      let l = List ["hello, world", "", "+,|<[]"]
-      decode @Sum (encode l) `shouldBe` Just l
+      it "encodes newlines in strings" $ do
+        let s = Str "hello\nworld"
+        decode @Sum (encode s) `shouldBe` Just s
 
-    it "encodes newlines in strings" $ do
-      let s = Str "hello\nworld"
-      decode @Sum (encode s) `shouldBe` Just s
+      -- Regression tests for https://github.com/seanhess/hyperbole/issues/187
+      -- A ViewId (or state) containing a list with newline characters must
+      -- encode/decode correctly.  Previously, desanitizeParamText blindly
+      -- replaced the JSON escape sequence "\\n" with a real newline, corrupting
+      -- the JSON and causing "No Handler for Event viewId".
+      it "list with newline character round-trips correctly (issue #187)" $ do
+        decode @Sum (encode (List ["\n"])) `shouldBe` Just (List ["\n"])
 
-    -- Regression tests for https://github.com/seanhess/hyperbole/issues/187
-    -- A ViewId (or state) containing a list with newline characters must
-    -- encode/decode correctly.  Previously, desanitizeParamText blindly
-    -- replaced the JSON escape sequence "\\n" with a real newline, corrupting
-    -- the JSON and causing "No Handler for Event viewId".
-    it "list with newline character round-trips correctly (issue #187)" $ do
-      decode @Sum (encode (List ["\n"])) `shouldBe` Just (List ["\n"])
+      it "list with newline in multiple elements" $ do
+        decode @Sum (encode (List ["\n", "hello\nworld", "plain"])) `shouldBe` Just (List ["\n", "hello\nworld", "plain"])
 
-    it "list with newline in multiple elements" $ do
-      decode @Sum (encode (List ["\n", "hello\nworld", "plain"])) `shouldBe` Just (List ["\n", "hello\nworld", "plain"])
-
-    it "strings" $ do
-      decode @Sum (encode (Str "")) `shouldBe` pure (Str "")
-      decode @Sum (encode (Str " ")) `shouldBe` pure (Str " ")
-      decode @Sum (encode (Str "_")) `shouldBe` pure (Str "_")
-      decode @Sum (encode (Str "~")) `shouldBe` pure (Str "~")
-      decode @Sum (encode (Str "+")) `shouldBe` pure (Str "+")
-      decode @Sum (encode (Str "hello world")) `shouldBe` pure (Str "hello world")
-      decode @Sum (encode (Str "hello_world")) `shouldBe` pure (Str "hello_world")
+      it "strings" $ do
+        decode @Sum (encode (Str "")) `shouldBe` pure (Str "")
+        decode @Sum (encode (Str " ")) `shouldBe` pure (Str " ")
+        decode @Sum (encode (Str "_")) `shouldBe` pure (Str "_")
+        decode @Sum (encode (Str "~")) `shouldBe` pure (Str "~")
+        decode @Sum (encode (Str "+")) `shouldBe` pure (Str "+")
+        decode @Sum (encode (Str "hello world")) `shouldBe` pure (Str "hello world")
+        decode @Sum (encode (Str "hello_world")) `shouldBe` pure (Str "hello_world")
