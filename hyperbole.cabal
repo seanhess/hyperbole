@@ -17,9 +17,10 @@ license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
 tested-with:
-    GHC == 9.8.4
-  , GHC == 9.6.7
+    GHC == 9.6.7
+  , GHC == 9.8.4
   , GHC == 9.10.3
+  , GHC == 9.12.4
 extra-source-files:
     client/dist/hyperbole.js
     client/dist/hyperbole.js.map
