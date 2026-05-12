@@ -4,3 +4,8 @@ packages:
   .
   ./demo/
   ./docs/
+
+-- `ghc9124` -> `selda-sqlite-0.1.7.3` -> `time (>=1.5 && <1.13)` 
+-- https://hackage.haskell.org/package/selda-sqlite
+-- There is already a patch ^ (but not released) https://github.com/valderman/selda/pull/207
+allow-newer: selda-sqlite:time
