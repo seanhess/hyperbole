@@ -13,24 +13,26 @@ export type ActionMessage = {
   requestId: RequestId
   state?: ViewState
   meta: Meta[]
-  form: URLSearchParams | undefined
+  body?: ActionBody
 }
 
-export type UserInput = string
+export type InputValue = string
+
+export type ActionBody = URLSearchParams | InputValue
 
 export function actionMessage(
   id: ViewId,
   action: EncodedAction,
   state: ViewState | undefined,
   reqId: RequestId,
-  form?: FormData
+  body?: ActionBody
 ): ActionMessage {
   let meta: Meta[] = [
     { key: "Cookie", value: decodeURI(document.cookie) },
     { key: "Query", value: window.location.search },
   ]
 
-  return { viewId: id, action, state, requestId: reqId, meta, form: toSearch(form) }
+  return { viewId: id, action, state, requestId: reqId, meta, body: body }
 }
 
 export function toSearch(form?: FormData): URLSearchParams | undefined {
@@ -54,12 +56,12 @@ export function renderActionMessage(msg: ActionMessage): string {
 
   header.push("RequestId: " + msg.requestId)
 
-  return [header.join("\n"), message.renderMetas(msg.meta)].join("\n") + renderForm(msg.form)
+  return [header.join("\n"), message.renderMetas(msg.meta)].join("\n") + renderForm(msg.body)
 }
 
-export function renderForm(form: URLSearchParams | undefined): string {
-  if (!form) return ""
-  return "\n\n" + form
+export function renderForm(body?: ActionBody): string {
+  if (!body) return ""
+  return "\n\n" + body
 }
 
 let globalRequestId: RequestId = 0

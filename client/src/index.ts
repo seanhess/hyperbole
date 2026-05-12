@@ -1,8 +1,7 @@
 import { patch, create } from "omdomdom/lib/omdomdom.es.js"
 import { SocketConnection, type Update, type Redirect, type Trigger, type JSEvent } from "./sockets"
 import {
-  listenChangeRaw,
-  listenChangeDropdown,
+  listenChange,
   listenClick,
   listenDblClick,
   listenFormSubmit,
@@ -14,7 +13,7 @@ import {
   listenMouseEnter,
   listenMouseLeave,
 } from "./events"
-import { actionMessage, newRequest } from "./action"
+import { actionMessage, newRequest, toSearch, type ActionBody, type InputValue } from "./action"
 import {
   type ViewId,
   type Metadata,
@@ -34,8 +33,9 @@ console.log("Hyperbole " + __VERSION__ + "b")
 let rootStyles: HTMLStyleElement
 let addedRulesIndex = new Set()
 
+
 // Run an action in a given HyperView
-async function runAction(target: HyperView, action: string, form?: FormData) {
+async function runAction(target: HyperView, action: string, body?: ActionBody) {
   if (target.activeRequest && !target.activeRequest?.isCancelled) {
     // Active Request!
     if (target.concurrency == "Drop") {
@@ -53,7 +53,7 @@ async function runAction(target: HyperView, action: string, form?: FormData) {
   let state = target.dataset.state
 
   let req = newRequest()
-  let msg = actionMessage(target.id, action, state, req.requestId, form)
+  let msg = actionMessage(target.id, action, state, req.requestId, body)
 
   // Set the requestId
   target.activeRequest = req
@@ -218,7 +218,7 @@ function runTrigger(viewId: ViewId, action: EncodedAction) {
   setTimeout(() => {
     let view = window.Hyperbole?.hyperView(viewId)
     if (view) {
-      void runAction(view, action)
+      void runAction(view, action, undefined)
     }
   }, 10)
 }
@@ -273,7 +273,7 @@ function init() {
   }
 
   listenTopLevel(async function(target: HyperView, action: string) {
-    void runAction(target, action)
+    void runAction(target, action, undefined)
   })
 
   listenLoad(document.body)
@@ -283,17 +283,17 @@ function init() {
 
   listenClick(async function(target: HyperView, action: string) {
     // console.log("CLICK", target.id, action)
-    void runAction(target, action)
+    void runAction(target, action, undefined)
   })
 
   listenDblClick(async function(target: HyperView, action: string) {
     // console.log("DBLCLICK", target.id, action)
-    void runAction(target, action)
+    void runAction(target, action, undefined)
   })
 
   listenKeydown(async function(target: HyperView, action: string) {
     // console.log("KEYDOWN", target.id, action)
-    void runAction(target, action)
+    void runAction(target, action, undefined)
   })
 
   listenKeyup(async function(target: HyperView, action: string) {
@@ -303,16 +303,13 @@ function init() {
 
   listenFormSubmit(async function(target: HyperView, action: string, form: FormData) {
     // console.log("FORM", target.id, action, form)
-    void runAction(target, action, form)
+    void runAction(target, action, toSearch(form))
   })
 
-  listenChangeRaw(async function(target: HyperView, action: string) {
-    void runAction(target, action)
+  listenChange(async function(target: HyperView, action: string, value: string) {
+    void runAction(target, action, value)
   })
 
-  listenChangeDropdown(async function(target: HyperView, action: string) {
-    void runAction(target, action)
-  })
 
   function onStartedTyping(target: HyperView) {
     if (target.concurrency == "Replace") {
@@ -320,8 +317,8 @@ function init() {
     }
   }
 
-  listenInput(onStartedTyping, async function(target: HyperView, action: string) {
-    void runAction(target, action)
+  listenInput(onStartedTyping, async function(target: HyperView, action: string, value: InputValue) {
+    void runAction(target, action, value)
   })
 }
 
@@ -375,7 +372,7 @@ declare global {
 }
 
 export interface HyperboleAPI {
-  runAction(target: HTMLElement, action: string, form?: FormData): Promise<void>
+  runAction(target: HTMLElement, action: string, body?: ActionBody): Promise<void>
   action(con: string, ...params: any[]): string
   hyperView(viewId: ViewId): HyperView | undefined
   parseMetadata(input: string): Metadata

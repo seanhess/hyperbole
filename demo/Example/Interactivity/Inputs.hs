@@ -12,7 +12,7 @@ data Planet
   | Venus
   | Earth
   | Mars
-  deriving (Generic, ToJSON, FromJSON, Eq, Show, UserInput)
+  deriving (Generic, ToJSON, FromJSON, Eq, Show, InputValue)
 
 instance HyperView Dropper es where
   data Action Dropper
@@ -20,7 +20,7 @@ instance HyperView Dropper es where
     deriving (Generic, ViewAction)
 
   update Select = do
-    mp :: Maybe Planet <- userInput
+    mp :: Maybe Planet <- inputValue
     pure $ selectPlanet mp
 
 selectPlanet :: Maybe Planet -> View Dropper ()

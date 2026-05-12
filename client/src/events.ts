@@ -1,5 +1,5 @@
 import debounce from 'debounce'
-import { encodedAction } from './action'
+import { type InputValue } from './action'
 import { isHyperView, type HyperView } from './hyperview'
 
 export type UrlFragment = string
@@ -154,21 +154,7 @@ export function listenMouseLeave(node: HTMLElement): void {
   })
 }
 
-export function listenChangeRaw(cb: (target: HyperView, action: string) => void): void {
-  listenChangeValue("onchange", (target, constructor, value) => {
-    let action = encodedAction(constructor, JSON.stringify(value))
-    cb(target, action)
-  })
-}
-
-export function listenChangeDropdown(cb: (target: HyperView, action: string) => void): void {
-  listenChangeValue("ondropdown", (target, constructor, value) => {
-    let action = encodedAction(constructor, value)
-    cb(target, action)
-  })
-}
-
-export function listenChangeValue(event: string, cb: (target: HyperView, constructor: string, value: string) => void): void {
+export function listenChange(cb: (target: HyperView, action: string, value: string) => void): void {
   document.addEventListener("change", function(e) {
     if (!(e.target instanceof HTMLElement)) {
       console.warn("listenChange received an event with non HTMLElment as EventTarget: %o", e)
@@ -176,29 +162,28 @@ export function listenChangeValue(event: string, cb: (target: HyperView, constru
     }
     let el = e.target
 
-    let source = el.closest<HTMLInputElement>("[data-" + event + "]")
+    let source = el.closest<HTMLInputElement>("[data-onchange]")
 
     if (!source) return
     e.preventDefault()
 
     if (source.value === null) {
-      console.error("Missing input value:", event, source)
+      console.error("Missing input value:", source)
       return
     }
 
     let target = nearestHyperViewTarget(source)
     if (!target) {
-      console.error("Missing target: listenChange", event)
+      console.error("Missing target: listenChange")
       return
     }
 
-    if (!source.dataset[event]) {
-      console.error("Missing onchange: ", event, source)
+    if (!source.dataset.onchange) {
+      console.error("Missing onchange: ", source)
       return
     }
 
-    // these are encoded directly as JSON-arguemnts
-    cb(target, source.dataset[event], source.value)
+    cb(target, source.dataset.onchange, source.value)
   })
 }
 
@@ -208,7 +193,7 @@ interface LiveInputElement extends HTMLInputElement {
 
 export function listenInput(
   startedTyping: (target: HyperView) => void,
-  cb: (target: HyperView, action: string) => void,
+  cb: (target: HyperView, action: string, value: InputValue) => void,
 ): void {
   document.addEventListener("input", function(e) {
     if (!(e.target instanceof HTMLElement)) {
@@ -242,9 +227,8 @@ export function listenInput(
           console.error("Missing onInput: ", source)
           return
         }
-        // we need to create a string argument
-        const action = encodedAction(source.dataset.oninput, JSON.stringify(source.value))
-        cb(target, action)
+
+        cb(target, source.dataset.oninput, source.value)
       }, delay)
     }
 

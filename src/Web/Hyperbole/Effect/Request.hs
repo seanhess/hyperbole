@@ -7,7 +7,7 @@ import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.Hyperbole.Data.URI (Path (..))
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Response (parseError)
-import Web.Hyperbole.HyperView.Event (UserInput (..))
+import Web.Hyperbole.HyperView.Input (InputValue (..))
 import Web.Hyperbole.Types.Request
 
 
@@ -37,9 +37,9 @@ formBody = do
     Right a -> pure a
 
 
-userInput :: (UserInput a, Hyperbole :> es) => Eff es a
-userInput = do
+inputValue :: (InputValue a, Hyperbole :> es) => Eff es a
+inputValue = do
   b <- (.body) <$> request
-  case parseUserInput (cs b) of
+  case parseInputValue (cs b) of
     Left err -> parseError $ "Could not decode User Input: " <> err
     Right a -> pure a

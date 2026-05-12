@@ -18,7 +18,7 @@ instance HyperView CustomText es where
     deriving (Generic, ViewAction)
 
   update ShowInput = do
-    t <- userInput
+    t <- inputValue
     pure $ viewCustom t
 
 customText :: View CustomText ()

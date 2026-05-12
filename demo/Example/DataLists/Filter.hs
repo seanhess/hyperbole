@@ -52,14 +52,14 @@ instance (IOE :> es) => HyperView Languages es where
     Select lang -> do
       pure $ chosenView lang
     SearchTerm -> do
-      term <- userInput
+      term <- inputValue
       filters <- modFilters $ \f -> f{term}
       pure $ languagesView filters
     Feature feature selected -> do
       filters <- modFilters $ \f -> setFeatures feature selected f
       pure $ languagesView filters
     SetFamily -> do
-      mf <- userInput
+      mf <- inputValue
       filters <- modFilters $ \Filters{features, term} -> Filters{family = mf, features, term}
       pure $ languagesView filters
    where

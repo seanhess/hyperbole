@@ -38,7 +38,7 @@ instance (IOE :> es) => HyperView LiveSearch es where
   type Concurrency LiveSearch = Replace
 
   update (SearchTerm current) = do
-    term <- userInput
+    term <- inputValue
     pure $ liveSearchView allLanguages current term
   update (Select Nothing) = do
     pure $ liveSearchView allLanguages 0 ""

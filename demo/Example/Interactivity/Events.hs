@@ -18,7 +18,7 @@ instance HyperView TryEvents es where
     deriving (Generic, ViewAction)
 
   update SetMessage = do
-    t <- userInput
+    t <- inputValue
     pure $ viewEvents t
   update ClearMessage = do
     pure $ viewEvents ""

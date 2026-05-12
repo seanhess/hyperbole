@@ -90,7 +90,7 @@ module Web.Hyperbole
   , Option
 
     -- * Events
-  , userInput
+  , inputValue
   , onClick
   , onDblClick
   , onMouseEnter
@@ -101,7 +101,7 @@ module Web.Hyperbole
   , onKeyDown
   , onKeyUp
   , Key (..)
-  , UserInput (..)
+  , InputValue (..)
 
     -- * Type-Safe Forms #forms#
     -- $forms

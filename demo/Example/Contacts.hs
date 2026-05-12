@@ -39,7 +39,7 @@ data Contacts = Contacts
 data Filter
   = Active
   | Inactive
-  deriving (Eq, Show, Read, Generic, ToJSON, FromJSON, UserInput)
+  deriving (Eq, Show, Read, Generic, ToJSON, FromJSON, InputValue)
 
 instance (Users :> es, Debug :> es) => HyperView Contacts es where
   data Action Contacts
@@ -52,7 +52,7 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
 
   update = \case
     Reload -> do
-      mf <- userInput
+      mf <- inputValue
       us <- Users.all
       pure $ allContactsView mf us
     AddUser -> do

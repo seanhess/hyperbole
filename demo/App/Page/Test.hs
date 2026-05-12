@@ -8,12 +8,9 @@ import Control.Monad (forM_)
 import Data.String.Conversions
 import Data.Text (Text)
 import Example.View.Layout
-import Text.Read (readMaybe)
 import Web.Atomic.CSS
 import Web.Hyperbole hiding (Number)
-import Web.Hyperbole.Effect.Request (userInput)
-import Web.Hyperbole.Effect.Response (parseError)
-import Web.Hyperbole.HyperView.Event
+import Web.Hyperbole.HyperView.Event (onChange)
 
 source :: ModuleSource
 source = $(moduleSource)
@@ -26,7 +23,7 @@ page = do
       --   hyper FunkyEncodings viewFunkyEncodings
 
       example source $ do
-        hyper Changes (viewChanges "" Nothing)
+        hyper Changes (viewChanges "")
 
 -- Encoding Tests
 
@@ -36,7 +33,7 @@ page = do
 data Options
   = Something
   | Multi Text Int
-  deriving (Generic, ToJSON, FromJSON, Show, Eq, UserInput)
+  deriving (Generic, ToJSON, FromJSON, Show, Eq, InputValue)
 
 -- instance HyperView FunkyEncodings es where
 --   data Action FunkyEncodings
@@ -103,35 +100,30 @@ instance HyperView Changes es where
     deriving (Generic, ViewAction)
 
   update (GoNum _ _) = do
-    n <- userInput
-    pure $ viewChanges "" (Just n)
-   where
-    parseNum t' = do
-      case readMaybe (cs t') of
-        Nothing -> parseError "Nope"
-        Just n -> pure n
+    n <- inputValue @Int
+    pure $ viewChanges (cs $ show n)
   update GoInput = do
-    t <- userInput
-    pure $ viewChanges t Nothing
+    t <- inputValue
+    pure $ viewChanges t
   update GoOption = do
-    o <- userInput @Options
-    pure $ el $ text $ cs $ show o
+    o <- inputValue @Options
+    pure $ do
+      viewChanges (cs $ show o)
   update GoNumOption = do
-    n <- userInput @Int
-    pure $ el $ text $ cs $ show n
+    n <- inputValue @Int
+    pure $ do
+      viewChanges (cs $ show n)
 
-viewChanges :: Text -> Maybe Int -> View Changes ()
-viewChanges inp mn = do
+viewChanges :: Text -> View Changes ()
+viewChanges inp = do
   col ~ gap 10 $ do
+    el ~ border 1 . pad 20 . bold $ text inp
+
     row ~ gap 10 $ do
       tag "input" @ onChange (GoNum 55 "hello world") . placeholder "Enter an integer" ~ border 1 . pad 10 $ none
-      case mn of
-        Nothing -> "_"
-        Just n -> el $ text $ cs $ show n
 
     row ~ gap 10 $ do
       tag "input" @ onChange GoInput . placeholder "Enter some text" ~ border 1 . pad 10 $ none
-      el $ text inp
 
     dropdown GoOption Something ~ border 1 $ do
       option Something "Something"

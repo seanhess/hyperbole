@@ -90,7 +90,7 @@ instance HyperView Users es where
       Just u -> pure $ do
         viewWithDetails (viewUserDetails u) viewKnownUsers
   update SearchUser = do
-    term <- userInput
+    term <- inputValue
     mu <- searchUser term
     pure $ do
       viewWithDetails (viewSearchResults mu) viewSearchUsers

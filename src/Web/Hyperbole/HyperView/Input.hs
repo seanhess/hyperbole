@@ -9,7 +9,7 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 import Web.Atomic.Types
 import Web.Hyperbole.Data.Argument (decodeArgument, encodeArgument)
-import Web.Hyperbole.HyperView.Event (DelayMs, onClick, onDropdown', onInput, UserInput(..))
+import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
 import Web.Hyperbole.View
@@ -35,14 +35,14 @@ button action cnt = do
 dropdown
   :: forall opt id
    . (ViewAction (Action id), FromJSON opt)
-  => (Action id)
+  => Action id
   -> opt -- default option
   -> View (Option id opt) ()
   -> View id ()
 dropdown act defOpt options = do
   st :: ViewState id <- viewState
   i :: id <- viewId
-  tag "select" @ onDropdown' act $ do
+  tag "select" @ onChange act $ do
     runViewContext (Option i defOpt) st options
 
 
@@ -102,7 +102,6 @@ route :: (Route a) => a -> View c () -> View c ()
 route r = link (routeUri r)
 
 
-
 -- instance {-# OVERLAPPABLE #-} (FromJSON a) => UserInput (Maybe a) where
 --   parseInput "" = pure Nothing
 --   parseInput t = pure $ A.decode (cs t)
@@ -110,3 +109,25 @@ route r = link (routeUri r)
 --
 -- instance {-# OVERLAPS #-} UserInput (Maybe Text) where
 --   parseInput = pure . Just
+
+class InputValue a where
+  parseInputValue :: Text -> Either String a
+  default parseInputValue :: (FromJSON a) => Text -> Either String a
+  parseInputValue = decodeArgument
+
+
+instance InputValue Text where
+  parseInputValue = pure
+instance InputValue Int
+instance InputValue Float
+instance InputValue Double
+instance InputValue Integer
+
+
+instance {-# OVERLAPPABLE #-} (InputValue a) => InputValue (Maybe a) where
+  parseInputValue "" = pure Nothing
+  parseInputValue t = Just <$> parseInputValue t
+
+
+instance {-# OVERLAPS #-} InputValue (Maybe Text) where
+  parseInputValue t = pure $ Just t
