@@ -1,3 +1,4 @@
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.HyperView.Input where
@@ -7,8 +8,8 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Web.Atomic.Types
-import Web.Hyperbole.Data.Argument (encodeArgument)
-import Web.Hyperbole.HyperView.Event (DelayMs, onClick, onDropdown', onInput)
+import Web.Hyperbole.Data.Argument (decodeArgument, encodeArgument)
+import Web.Hyperbole.HyperView.Event (DelayMs, onClick, onDropdown', onInput, UserInput(..))
 import Web.Hyperbole.HyperView.Types (HyperView (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
 import Web.Hyperbole.View
@@ -34,7 +35,7 @@ button action cnt = do
 dropdown
   :: forall opt id
    . (ViewAction (Action id), FromJSON opt)
-  => (opt -> Action id)
+  => (Action id)
   -> opt -- default option
   -> View (Option id opt) ()
   -> View id ()
@@ -80,7 +81,7 @@ instance (ToJSON id, ToJSON opt, FromJSON id, FromJSON opt) => ViewId (Option id
 #EMBED Example.Errors viewSearchUsers
 @
 -}
-search :: (ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> View id ()
+search :: (ViewAction (Action id)) => Action id -> DelayMs -> View id ()
 search go delay = do
   tag "input" none @ onInput go delay
 
@@ -99,3 +100,13 @@ checked c =
 -}
 route :: (Route a) => a -> View c () -> View c ()
 route r = link (routeUri r)
+
+
+
+-- instance {-# OVERLAPPABLE #-} (FromJSON a) => UserInput (Maybe a) where
+--   parseInput "" = pure Nothing
+--   parseInput t = pure $ A.decode (cs t)
+--
+--
+-- instance {-# OVERLAPS #-} UserInput (Maybe Text) where
+--   parseInput = pure . Just

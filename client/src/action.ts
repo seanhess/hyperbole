@@ -16,12 +16,14 @@ export type ActionMessage = {
   form: URLSearchParams | undefined
 }
 
+export type UserInput = string
+
 export function actionMessage(
   id: ViewId,
   action: EncodedAction,
   state: ViewState | undefined,
   reqId: RequestId,
-  form?: FormData,
+  form?: FormData
 ): ActionMessage {
   let meta: Meta[] = [
     { key: "Cookie", value: decodeURI(document.cookie) },

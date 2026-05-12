@@ -14,10 +14,11 @@ data CustomText = CustomText
 
 instance HyperView CustomText es where
   data Action CustomText
-    = ShowInput Text
+    = ShowInput
     deriving (Generic, ViewAction)
 
-  update (ShowInput t) =
+  update ShowInput = do
+    t <- userInput
     pure $ viewCustom t
 
 customText :: View CustomText ()

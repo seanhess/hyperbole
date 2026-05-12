@@ -1,3 +1,5 @@
+{-# LANGUAGE DefaultSignatures #-}
+
 module Web.Hyperbole.HyperView.Event where
 
 import Data.Aeson (FromJSON)
@@ -5,6 +7,7 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Text.Casing (kebab)
 import Web.Atomic.Types
+import Web.Hyperbole.Data.Argument (decodeArgument)
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.HyperView.Handled
 import Web.Hyperbole.HyperView.Types
@@ -55,20 +58,20 @@ WARNING: a short delay can result in poor performance. It is not recommended to 
 
 > input (onInput OnSearch) 250 id
 -}
-onInput :: (ViewAction (Action id), Attributable a) => (Text -> Action id) -> DelayMs -> Attributes a -> Attributes a
+onInput :: (ViewAction (Action id), Attributable a) => Action id -> DelayMs -> Attributes a -> Attributes a
 onInput a delay = do
-  att (eventName "input") (encodedToText $ toActionInput a) . att "data-delay" (cs $ show delay)
+  att (eventName "input") (encodedToText $ toAction a) . att "data-delay" (cs $ show delay)
 
 
-onChange :: (ViewAction (Action id), Attributable a) => (Text -> Action id) -> Attributes a -> Attributes a
+onChange :: (ViewAction (Action id), Attributable a) => Action id -> Attributes a -> Attributes a
 onChange a = do
-  att (eventName "change") (encodedToText $ toActionInput a)
+  att (eventName "change") (encodedToText $ toAction a)
 
 
 -- | Specialized version of onChange that does not JSON encode the input, since dropdown options are alreay Data.Encoded
-onDropdown' :: (ViewAction (Action id), Attributable a, FromJSON value) => (value -> Action id) -> Attributes a -> Attributes a
+onDropdown' :: (ViewAction (Action id), Attributable a) => Action id -> Attributes a -> Attributes a
 onDropdown' a = do
-  att (eventName "dropdown") (encodedToText $ toActionInput a)
+  att (eventName "dropdown") (encodedToText $ toAction a)
 
 
 onSubmit :: (ViewAction (Action id), Attributable a) => Action id -> Attributes a -> Attributes a
@@ -126,3 +129,26 @@ target :: forall id ctx. (HyperViewHandled id ctx, ViewId id) => id -> ViewState
 target newId st view = do
   runViewContext newId st $ do
     view @ dataTarget newId
+
+
+class UserInput a where
+  parseUserInput :: Text -> Either String a
+  default parseUserInput :: (FromJSON a) => Text -> Either String a
+  parseUserInput = decodeArgument
+
+
+instance UserInput Text where
+  parseUserInput = pure
+instance UserInput Int
+instance UserInput Float
+instance UserInput Double
+instance UserInput Integer
+
+
+instance {-# OVERLAPPABLE #-} (UserInput a) => UserInput (Maybe a) where
+  parseUserInput "" = pure Nothing
+  parseUserInput t = Just <$> parseUserInput t
+
+
+instance {-# OVERLAPS #-} UserInput (Maybe Text) where
+  parseUserInput t = pure $ Just t

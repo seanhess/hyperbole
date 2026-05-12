@@ -3,13 +3,13 @@
 module Example.Errors where
 
 import App.Docs
-import Effectful.Exception
-import Example.Colors
-import Text.Read (readMaybe)
-import Example.Style.Cyber as Cyber (btn)
 import Control.Monad (forM_)
 import Data.List qualified as L
 import Data.Text (Text, pack, unpack)
+import Effectful.Exception
+import Example.Colors
+import Example.Style.Cyber as Cyber (btn)
+import Text.Read (readMaybe)
 import Web.Atomic.CSS
 import Web.Hyperbole hiding (Response)
 
@@ -72,7 +72,6 @@ findUser :: UserId -> Eff es (Maybe User)
 findUser uid =
   pure $ L.find (\(User i _) -> uid == i) fakeDatabase
 
-
 -- KnownUsers ------------------------------------------------
 
 data Users = KnownUsers | SearchUsers
@@ -81,7 +80,7 @@ data Users = KnownUsers | SearchUsers
 instance HyperView Users es where
   data Action Users
     = UserDetails Int
-    | SearchUser Text
+    | SearchUser
     deriving (Generic, ViewAction)
 
   update (UserDetails uid) = do
@@ -90,7 +89,8 @@ instance HyperView Users es where
       Nothing -> notFound
       Just u -> pure $ do
         viewWithDetails (viewUserDetails u) viewKnownUsers
-  update (SearchUser term) = do
+  update SearchUser = do
+    term <- userInput
     mu <- searchUser term
     pure $ do
       viewWithDetails (viewSearchResults mu) viewSearchUsers
@@ -142,7 +142,6 @@ viewSearchResults mu = do
   case mu of
     Nothing -> el ~ italic $ "User not found. No big deal. Doesn't need to be an application error"
     Just u -> viewUserDetails u
-
 
 source :: ModuleSource
 source = $(moduleSource)

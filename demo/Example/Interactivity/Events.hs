@@ -13,17 +13,21 @@ data TryEvents = TryEvents
 
 instance HyperView TryEvents es where
   data Action TryEvents
-    = SetMessage Text
+    = SetMessage
+    | ClearMessage
     deriving (Generic, ViewAction)
 
-  update (SetMessage t) = do
+  update SetMessage = do
+    t <- userInput
     pure $ viewEvents t
+  update ClearMessage = do
+    pure $ viewEvents ""
 
 viewEvents :: Text -> View TryEvents ()
 viewEvents t = do
   el ~ bold $ text t
   input @ onInput SetMessage 250 ~ border 1 . pad 5 $ none
-  button @ onDblClick (SetMessage "") ~ btn $ "Double Click to Clear"
+  button @ onDblClick ClearMessage ~ btn $ "Double Click to Clear"
  where
   input = tag "input"
   button = tag "button"

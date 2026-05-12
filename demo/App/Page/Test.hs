@@ -11,63 +11,64 @@ import Example.View.Layout
 import Text.Read (readMaybe)
 import Web.Atomic.CSS
 import Web.Hyperbole hiding (Number)
+import Web.Hyperbole.Effect.Request (userInput)
 import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView.Event
 
 source :: ModuleSource
 source = $(moduleSource)
 
-page :: (Hyperbole :> es) => Page es '[FunkyEncodings, Changes]
+page :: (Hyperbole :> es) => Page es '[Changes]
 page = do
   pure $ layout (Test TestMain) $ do
     section' "Encodings" $ do
-      example source $ do
-        hyper FunkyEncodings viewFunkyEncodings
+      -- example source $ do
+      --   hyper FunkyEncodings viewFunkyEncodings
 
       example source $ do
         hyper Changes (viewChanges "" Nothing)
 
 -- Encoding Tests
 
-data FunkyEncodings = FunkyEncodings
-  deriving (Generic, ViewId)
+-- data FunkyEncodings = FunkyEncodings
+--   deriving (Generic, ViewId)
 
 data Options
   = Something
   | Multi Text Int
-  deriving (Generic, ToJSON, FromJSON, Show, Eq)
+  deriving (Generic, ToJSON, FromJSON, Show, Eq, UserInput)
 
-instance HyperView FunkyEncodings es where
-  data Action FunkyEncodings
-    = Funky Int Text Text
-    | Opts Options
-    deriving (Generic, ViewAction, Show)
-
-  update a =
-    pure $ do
-      viewFunkyEncodings
-      el $ text $ cs $ show a
-
-viewFunkyEncodings :: View FunkyEncodings ()
-viewFunkyEncodings = do
-  -- dropdown (\s -> Funky 10 s "hello big_world !") "" ~ border 1 $ do
-  --   option "" "Select"
-  --   option "   " "Spaces"
-  --   option "Big Bear" "Big Bear"
-  --   option "Nice_Option" "Nice_Option"
-
-  -- dropdown (Funky 14 "first") "" ~ border 1 $ do
-  --   option "" "Last Position"
-  --   option "   " "Spaces"
-  --   option "Big Bear" "Big Bear"
-
-  dropdown Opts Something ~ border 1 $ do
-    option Something "Something"
-    option (Multi "" 1) "One"
-    option (Multi "" 2) "Two"
-    option (Multi "" 3) "Three"
-
-  search (\s -> Funky 18 s "last one") 250 ~ border 1 . pad 5
+-- instance HyperView FunkyEncodings es where
+--   data Action FunkyEncodings
+--     = Funky Int Text
+--     | Opts Options
+--     deriving (Generic, ViewAction, Show)
+--
+--   update a =
+--     pure $ do
+--       viewFunkyEncodings
+--       el $ text $ cs $ show a
+--
+-- viewFunkyEncodings :: View FunkyEncodings ()
+-- viewFunkyEncodings = do
+--   -- dropdown (\s -> Funky 10 s "hello big_world !") "" ~ border 1 $ do
+--   --   option "" "Select"
+--   --   option "   " "Spaces"
+--   --   option "Big Bear" "Big Bear"
+--   --   option "Nice_Option" "Nice_Option"
+--
+--   -- dropdown (Funky 14 "first") "" ~ border 1 $ do
+--   --   option "" "Last Position"
+--   --   option "   " "Spaces"
+--   --   option "Big Bear" "Big Bear"
+--
+--   dropdown Opts Something ~ border 1 $ do
+--     option Something "Something"
+--     option (Multi "" 1) "One"
+--     option (Multi "" 2) "Two"
+--     option (Multi "" 3) "Three"
+--
+--   search (\s -> Funky 18 s "last one") 250 ~ border 1 . pad 5
 
 newtype UserNum = UserNum Int
   deriving (Generic)
@@ -95,25 +96,28 @@ data Changes = Changes
 
 instance HyperView Changes es where
   data Action Changes
-    = GoNum Int Text Text
-    | GoInput Text
-    | GoOption Options
-    | GoNuMOption Int
+    = GoNum Int Text
+    | GoInput
+    | GoOption
+    | GoNumOption
     deriving (Generic, ViewAction)
 
-  update (GoNum _ _ t) = do
-    n <- parseNum t
+  update (GoNum _ _) = do
+    n <- userInput
     pure $ viewChanges "" (Just n)
    where
     parseNum t' = do
       case readMaybe (cs t') of
         Nothing -> parseError "Nope"
         Just n -> pure n
-  update (GoInput t) = do
+  update GoInput = do
+    t <- userInput
     pure $ viewChanges t Nothing
-  update (GoOption o) = do
+  update GoOption = do
+    o <- userInput @Options
     pure $ el $ text $ cs $ show o
-  update (GoNuMOption n) = do
+  update GoNumOption = do
+    n <- userInput @Int
     pure $ el $ text $ cs $ show n
 
 viewChanges :: Text -> Maybe Int -> View Changes ()
@@ -135,6 +139,6 @@ viewChanges inp mn = do
       option (Multi "two!" 2) "Two"
       option (Multi "hello world" 3) "Three"
 
-    dropdown GoNuMOption 0 ~ border 1 $ do
+    dropdown GoNumOption (0 :: Int) ~ border 1 $ do
       forM_ [0 .. 10] $ \n -> do
         option n (cs $ show n)

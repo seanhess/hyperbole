@@ -39,11 +39,11 @@ data Contacts = Contacts
 data Filter
   = Active
   | Inactive
-  deriving (Eq, Show, Read, Generic, ToJSON, FromJSON)
+  deriving (Eq, Show, Read, Generic, ToJSON, FromJSON, UserInput)
 
 instance (Users :> es, Debug :> es) => HyperView Contacts es where
   data Action Contacts
-    = Reload (Maybe Filter)
+    = Reload
     | AddUser
     | DeleteUser UserId
     deriving (Generic, ViewAction)
@@ -51,7 +51,8 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
   type Require Contacts = '[InlineContact, NewContact]
 
   update = \case
-    Reload mf -> do
+    Reload -> do
+      mf <- userInput
       us <- Users.all
       pure $ allContactsView mf us
     AddUser -> do
@@ -86,7 +87,7 @@ allContactsView fil us = col ~ gap 20 $ do
           route (Route.Contacts $ Route.Contact u.id) "details" ~ Style.link
 
   row ~ gap 10 $ do
-    button (Reload Nothing) ~ Style.btnLight $ "Reload"
+    button Reload ~ Style.btnLight $ "Reload"
     target (InlineContact 2) () $ button Edit ~ Style.btnLight $ "Edit Sara"
 
   hyper NewContact newContactButton

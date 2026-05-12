@@ -30,14 +30,15 @@ data LiveSearch = LiveSearch
 
 instance (IOE :> es) => HyperView LiveSearch es where
   data Action LiveSearch
-    = SearchTerm Int Text
+    = SearchTerm Int
     | Select (Maybe ProgrammingLanguage)
     deriving (Generic, ViewAction)
 
   -- favor the latest thing typed
   type Concurrency LiveSearch = Replace
 
-  update (SearchTerm current term) = do
+  update (SearchTerm current) = do
+    term <- userInput
     pure $ liveSearchView allLanguages current term
   update (Select Nothing) = do
     pure $ liveSearchView allLanguages 0 ""
@@ -54,6 +55,7 @@ liveSearchView langs current term = do
   col ~ gap 10 $ do
     el ~ stack $ do
       search (SearchTerm current) 250 @ searchKeys . placeholder "search programming languages" . value term . autofocus ~ border 1 . pad 10 . grow
+      -- TEST: does clearing work like this?
       Filter.clearButton (SearchTerm current) term
       col ~ popup (TRBL 50 0 0 0) . shownIfMatches $ do
         searchPopup matchedLanguages currentSearchLang
@@ -67,10 +69,12 @@ liveSearchView langs current term = do
   shownIfMatches =
     if T.null term || null matchedLanguages then display None else flexCol
 
+  -- TEST: this will clear the user input??? Before, we passed it along, so we could keep it the same as you arrowed around
+  -- that's not good! How can we fix it?
   searchKeys =
     onKeyDown Enter (Select currentSearchLang)
-      . onKeyDown ArrowDown (SearchTerm (current + 1) term)
-      . onKeyDown ArrowUp (SearchTerm (current - 1) term)
+      . onKeyDown ArrowDown (SearchTerm (current + 1))
+      . onKeyDown ArrowUp (SearchTerm (current - 1))
 
 searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View LiveSearch ()
 searchPopup shownLangs highlighted = do
