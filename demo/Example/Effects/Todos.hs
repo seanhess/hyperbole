@@ -7,7 +7,7 @@ import Data.Map (Map)
 import Data.Map.Strict qualified as M
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import Database.Selda (SqlRow)
+import Database.SQLite.Simple (FromRow, ToRow)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import System.Random (randomRIO)
@@ -32,7 +32,7 @@ data Todo = Todo
   , task :: Text
   , completed :: Bool
   }
-  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam, SqlRow)
+  deriving (Generic, ToJSON, FromJSON, ToParam, FromParam, FromRow, ToRow)
 
 data Todos :: Effect where
   LoadAll :: Todos m [Todo]

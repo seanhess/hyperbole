@@ -56,7 +56,7 @@ import Example.DataLists.Autocomplete qualified as Autocomplete
 import Example.DataLists.DataTable qualified as DataTable
 import Example.DataLists.Filter qualified as Filter
 import Example.DataLists.LoadMore qualified as LoadMore
-import Example.Effects.Database (DB, initTodosDatabase, runTodosSelda)
+import Example.Effects.Database (DB, initTodosDatabase, runTodosSQLite)
 import Example.Effects.Database qualified as TodosDB
 import Example.Effects.Debug as Debug
 import Example.Effects.Todos (Todos, runTodosSession)
@@ -170,7 +170,7 @@ exampleApp config users count chats db = do
   router (Examples OtherExamples) = runPage Examples.page
   router (Examples Todos) = runTodosSession $ runPage Todo.page
   router (Examples TodosCSS) = runTodosSession $ runPage TodoCSS.page
-  router (Examples TodosDB) = runTodosSelda db $ runPage TodosDB.page
+  router (Examples TodosDB) = runTodosSQLite db $ runPage TodosDB.page
   router (Examples Tags) = runPage Tags.page
   router Javascript = redirect (routeUri Interactivity)
   router (Examples OAuth2) = runPage OAuth2.page

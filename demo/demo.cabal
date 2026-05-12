@@ -157,8 +157,7 @@ executable demo
     , network-uri
     , random
     , safe
-    , selda
-    , selda-sqlite
+    , sqlite-simple
     , string-conversions
     , string-interpolate
     , template-haskell

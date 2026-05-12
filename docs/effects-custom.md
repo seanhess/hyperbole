@@ -22,4 +22,4 @@ Whichever implementation we use, a `HyperView` or `Page` can interact with the d
 
 * [Effectful.Dynamic.Dispatch](https://hackage.haskell.org/package/effectful-core/docs/Effectful-Dispatch-Dynamic.html) - Introduction to Effects
 * [[/examples/todos]] - Implemented with Session
-* [[/examples/todosdb]] - Implemented with SQLite / [Selda](https://valderman.github.io/selda/)
+* [[/examples/todosdb]] - Implemented with [sqlite-simple](https://hackage.haskell.org/package/sqlite-simple)
