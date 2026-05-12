@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.38.3.
+-- This file has been generated from package.yaml by hpack version 0.39.5.
 --
 -- see: https://github.com/sol/hpack
 
@@ -17,7 +17,9 @@ license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
 tested-with:
-    GHC == 9.8.4
+    GHC == 9.12.4
+  , GHC == 9.10.3
+  , GHC == 9.8.4
   , GHC == 9.6.7
 extra-source-files:
     client/dist/hyperbole.js
