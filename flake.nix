@@ -79,13 +79,19 @@
               }
             );
           });
-          # ghc967 = (prev.overriddenHaskellPackages.ghc967 or prev.haskell.packages.ghc967).override (old: {
-          #   overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
-          #     hfinal: hprev: {
-          #       "${packageName}" = hfinal.callCabal2nix packageName src { };
-          #     }
-          #   );
-          # });
+          ghc967 = (prev.overriddenHaskellPackages.ghc967 or prev.haskell.packages.ghc967).override (old: {
+            overrides = prev.lib.composeExtensions (old.overrides or (_: _: { })) (
+              hfinal: hprev: {
+                "${packageName}" = hfinal.callCabal2nix packageName src { };
+                # Tests require `skeletest`, which needs to be pinned as follow:
+                # `nixpkgs` ships `skeletest_0_3_7` for `ghc967`, BUT skeletest >= 0.1.1 dropped ghc9.6.x,
+                # That's why we use `0.1.0` here available at Hackage (not with `nixpkgs`).
+                skeletest = hfinal.callHackage "skeletest" "0.1.0" { };
+                # `skeletest` `0.1.0` constraints `Diff < 1.0`
+                Diff = hfinal.callHackage "Diff" "0.5" { };
+              }
+            );
+          });
         };
       };
 
@@ -134,7 +140,7 @@
         '';
 
         ghcVersions = [
-          # "967"
+          "967"
           "984"
           "9103"
           "9124"
