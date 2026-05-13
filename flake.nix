@@ -58,8 +58,6 @@
                 "${packageName}" = hfinal.callCabal2nix packageName src { };
                 # `atomic-css` upstream overlay does not support `ghc912x` currently
                 atomic-css = hfinal.callCabal2nix "atomic-css" atomic-css { };
-                # `selda-sqlite-0.1.7.3` requires `time < 1.13`, but `ghc9124` ships a newer one
-                selda-sqlite = prev.haskell.lib.doJailbreak hprev.selda-sqlite;
               }
             );
           });
