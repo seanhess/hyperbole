@@ -112,25 +112,6 @@ jobs:
             ghc_version: 9.10.3
             cabal_project: cabal.project
 
-          - name: ci-sdist
-            command: cabal
-            ghc_version: 9.8.4
-            runner: ubuntu-latest
-            pack_options: >-
-              DISABLE_SDIST_BUILD=n
-
-          - name: ci
-            command: cabal
-            ghc_version: 9.12.4
-            runner: ubuntu-latest
-            cabal_project: cabal.project
-
-          - name: ci
-            command: cabal
-            ghc_version: 9.10.3
-            runner: ubuntu-latest
-            cabal_project: cabal.project
-
           - name: ci
             command: cabal
             ghc_version: 9.8.4
@@ -142,6 +123,13 @@ jobs:
             ghc_version: 9.6.7
             runner: ubuntu-latest
             cabal_project: cabal.project
+
+          - name: ci-sdist
+            command: cabal
+            ghc_version: 9.8.4
+            runner: ubuntu-latest
+            pack_options: >-
+              DISABLE_SDIST_BUILD=n
 
           # - name: ci
           #   command: hlint
