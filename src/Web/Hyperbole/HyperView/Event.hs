@@ -54,17 +54,14 @@ WARNING: a short delay can result in poor performance. It is not recommended to 
 
 > input (onInput OnSearch) 250 id
 -}
-onInput :: (ViewAction (Action id), Attributable a) => (Text -> Action id) -> DelayMs -> Attributes a -> Attributes a
+onInput :: (ViewAction (Action id), Attributable a) => Action id -> DelayMs -> Attributes a -> Attributes a
 onInput a delay = do
-  att (eventName "input") (encodedToText $ toActionInput a) . att "data-delay" (cs $ show delay)
+  att (eventName "input") (encodedToText $ toAction a) . att "data-delay" (cs $ show delay)
 
 
--- WARNING: no way to do this generically right now, because toActionInput is specialized to Text
---   the change event DOES assume that the target has a string value
---   but, that doesn't let us implement dropdown
-onChange :: (ViewAction (Action id), Attributable a) => (value -> Action id) -> Attributes a -> Attributes a
+onChange :: (ViewAction (Action id), Attributable a) => Action id -> Attributes a -> Attributes a
 onChange a = do
-  att (eventName "change") (encodedToText $ toActionInput a)
+  att (eventName "change") (encodedToText $ toAction a)
 
 
 onSubmit :: (ViewAction (Action id), Attributable a) => Action id -> Attributes a -> Attributes a
@@ -105,17 +102,6 @@ data Key
   | Shift
   | OtherKey Text
   deriving (Show, Read)
-
-
--- | Serialize a constructor that expects a single input, like `data MyAction = GoSearch Text`
-toActionInput :: (ViewAction a) => (val -> a) -> Encoded
-toActionInput act =
-  -- laziness should let us drop the last item?
-  -- maybe... I bet it evaluates it strictly
-  let Encoded con vals = toAction (act undefined)
-   in if null vals
-        then Encoded con vals
-        else Encoded con (init vals)
 
 
 -- | Internal

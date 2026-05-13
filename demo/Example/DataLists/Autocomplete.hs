@@ -5,7 +5,9 @@ module Example.DataLists.Autocomplete where
 
 import App.Docs
 import App.Route as Route
+import Control.Applicative ((<|>))
 import Control.Monad (forM_)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Effectful
@@ -30,7 +32,7 @@ data LiveSearch = LiveSearch
 
 instance (IOE :> es) => HyperView LiveSearch es where
   data Action LiveSearch
-    = SearchTerm Int Text
+    = SearchTerm Int (Maybe Text)
     | Select (Maybe ProgrammingLanguage)
     deriving (Generic, ViewAction)
 
@@ -38,7 +40,8 @@ instance (IOE :> es) => HyperView LiveSearch es where
   type Concurrency LiveSearch = Replace
 
   update (SearchTerm current term) = do
-    pure $ liveSearchView allLanguages current term
+    val <- inputValue
+    pure $ liveSearchView allLanguages current (fromMaybe "" $ term <|> val)
   update (Select Nothing) = do
     pure $ liveSearchView allLanguages 0 ""
   update (Select (Just lang)) = do
@@ -53,8 +56,8 @@ liveSearchView :: [ProgrammingLanguage] -> Int -> Text -> View LiveSearch ()
 liveSearchView langs current term = do
   col ~ gap 10 $ do
     el ~ stack $ do
-      search (SearchTerm current) 250 @ searchKeys . placeholder "search programming languages" . value term . autofocus ~ border 1 . pad 10 . grow
-      Filter.clearButton (SearchTerm current) term
+      search (SearchTerm current Nothing) 250 @ searchKeys . placeholder "search programming languages" . value term . autofocus ~ border 1 . pad 10 . grow
+      Filter.clearButton (SearchTerm current Nothing) term
       col ~ popup (TRBL 50 0 0 0) . shownIfMatches $ do
         searchPopup matchedLanguages currentSearchLang
     Filter.resultsTable (Select . Just) langs
@@ -67,10 +70,12 @@ liveSearchView langs current term = do
   shownIfMatches =
     if T.null term || null matchedLanguages then display None else flexCol
 
+  -- TEST: this will clear the user input??? Before, we passed it along, so we could keep it the same as you arrowed around
+  -- that's not good! How can we fix it?
   searchKeys =
     onKeyDown Enter (Select currentSearchLang)
-      . onKeyDown ArrowDown (SearchTerm (current + 1) term)
-      . onKeyDown ArrowUp (SearchTerm (current - 1) term)
+      . onKeyDown ArrowDown (SearchTerm (current + 1) (Just term))
+      . onKeyDown ArrowUp (SearchTerm (current - 1) (Just term))
 
 searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View LiveSearch ()
 searchPopup shownLangs highlighted = do

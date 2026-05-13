@@ -3,6 +3,8 @@
 
 module Web.Hyperbole.Server.Handler where
 
+import Data.Aeson (FromJSON, ToJSON, Value)
+import Data.Aeson qualified as A
 import Data.Kind (Type)
 import Effectful
 import Effectful.Dispatch.Dynamic
@@ -10,7 +12,7 @@ import Effectful.Reader.Dynamic
 import Effectful.State.Dynamic
 import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Response (hyperView, respondError)
+import Web.Hyperbole.Effect.Response (hyperView, parseError, respondError)
 import Web.Hyperbole.HyperView
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Request
@@ -19,14 +21,14 @@ import Web.Hyperbole.View
 
 
 class RunHandlers (views :: [Type]) es where
-  runHandlers :: (Hyperbole :> es) => Event TargetViewId Encoded Encoded -> Eff es (Maybe Response)
+  runHandlers :: (Hyperbole :> es) => Event TargetViewId Encoded Value -> Eff es (Maybe Response)
 
 
 instance RunHandlers '[] es where
   runHandlers _ = pure Nothing
 
 
-instance (HyperView view es, ToEncoded (ViewState view), FromEncoded (ViewState view), RunHandlers views es) => RunHandlers (view : views) es where
+instance (HyperView view es, ToJSON (ViewState view), FromJSON (ViewState view), RunHandlers views es) => RunHandlers (view : views) es where
   runHandlers rawEvent = do
     mr <- runHandler @view rawEvent (update @view)
     case mr of
@@ -36,8 +38,8 @@ instance (HyperView view es, ToEncoded (ViewState view), FromEncoded (ViewState 
 
 runHandler
   :: forall id es
-   . (HyperView id es, ToEncoded (ViewState id), FromEncoded (ViewState id), Hyperbole :> es)
-  => Event TargetViewId Encoded Encoded
+   . (HyperView id es, ToJSON (ViewState id), FromJSON (ViewState id), Hyperbole :> es)
+  => Event TargetViewId Encoded Value
   -> (Action id -> Eff (Reader id : State (ViewState id) : es) (View id ()))
   -> Eff es (Maybe Response)
 runHandler rawEvent run = do
@@ -79,10 +81,21 @@ loadPageResponse run = do
 
 
 -- despite not needing any effects, this must be in Eff es to get `es` on the RHS
-decodeEvent :: forall id es. (HyperView id es, FromEncoded (ViewState id)) => Event TargetViewId Encoded Encoded -> Eff es (Maybe (Event id (Action id) (ViewState id)))
+decodeEvent :: forall id es. (HyperView id es, FromJSON (ViewState id), Hyperbole :> es) => Event TargetViewId Encoded Value -> Eff es (Maybe (Event id (Action id) (ViewState id)))
 decodeEvent (Event (TargetViewId ti) eact est) =
-  pure $ either (const Nothing) Just $ do
-    vid <- parseViewId ti
-    act <- parseAction eact
-    st <- parseEncoded est
-    pure $ Event vid act st
+  -- First, parse the view id. These should be unique on each page
+  case parseViewId ti of
+    Left _ -> pure Nothing
+    Right vid -> do
+      -- Then if parsing the state or action fails, throw an erro
+      either parseError (pure . Just) $ do
+        act <- parseAction eact
+        st <- parseState est
+        pure $ Event vid act st
+
+
+parseState :: (FromJSON a) => Value -> Either String a
+parseState v =
+  case A.fromJSON v of
+    A.Success a -> pure a
+    A.Error e -> Left e

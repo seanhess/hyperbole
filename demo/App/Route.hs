@@ -112,7 +112,6 @@ instance Route ExamplesRoute where
 
 data TestRoute
   = TestMain
-  | TestState
   deriving (Eq, Generic, Show)
 instance Route TestRoute where
   baseRoute = Just TestMain

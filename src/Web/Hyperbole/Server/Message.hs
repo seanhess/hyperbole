@@ -4,8 +4,11 @@ module Web.Hyperbole.Server.Message where
 
 import Control.Applicative ((<|>))
 import Control.Exception (Exception)
+import Data.Aeson (Value (Null))
 import Data.Aeson qualified as Aeson
-import Data.Attoparsec.Text (Parser, char, endOfLine, isEndOfLine, parseOnly, sepBy, string, takeText, takeTill, takeWhile1)
+import Data.Aeson.Parser (json)
+import Data.Attoparsec.ByteString.Char8 (Parser, char, endOfLine, isEndOfLine, parseOnly, sepBy, string, takeLazyByteString, takeWhile1)
+import Data.Attoparsec.ByteString.Lazy (takeTill)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.List qualified as L
@@ -39,7 +42,7 @@ import Web.Hyperbole.View (ViewId)
 
 data Message = Message
   { messageType :: Text
-  , event :: Event TargetViewId Encoded Encoded
+  , event :: Event TargetViewId Encoded Value
   , requestId :: RequestId
   , metadata :: Metadata
   , body :: MessageBody
@@ -64,7 +67,7 @@ mimeType :: Text
 mimeType = "application/hyperbole.message"
 
 
-parseActionMessage :: Text -> Either String Message
+parseActionMessage :: BS.ByteString -> Either String Message
 parseActionMessage = parseOnly parser
  where
   parser :: Parser Message
@@ -82,17 +85,17 @@ parseActionMessage = parseOnly parser
     t <- takeWhile1 (/= '|')
     _ <- char '|'
     endOfLine
-    pure t
+    pure $ cs t
 
   body :: Parser MessageBody
   body = do
-    MessageBody . cs . T.strip <$> takeText
+    MessageBody . cs . T.strip . cs <$> takeLazyByteString
 
-  event :: Parser (Event TargetViewId Encoded Encoded)
+  event :: Parser (Event TargetViewId Encoded Value)
   event = do
     vid <- targetViewId
     act <- encodedAction
-    st <- encodedState <|> pure mempty
+    st <- encodedState <|> pure Null
     pure $ Event vid act st
    where
     targetViewId :: Parser TargetViewId
@@ -115,13 +118,10 @@ parseActionMessage = parseOnly parser
       endOfLine
       pure v
 
-    encodedState :: Parser Encoded
+    encodedState :: Parser Value
     encodedState = do
       _ <- string "State: "
-      inp <- takeLine
-      v <- case encodedParseText inp of
-        Left e -> fail $ "Parse Encoded ViewState failed: " <> cs e <> " from " <> cs inp
-        Right a -> pure a
+      v <- json
       endOfLine
       pure v
 
@@ -142,11 +142,11 @@ parseActionMessage = parseOnly parser
   metaKey = do
     key <- takeWhile1 (/= ':')
     _ <- string ": "
-    pure key
+    pure $ cs key
 
   takeLine :: Parser Text
   takeLine = do
-    takeTill isEndOfLine
+    cs <$> takeTill isEndOfLine
 
 
 -- Render ---------------------------------------------
@@ -192,7 +192,7 @@ requestMetadata req =
   metaRequestId (RequestId reqId) =
     metadata "RequestId" (cs reqId)
 
-  eventMetadata :: Event TargetViewId Encoded Encoded -> Metadata
+  eventMetadata :: Event TargetViewId Encoded state -> Metadata
   eventMetadata event =
     Metadata
       [ ("ViewId", encodedToText event.viewId.encoded)

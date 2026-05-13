@@ -11,7 +11,7 @@ import Web.Hyperbole.Data.Encoded
 
 
 data Thing = Thing
-  deriving (Generic, Show, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded, ViewId, ToParam, FromParam)
+  deriving (Generic, Show, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded, ViewId)
 
 
 data Custom = Custom
@@ -27,7 +27,7 @@ data Compound
   | Two Thing
   | WithId (Id Thing)
   | Compound Text Compound
-  deriving (Generic, Show, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded, ViewId, ToParam, FromParam)
+  deriving (Generic, Show, Eq, ToJSON, FromJSON, ToEncoded, FromEncoded, ViewId)
 
 
 data Product4 = Product4 Text Text Text Text
@@ -40,7 +40,7 @@ data MessageView = MessageView [Text]
 
 
 newtype Id a = Id {fromId :: Text}
-  deriving newtype (Eq, ToJSON, FromJSON, Ord, Show, ToParam, FromParam)
+  deriving newtype (Eq, ToJSON, FromJSON, Ord, Show)
   deriving (Generic)
 
 
@@ -65,7 +65,7 @@ spec = withMarkers ["encoded"] $ do
 
     describe "has-string" $ do
       it "should not contain single quotes" $ do
-        encodeViewId (HasString "woot") `shouldBe` "HasString woot"
+        encodeViewId (HasString "woot") `shouldBe` "HasString \"woot\""
         containsSingleQuotes (encodeViewId (HasString "woot")) `shouldBe` False
 
       it "should roundtrip" $ do

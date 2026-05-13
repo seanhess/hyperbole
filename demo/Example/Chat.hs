@@ -17,7 +17,6 @@ import Example.Style.Cyber as Cyber (btn, font)
 import Example.View.Layout (layout)
 import Web.Atomic.CSS
 import Web.Hyperbole
-import Web.Hyperbole.Data.Encoded (Encoded (..), FromEncoded (..), ToEncoded (..))
 
 page :: (Hyperbole :> es, Concurrent :> es, Reader Room :> es) => Page es '[Content, Chats, NewMessage]
 page = do
@@ -72,7 +71,7 @@ data Message = Message
   { sender :: Username
   , body :: Text
   }
-  deriving (Generic, ToParam, FromParam)
+  deriving (Generic, ToJSON, FromJSON)
 
 newtype Room = Room (TChan Message)
 newtype Subscription = Subscription (TChan Message)
@@ -92,12 +91,9 @@ sendMessage (Room chan) msg = atomically $ writeTChan chan msg
 -- Encoding for message history since starting
 newtype AllMessages = AllMessages [Message]
   deriving newtype (Semigroup, Monoid)
+  deriving stock (Generic)
+  deriving anyclass (ToJSON, FromJSON)
 
-instance ToEncoded AllMessages where
-  toEncoded (AllMessages ms) = Encoded "" (fmap toParam ms)
-instance FromEncoded AllMessages where
-  parseEncoded (Encoded _ ps) =
-    AllMessages <$> mapM parseParam ps
 
 --- Chat Updates ---------------------------------------------
 

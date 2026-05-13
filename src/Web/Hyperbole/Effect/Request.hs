@@ -6,8 +6,9 @@ import Effectful.Dispatch.Dynamic
 import Web.FormUrlEncoded (Form, urlDecodeForm)
 import Web.Hyperbole.Data.URI (Path (..))
 import Web.Hyperbole.Effect.Hyperbole
+import Web.Hyperbole.Effect.Response (parseError)
+import Web.Hyperbole.HyperView.Input (InputValue (..))
 import Web.Hyperbole.Types.Request
-import Web.Hyperbole.Types.Response
 
 
 -- | Return all information about the 'Request'
@@ -31,5 +32,14 @@ Prefer using Type-Safe 'Form's when possible
 formBody :: (Hyperbole :> es) => Eff es Form
 formBody = do
   b <- (.body) <$> request
-  let ef = urlDecodeForm b
-  either (send . RespondNow . Err . ErrParse . cs) pure ef
+  case urlDecodeForm b of
+    Left err -> parseError $ "Could not decode Form: " <> cs err
+    Right a -> pure a
+
+
+inputValue :: (InputValue a, Hyperbole :> es) => Eff es a
+inputValue = do
+  b <- (.body) <$> request
+  case parseInputValue (cs b) of
+    Left err -> parseError $ "Could not decode User Input: " <> err
+    Right a -> pure a

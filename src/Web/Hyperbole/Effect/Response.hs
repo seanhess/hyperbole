@@ -1,11 +1,11 @@
 module Web.Hyperbole.Effect.Response where
 
+import Data.Aeson (ToJSON)
 import Data.Text (Text)
 import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic
 import Effectful.State.Dynamic
-import Web.Hyperbole.Data.Encoded
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.HyperView (ConcurrencyValue (..), HyperView (..), hyperUnsafe)
@@ -15,20 +15,20 @@ import Web.Hyperbole.View
 
 
 -- | Respond with the given hyperview
-hyperView :: (HyperView id es, ToEncoded (ViewState id)) => id -> ViewState id -> View id () -> Eff es Response
+hyperView :: (HyperView id es, ToJSON (ViewState id)) => id -> ViewState id -> View id () -> Eff es Response
 hyperView i st vw = do
   let vid = TargetViewId (toViewId i)
   pure $ Response $ ViewUpdate vid $ renderBody $ hyperUnsafe i st vw
 
 
-pushUpdate :: (Hyperbole :> es, ViewId id, ToEncoded (ViewState id), ConcurrencyValue (Concurrency id)) => View id () -> Eff (Reader id : State (ViewState id) : es) ()
+pushUpdate :: (Hyperbole :> es, ViewId id, ToJSON (ViewState id), ConcurrencyValue (Concurrency id)) => View id () -> Eff (Reader id : State (ViewState id) : es) ()
 pushUpdate vw = do
   i <- viewId
   st <- get
   pushUpdateTo i st vw
 
 
-pushUpdateTo :: (Hyperbole :> es, ViewId id, ToEncoded (ViewState id), ConcurrencyValue (Concurrency id)) => id -> ViewState id -> View id () -> Eff es ()
+pushUpdateTo :: (Hyperbole :> es, ViewId id, ToJSON (ViewState id), ConcurrencyValue (Concurrency id)) => id -> ViewState id -> View id () -> Eff es ()
 pushUpdateTo i st vw = do
   send $ PushUpdate $ ViewUpdate (TargetViewId $ toViewId i) $ renderBody $ hyperUnsafe i st vw
 

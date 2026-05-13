@@ -1,10 +1,14 @@
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Web.Hyperbole.HyperView.Input where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Web.Atomic.Types
-import Web.Hyperbole.Data.Param (FromParam, ParamValue (..), ToParam (..))
+import Web.Hyperbole.Data.Argument (decodeArgument, encodeArgument)
 import Web.Hyperbole.HyperView.Event (DelayMs, onChange, onClick, onInput)
 import Web.Hyperbole.HyperView.Types (HyperView (..))
 import Web.Hyperbole.Route (Route (..), routeUri)
@@ -30,8 +34,8 @@ button action cnt = do
 -}
 dropdown
   :: forall opt id
-   . (ViewAction (Action id))
-  => (opt -> Action id)
+   . (ViewAction (Action id), FromJSON opt)
+  => Action id
   -> opt -- default option
   -> View (Option id opt) ()
   -> View id ()
@@ -45,13 +49,13 @@ dropdown act defOpt options = do
 -- | An option for a 'dropdown' or 'select'
 option
   :: forall opt id
-   . (ViewAction (Action id), Eq opt, ToParam opt)
+   . (ViewAction (Action id), Eq opt, ToJSON opt)
   => opt
   -> Text
   -> View (Option id opt) ()
 option opt cnt = do
   os :: Option id opt <- viewId
-  tag "option" @ att "value" (toParam opt).value @ selected (os.defaultOption == opt) $ text cnt
+  tag "option" @ att "value" (encodeArgument opt) @ selected (os.defaultOption == opt) $ text cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
@@ -67,7 +71,7 @@ data Option id opt = Option
   deriving (Generic)
 
 
-instance (ToParam id, ToParam opt, FromParam id, FromParam opt) => ViewId (Option id opt) where
+instance (ToJSON id, ToJSON opt, FromJSON id, FromJSON opt) => ViewId (Option id opt) where
   type ViewState (Option id opt) = ViewState id
 
 
@@ -77,7 +81,7 @@ instance (ToParam id, ToParam opt, FromParam id, FromParam opt) => ViewId (Optio
 #EMBED Example.Errors viewSearchUsers
 @
 -}
-search :: (ViewAction (Action id)) => (Text -> Action id) -> DelayMs -> View id ()
+search :: (ViewAction (Action id)) => Action id -> DelayMs -> View id ()
 search go delay = do
   tag "input" none @ onInput go delay
 
@@ -96,3 +100,34 @@ checked c =
 -}
 route :: (Route a) => a -> View c () -> View c ()
 route r = link (routeUri r)
+
+
+-- instance {-# OVERLAPPABLE #-} (FromJSON a) => UserInput (Maybe a) where
+--   parseInput "" = pure Nothing
+--   parseInput t = pure $ A.decode (cs t)
+--
+--
+-- instance {-# OVERLAPS #-} UserInput (Maybe Text) where
+--   parseInput = pure . Just
+
+class InputValue a where
+  parseInputValue :: Text -> Either String a
+  default parseInputValue :: (FromJSON a) => Text -> Either String a
+  parseInputValue = decodeArgument
+
+
+instance InputValue Text where
+  parseInputValue = pure
+instance InputValue Int
+instance InputValue Float
+instance InputValue Double
+instance InputValue Integer
+
+
+instance {-# OVERLAPPABLE #-} (InputValue a) => InputValue (Maybe a) where
+  parseInputValue "" = pure Nothing
+  parseInputValue t = Just <$> parseInputValue t
+
+
+instance {-# OVERLAPS #-} InputValue (Maybe Text) where
+  parseInputValue t = pure $ Just t

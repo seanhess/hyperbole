@@ -39,10 +39,10 @@ data Filters = Filters
 
 instance (IOE :> es) => HyperView Languages es where
   data Action Languages
-    = SearchTerm Text
+    = SearchTerm
     | Select ProgrammingLanguage
     | Feature TypeFeature Bool
-    | SetFamily (Maybe LanguageFamily)
+    | SetFamily
     deriving (Generic, ViewAction)
 
   -- favor the latest thing entered / typed
@@ -51,14 +51,16 @@ instance (IOE :> es) => HyperView Languages es where
   update = \case
     Select lang -> do
       pure $ chosenView lang
-    SearchTerm term -> do
+    SearchTerm -> do
+      term <- inputValue
       filters <- modFilters $ \f -> f{term}
       pure $ languagesView filters
     Feature feature selected -> do
       filters <- modFilters $ \f -> setFeatures feature selected f
       pure $ languagesView filters
-    SetFamily f -> do
-      filters <- modFilters $ \Filters{features, term} -> Filters{family = f, features, term}
+    SetFamily -> do
+      mf <- inputValue
+      filters <- modFilters $ \Filters{features, term} -> Filters{family = mf, features, term}
       pure $ languagesView filters
    where
     setFeatures feature selected Filters{term, family, features} =
@@ -129,10 +131,10 @@ familyDropdown filters =
     option (Just ObjectOriented) "Object Oriented"
     option (Just Functional) "Functional"
 
-clearButton :: (ViewAction (Action id)) => (Text -> Action id) -> Text -> View id ()
+clearButton :: (ViewAction (Action id)) => Action id -> Text -> View id ()
 clearButton clear term =
   el ~ popup (R 0) . pad 10 . showClearBtn $ do
-    button (clear "") ~ width 24 . hover (color PrimaryLight) $ Icon.xCircle
+    button clear ~ width 24 . hover (color PrimaryLight) $ Icon.xCircle
  where
   showClearBtn =
     case term of

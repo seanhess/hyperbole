@@ -3,6 +3,8 @@
 
 module Web.Hyperbole.Effect.Session where
 
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson qualified as A
 import Data.Default (Default (..))
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions (cs)
@@ -11,8 +13,6 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import GHC.Generics
 import Web.Hyperbole.Data.Cookie as Cookie
-import Web.Hyperbole.Data.Encoded as Encoded
-import Web.Hyperbole.Data.Param
 import Web.Hyperbole.Data.URI (Path)
 import Web.Hyperbole.Effect.Hyperbole (Hyperbole (..))
 import Web.Hyperbole.Effect.Request (request)
@@ -50,15 +50,15 @@ class Session a where
 
   -- | Encode type to a a cookie value
   toCookie :: a -> CookieValue
-  default toCookie :: (ToEncoded a) => a -> CookieValue
-  toCookie = CookieValue . cs . Encoded.encode
+  default toCookie :: (ToJSON a) => a -> CookieValue
+  toCookie = CookieValue . cs . A.encode
 
 
   -- | Decode from a cookie value. Defaults to FromJSON
   parseCookie :: CookieValue -> Either String a
-  default parseCookie :: (FromEncoded a) => CookieValue -> Either String a
+  default parseCookie :: (FromJSON a) => CookieValue -> Either String a
   parseCookie (CookieValue bs) = do
-    Encoded.decodeEither (cs bs)
+    A.eitherDecode (cs bs)
 
 
 {- | Load data from a browser cookie. If it doesn't exist, the 'Default' instance is used
@@ -131,7 +131,7 @@ parseSession prm cook = do
 
 
 -- | save a single datatype to a specific key in the session
-setCookie :: (ToParam a, Hyperbole :> es) => Cookie -> Eff es ()
+setCookie :: (ToJSON a, Hyperbole :> es) => Cookie -> Eff es ()
 setCookie ck = do
   modifyCookies (Cookie.insert ck)
 

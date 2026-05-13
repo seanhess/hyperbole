@@ -1,5 +1,6 @@
 module Web.Hyperbole.Types.Request where
 
+import Data.Aeson (Value)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.Text (Text)
@@ -21,7 +22,7 @@ data Request = Request
   , body :: BL.ByteString
   , method :: Method
   , cookies :: Cookies
-  , event :: Maybe (Event TargetViewId Encoded Encoded)
+  , event :: Maybe (Event TargetViewId Encoded Value)
   , requestId :: RequestId
   }
   deriving (Show)
