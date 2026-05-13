@@ -2,7 +2,6 @@
 
 module Test.ViewActionSpec where
 
-import Control.Exception (catch)
 import Data.Aeson (Value (..))
 import Data.Text (Text)
 import GHC.Generics

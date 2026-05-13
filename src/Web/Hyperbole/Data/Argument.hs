@@ -45,6 +45,7 @@ parseArgument (JSON v) = do
     A.Error e -> Left e
 
 
+-- | Parses both json and our custom constructor format
 argumentParser :: Atto.Parser Argument
 argumentParser =
   JSON <$> (json <|> constructor <|> innerProduct)
@@ -89,6 +90,7 @@ encodeFromArgument :: Argument -> Text
 encodeFromArgument (JSON v) = encodeJSON v
 
 
+-- | Encodes as JSON for simple values, but forces constructors into our custom show-like format
 encodeJSON :: Value -> Text
 encodeJSON = \case
   (String s) ->
