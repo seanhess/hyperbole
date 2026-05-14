@@ -1,0 +1,27 @@
+name: nix
+
+on:
+  push:
+    branches: ["main", "ci"]
+  pull_request:
+
+jobs:
+  build:
+    name: ghc${{ matrix.ghc_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ghc_version:
+          - "967"
+          # - "984"
+          # - "9103"
+          # - "9124"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: build (incl. tests)
+        run: nix build .#ghc${{ matrix.ghc_version }}-hyperbole
