@@ -13,7 +13,7 @@ import {
   listenMouseEnter,
   listenMouseLeave,
 } from "./events"
-import { actionMessage, newRequest, toSearch, type ActionBody, type InputValue } from "./action"
+import { actionMessage, newRequest, type ActionBody, type InputValue } from "./action"
 import {
   type ViewId,
   type Metadata,
@@ -113,11 +113,15 @@ function handleResponse(res: Response) {
 }
 
 function handleUpdate(up: Update) {
-  if (!up.targetViewId) {
-    console.error("Missing Update targetViewId", up)
-    return
+  if (up.meta.error) {
+    runUpdate(up.viewId, up)
   }
-  runUpdate(up.targetViewId, up)
+  else if (!up.targetViewId) {
+    console.error("Missing Update targetViewId", up)
+  }
+  else {
+    runUpdate(up.targetViewId, up)
+  }
 }
 
 function runUpdate(targetViewId: ViewId, res: BaseResponse): HyperView | undefined {
@@ -332,7 +336,7 @@ function init() {
 
   listenFormSubmit(async function(target: HyperView, action: string, form: FormData) {
     // console.log("FORM", target.id, action, form)
-    void runAction(target, action, toSearch(form))
+    void runAction(target, action, form)
   })
 
   listenChange(async function(target: HyperView, action: string, value: string) {

@@ -29,14 +29,14 @@ data Planet
   | Venus
   | Earth
   | Mars
-  deriving (Generic, FromJSON, ToJSON, Eq, Show)
+  deriving (Generic, FromJSON, ToJSON, Eq, Show, FromField)
 
 data Moon
   = Titan
   | Europa
   | Callisto
   | Mimas
-  deriving (Generic, ToJSON, FromJSON, Eq, Show)
+  deriving (Generic, ToJSON, FromJSON, Eq, Show, FromField)
 
 -- Forms can be pretty simple. Just a type that can be parsed
 data ContactForm = ContactForm

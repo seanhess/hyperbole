@@ -1,7 +1,8 @@
 module Web.Hyperbole.Types.Request
   ( Request (..)
   , Host (..)
-  , RequestBody (..)
+  , Form (..)
+  , FormParam (..)
   , Param
   , FileParam
   , File
@@ -11,6 +12,8 @@ module Web.Hyperbole.Types.Request
 
 import Data.Aeson (Value)
 import Data.ByteString qualified as BS
+import Data.String (IsString (..))
+import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Network.HTTP.Types (Method)
 import Network.Wai.Parse (File, Param)
@@ -43,17 +46,25 @@ data Request = Request
   , cookies :: Cookies
   , event :: Maybe (Event TargetViewId Encoded Value)
   , requestId :: RequestId
-  , body :: RequestBody
+  , form :: Form
+  , input :: Text
   }
   deriving (Show)
 
 
-data RequestBody = RequestBody
+data Form = Form
   { params :: [Param]
   , files :: [FileParam]
   }
   deriving (Show)
-  
+
+
+data FormParam
+  = FormParam Text
+  | FileParam UploadedFile
+  deriving (Show, Eq)
+instance IsString FormParam where
+  fromString s = FormParam (cs s)
 
 
 newtype RequestId = RequestId Text

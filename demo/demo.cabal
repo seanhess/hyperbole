@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.38.3.
+-- This file has been generated from package.yaml by hpack version 0.39.5.
 --
 -- see: https://github.com/sol/hpack
 
@@ -150,7 +150,6 @@ executable demo
     , file-embed
     , filepath
     , foreign-store
-    , http-api-data
     , http-client
     , http-client-tls
     , http-types

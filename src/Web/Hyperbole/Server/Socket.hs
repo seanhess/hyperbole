@@ -4,7 +4,7 @@ module Web.Hyperbole.Server.Socket where
 
 import Control.Monad (void)
 import Data.Aeson (Value)
-import Data.Bifunctor (bimap, first)
+import Data.Bifunctor (first)
 import Data.List qualified as L
 import Data.Map (Map)
 import Data.Map qualified as M
@@ -24,7 +24,6 @@ import Network.Wai qualified as Wai
 import Network.WebSockets (Connection)
 import Network.WebSockets qualified as WS
 import Web.Cookie qualified
-import Web.FormUrlEncoded qualified as FE
 import Web.Hyperbole.Data.Cookie qualified as Cookie
 import Web.Hyperbole.Data.Encoded (Encoded, encodedToText)
 import Web.Hyperbole.Data.URI (URI, path, uriToText)
@@ -162,7 +161,7 @@ handleRequestSocket opts actions wreq conn eff = do
         method = "POST"
 
     -- Parse params as url encoded, ignore files
-    params <- bimap (\e -> InvalidBodyParams (cs e) msg.body) (fmap (bimap cs cs)) $ FE.urlDecodeParams msg.body.value
+    let body = cs msg.body.value
 
     query <- HTTP.parseQuery . cs <$> requireMeta "Query" msg.metadata
     cookie <- cs <$> requireMeta "Cookie" msg.metadata
@@ -175,7 +174,8 @@ handleRequestSocket opts actions wreq conn eff = do
         , event = Just msg.event
         , host
         , query
-        , body = RequestBody params []
+        , form = Form mempty mempty
+        , input = body
         , method
         , cookies
         , requestId = msg.requestId

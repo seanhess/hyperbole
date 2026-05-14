@@ -32,7 +32,7 @@ instance HyperView Signup es where
 
 -- Form Fields
 newtype User = User {username :: Text}
-  deriving newtype (FromJSON)
+  deriving newtype (FromField)
 
 data UserForm f = UserForm
   { user :: Field f User

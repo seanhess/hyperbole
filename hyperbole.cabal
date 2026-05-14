@@ -21,6 +21,9 @@ tested-with:
   , GHC == 9.10.3
   , GHC == 9.8.4
   , GHC == 9.6.7
+  , GHC == 9.8.4
+  , GHC == 9.10.3
+  , GHC == 9.12.4
 extra-source-files:
     client/dist/hyperbole.js
     client/dist/hyperbole.js.map
@@ -48,6 +51,7 @@ library
       Web.Hyperbole.Effect.Hyperbole
       Web.Hyperbole.Effect.OAuth2
       Web.Hyperbole.Effect.Query
+      Web.Hyperbole.Effect.Request
       Web.Hyperbole.Effect.Response
       Web.Hyperbole.Effect.Session
       Web.Hyperbole.HyperView
@@ -109,7 +113,6 @@ library
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2
-    , http-api-data >=0.6 && <0.8
     , http-client ==0.7.*
     , http-client-tls ==0.3.*
     , http-types ==0.12.*
@@ -174,7 +177,6 @@ test-suite test
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2
-    , http-api-data >=0.6 && <0.8
     , http-client ==0.7.*
     , http-client-tls ==0.3.*
     , http-types ==0.12.*

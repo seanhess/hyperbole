@@ -37,7 +37,6 @@ dependencies:
   - time
   - string-interpolate
   - file-embed
-  - http-api-data
   - http-types
   - random
   - wai

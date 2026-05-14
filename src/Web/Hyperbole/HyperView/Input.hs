@@ -118,10 +118,18 @@ class InputValue a where
 
 instance InputValue Text where
   parseInputValue = pure
-instance InputValue Int
-instance InputValue Float
-instance InputValue Double
-instance InputValue Integer
+instance InputValue Int where
+  parseInputValue "" = Right 0
+  parseInputValue t = decodeArgument t
+instance InputValue Float where
+  parseInputValue "" = Right 0
+  parseInputValue t = decodeArgument t
+instance InputValue Double where
+  parseInputValue "" = Right 0
+  parseInputValue t = decodeArgument t
+instance InputValue Integer where
+  parseInputValue "" = Right 0
+  parseInputValue t = decodeArgument t
 
 
 instance {-# OVERLAPPABLE #-} (InputValue a) => InputValue (Maybe a) where

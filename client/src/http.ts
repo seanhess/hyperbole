@@ -15,6 +15,8 @@ export async function sendActionHttp(msg: ActionMessage): Promise<Response | Red
     "Hyp-State": msg.state || "()"
   }
 
+  console.log("sendActionHttp", msg.form)
+
   let res = await fetch(url, {
     method: "POST",
     headers: headers,

@@ -4,10 +4,13 @@
 
 module Test.FormSpec where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import GHC.Exts (IsList (..))
 import Skeletest
+import Web.Hyperbole.Data.Argument
 import Web.Hyperbole.HyperView.Forms
+import Web.Hyperbole.HyperView.Input (InputValue (..))
 import Web.Hyperbole.Types.Request
 
 
@@ -36,22 +39,35 @@ data Todo = Todo
   deriving (Generic, FromForm, Show, Eq)
 
 
-instance IsList RequestBody where
-  type Item RequestBody = Param
-  fromList ps = RequestBody ps mempty
-  toList (RequestBody ps _) = ps
+instance IsList Form where
+  type Item Form = Param
+  fromList ps = Form ps mempty
+  toList (Form ps _) = ps
 
 
 spec :: Spec
 spec = do
   describe "forms" $ do
-    it "should parse a form" $ do
-      case fromForm @(Example Identity) [("message", "hello"), ("age", "23"), ("whatever", "")] of
+    it "parses a record" $ do
+      case fromForm @(Example Identity) [("message", "hello"), ("age", "23"), ("whatever", "10.4"), ("maybeMessage", "hello world")] of
         Left e -> fail $ show e
         Right a -> do
           a.message `shouldBe` "hello"
           a.age `shouldBe` 23
-          a.whatever `shouldBe` Nothing
+          a.whatever `shouldBe` Just 10.4
+          a.maybeMessage `shouldBe` Just "hello world"
+
+    it "parses empty values" $ do
+      let e = fromForm @(Example Identity) [("age", ""), ("whatever", "")]
+      fmap (.age) e `shouldBe` Right 0
+      fmap (.whatever) e `shouldBe` Right Nothing
+      fmap (.maybeMessage) e `shouldBe` Right Nothing
+
+    it "parses missing values" $ do
+      let e = fromForm @(Example Identity) []
+      fmap (.age) e `shouldBe` Right 0
+      fmap (.whatever) e `shouldBe` Right Nothing
+      fmap (.maybeMessage) e `shouldBe` Right Nothing
 
     it "should parse a form with a number for the text" $ do
       let res = fromForm @(Example Identity) [("message", "30"), ("age", "0"), ("whatever", "2"), ("maybeMessage", "hello")]
@@ -65,7 +81,7 @@ spec = do
       let res = fromForm @(Example Identity) [("message", "30"), ("age", "0"), ("maybeMessage", "")]
       res `shouldBe` Right (Example "30" 0 Nothing (Just ""))
 
-    it "parses weird" $ do
+    it "parses bools" $ do
       fromForm @Flags [("a", "true"), ("b", "off")] `shouldBe` Right (Flags True False)
       fromForm @Flags [("a", "on"), ("b", "false")] `shouldBe` Right (Flags True False)
       fromForm @Flags [("a", "on")] `shouldBe` Right (Flags True False)
@@ -73,8 +89,24 @@ spec = do
     it "parses missing bools as false" $ do
       fromForm @Flags [("a", "true")] `shouldBe` Right (Flags True False)
 
-    it "parses underscores" $ do
+    it "parses special characters" $ do
       fromForm @Todo [("msg", "test")] `shouldBe` Right (Todo "test")
       fromForm @Todo [("msg", "hello world")] `shouldBe` Right (Todo "hello world")
       fromForm @Todo [("msg", "hello+world")] `shouldBe` Right (Todo "hello+world")
       fromForm @Todo [("msg", "hello_world")] `shouldBe` Right (Todo "hello_world")
+
+  describe "inputs" $ do
+    it "decodes option as input" $ do
+      let enc = encodeArgument (Twonit "Hello world" 33)
+      parseInputValue enc `shouldBe` Right (Twonit "Hello world" 33)
+
+    it "decodes option as field" $ do
+      let enc = encodeArgument (Twonit "Hello world" 33)
+      fromField (Just (FormParam enc)) `shouldBe` Right (Twonit "Hello world" 33)
+
+
+data FancySum
+  = Unit
+  | Onit Text
+  | Twonit Text Int
+  deriving (Generic, Eq, FromJSON, ToJSON, InputValue, FromField)

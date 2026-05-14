@@ -46,10 +46,11 @@ handleRequestWai
   -> Eff (Hyperbole : es) Response
   -> Eff es Wai.ResponseReceived
 handleRequestWai options req respond actions = do
-  -- NOTE: Remember, this is called for both updates AND for page loads
+  -- NOTE: Remember, this is called for both updates AND for page loads. We don't have to worry about anything the socket connection is doing
+  -- in particular, the socket connection sends a plain text body for input.value, but we don't care here
   withPostBody options.parseRequestBody req $ \params files -> do
     rq <- either throwIO pure $ do
-      fromWaiRequest req $ RequestBody params files
+      fromWaiRequest req (Form params files)
     (res, client, rmts) <- runHyperboleWai rq actions
     liftIO $ sendResponse options rq client res rmts respond
 
@@ -147,8 +148,8 @@ messageFromBody inp = do
   first (\e -> InvalidMessage e (cs inp)) $ parseActionMessage (cs inp)
 
 
-fromWaiRequest :: Wai.Request -> RequestBody -> Either MessageError Request
-fromWaiRequest wr body = do
+fromWaiRequest :: Wai.Request -> Form -> Either MessageError Request
+fromWaiRequest wr form = do
   let pth = path $ cs $ Wai.rawPathInfo wr
       query = Wai.queryString wr
       headers = Wai.requestHeaders wr
@@ -161,13 +162,14 @@ fromWaiRequest wr body = do
 
   pure $
     Request
-      { body
-      , path = pth
+      { path = pth
       , event
       , query
       , method
       , cookies
       , host
+      , form
+      , input = ""
       , requestId
       }
  where

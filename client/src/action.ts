@@ -13,12 +13,13 @@ export type ActionMessage = {
   requestId: RequestId
   state?: ViewState
   meta: Meta[]
-  body?: ActionBody
+  form?: FormData
+  value?: InputValue
 }
 
 export type InputValue = string
 
-export type ActionBody = URLSearchParams | InputValue
+export type ActionBody = FormData | InputValue
 
 export function actionMessage(
   id: ViewId,
@@ -32,22 +33,16 @@ export function actionMessage(
     { key: "Query", value: window.location.search },
   ]
 
-  return { viewId: id, action, state, requestId: reqId, meta, body: body }
-}
+  let form = undefined
+  let value = undefined
+  if (body instanceof FormData) {
+    form = body
+  }
+  else if (body) {
+    value = body as string
+  }
 
-export function toSearch(form?: FormData): URLSearchParams | undefined {
-  if (!form) return undefined
-
-
-  const params = new URLSearchParams()
-
-  console.log("FORM DATA")
-  form.forEach((value, key) => {
-    console.log(" ", key, "=", value)
-    params.append(key, value as string)
-  })
-
-  return params
+  return { viewId: id, action, state, requestId: reqId, meta, form, value }
 }
 
 export function renderActionMessage(msg: ActionMessage): string {
@@ -62,13 +57,13 @@ export function renderActionMessage(msg: ActionMessage): string {
   return [
     header.join('\n'),
     message.renderMetas(msg.meta),
-  ].join('\n')
+  ].join('\n') + renderInput(msg.value)
   // Forms are submitted via fetch() + renderForm(msg.form)
 }
 
-export function renderForm(body?: ActionBody): string {
-  if (!body) return ""
-  return "\n\n" + body
+export function renderInput(value?: InputValue): string {
+  if (!value) return ""
+  return "\n\n" + value
 }
 
 let globalRequestId: RequestId = 0
