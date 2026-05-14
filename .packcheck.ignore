@@ -11,6 +11,7 @@ demo/
 .dockerignore
 .github/workflows/haskell.yaml
 .github/workflows/packcheck.yaml
+.github/workflows/nix.yaml
 .gitignore
 .hlint.yaml
 .packcheck.ignore
