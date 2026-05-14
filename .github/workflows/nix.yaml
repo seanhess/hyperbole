@@ -25,5 +25,10 @@ jobs:
         with:
           extra_nix_config: "accept-flake-config = true"
 
+      - uses: cachix/cachix-action@v17
+        with:
+          name: hyperbole
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
       - name: build (incl. tests)
         run: nix build .#ghc${{ matrix.ghc_version }}-hyperbole
