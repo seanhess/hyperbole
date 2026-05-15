@@ -8,6 +8,7 @@ client/package-lock.json
 client/tsconfig.json
 docs/
 demo/
+hyperbole-oauth2/
 .dockerignore
 .github/workflows/haskell.yaml
 .github/workflows/packcheck.yaml
