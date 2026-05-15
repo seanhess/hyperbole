@@ -14,7 +14,6 @@ bug-reports:    https://github.com/seanhess/hyperbole/issues
 author:         Sean Hess
 maintainer:     seanhess@gmail.com
 license:        BSD-3-Clause
-license-file:   LICENSE
 build-type:     Simple
 extra-doc-files:
     README.md
