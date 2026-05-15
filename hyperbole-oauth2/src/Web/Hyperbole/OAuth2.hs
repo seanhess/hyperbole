@@ -2,7 +2,7 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Web.Hyperbole.Effect.OAuth2
+module Web.Hyperbole.OAuth2
   ( OAuth2 (..)
   , authUrl
   , validateCode
@@ -43,7 +43,6 @@ import GHC.Generics (Generic)
 import Network.HTTP.Client (HttpException, Request (..), RequestBody (..))
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types (hAccept, hContentType)
-import Network.URI (parseURI)
 import Text.Casing (quietSnake)
 import Web.Hyperbole.Data.URI
 import Web.Hyperbole.Effect.GenRandom

@@ -1,0 +1,60 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.39.5.
+--
+-- see: https://github.com/sol/hpack
+
+name:           hyperbole-oauth2
+version:        0.6.1
+synopsis:       OAuth2 Support for Hyperbole
+description:    OAuth2 Support for the Hyperbole framework
+category:       Web, Network
+homepage:       https://github.com/seanhess/hyperbole
+bug-reports:    https://github.com/seanhess/hyperbole/issues
+author:         Sean Hess
+maintainer:     seanhess@gmail.com
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Simple
+extra-doc-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/seanhess/hyperbole
+
+library
+  exposed-modules:
+      Web.Hyperbole.OAuth2
+  other-modules:
+      Paths_hyperbole_oauth2
+  autogen-modules:
+      Paths_hyperbole_oauth2
+  hs-source-dirs:
+      src
+  default-extensions:
+      OverloadedStrings
+      OverloadedRecordDot
+      DuplicateRecordFields
+      NoFieldSelectors
+      TypeFamilies
+      DataKinds
+      DerivingStrategies
+      DeriveAnyClass
+  ghc-options: -Wall -fdefer-typed-holes
+  build-depends:
+      aeson >=2.1.2.1 && <2.3
+    , base >=4.16 && <5
+    , bytestring >=0.11 && <0.13
+    , casing >=0.1.2 && <0.2
+    , containers >=0.6 && <1
+    , data-default ==0.8.*
+    , effectful >=2.4 && <3
+    , http-client ==0.7.*
+    , http-client-tls ==0.3.*
+    , http-types ==0.12.*
+    , hyperbole >=0.6 && <1
+    , random >=1.2 && <2
+    , string-conversions ==0.4.*
+    , text >=1.2 && <3
+  default-language: GHC2021

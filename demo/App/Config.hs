@@ -8,10 +8,9 @@ import Effectful.Environment
 import Effectful.Exception
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.TLS qualified as HTTPS
-import Network.URI (parseURI)
 import Web.Hyperbole.Data.URI
-import Web.Hyperbole.Effect.OAuth2 (Config (..), Token (..))
-import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
+import Web.Hyperbole.OAuth2 (Config (..), Token (..))
+import Web.Hyperbole.OAuth2 qualified as OAuth2
 
 data App
 data AppConfig = AppConfig

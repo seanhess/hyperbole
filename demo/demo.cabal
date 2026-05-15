@@ -154,6 +154,7 @@ executable demo
     , http-client-tls
     , http-types
     , hyperbole
+    , hyperbole-oauth2
     , network
     , network-uri
     , random

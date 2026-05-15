@@ -94,8 +94,8 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Application
 import Web.Hyperbole.Effect.GenRandom
-import Web.Hyperbole.Effect.OAuth2 (OAuth2, runOAuth2)
-import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
+import Web.Hyperbole.OAuth2 (OAuth2, runOAuth2)
+import Web.Hyperbole.OAuth2 qualified as OAuth2
 import Web.Hyperbole.Server.Options (defaultError)
 import Web.Hyperbole.Types.Response
 

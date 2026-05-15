@@ -4,3 +4,4 @@ packages:
   .
   ./demo/
   ./docs/
+  ./hyperbole-oauth2/

@@ -19,8 +19,8 @@ import Network.HTTP.Client qualified as HTTP
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI (Endpoint (..), (./.))
-import Web.Hyperbole.Effect.OAuth2 (Access, OAuth2, Token (..))
-import Web.Hyperbole.Effect.OAuth2 qualified as OAuth2
+import Web.Hyperbole.OAuth2 (Access, OAuth2, Token (..))
+import Web.Hyperbole.OAuth2 qualified as OAuth2
 import Web.Hyperbole.Types.Response (ResponseError (ErrAuth))
 
 --------------------------------------------------------------------------------

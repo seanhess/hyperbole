@@ -1,12 +1,10 @@
 {-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLists #-}
 
 module Web.Hyperbole.Data.Argument where
 
 import Control.Applicative ((<|>))
-import Control.DeepSeq (NFData)
 import Data.Aeson (FromJSON (..), ToJSON (..), Value (..))
 import Data.Aeson qualified as A
 import Data.Aeson.KeyMap (KeyMap, (!?))
@@ -27,7 +25,7 @@ import GHC.Generics
 
 data Argument
   = JSON Value
-  deriving (Show, Eq, Ord, Generic, NFData)
+  deriving (Show, Eq, Ord, Generic)
 
 
 -------------------------------------------------------------------------------

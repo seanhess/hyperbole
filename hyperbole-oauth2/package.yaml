@@ -1,0 +1,49 @@
+name:               hyperbole-oauth2
+version:            0.6.1
+synopsis:           OAuth2 Support for Hyperbole
+homepage:           https://github.com/seanhess/hyperbole
+github:             seanhess/hyperbole
+license:            BSD-3-Clause
+author:             Sean Hess
+maintainer:         seanhess@gmail.com
+category:           Web, Network
+description:        OAuth2 Support for the Hyperbole framework
+
+extra-doc-files:
+  - README.md
+
+language: GHC2021
+
+ghc-options:
+  - -Wall
+  - -fdefer-typed-holes
+
+default-extensions:
+  - OverloadedStrings
+  - OverloadedRecordDot
+  - DuplicateRecordFields
+  - NoFieldSelectors
+  - TypeFamilies
+  - DataKinds
+  - DerivingStrategies
+  - DeriveAnyClass
+
+dependencies:
+  - base >=4.16 && <5
+  - aeson >= 2.1.2.1 && <2.3
+  - bytestring >= 0.11 && <0.13
+  - casing >= 0.1.2 && <0.2
+  - containers >= 0.6 && <1
+  - data-default >= 0.8 && <0.9
+  - effectful >= 2.4 && <3
+  - http-client >= 0.7 && < 0.8
+  - http-client-tls >= 0.3 && < 0.4
+  - http-types >= 0.12 && <0.13
+  - hyperbole >= 0.6 && <1
+  - random >= 1.2 && < 2
+  - string-conversions >= 0.4 && <0.5
+  - text >= 1.2 && <3
+
+library:
+  source-dirs:
+    - src

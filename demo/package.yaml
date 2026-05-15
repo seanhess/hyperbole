@@ -48,6 +48,7 @@ dependencies:
   - websockets
   - cookie
   - hyperbole
+  - hyperbole-oauth2
   - network-uri
   - http-client
   - http-client-tls

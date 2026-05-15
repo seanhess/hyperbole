@@ -9,6 +9,7 @@ module Web.Hyperbole.Data.URI
   , Segment
   , path
   , parseURIReference
+  , parseURI
   , pathUri
   , uriToText
   , pathToText
@@ -34,7 +35,7 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import GHC.Exts (IsList (..))
 import Network.HTTP.Types (Query, QueryItem, parseQuery, renderQuery)
-import Network.URI (URI (..), URIAuth (..), parseURIReference, uriToString)
+import Network.URI (URI (..), URIAuth (..), parseURI, parseURIReference, uriToString)
 import Network.URI qualified as Network
 import Network.URI.Static (uri)
 import System.FilePath (normalise, (</>))
