@@ -1,4 +1,4 @@
-name:               docgen
+name:               docs
 version:            0.6.1
 synopsis:           Interactive HTML apps using type-safe serverside Haskell
 homepage:           https://github.com/seanhess/hyperbole
@@ -31,8 +31,7 @@ dependencies:
   - filepath
   - text
   - string-conversions
-  - Cabal
-  - hyperbole
+  - network-uri
   - casing
 
 executables:

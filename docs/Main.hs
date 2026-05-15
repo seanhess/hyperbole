@@ -8,23 +8,25 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
-import Distribution.Simple.Utils (copyDirectoryRecursive)
-import Distribution.Verbosity (verbose)
 import System.Directory
 import System.FilePath
-import Web.Hyperbole.Data.URI
--- import Control.Applicative ((<|>))
--- import Web.Hyperbole.Route (matchRoute)
+import Network.URI (URI)
+import Network.URI.Static (uri)
+import System.Environment (getArgs)
 
 
 main :: IO ()
 main = do
-  let tmpDir = "/tmp/hyperbole"
-  copyExtraFilesTo tmpDir
-  expandSourcesTo tmpDir
-  putStrLn $ "COPY RECURSIVE: " <> (tmpDir <> "docs")
-  copyDirectoryRecursive verbose "./docs" (tmpDir </> "docs")
-  copyDirectoryRecursive verbose "./demo" (tmpDir </> "demo")
+  args <- getArgs
+  case args of
+    [original, input, output] -> do
+      src <- readSource input
+      expanded <- expandFile src
+      let linePragma = T.pack $ "{-# LINE 1 \"" ++ original ++ "\" #-}"
+      let final = SourceCode [linePragma] <> expanded
+      T.writeFile output $ T.unlines final.lines
+
+    _ -> error "Usage: docgen _ _ _"
 
 
 test :: IO ()
@@ -111,6 +113,7 @@ data Macro
   -- | Example Path
   deriving (Eq)
 newtype SourceCode = SourceCode {lines :: [Text]}
+  deriving newtype (Monoid, Semigroup)
 instance Show Macro where
   -- show (Example p) = "Example " <> show p
   show (Embed mn def) = "Embed " <> show mn <> " " <> show def
@@ -191,7 +194,7 @@ modulePath (ModuleName mn) = cs $ T.replace "." "/" mn <> ".hs"
 expandEmbed :: ModuleName -> Text -> TopLevelDefinition -> IO [Text]
 expandEmbed mn pfx def = do
   let src = modulePath mn
-  putStrLn $ "  embed: " <> src
+  -- putStrLn $ "  embed: " <> src
   source <- T.readFile $ "./demo/" <> src
   expanded <- requireTopLevel def (SourceCode $ T.lines source)
   pure $ fmap markupLine expanded

@@ -93,7 +93,9 @@ library
       DataKinds
       DerivingStrategies
       DeriveAnyClass
-  ghc-options: -Wall -fdefer-typed-holes
+  ghc-options: -Wall -fdefer-typed-holes -F -pgmF=docgen
+  build-tool-depends:
+      docs:docgen
   build-depends:
       aeson >=2.1.2.1 && <2.3
     , atomic-css ==0.2.*
