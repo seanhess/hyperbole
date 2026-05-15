@@ -82,12 +82,11 @@ handleRequestSocket opts actions wreq conn eff = do
     req <- parseMessageRequest msg
 
     a <- async $ do
-      -- is one already running?
       res <- trySync $ runHyperboleSocket opts conn req eff
       case res of
         -- TODO: catch socket errors separately from SomeException?
         Left (ex :: SomeException) -> do
-          -- It's not safe to send any exception over the wire
+          -- It's not safe to send SomeException over the wire
           -- log it to the console and send the error to the client
           liftIO $ print ex
           res2 <- trySync $ sendError conn (requestMetadata req) (opts.serverError ErrInternal)
@@ -161,7 +160,8 @@ handleRequestSocket opts actions wreq conn eff = do
         headers = Wai.requestHeaders wreq
         method = "POST"
 
-        body = msg.body.value
+    -- Parse params as url encoded, ignore files
+    let body = cs msg.body.value
 
     query <- HTTP.parseQuery . cs <$> requireMeta "Query" msg.metadata
     cookie <- cs <$> requireMeta "Cookie" msg.metadata
@@ -174,7 +174,8 @@ handleRequestSocket opts actions wreq conn eff = do
         , event = Just msg.event
         , host
         , query
-        , body
+        , form = Form mempty mempty
+        , input = body
         , method
         , cookies
         , requestId = msg.requestId

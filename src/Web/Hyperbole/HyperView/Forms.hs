@@ -1,10 +1,12 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Web.Hyperbole.HyperView.Forms
   ( FromForm (..)
   , FromFormF (..)
+  , FromField (..)
   , GenFields (..)
   , fieldNames
   , FieldName (..)
@@ -15,6 +17,7 @@ module Web.Hyperbole.HyperView.Forms
   , field
   , label
   , input
+  , fileInput
   , checkbox
   , radioGroup
   , radio
@@ -23,7 +26,6 @@ module Web.Hyperbole.HyperView.Forms
   , textarea
   , submit
   , formData
-  , FormOptions (..)
   , Validated (..)
   , isInvalid
   , invalidText
@@ -31,41 +33,46 @@ module Web.Hyperbole.HyperView.Forms
   , Identity
 
     -- * Re-exports
-  , FE.FromFormKey
   , Generic
   , GFieldsGen (..)
   , GenField (..)
-  , Form (..)
   )
 where
 
+import Control.Applicative ((<|>))
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Bifunctor (first)
+import Data.Bifunctor (first, second)
+import Data.ByteString qualified as BS
 import Data.Functor.Identity (Identity (..))
 import Data.Kind (Type)
 import Data.Maybe (fromMaybe)
 import Data.String (IsString (..))
 import Data.String.Conversions (cs)
 import Data.Text (Text, pack)
+import Data.Time.Clock (UTCTime)
 import Effectful
 import GHC.Generics
+import Network.URI
 import Text.Casing (kebab)
+import Text.Read (readMaybe)
 import Web.Atomic.Types hiding (Selector)
-import Web.FormUrlEncoded (Form (..), FormOptions (..))
-import Web.FormUrlEncoded qualified as FE
 import Web.Hyperbole.Data.Argument
 import Web.Hyperbole.Effect.Hyperbole
-import Web.Hyperbole.Effect.Request
+import Web.Hyperbole.Effect.Request (formBody)
 import Web.Hyperbole.Effect.Response (parseError)
 import Web.Hyperbole.HyperView.Event (onSubmit)
 import Web.Hyperbole.HyperView.Input (Option (..), checked)
 import Web.Hyperbole.HyperView.Types
+import Web.Hyperbole.Types.Request
 import Web.Hyperbole.View
 
 
 ------------------------------------------------------------------------------
 -- FORM PARSING
 ------------------------------------------------------------------------------
+
+type ParamKey = BS.ByteString
+
 
 {- | Simple types that be decoded from form data
 
@@ -74,20 +81,20 @@ import Web.Hyperbole.View
 @
 -}
 class FromForm (form :: Type) where
-  fromForm :: FE.Form -> Either String form
-  default fromForm :: (Generic form, GFormParse (Rep form)) => FE.Form -> Either String form
+  fromForm :: Form -> Either String form
+  default fromForm :: (Generic form, GFormParse (Rep form)) => Form -> Either String form
   fromForm f = to <$> gFormParse f
 
 
-{- | A Higher-Kinded type that can be parsed from a 'Web.FormUrlEncoded.Form'
+{- | A Higher-Kinded type that can be parsed from a 'Form'
 
 @
 #EMBED Example.FormValidation data UserForm
 @
 -}
 class FromFormF (f :: (Type -> Type) -> Type) where
-  fromFormF :: FE.Form -> Either String (f Identity)
-  default fromFormF :: (Generic (f Identity), GFormParse (Rep (f Identity))) => FE.Form -> Either String (f Identity)
+  fromFormF :: Form -> Either String (f Identity)
+  default fromFormF :: (Generic (f Identity), GFormParse (Rep (f Identity))) => Form -> Either String (f Identity)
   fromFormF f = to <$> gFormParse f
 
 
@@ -104,6 +111,14 @@ formData = do
   let ef = fromForm @form f :: Either String form
   either parseError pure ef
 
+
+lookupParam :: ParamKey -> Form -> Maybe FormParam
+lookupParam key f = FormParam . cs <$> lookup key f.params <|> FileParam <$> lookup key f.files
+
+
+-- where
+--  -- lookupFile = FileField <$> lookup key req.files
+--  lookupParam = ParamField . ParamValue . cs <$>
 
 ------------------------------------------------------------------------------
 -- GEN FIELDS: Generate a type from selector names
@@ -229,6 +244,12 @@ label :: Text -> View (Input id a) ()
 -}
 label :: View c () -> View c ()
 label = tag "label"
+
+
+fileInput :: forall id a. View (Input id a) ()
+fileInput = do
+  inp :: Input id a <- viewId
+  tag "input" @ att "type" "file" . name inp.inputName.value $ none
 
 
 -- | input for a 'field'
@@ -393,11 +414,150 @@ type instance Field (Either String) a = Either String a
 
 
 ------------------------------------------------------------------------------
+-- FormField
+------------------------------------------------------------------------------
+
+class FromField a where
+  fromField :: Maybe FormParam -> Either String a
+  default fromField :: (FromJSON a) => Maybe FormParam -> Either String a
+  fromField = argumentField
+
+
+argumentField :: (FromJSON a) => Maybe FormParam -> Either String a
+argumentField = \case
+  Nothing -> Left "Missing form field value"
+  Just (FormParam t) -> decodeArgument t
+  Just (FileParam _) ->
+    Left "Cannot parse uploaded file as param"
+
+
+readField :: (Read a) => Maybe FormParam -> Either String a
+readField = \case
+  Nothing -> Left "Missing form field value"
+  Just (FormParam p) -> do
+    case readMaybe (cs p) of
+      Nothing -> Left "Could not read form field"
+      Just a -> pure a
+  Just (FileParam _) ->
+    Left "Cannot read uploaded file as param"
+
+
+instance FromField Int where
+  fromField Nothing = pure 0
+  fromField (Just "") = pure 0
+  fromField (Just t) = readField (Just t)
+instance FromField Integer where
+  fromField Nothing = pure 0
+  fromField (Just "") = pure 0
+  fromField (Just t) = readField (Just t)
+instance FromField Float where
+  fromField Nothing = pure 0
+  fromField (Just "") = pure 0
+  fromField (Just t) = readField (Just t)
+instance FromField Double where
+  fromField Nothing = pure 0
+  fromField (Just "") = pure 0
+  fromField (Just t) = readField (Just t)
+
+
+instance FromField Bool where
+  fromField Nothing = pure False
+  fromField (Just (FileParam _)) = Left "Cannot parse file param as bool"
+  fromField (Just (FormParam p)) =
+    case p of
+      "on" -> pure True
+      "off" -> pure False
+      "" -> pure False
+      "false" -> pure False
+      "true" -> pure True
+      other -> Left $ "Could not parse bool form param: " <> cs other
+instance FromField Char where
+  fromField Nothing = Left "Missing form field value"
+  fromField (Just (FileParam _)) = Left "Cannot parse file param as Char"
+  fromField (Just (FormParam t)) =
+    case cs t of
+      (c : _) -> pure c
+      _ -> Left "Could not parse empty form field as char"
+instance FromField UTCTime where
+  fromField = readField
+instance FromField URI where
+  fromField = \case
+    Nothing -> Left "Missing form field value"
+    Just (FileParam _) -> Left "Cannot parse file param as Char"
+    Just (FormParam t) ->
+      case parseURIReference (cs t) of
+        Nothing -> Left "Invalid URI"
+        Just a -> pure a
+instance FromField String where
+  fromField t = second cs $ fromField @Text t
+instance FromField BS.ByteString where
+  fromField t = second cs $ fromField @Text t
+instance FromField Text where
+  fromField = \case
+    Nothing -> pure ""
+    Just (FormParam t) -> pure t
+    Just (FileParam _) -> Left "Cannot parse FileParam as Text"
+
+
+instance {-# OVERLAPPABLE #-} (FromField a) => FromField (Maybe a) where
+  fromField Nothing = pure Nothing
+  fromField (Just "") = pure Nothing
+  fromField (Just a) = Just <$> fromField @a (Just a)
+instance {-# OVERLAPS #-} FromField (Maybe BS.ByteString) where
+  fromField Nothing = pure Nothing
+  fromField (Just "") = pure $ Just ""
+  fromField (Just a) = Just <$> fromField @BS.ByteString (Just a)
+instance {-# OVERLAPS #-} FromField (Maybe Text) where
+  fromField Nothing = pure Nothing
+  fromField (Just "") = pure $ Just ""
+  fromField (Just a) = Just <$> fromField @Text (Just a)
+instance {-# OVERLAPS #-} FromField (Maybe String) where
+  fromField Nothing = pure Nothing
+  fromField (Just "") = pure $ Just ""
+  fromField (Just a) = Just <$> fromField @String (Just a)
+instance {-# OVERLAPPABLE #-} (FromField a, FromField b) => FromField (Either a b) where
+  fromField = \case
+    Nothing -> Left "Missing form field value"
+    Just p ->
+      case fromField @a (Just p) of
+        Right a -> pure $ Left a
+        Left _ -> pure <$> fromField @b (Just p)
+instance FromField UploadedFile where
+  fromField = \case
+    Nothing -> Left "Missing file upload"
+    Just (FormParam "") -> Left "Missing file upload"
+    Just (FormParam t) -> Left $ "Cannot parse FormParam as UploadedFile: " <> cs t
+    Just (FileParam f) ->
+      if f.fileName == mempty
+        then Left "Empty file uploaded"
+        else pure f
+instance {-# OVERLAPS #-} FromField (Maybe UploadedFile) where
+  fromField = \case
+    Nothing -> pure Nothing
+    Just (FileParam f) -> do
+      if f.fileName == mempty
+        then pure Nothing
+        else pure $ Just f
+    other -> fromField other
+
+
+-- these instances don't make a lot of sense
+-- instance (FromField a, FromField b) => FromField (a, b)
+-- instance (FromField a, FromField b, FromField c) => FromField (a, b, c)
+-- instance {-# OVERLAPPABLE #-} (FromParam a) => FromField [a]
+-- instance FromField Value
+-- instance FromField Word
+-- instance FromField Word8
+-- instance FromField Word16
+-- instance FromField Word32
+-- instance FromField Word64
+
+------------------------------------------------------------------------------
 -- GENERIC FORM PARSE
 ------------------------------------------------------------------------------
 
 class GFormParse f where
-  gFormParse :: FE.Form -> Either String (f p)
+  gFormParse :: Form -> Either String (f p)
 
 
 instance (GFormParse f, GFormParse g) => GFormParse (f :*: g) where
@@ -415,78 +575,91 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
   gFormParse f = M1 <$> gFormParse f
 
 
-instance (Selector s, GFieldParse f) => GFormParse (M1 S s f) where
+instance (Selector s, FromField a) => GFormParse (M1 S s (K1 R a)) where
   gFormParse f = do
     let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
-    mt :: Maybe Text <- first cs $ FE.lookupMaybe (cs sel) f
-    x :: f p <- gFieldParse sel mt
-    pure $ M1 x
+    let mt :: Maybe FormParam = lookupParam (cs sel) f
+    a <- first (\err -> sel <> ": " <> err) $ fromField @a mt
+    pure $ M1 $ K1 a
 
 
-class GFieldParse f where
-  gFieldParse :: String -> Maybe Text -> Either String (f p)
-
-
-instance {-# OVERLAPPABLE #-} (FromJSON a) => GFieldParse (K1 R a) where
-  gFieldParse sel Nothing = Left $ "Missing form field: " <> sel
-  gFieldParse _ (Just t) = K1 <$> decodeArgument t
-
-
-instance {-# OVERLAPS #-} (FromJSON a) => GFieldParse (K1 R (Maybe a)) where
-  gFieldParse _ Nothing = pure $ K1 Nothing
-  gFieldParse _ (Just "") = pure $ K1 Nothing -- an empty string should be Nothing unless overriden
-  gFieldParse _ (Just t) = K1 <$> decodeArgument t
-
-
-instance {-# OVERLAPS #-} GFieldParse (K1 R Bool) where
-  gFieldParse _ Nothing = pure $ K1 False
-  gFieldParse sel (Just t) = do
-    K1 <$> case t of
-      "on" -> pure True
-      "off" -> pure False
-      "" -> pure False
-      "false" -> pure False
-      "true" -> pure True
-      other -> Left $ "Could not parse bool field: " <> sel <> " = " <> cs other
-
-
-instance {-# OVERLAPS #-} GFieldParse (K1 R (Maybe Text)) where
-  gFieldParse _ Nothing = pure $ K1 Nothing
-  gFieldParse sel inp = do
-    K1 t <- gFieldParse @(K1 R Text) sel inp
-    pure $ K1 $ Just t
-
-
-instance {-# OVERLAPS #-} GFieldParse (K1 R Text) where
-  gFieldParse _ Nothing = pure $ K1 ""
-  gFieldParse _ (Just "") = pure $ K1 ""
-  gFieldParse _ (Just t) = K1 <$> decodeArgument ("\"" <> t <> "\"")
-
-
-instance {-# OVERLAPS #-} GFieldParse (K1 R Int) where
-  gFieldParse _ Nothing = pure $ K1 0
-  gFieldParse _ (Just "") = do
-    pure $ K1 0
-  gFieldParse _ (Just t) = K1 <$> decodeArgument t
-
-
-instance {-# OVERLAPS #-} GFieldParse (K1 R Integer) where
-  gFieldParse _ Nothing = pure $ K1 0
-  gFieldParse _ (Just "") = pure $ K1 0
-  gFieldParse _ (Just t) = K1 <$> decodeArgument t
-
-
-instance {-# OVERLAPS #-} GFieldParse (K1 R Float) where
-  gFieldParse _ Nothing = pure $ K1 0
-  gFieldParse _ (Just "") = pure $ K1 0
-  gFieldParse _ (Just t) = K1 <$> decodeArgument t
-
-
-instance {-# OVERLAPS #-} GFieldParse (K1 R Double) where
-  gFieldParse _ Nothing = pure $ K1 0
-  gFieldParse _ (Just "") = pure $ K1 0
-  gFieldParse _ (Just t) = K1 <$> decodeArgument t
-
+-- class GFieldParse f where
+--   gFieldParse :: String -> Maybe ParamValue -> Either String (f p)
+--
+--
+-- instance {-# OVERLAPPABLE #-} (FromJSON a) => GFieldParse (K1 R a) where
+--   gFieldParse sel Nothing = Left $ "Missing form field: " <> sel
+--   gFieldParse _ (Just (ParamText t)) = K1 <$> decodeArgument t
+--   gFieldParse sel (Just _) = Left $ "Unexpected file param: " <> sel
+--
+--
+-- instance {-# OVERLAPS #-} (GFieldParse (K1 R a)) => GFieldParse (K1 R (Maybe a)) where
+--   gFieldParse _ Nothing = pure $ K1 Nothing
+--   gFieldParse _ (Just (ParamText "")) = pure $ K1 Nothing -- an empty string should be Nothing unless overriden
+--   gFieldParse sel (Just p) = do
+--     K1 a <- gFieldParse @(K1 R a) sel (Just p)
+--     pure $ K1 $ Just a
+--
+--
+-- instance {-# OVERLAPS #-} GFieldParse (K1 R Bool) where
+--   gFieldParse _ Nothing = pure $ K1 False
+--   gFieldParse sel (Just t) = do
+--     K1 <$> case t of
+--       "on" -> pure True
+--       "off" -> pure False
+--       "" -> pure False
+--       "false" -> pure False
+--       "true" -> pure True
+--       ParamText other -> Left $ "Could not parse bool field: " <> sel <> " = " <> cs other
+--       ParamFile _ -> Left $ "Unexpected file param: " <> sel
+--
+--
+-- instance {-# OVERLAPS #-} GFieldParse (K1 R (Maybe Text)) where
+--   gFieldParse _ Nothing = pure $ K1 Nothing
+--   gFieldParse sel inp = do
+--     K1 t <- gFieldParse @(K1 R Text) sel inp
+--     pure $ K1 $ Just t
+--
+--
+-- instance {-# OVERLAPS #-} GFieldParse (K1 R Text) where
+--   gFieldParse _ Nothing = pure $ K1 ""
+--   gFieldParse _ (Just "") = pure $ K1 ""
+--   gFieldParse _ (Just (ParamText t)) = K1 <$> decodeArgument ("\"" <> t <> "\"")
+--   gFieldParse sel (Just _) = Left $ "Unexpected file param: " <> sel
+--
+--
+-- instance {-# OVERLAPS #-} GFieldParse (K1 R Int) where
+--   gFieldParse _ Nothing = pure $ K1 0
+--   gFieldParse _ (Just "") = pure $ K1 0
+--   gFieldParse _ (Just (ParamText t)) = K1 <$> decodeArgument t
+--   gFieldParse sel (Just _) = Left $ "Unexpected file param: " <> sel
+--
+--
+-- instance {-# OVERLAPS #-} GFieldParse (K1 R Integer) where
+--   gFieldParse _ Nothing = pure $ K1 0
+--   gFieldParse _ (Just "") = pure $ K1 0
+--   gFieldParse _ (Just (ParamText t)) = K1 <$> decodeArgument t
+--   gFieldParse sel (Just _) = Left $ "Unexpected file param: " <> sel
+--
+--
+-- instance {-# OVERLAPS #-} GFieldParse (K1 R Float) where
+--   gFieldParse _ Nothing = pure $ K1 0
+--   gFieldParse _ (Just "") = pure $ K1 0
+--   gFieldParse _ (Just (ParamText t)) = K1 <$> decodeArgument t
+--   gFieldParse sel (Just _) = Left $ "Unexpected file param: " <> sel
+--
+--
+-- instance {-# OVERLAPS #-} GFieldParse (K1 R Double) where
+--   gFieldParse _ Nothing = pure $ K1 0
+--   gFieldParse _ (Just "") = pure $ K1 0
+--   gFieldParse _ (Just (ParamText t)) = K1 <$> decodeArgument t
+--   gFieldParse sel (Just _) = Left $ "Unexpected file param: " <> sel
+--
+--
+-- instance {-# OVERLAPS #-} GFieldParse (K1 R UploadedFile) where
+--   gFieldParse sel Nothing = Left $ "Missing form field: " <> sel
+--   gFieldParse _ (Just (ParamFile f)) = Right $ K1 f
+--   gFieldParse sel (Just (ParamText _)) = Left $ "Unexpected text param: " <> sel
 
 ------------------------------------------------------------------------------
 -- GENERIC GENERATE FIELDS

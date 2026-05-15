@@ -39,6 +39,8 @@ module Web.Hyperbole
     -- ** Request #request#
   , request
   , Request (..)
+  , Form (..)
+  , UploadedFile (..)
 
     -- ** Response #response#
   , respondError
@@ -107,6 +109,7 @@ module Web.Hyperbole
     -- $forms
   , FromForm (..)
   , FromFormF (..)
+  , FromField (..)
   , formData
   , GenFields (..)
   , fieldNames
@@ -127,6 +130,7 @@ module Web.Hyperbole
   , select
   , checked
   , textarea
+  , fileInput
   , submit
   , View.placeholder
   , InputType (..)
@@ -188,7 +192,7 @@ import Web.Hyperbole.Document
 import Web.Hyperbole.Effect.Client
 import Web.Hyperbole.Effect.Hyperbole
 import Web.Hyperbole.Effect.Query
-import Web.Hyperbole.Effect.Request
+import Web.Hyperbole.Effect.Request (inputValue)
 import Web.Hyperbole.Effect.Response
 import Web.Hyperbole.Effect.Session
 import Web.Hyperbole.HyperView

@@ -37,7 +37,7 @@ export function toMetadata(meta: Meta[]): Metadata {
 // viewId: meta.find(m => m.key == "VIEW-ID")?.value,
 
 export function parseMetadata(input: string): Metadata {
-  let metas = takeWhileMap(parseMeta, input.trim().split("\n"))
+  let metas = parseMetas(input.trim().split("\n"))
   return toMetadata(metas)
 }
 
@@ -65,6 +65,10 @@ export function splitMessage(message: string): SplitMessage {
   let rest = dropWhile((l) => l == "", lines.slice(metas.length + 1))
 
   return { command, metas, rest }
+}
+
+export function parseMetas(lines: string[]): Meta[] {
+  return takeWhileMap(parseMeta, lines)
 }
 
 export function parseMeta(line: string): Meta | undefined {

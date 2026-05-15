@@ -7,15 +7,17 @@ import App.Route
 import Control.Monad (forM_)
 import Data.String.Conversions
 import Data.Text (Text)
+import Example.Style qualified as Style
+import Example.Style.Cyber (btn)
 import Example.View.Layout
 import Web.Atomic.CSS
-import Web.Hyperbole hiding (Number)
+import Web.Hyperbole
 import Web.Hyperbole.HyperView.Event (onChange)
 
 source :: ModuleSource
 source = $(moduleSource)
 
-page :: (Hyperbole :> es) => Page es '[Changes]
+page :: (Hyperbole :> es) => Page es '[Changes, AddContact]
 page = do
   pure $ layout (Test TestMain) $ do
     section' "Encodings" $ do
@@ -24,6 +26,9 @@ page = do
 
       example source $ do
         hyper Changes (viewChanges "")
+
+      example source $ do
+        hyper AddContact formView
 
 -- Encoding Tests
 
@@ -134,3 +139,121 @@ viewChanges inp = do
     dropdown GoNumOption (0 :: Int) ~ border 1 $ do
       forM_ [0 .. 10] $ \n -> do
         option n (cs $ show n)
+
+data AddContact = AddContact
+  deriving (Generic, ViewId)
+
+instance HyperView AddContact es where
+  data Action AddContact
+    = Submit
+    deriving (Generic, ViewAction)
+
+  update Submit = do
+    cf <- formData
+    pure $ contactView cf
+
+data Planet
+  = Mercury
+  | Venus
+  | Earth
+  | Mars
+  | Whatever Text
+  deriving (Generic, FromJSON, ToJSON, Eq, Show, FromField)
+
+data Moon
+  = Titan
+  | Europa
+  | Callisto
+  | Mimas
+  deriving (Generic, ToJSON, FromJSON, Eq, Show, FromField)
+
+-- Forms can be pretty simple. Just a type that can be parsed
+data ContactForm = ContactForm
+  { name :: Text
+  , age :: Int
+  , isFavorite :: Bool
+  , planet :: Planet
+  , moon :: Moon
+  }
+  deriving (Generic, FromForm)
+
+nameForm :: View AddContact ()
+nameForm = do
+  form Submit $ do
+    -- Make sure these names match the field names used by FormParse / formData
+    field "name" $ do
+      label $ do
+        text "Contact Name"
+        input Username @ placeholder "contact name"
+
+-- and a view that displays an input for each field
+formView :: View AddContact ()
+formView = do
+  form Submit ~ gap 15 . pad 10 . flexCol $ do
+    el ~ Style.h1 $ "Add Contact"
+
+    -- Make sure these names match the field names used by FormParse / formData
+    field "name" $ do
+      label $ do
+        text "Contact Name"
+        input Username @ placeholder "contact name" ~ Style.input
+
+    field "age" $ do
+      label $ do
+        text "Age"
+        input Number @ placeholder "age" . value "0" ~ Style.input
+
+    field "isFavorite" $ do
+      label $ do
+        row ~ gap 10 $ do
+          checkbox False ~ width 32
+          text "Favorite?"
+
+    col ~ gap 5 $ do
+      el $ text "Planet"
+      field "planet" $ do
+        radioGroup Earth $ do
+          planet Mercury
+          planet Venus
+          planet Earth
+          planet Mars
+          planet $ Whatever "is cooking"
+
+    field "moon" $ do
+      label $ do
+        text "Moon"
+        select Callisto ~ Style.input $ do
+          option Titan "Titan"
+          option Europa "Europa"
+          option Callisto "Callisto"
+          option Mimas "Mimas"
+
+    submit "Submit" ~ btn
+ where
+  planet val =
+    label ~ flexRow . gap 10 $ do
+      radio val ~ width 32
+      text (cs (show val))
+
+contactView :: ContactForm -> View AddContact ()
+contactView u = do
+  el ~ bold . Style.success $ "Accepted Signup"
+  row ~ gap 5 $ do
+    el "Username:"
+    el $ text u.name
+
+  row ~ gap 5 $ do
+    el "Age:"
+    el $ text $ cs (show u.age)
+
+  row ~ gap 5 $ do
+    el "Favorite:"
+    el $ text $ cs (show u.isFavorite)
+
+  row ~ gap 5 $ do
+    el "Planet:"
+    el $ text $ cs (show u.planet)
+
+  row ~ gap 5 $ do
+    el "Moon:"
+    el $ text $ cs (show u.moon)

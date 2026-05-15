@@ -5,6 +5,7 @@ module Web.Hyperbole.Effect.Hyperbole where
 import Data.Aeson (Value)
 import Data.Text (Text)
 import Effectful
+import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static
 import Effectful.State.Static.Local
 import Effectful.Writer.Static.Local
@@ -47,3 +48,8 @@ runHyperboleLocal req eff = do
       , query = mempty
       , pageTitle = Nothing
       }
+
+
+-- | Return all information about the 'Request'
+request :: (Hyperbole :> es) => Eff es Request
+request = send GetRequest
