@@ -10,6 +10,7 @@ maintainer:         seanhess@gmail.com
 category:           Web, Network
 description:        Interactive HTML applications with type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView.
 
+
 extra-doc-files:
   - README.md
   - CHANGELOG.md
@@ -73,7 +74,7 @@ dependencies:
   - http-client-tls >= 0.3 && < 0.4
 
 library:
-  build-tools: docs:docgen
+  build-tools: docgen:docgen
   ghc-options:
     - -F -pgmF=docgen
   source-dirs:

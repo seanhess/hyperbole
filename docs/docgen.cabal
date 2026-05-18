@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 
-name:           docs
+name:           docgen
 version:        0.6.1
 synopsis:       Interactive HTML apps using type-safe serverside Haskell
 description:    Interactive HTML applications using type-safe serverside Haskell. Inspired by HTMX, Elm, and Phoenix LiveView
@@ -23,9 +23,9 @@ source-repository head
 executable docgen
   main-is: Main.hs
   other-modules:
-      Paths_docs
+      Paths_docgen
   autogen-modules:
-      Paths_docs
+      Paths_docgen
   hs-source-dirs:
       ./
   default-extensions:
