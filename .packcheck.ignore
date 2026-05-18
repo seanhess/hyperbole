@@ -16,7 +16,6 @@ hyperbole-oauth2/
 .gitignore
 .hlint.yaml
 .packcheck.ignore
-DOCTODO.md
 Dockerfile
 bin/dev
 bin/docgen
