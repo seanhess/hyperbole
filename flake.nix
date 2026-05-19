@@ -127,6 +127,16 @@
           ];
         };
 
+        oauth2-src = nix-filter.lib {
+          root = ./hyperbole-oauth2;
+          include = [
+            "src"
+            (nix-filter.lib.matchExt "hs")
+            ./hyperbole-oauth2/hyperbole-oauth2.cabal
+            ./hyperbole-oauth2/README.md # required by `extra-doc-files` in `hyperbole-oauth2.cabal`
+          ];
+        };
+
         # Merges filtered `demo` + `docs` sources into `$out`.
         # Needed to solve `demo/docs` -> `../docs` symlink issue Nix has before.
         # Named "demo" so the store path is `/nix/store/<hash>-demo`.
@@ -152,6 +162,7 @@
                 hfinal: hprev: {
                   ${demoName} = hfinal.callCabal2nix demoName demo-docs-src { };
                   docgen = hfinal.callCabal2nix "docgen" docgen-src { };
+                  hyperbole-oauth2 = hfinal.callCabal2nix "hyperbole-oauth2" oauth2-src { };
                 }
               )
             );
