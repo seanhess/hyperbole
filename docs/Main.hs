@@ -1,8 +1,5 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Main where
 
-import Control.Exception (SomeException, try)
 import Data.Char (isAlpha, isSpace)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
@@ -10,8 +7,6 @@ import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import System.Directory
 import System.FilePath
-import Network.URI (URI)
-import Network.URI.Static (uri)
 import System.Environment (getArgs)
 
 
@@ -36,34 +31,34 @@ test = do
   mapM_ print lns
 
 
-expandSourcesTo :: FilePath -> IO ()
-expandSourcesTo tmpDir = do
-  allFiles <- relativeSourceFiles "./src"
-  -- mapM_ (putStrLn . ("SOURCE " <>)) allFiles
-  mapM_ (expandAndCopyFileTo tmpDir) allFiles
+-- expandSourcesTo :: FilePath -> IO ()
+-- expandSourcesTo tmpDir = do
+--   allFiles <- relativeSourceFiles "./src"
+--   -- mapM_ (putStrLn . ("SOURCE " <>)) allFiles
+--   mapM_ (expandAndCopyFileTo tmpDir) allFiles
 
 
-copyExtraFilesTo :: FilePath -> IO ()
-copyExtraFilesTo tmpDir = do
-  createDirectoryIfMissing True tmpDir
-  copyFile "./cabal.project" (tmpDir </> "cabal.project")
-  copyFile "./hyperbole.cabal" (tmpDir </> "hyperbole.cabal")
-  copyFile "./README.md" (tmpDir </> "README.md")
-  copyFile "./CHANGELOG.md" (tmpDir </> "CHANGELOG.md")
-  copyFile "./LICENSE" (tmpDir </> "LICENSE")
-  createDirectoryIfMissing True (tmpDir </> "client/dist")
-  copyFile "./client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
-  copyFile "./client/dist/hyperbole.js.map" (tmpDir </> "client/dist/hyperbole.js.map")
-  createDirectoryIfMissing True (tmpDir </> "client/util")
-  copyFile "./client/util/live-reload.js" (tmpDir </> "client/util/live-reload.js")
+-- copyExtraFilesTo :: FilePath -> IO ()
+-- copyExtraFilesTo tmpDir = do
+--   createDirectoryIfMissing True tmpDir
+--   copyFile "./cabal.project" (tmpDir </> "cabal.project")
+--   copyFile "./hyperbole.cabal" (tmpDir </> "hyperbole.cabal")
+--   copyFile "./README.md" (tmpDir </> "README.md")
+--   copyFile "./CHANGELOG.md" (tmpDir </> "CHANGELOG.md")
+--   copyFile "./LICENSE" (tmpDir </> "LICENSE")
+--   createDirectoryIfMissing True (tmpDir </> "client/dist")
+--   copyFile "./client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
+--   copyFile "./client/dist/hyperbole.js.map" (tmpDir </> "client/dist/hyperbole.js.map")
+--   createDirectoryIfMissing True (tmpDir </> "client/util")
+--   copyFile "./client/util/live-reload.js" (tmpDir </> "client/util/live-reload.js")
 
 
-expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
-expandAndCopyFileTo tmpDir pth = do
-  putStrLn $ "EXPANDING " <> pth
-  src <- readSource pth
-  expanded <- expandFile src
-  writeSource tmpDir pth expanded
+-- expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
+-- expandAndCopyFileTo tmpDir pth = do
+--   putStrLn $ "EXPANDING " <> pth
+--   src <- readSource pth
+--   expanded <- expandFile src
+--   writeSource tmpDir pth expanded
 
 
 readSource :: FilePath -> IO SourceCode
@@ -83,26 +78,26 @@ writeSource tmpDir relPath src = do
     dropWhile (== '/') . dropWhile (== '.')
 
 
-relativeSourceFiles :: FilePath -> IO [FilePath]
-relativeSourceFiles dir = do
-  contents <- tryDirectory dir
-  let folders = filter isFolder contents
-  let files = filter isSourceFile contents
-
-  files' <- mapM (relativeSourceFiles . addDir) folders
-
-  pure $ fmap addDir files <> mconcat files'
- where
-  isSourceFile pth = takeExtension pth == ".hs"
-  isFolder pth = takeExtension pth == ""
-  addDir = (dir </>)
-  tryDirectory pth = do
-    res <- try $ listDirectory pth
-    case res of
-      Left (_ :: SomeException) -> do
-        putStrLn $ "SKIPPED" <> pth
-        pure []
-      Right files -> pure files
+-- relativeSourceFiles :: FilePath -> IO [FilePath]
+-- relativeSourceFiles dir = do
+--   contents <- tryDirectory dir
+--   let folders = filter isFolder contents
+--   let files = filter isSourceFile contents
+--
+--   files' <- mapM (relativeSourceFiles . addDir) folders
+--
+--   pure $ fmap addDir files <> mconcat files'
+--  where
+--   isSourceFile pth = takeExtension pth == ".hs"
+--   isFolder pth = takeExtension pth == ""
+--   addDir = (dir </>)
+--   tryDirectory pth = do
+--     res <- try $ listDirectory pth
+--     case res of
+--       Left (_ :: SomeException) -> do
+--         putStrLn $ "SKIPPED" <> pth
+--         pure []
+--       Right files -> pure files
 
 
 data Macro
@@ -183,8 +178,8 @@ expandLine line = do
 --       Nothing -> fail $ "Could not find example: " <> cs (pathToText False p)
 --       Just r -> pure r
 
-exampleBaseURI :: URI
-exampleBaseURI = [uri|https://hyperbole.live|]
+-- exampleBaseURI :: URI
+-- exampleBaseURI = [uri|https://hyperbole.live|]
 
 
 modulePath :: ModuleName -> FilePath
