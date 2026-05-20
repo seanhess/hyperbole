@@ -48,7 +48,7 @@ data DocumentHead = DocumentHead
 @
 -}
 quickStartDocument :: BL.ByteString -> BL.ByteString
-quickStartDocument = document (mobileFriendly >> quickStart)
+quickStartDocument = document quickStart
 
 
 -- | A simple mobile-friendly header with all required embeds and live reload
