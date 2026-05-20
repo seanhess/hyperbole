@@ -74,7 +74,7 @@ dependencies:
   - http-client-tls >= 0.3 && < 0.4
 
 library:
-  build-tools: docgen:docgen
+  build-tools: hyperbole:docgen
   ghc-options:
     - -F -pgmF=docgen
   source-dirs:
@@ -93,3 +93,10 @@ tests:
     dependencies:
       - hyperbole
       - skeletest
+
+executables:
+  docgen:
+    main:         Docgen.hs
+    source-dirs:  docs
+    dependencies:
+      - directory >= 1.2 && < 1.4

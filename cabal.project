@@ -3,5 +3,4 @@ multi-repl: True
 packages:
   .
   ./demo/
-  ./docs/
   ./hyperbole-oauth2/

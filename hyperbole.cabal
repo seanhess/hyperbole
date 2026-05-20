@@ -95,7 +95,7 @@ library
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes -F -pgmF=docgen
   build-tool-depends:
-      docgen:docgen
+      hyperbole:docgen
   build-depends:
       aeson >=2.1.2.1 && <2.3
     , atomic-css ==0.2.*
@@ -107,6 +107,57 @@ library
     , containers >=0.6 && <1
     , cookie >=0.4 && <0.6
     , data-default ==0.8.*
+    , effectful >=2.4 && <3
+    , file-embed >=0.0.10 && <0.1
+    , filepath >=1.4 && <2
+    , http-client ==0.7.*
+    , http-client-tls ==0.3.*
+    , http-types ==0.12.*
+    , network >=3.1 && <4
+    , network-uri >=2.6.4.1 && <2.7
+    , random >=1.2 && <2
+    , resourcet >=1.2 && <2
+    , string-conversions ==0.4.*
+    , string-interpolate ==0.3.*
+    , text >=1.2 && <3
+    , time >=1.12 && <2
+    , wai >=3.2 && <4
+    , wai-extra >=3.1.10 && <3.2
+    , wai-websockets >=3.0 && <4
+    , warp >=3.3 && <4
+    , websockets >=0.12 && <0.14
+  default-language: GHC2021
+
+executable docgen
+  main-is: Docgen.hs
+  other-modules:
+      Paths_hyperbole
+  autogen-modules:
+      Paths_hyperbole
+  hs-source-dirs:
+      docs
+  default-extensions:
+      OverloadedStrings
+      OverloadedRecordDot
+      DuplicateRecordFields
+      NoFieldSelectors
+      TypeFamilies
+      DataKinds
+      DerivingStrategies
+      DeriveAnyClass
+  ghc-options: -Wall -fdefer-typed-holes
+  build-depends:
+      aeson >=2.1.2.1 && <2.3
+    , atomic-css ==0.2.*
+    , attoparsec ==0.14.*
+    , attoparsec-aeson >=2.1 && <2.3
+    , base >=4.16 && <5
+    , bytestring >=0.11 && <0.13
+    , casing >=0.1.2 && <0.2
+    , containers >=0.6 && <1
+    , cookie >=0.4 && <0.6
+    , data-default ==0.8.*
+    , directory >=1.2 && <1.4
     , effectful >=2.4 && <3
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2

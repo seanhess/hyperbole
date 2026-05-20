@@ -21,7 +21,7 @@ main = do
       let final = SourceCode [linePragma] <> expanded
       T.writeFile output $ T.unlines final.lines
 
-    _ -> error "Usage: docgen _ _ _"
+    _ -> error "Usage (Hyperbole Internal Only): docgen src/MyModule.hs /tmp/input/MyModule.hs /build/output/Original.hs"
 
 
 test :: IO ()
