@@ -223,6 +223,8 @@
             ghcid
             pkgs.ghciwatch
             pkgs.hpack
+            # `docgen` is required by `hls`, also by running `nix flake check` to resolve `type docgen`
+            (pkgs.haskell.lib.justStaticExecutables ghcPkgs."ghc${version}".docgen)
           ];
           withHoogle = true;
           doBenchmark = true;
