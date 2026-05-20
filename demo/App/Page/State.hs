@@ -51,7 +51,7 @@ page = do
       markdocs $(embedFile "docs/state-viewstate.md")
 
       example $(moduleSourceNamed "Example.State.ViewState") $ do
-        hyperState ViewState.CounterState 0 ViewState.viewCount
+        hyperState ViewState.CounterState 10 ViewState.viewCount
 
     section BrowserQuery $ do
       markdocs $(embedFile "docs/state-browser.md")

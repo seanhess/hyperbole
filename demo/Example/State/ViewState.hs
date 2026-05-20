@@ -9,7 +9,7 @@ import Web.Hyperbole.HyperView
 page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   pure $ do
-    hyperState CounterState 1 viewCount
+    hyperState CounterState 10 viewCount
 
 data Counter = CounterState
   deriving (Generic)
