@@ -78,4 +78,4 @@ parse kvs = do
 parseValue :: ByteString -> ByteString -> Either String Cookie
 parseValue k val = do
   let cval = CookieValue $ cs $ urlDecode True val
-  pure $ Cookie (cs k) Nothing (Just $ cval) True
+  pure $ Cookie (cs k) Nothing (Just cval) True

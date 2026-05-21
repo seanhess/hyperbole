@@ -19,5 +19,5 @@ spec = do
         renderText v `shouldBe` "<div>one</div>\n<div>two</div>"
 
       it "renders all nodes with >>=" $ do
-        let v = el "one" >>= \_ -> el "two"
+        let v = el "one" >> el "two"
         renderText v `shouldBe` "<div>one</div>\n<div>two</div>"
