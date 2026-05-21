@@ -2,12 +2,12 @@
 
 module Example.Contact where
 
+import App.Docs
 import App.Route (UserId)
 import App.Route qualified as Route
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions
 import Data.Text (Text, pack)
-import App.Docs
 import Effectful
 import Effectful.Reader.Dynamic
 import Example.Colors

@@ -2,8 +2,8 @@
 
 module Example.Javascript where
 
-import Data.Text (Text, pack)
 import App.Docs
+import Data.Text (Text, pack)
 import Example.Interactivity.Events (box, boxes)
 import Example.Style.Cyber (btn)
 import Web.Atomic.CSS

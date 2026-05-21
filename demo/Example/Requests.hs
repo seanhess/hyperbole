@@ -2,9 +2,9 @@
 
 module Example.Requests where
 
+import App.Docs
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import App.Docs
 import Example.Colors
 import Example.Style.Cyber as Cyber (btn, btn')
 import Web.Atomic.CSS

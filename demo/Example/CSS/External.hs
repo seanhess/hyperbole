@@ -2,8 +2,8 @@
 
 module Example.CSS.External where
 
-import Data.Text (Text)
 import App.Docs
+import Data.Text (Text)
 import Web.Hyperbole
 
 source :: ModuleSource

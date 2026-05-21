@@ -48,4 +48,3 @@ respectful: true
 #
 # # Module reexports Fourmolu should know about
 # reexports: []
-

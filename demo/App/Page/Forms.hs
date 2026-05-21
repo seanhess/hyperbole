@@ -38,4 +38,4 @@ page = do
       markdocs $(embedFile "docs/forms-fileupload.md")
 
       example FormFileUpload.source $ do
-        hyper SubmitFiles $ FormFileUpload.documentFormView
+        hyper SubmitFiles FormFileUpload.documentFormView
