@@ -94,7 +94,6 @@ newtype AllMessages = AllMessages [Message]
   deriving stock (Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-
 --- Chat Updates ---------------------------------------------
 
 data Chats = Chats

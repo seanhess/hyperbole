@@ -3,8 +3,8 @@
 
 module Example.Docs.ViewFunctions where
 
-import Data.Text (Text)
 import App.Docs
+import Data.Text (Text)
 import Example.Style.Cyber (btn)
 import Example.View.Inputs (progressBar, toggleCheckbox)
 import Web.Atomic.CSS

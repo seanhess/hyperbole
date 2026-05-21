@@ -227,6 +227,7 @@
             pkgs.nodejs_24
             cabal-install
             haskell-language-server
+            hlint
             fourmolu
             fast-tags
             ghcid

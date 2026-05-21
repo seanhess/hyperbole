@@ -1,6 +1,6 @@
-import debounce from 'debounce'
-import { type InputValue } from './action'
-import { isHyperView, type HyperView } from './hyperview'
+import debounce from "debounce"
+import { type InputValue } from "./action"
+import { isHyperView, type HyperView } from "./hyperview"
 
 export type UrlFragment = string
 
@@ -16,7 +16,7 @@ export function listenKeyEvent(
   event: "keyup" | "keydown",
   cb: (target: HyperView, action: string) => void,
 ): void {
-  document.addEventListener(event, function(e: KeyboardEvent) {
+  document.addEventListener(event, function (e: KeyboardEvent) {
     if (!(e.target instanceof HTMLElement)) {
       console.warn("listenKeyEvent received event with non HTMLElment as EventTarget: %o", e)
       return
@@ -41,12 +41,9 @@ export function listenBubblingEvent(
   event: string,
   cb: (_target: HyperView, action: string) => void,
 ): void {
-  document.addEventListener(event, function(e) {
-    if (!(e.target instanceof HTMLElement)) {
-      console.warn(
-        "listenBubblingEvent received an event with non HTMLElment as EventTarget: %o",
-        e,
-      )
+  document.addEventListener(event, function (e) {
+    if (!(e.target instanceof Element)) {
+      console.warn("listenBubblingEvent received an event with non Elment as EventTarget: %o", e)
       return
     }
     let el = e.target
@@ -79,19 +76,19 @@ export function listenDblClick(cb: (target: HyperView, action: string) => void):
 }
 
 export function listenTopLevel(cb: (target: HyperView, action: string) => void): void {
-  document.addEventListener("hyp-load", function(e: CustomEvent) {
+  document.addEventListener("hyp-load", function (e: CustomEvent) {
     let action = e.detail.onLoad
     let target = e.detail.target
     cb(target, action)
   })
 
-  document.addEventListener("hyp-mouseenter", function(e: CustomEvent) {
+  document.addEventListener("hyp-mouseenter", function (e: CustomEvent) {
     let action = e.detail.onMouseEnter
     let target = e.detail.target
     cb(target, action)
   })
 
-  document.addEventListener("hyp-mouseleave", function(e: CustomEvent) {
+  document.addEventListener("hyp-mouseleave", function (e: CustomEvent) {
     let action = e.detail.onMouseLeave
     let target = e.detail.target
     cb(target, action)
@@ -155,7 +152,7 @@ export function listenMouseLeave(node: HTMLElement): void {
 }
 
 export function listenChange(cb: (target: HyperView, action: string, value: string) => void): void {
-  document.addEventListener("change", function(e) {
+  document.addEventListener("change", function (e) {
     if (!(e.target instanceof HTMLElement)) {
       console.warn("listenChange received an event with non HTMLElment as EventTarget: %o", e)
       return
@@ -195,7 +192,7 @@ export function listenInput(
   startedTyping: (target: HyperView) => void,
   cb: (target: HyperView, action: string, value: InputValue) => void,
 ): void {
-  document.addEventListener("input", function(e) {
+  document.addEventListener("input", function (e) {
     if (!(e.target instanceof HTMLElement)) {
       console.warn("listenInput received an event with non HTMLElment as EventTarget: %o", e)
       return
@@ -239,7 +236,7 @@ export function listenInput(
 export function listenFormSubmit(
   cb: (target: HyperView, action: string, form: FormData) => void,
 ): void {
-  document.addEventListener("submit", function(e) {
+  document.addEventListener("submit", function (e) {
     if (!(e.target instanceof HTMLFormElement)) {
       console.warn("listenFormSubmit received an event with non HTMLElment as EventTarget: %o", e)
       return

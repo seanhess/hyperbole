@@ -1,15 +1,18 @@
-
-import { type ViewId, type Metadata, type Meta, metaValue, toMetadata, type RequestId, type EncodedAction } from './message'
-
-
-
+import {
+  type ViewId,
+  type Metadata,
+  type Meta,
+  metaValue,
+  toMetadata,
+  type RequestId,
+  type EncodedAction,
+} from "./message"
 
 export type ResponseBody = string
 
-
 export function parseResponseDocument(res: ResponseBody): Document {
   const parser = new DOMParser()
-  return parser.parseFromString(res, 'text/html')
+  return parser.parseFromString(res, "text/html")
 }
 
 export function documentUpdate(doc: Document): LiveUpdate {
@@ -32,33 +35,32 @@ export type BaseResponse = {
 }
 
 export type Response = BaseResponse & {
-  kind: 'response'
+  kind: "response"
 }
 
 export type Update = BaseResponse & {
-  kind: 'update'
+  kind: "update"
   targetViewId: ViewId
 }
 
 export type Redirect = {
-  kind: 'redirect'
+  kind: "redirect"
   requestId: RequestId
   meta: Metadata
   url: string
 }
 
-
 export function parseUpdate(metas: Meta[], rest: string[]): Update {
   let { requestId, viewId, action, meta, body } = parseResponse(metas, rest)
 
   return {
-    kind: 'update',
+    kind: "update",
     targetViewId: metaValue("TargetViewId", metas) || viewId,
     requestId,
     viewId,
     action,
     meta,
-    body
+    body,
   }
 }
 
@@ -67,7 +69,7 @@ export function parseResponse(metas: Meta[], rest: string[]): Response {
   let action = requireMeta(rest, metas, "Action")
   let requestId = parseInt(requireMeta(rest, metas, "RequestId"), 0)
   return {
-    kind: 'response',
+    kind: "response",
     requestId,
     targetViewId: undefined, // only set on push update
     viewId,
@@ -81,20 +83,18 @@ export function parseRedirect(metas: Meta[], rest: string[]): Redirect {
   let url = rest[0]
   let requestId = parseInt(requireMeta(rest, metas, "RequestId"), 0)
   return {
-    kind: 'redirect',
+    kind: "redirect",
     requestId,
     meta: toMetadata(metas),
-    url
+    url,
   }
 }
 
-
 export function requireMeta(lines: string[], metas: Meta[], key: string): string {
   let val = metaValue(key, metas)
-  if (!val) throw new ProtocolError("Missing Required Metadata: " + key, lines.join('\n'))
+  if (!val) throw new ProtocolError("Missing Required Metadata: " + key, lines.join("\n"))
   return val
 }
-
 
 export type LiveUpdate = {
   content: HTMLElement | null

@@ -3,8 +3,8 @@
 
 module Example.Docs.SideEffects where
 
-import Data.Text (Text)
 import App.Docs
+import Data.Text (Text)
 import Effectful
 import Effectful.Concurrent
 import Effectful.Reader.Dynamic

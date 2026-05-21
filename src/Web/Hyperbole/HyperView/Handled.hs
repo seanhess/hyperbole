@@ -91,8 +91,7 @@ type family HyperViewHandled id ctx :: Constraint where
 -- TODO: Report which view requires the missing one
 type family CheckDescendents id ctx :: Constraint where
   CheckDescendents id (Root total) =
-    ( AllInPage (ValidDescendents id) total
-    )
+    (AllInPage (ValidDescendents id) total)
   CheckDescendents id ctx = ()
 
 

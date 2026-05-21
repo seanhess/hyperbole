@@ -2,7 +2,7 @@ name: Haskell CI
 
 on:
   push:
-    branches: [ "main", "ci" ]
+    branches: [ "main", "ci-*" ]
   pull_request:
     branches: [ "main" ]
 
@@ -12,6 +12,36 @@ permissions:
 
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run fourmolu (demo only)
+        uses: haskell-actions/run-fourmolu@v12
+        with:
+          version: "latest"
+          working-directory: "./demo"
+          pattern: |
+            **/*.hs
+            # ignore symlink to `docs` folder
+            !docs
+
+      - name: Run fourmolu (all the others)
+        uses: haskell-actions/run-fourmolu@v12
+        with:
+          version: "latest"
+          pattern: |
+            **/*.hs
+            !demo
+    
+      - uses: haskell-actions/hlint-setup@v2
+        with:
+          version: "3.10"
+
+      - name: Run HLint
+        run: git ls-files '*.hs' | xargs hlint
+
   build-cache:
     runs-on: ubuntu-latest
     container:

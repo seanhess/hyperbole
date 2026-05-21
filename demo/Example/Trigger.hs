@@ -2,8 +2,8 @@
 
 module Example.Trigger where
 
-import Data.Text (Text)
 import App.Docs
+import Data.Text (Text)
 import Example.Style.Cyber as Cyber (btn, font)
 import Web.Atomic.CSS
 import Web.Hyperbole

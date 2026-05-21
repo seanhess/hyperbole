@@ -49,5 +49,3 @@ loadDummyItem n =
 
 loadDummyItemIds :: Eff es [Int]
 loadDummyItemIds = pure [0 .. 4]
-
-

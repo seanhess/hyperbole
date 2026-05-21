@@ -9,7 +9,6 @@ import System.Directory
 import System.FilePath
 import System.Environment (getArgs)
 
-
 main :: IO ()
 main = do
   args <- getArgs
@@ -102,10 +101,9 @@ writeSource tmpDir relPath src = do
 
 data Macro
   = Embed
-      { moduleName :: ModuleName
-      , definition :: TopLevelDefinition
-      }
-  -- | Example Path
+  { moduleName :: ModuleName
+  , definition :: TopLevelDefinition
+  }
   deriving (Eq)
 newtype SourceCode = SourceCode {lines :: [Text]}
   deriving newtype (Monoid, Semigroup)

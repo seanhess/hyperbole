@@ -1,7 +1,7 @@
 module App.Page.HyperboleEffect where
 
-import App.Route as Route hiding (Response, UserId)
 import App.Docs
+import App.Route as Route hiding (Response, UserId)
 import Effectful
 import Example.Errors (Errors (..), Users (..), viewCustom, viewExceptions, viewKnownUsers, viewSearchUsers)
 import Example.Errors qualified as Errors
