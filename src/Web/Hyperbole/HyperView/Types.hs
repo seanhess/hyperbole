@@ -27,16 +27,18 @@ Create an instance with a unique view id type and a sum type describing the acti
 @
 -}
 class (ViewId id, ViewAction (Action id), ConcurrencyValue (Concurrency id)) => HyperView id es where
-  -- | Outline all actions that are permitted in this HyperView
-  --
-  -- > data Action Message = SetMessage Text | ClearMessage
-  -- >   deriving (Generic, ViewAction)
+  {- | Outline all actions that are permitted in this HyperView
+
+  > data Action Message = SetMessage Text | ClearMessage
+  >   deriving (Generic, ViewAction)
+  -}
   data Action id
 
 
-  -- | Include any child hyperviews here. The compiler will make sure that the page knows how to handle them
-  --
-  -- > type Require Messages = '[ChildView]
+  {- | Include any child hyperviews here. The compiler will make sure that the page knows how to handle them
+
+  > type Require Messages = '[ChildView]
+  -}
   type Require id :: [Type]
 
 
@@ -46,19 +48,21 @@ class (ViewId id, ViewAction (Action id), ConcurrencyValue (Concurrency id)) => 
   -- type ViewState id :: Type
   -- type ViewState id = ()
 
-  -- | Control how overlapping actions are handled. 'Drop' by default
-  --
-  -- > type Concurrency Autocomplete = Replace
+  {- | Control how overlapping actions are handled. 'Drop' by default
+
+  > type Concurrency Autocomplete = Replace
+  -}
   type Concurrency id :: ConcurrencyMode
 
 
   type Concurrency id = Drop
 
 
-  -- | Specify how the view should be updated for each Action
-  --
-  -- > update (SetMessage msg) = pure $ messageView msg
-  -- > update ClearMessage = pure $ messageView ""
+  {- | Specify how the view should be updated for each Action
+
+  > update (SetMessage msg) = pure $ messageView msg
+  > update ClearMessage = pure $ messageView ""
+  -}
   update :: (Hyperbole :> es) => Action id -> Eff (Reader id : State (ViewState id) : es) (View id ())
 
 

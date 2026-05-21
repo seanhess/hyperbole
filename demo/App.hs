@@ -99,6 +99,7 @@ import Web.Hyperbole.OAuth2 qualified as OAuth2
 import Web.Hyperbole.Server.Options (defaultError)
 import Web.Hyperbole.Types.Response
 
+
 run :: IO ()
 run = do
   hSetBuffering stdout LineBuffering
@@ -128,6 +129,7 @@ run = do
   devReload config
     | config.devMode = Wai.modifyResponse $ Wai.mapResponseHeaders $ \hs -> ("Connection", "Close") : hs
     | otherwise = id
+
 
 exampleApp :: AppConfig -> UserStore -> TVar Int -> Chat.Room -> DB -> Application
 exampleApp config users count chats db = do
@@ -231,6 +233,7 @@ exampleApp config users count chats db = do
           , body = Cyber.cyberError $ Cyber.glitch msg
           }
 
+
 {- | Made for local development
  -
  - ghcid --setup=Main.update --command="cabal repl exe:examples lib:hyperbole test" --run=Main.update --warnings
@@ -278,13 +281,16 @@ update = do
       -- Normally this should be fine
       (\_ -> putMVar done ())
 
+
 tidStoreNum :: Word32
 tidStoreNum = 1
+
 
 modifyStoredIORef :: Store (IORef a) -> (a -> IO a) -> IO ()
 modifyStoredIORef store f = withStore store $ \ref -> do
   v <- readIORef ref
   f v >>= writeIORef ref
+
 
 cacheMiddleware :: Application -> Application
 cacheMiddleware = Wai.modifyResponse addCache

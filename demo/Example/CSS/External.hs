@@ -2,17 +2,20 @@
 
 module Example.CSS.External where
 
-import Data.Text (Text)
 import App.Docs
+import Data.Text (Text)
 import Web.Hyperbole
+
 
 source :: ModuleSource
 source = $(moduleSource)
+
 
 main :: IO ()
 main = do
   run 3000 $ do
     liveApp quickStartDocument (runPage page)
+
 
 page :: (Hyperbole :> es) => Page es '[Items]
 page = do
@@ -22,15 +25,19 @@ page = do
     stylesheet "external.css"
     hyper Items $ itemsView "one"
 
+
 data Items = Items
   deriving (Generic, ViewId)
+
 
 instance HyperView Items es where
   data Action Items = Select Text
     deriving (Generic, ViewAction)
 
+
   update (Select t) = do
     pure $ itemsView t
+
 
 itemsView :: Text -> View Items ()
 itemsView sel = do

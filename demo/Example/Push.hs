@@ -13,8 +13,10 @@ import Example.View.Inputs (progressBar)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 data Tasks = Tasks
   deriving (Generic, ViewId)
+
 
 instance (Debug :> es) => HyperView Tasks es where
   data Action Tasks
@@ -22,7 +24,9 @@ instance (Debug :> es) => HyperView Tasks es where
     | Interrupt
     deriving (Generic, ViewAction)
 
+
   type Concurrency Tasks = Replace
+
 
   update RunLongTask = do
     forM_ [1 :: Float .. 100] $ \n -> do
@@ -33,6 +37,7 @@ instance (Debug :> es) => HyperView Tasks es where
     pure $ col ~ gap 10 $ do
       el "Interrupted!"
       taskView 0
+
 
 taskView :: Float -> View Tasks ()
 taskView pct = col ~ gap 10 $ do
@@ -48,6 +53,7 @@ taskView pct = col ~ gap 10 $ do
     | otherwise = progressBar pct "Task"
 
   isRunning = pct > 0 && pct < 1
+
 
 source :: ModuleSource
 source = $(moduleSource)

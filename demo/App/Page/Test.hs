@@ -14,8 +14,10 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.HyperView.Event (onChange)
 
+
 source :: ModuleSource
 source = $(moduleSource)
+
 
 page :: (Hyperbole :> es) => Page es '[Changes, AddContact]
 page = do
@@ -30,6 +32,7 @@ page = do
       example source $ do
         hyper AddContact formView
 
+
 -- Encoding Tests
 
 -- data FunkyEncodings = FunkyEncodings
@@ -39,6 +42,7 @@ data Options
   = Something
   | Multi Text Int
   deriving (Generic, ToJSON, FromJSON, Show, Eq, InputValue)
+
 
 -- instance HyperView FunkyEncodings es where
 --   data Action FunkyEncodings
@@ -76,6 +80,7 @@ newtype UserNum = UserNum Int
   deriving (Generic)
   deriving newtype (ToJSON)
 
+
 -- WARNING: this is a bit misleading
 -- we could use a custom encoding instead
 --
@@ -96,6 +101,7 @@ newtype UserNum = UserNum Int
 data Changes = Changes
   deriving (Generic, ViewId)
 
+
 instance HyperView Changes es where
   data Action Changes
     = GoNum Int Text
@@ -103,6 +109,7 @@ instance HyperView Changes es where
     | GoOption
     | GoNumOption
     deriving (Generic, ViewAction)
+
 
   update (GoNum _ _) = do
     n <- inputValue @Int
@@ -118,6 +125,7 @@ instance HyperView Changes es where
     n <- inputValue @Int
     pure $ do
       viewChanges (cs $ show n)
+
 
 viewChanges :: Text -> View Changes ()
 viewChanges inp = do
@@ -140,17 +148,21 @@ viewChanges inp = do
       forM_ [0 .. 10] $ \n -> do
         option n (cs $ show n)
 
+
 data AddContact = AddContact
   deriving (Generic, ViewId)
+
 
 instance HyperView AddContact es where
   data Action AddContact
     = Submit
     deriving (Generic, ViewAction)
 
+
   update Submit = do
     cf <- formData
     pure $ contactView cf
+
 
 data Planet
   = Mercury
@@ -160,12 +172,14 @@ data Planet
   | Whatever Text
   deriving (Generic, FromJSON, ToJSON, Eq, Show, FromField)
 
+
 data Moon
   = Titan
   | Europa
   | Callisto
   | Mimas
   deriving (Generic, ToJSON, FromJSON, Eq, Show, FromField)
+
 
 -- Forms can be pretty simple. Just a type that can be parsed
 data ContactForm = ContactForm
@@ -177,6 +191,7 @@ data ContactForm = ContactForm
   }
   deriving (Generic, FromForm)
 
+
 nameForm :: View AddContact ()
 nameForm = do
   form Submit $ do
@@ -185,6 +200,7 @@ nameForm = do
       label $ do
         text "Contact Name"
         input Username @ placeholder "contact name"
+
 
 -- and a view that displays an input for each field
 formView :: View AddContact ()
@@ -234,6 +250,7 @@ formView = do
     label ~ flexRow . gap 10 $ do
       radio val ~ width 32
       text (cs (show val))
+
 
 contactView :: ContactForm -> View AddContact ()
 contactView u = do

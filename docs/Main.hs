@@ -13,9 +13,10 @@ import Distribution.Verbosity (verbose)
 import System.Directory
 import System.FilePath
 import Web.Hyperbole.Data.URI
+
+
 -- import Control.Applicative ((<|>))
 -- import Web.Hyperbole.Route (matchRoute)
-
 
 main :: IO ()
 main = do
@@ -105,10 +106,9 @@ relativeSourceFiles dir = do
 
 data Macro
   = Embed
-      { moduleName :: ModuleName
-      , definition :: TopLevelDefinition
-      }
-  -- | Example Path
+  { moduleName :: ModuleName
+  , definition :: TopLevelDefinition
+  }
   deriving (Eq)
 newtype SourceCode = SourceCode {lines :: [Text]}
 instance Show Macro where

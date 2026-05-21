@@ -2,28 +2,32 @@
 
 module Example.Requests where
 
+import App.Docs
 import Data.String.Conversions (cs)
 import Data.Text (Text)
-import App.Docs
 import Example.Colors
 import Example.Style.Cyber as Cyber (btn, btn')
 import Web.Atomic.CSS
 import Web.Hyperbole hiding (Response)
 import Web.Hyperbole.Data.URI
 
+
 -- REQUEst -------------------------------------------------
 
 data CheckRequest = CheckRequest
   deriving (Generic, ViewId)
+
 
 instance HyperView CheckRequest es where
   data Action CheckRequest
     = Refresh
     deriving (Generic, ViewAction)
 
+
   update Refresh = do
     r <- request
     pure $ viewRequest r
+
 
 viewRequest :: Request -> View CheckRequest ()
 viewRequest r = do
@@ -41,6 +45,7 @@ viewRequest r = do
       text "Cookies: "
       text $ cs $ show r.cookies
 
+
 -- CLIENT -------------------------------------------------
 
 data Message = Message
@@ -48,16 +53,20 @@ data Message = Message
   }
   deriving (Generic, ToQuery)
 
+
 data ControlClient = ControlClient
   deriving (Generic, ViewId)
 
+
 instance HyperView ControlClient es where
   type Require ControlClient = '[CheckRequest]
+
 
   data Action ControlClient
     = SetQuery
     | ClearQuery
     deriving (Generic, ViewAction)
+
 
   update SetQuery = do
     setQuery $ Message "hello"
@@ -70,15 +79,18 @@ instance HyperView ControlClient es where
     trigger CheckRequest Refresh
     pure viewClient
 
+
 viewClient :: View ControlClient ()
 viewClient = do
   button SetQuery ~ btn $ "Set Query from another HyperView"
   button ClearQuery ~ btn $ "Clear Query"
 
+
 -- RESPONSE -------------------------------------------------
 
 data ControlResponse = ControlResponse
   deriving (Generic, ViewId)
+
 
 instance HyperView ControlResponse es where
   data Action ControlResponse
@@ -105,6 +117,7 @@ instance HyperView ControlResponse es where
     _ <- respondError "Some custom error"
     pure "This will not be rendered"
 
+
 responseView :: View ControlResponse ()
 responseView = do
   row ~ gap 10 . flexWrap Wrap $ do
@@ -112,6 +125,7 @@ responseView = do
     button SetPageTitle ~ btn $ "Set Page Title"
     button RespondNotFound ~ btn' Danger $ "Respond Not Found"
     button RespondWithError ~ btn' Danger $ "Respond Error"
+
 
 source :: ModuleSource
 source = $(moduleSource)

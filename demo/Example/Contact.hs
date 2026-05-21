@@ -2,12 +2,12 @@
 
 module Example.Contact where
 
+import App.Docs
 import App.Route (UserId)
 import App.Route qualified as Route
 import Data.Maybe (fromMaybe)
 import Data.String.Conversions
 import Data.Text (Text, pack)
-import App.Docs
 import Effectful
 import Effectful.Reader.Dynamic
 import Example.Colors
@@ -20,9 +20,11 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 -- Example adding a reader context to the page, based on an argument from the AppRoute
 response :: (Hyperbole :> es, Users :> es, Debug :> es) => UserId -> Eff es Response
 response uid = runReader uid $ runPage page
+
 
 -- The page assumes all effects have been added
 page
@@ -36,10 +38,12 @@ page = do
     section' "Contact" $ do
       hyper (Contact uid) $ contactView u
 
+
 -- Contact ----------------------------------------------------
 
 data Contact = Contact UserId
   deriving (Generic, ViewId)
+
 
 instance (Users :> es, Debug :> es) => HyperView Contact es where
   data Action Contact
@@ -47,6 +51,7 @@ instance (Users :> es, Debug :> es) => HyperView Contact es where
     | Save
     | ViewContact
     deriving (Generic, ViewAction)
+
 
   update action = do
     -- No matter which action we are performing, let's look up the user to make sure it exists
@@ -63,6 +68,7 @@ instance (Users :> es, Debug :> es) => HyperView Contact es where
         Users.save unew
         pure $ contactView unew
 
+
 data ContactForm f = ContactForm
   { firstName :: Field f Text
   , lastName :: Field f Text
@@ -71,13 +77,16 @@ data ContactForm f = ContactForm
   }
   deriving (Generic, FromFormF, GenFields FieldName, GenFields Maybe)
 
+
 parseUser :: (Hyperbole :> es) => Int -> Eff es User
 parseUser uid = do
   ContactForm{firstName, lastName, age, info} <- formData @(ContactForm Identity)
   pure User{id = uid, isActive = True, firstName, lastName, age, info}
 
+
 contactView :: User -> View Contact ()
 contactView = contactView' Edit
+
 
 contactView' :: (ViewId c, ViewAction (Action c)) => Action c -> User -> View c ()
 contactView' edit u = do
@@ -106,10 +115,12 @@ contactView' edit u = do
  where
   fld = gap 10
 
+
 contactEditView :: User -> View Contact ()
 contactEditView u = do
   el contactLoading ~ display None . whenLoading flexCol
   el (contactEdit ViewContact Save u) ~ whenLoading (display None)
+
 
 contactEdit :: (ViewId c, ViewAction (Action c)) => Action c -> Action c -> User -> View c ()
 contactEdit onView onSave u = do
@@ -125,6 +136,7 @@ contactEdit onView onSave u = do
       , age = Just u.age
       , info = Just u.info
       }
+
 
 contactForm :: (ViewId id, ViewAction (Action id)) => Action id -> ContactForm Maybe -> View id ()
 contactForm onSubmit c = do
@@ -155,6 +167,7 @@ contactForm onSubmit c = do
   fld :: (Styleable a) => CSS a -> CSS a
   fld = flexRow . gap 10
   inp = Style.input
+
 
 contactLoading :: View id ()
 contactLoading = el ~ (bg Warning . pad 10) $ "Loading..."

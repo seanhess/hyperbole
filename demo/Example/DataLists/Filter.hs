@@ -17,6 +17,7 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
+
 page :: (Hyperbole :> es, IOE :> es) => Page es '[Languages]
 page = do
   filters <- query
@@ -25,8 +26,10 @@ page = do
     example $(moduleSource) $ do
       hyper Languages $ languagesView filters
 
+
 data Languages = Languages
   deriving (Generic, ViewId)
+
 
 -- Filters available from the query
 -- See Example.Data.ProgrammingLanguage
@@ -37,6 +40,7 @@ data Filters = Filters
   }
   deriving (Generic, Show, FromQuery, ToQuery)
 
+
 instance (IOE :> es) => HyperView Languages es where
   data Action Languages
     = SearchTerm
@@ -45,8 +49,10 @@ instance (IOE :> es) => HyperView Languages es where
     | SetFamily
     deriving (Generic, ViewAction)
 
+
   -- favor the latest thing entered / typed
   type Concurrency Languages = Replace
+
 
   update = \case
     Select lang -> do
@@ -77,6 +83,7 @@ instance (IOE :> es) => HyperView Languages es where
       setQuery filts'
       pure filts'
 
+
 -- apply our filters, return any languages that match
 filterLanguages :: Filters -> [ProgrammingLanguage]
 filterLanguages filts =
@@ -91,12 +98,14 @@ filterLanguages filts =
   matchFeatures feats lang =
     all (\f -> f `elem` lang.features) feats
 
+
 languagesView :: Filters -> View Languages ()
 languagesView filters = do
   let matched = filterLanguages filters
   col ~ gap 10 . grow $ do
     filtersView filters
     resultsTable Select matched
+
 
 filtersView :: Filters -> View Languages ()
 filtersView filters = do
@@ -124,12 +133,14 @@ filtersView filters = do
 
   featureName f = pack $ show f
 
+
 familyDropdown :: Filters -> View Languages ()
 familyDropdown filters =
   dropdown SetFamily filters.family ~ border 1 . pad 10 $ do
     option Nothing "Any"
     option (Just ObjectOriented) "Object Oriented"
     option (Just Functional) "Functional"
+
 
 clearButton :: (ViewAction (Action id)) => Action id -> Text -> View id ()
 clearButton clear term =
@@ -141,12 +152,14 @@ clearButton clear term =
       "" -> display None
       _ -> id
 
+
 chosenView :: ProgrammingLanguage -> View c ()
 chosenView lang = do
   row ~ gap 10 $ do
     el "You chose:"
     el $ text lang.name
   el ~ (if lang.name == "Haskell" then id else display None) $ "You are as wise as you are attractive"
+
 
 resultsTable :: (ViewAction (Action id)) => (ProgrammingLanguage -> Action id) -> [ProgrammingLanguage] -> View id ()
 resultsTable onSelect langs = do
@@ -166,6 +179,7 @@ resultsTable onSelect langs = do
         el $ text lang.description
 
   rows = textAlign AlignCenter . border 1 . borderColor GrayLight
+
 
 viewFamily :: LanguageFamily -> View c ()
 viewFamily fam = do

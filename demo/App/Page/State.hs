@@ -18,6 +18,7 @@ import Example.State.ViewState qualified as ViewState
 import Example.View.Layout (layoutSubnav)
 import Web.Hyperbole
 
+
 data StateSection
   = Stateless
   | ActionThreading
@@ -27,7 +28,9 @@ data StateSection
   | WithEffects
   deriving (Show, Enum, Bounded)
 
+
 instance PageAnchor StateSection
+
 
 page :: (Hyperbole :> es, Reader (TVar Int) :> es, Concurrent :> es) => Page es '[Threaded.Counter, Swapper, QueryPrefs, Session.Contents, Effects.Counter, ViewState.Counter]
 page = do

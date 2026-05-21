@@ -19,6 +19,7 @@ import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types (Root (..))
 import Web.Hyperbole.Page (subPage)
 
+
 data CSSExample
   = Factoring
   | Transitions
@@ -33,6 +34,7 @@ instance PageAnchor CSSExample where
     Tooltips -> "Tooltips"
     Loading -> "Loading"
     External -> "External Stylesheets"
+
 
 page :: (Hyperbole :> es) => Page es '[Animate, External.Items, Boxes, Loader]
 page = do

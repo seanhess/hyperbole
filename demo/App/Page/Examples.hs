@@ -7,6 +7,7 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 page :: (Hyperbole :> es) => Page es '[]
 page = do
   pure $ layout (Examples OtherExamples) $ do

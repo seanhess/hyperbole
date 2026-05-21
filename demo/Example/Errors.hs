@@ -13,10 +13,12 @@ import Text.Read (readMaybe)
 import Web.Atomic.CSS
 import Web.Hyperbole hiding (Response)
 
+
 -- Exceptiosn
 
 data Errors = Exceptions | Customs
   deriving (Generic, ViewId)
+
 
 instance HyperView Errors es where
   data Action Errors
@@ -24,6 +26,7 @@ instance HyperView Errors es where
     | CauseUserFacing
     | CauseCustom
     deriving (Generic, ViewAction)
+
 
   update CauseServerside = do
     _ <- throwIO $ SomeServerError "Oh no!"
@@ -36,10 +39,12 @@ instance HyperView Errors es where
       el ~ border 1 . borderColor Danger . rounded 3 $ "Style errors however you want!"
     pure $ el "unreachable"
 
+
 viewExceptions :: View Errors ()
 viewExceptions = do
   row ~ gap 10 $ do
     button CauseServerside ~ btn $ "Cause Exception"
+
 
 viewCustom :: View Errors ()
 viewCustom = do
@@ -47,9 +52,11 @@ viewCustom = do
     button CauseUserFacing ~ btn $ "Custom Error Message"
     button CauseCustom ~ btn $ "Custom Error View"
 
+
 data SomeServerError
   = SomeServerError String
   deriving (Show, Eq, Exception)
+
 
 -- Users ------------------------------------------------
 
@@ -58,8 +65,10 @@ data User = User
   , username :: Text
   }
 
+
 type UserId = Int
 type UserName = Text
+
 
 fakeDatabase :: [User]
 fakeDatabase =
@@ -68,20 +77,24 @@ fakeDatabase =
   , User 3 "Alice"
   ]
 
+
 findUser :: UserId -> Eff es (Maybe User)
 findUser uid =
   pure $ L.find (\(User i _) -> uid == i) fakeDatabase
+
 
 -- KnownUsers ------------------------------------------------
 
 data Users = KnownUsers | SearchUsers
   deriving (Generic, ViewId)
 
+
 instance HyperView Users es where
   data Action Users
     = UserDetails Int
     | SearchUser
     deriving (Generic, ViewAction)
+
 
   update (UserDetails uid) = do
     mu <- findUser uid
@@ -95,6 +108,7 @@ instance HyperView Users es where
     pure $ do
       viewWithDetails (viewSearchResults mu) viewSearchUsers
 
+
 viewKnownUsers :: View Users ()
 viewKnownUsers = do
   col ~ gap 10 $ do
@@ -106,11 +120,13 @@ viewKnownUsers = do
     el "If a user were deleted between when they were rendered and loaded, the error would look like this:"
     button (UserDetails 4) ~ btn $ "Attempt to load non-existing User 4"
 
+
 viewWithDetails :: View c () -> View c () -> View c ()
 viewWithDetails details cnt = do
   col ~ gap 10 $ do
     details
     cnt
+
 
 viewUserDetails :: User -> View c ()
 viewUserDetails u = do
@@ -122,6 +138,7 @@ viewUserDetails u = do
       text "Name: "
       text u.username
 
+
 -- SearchUsers ------------------------------------------------
 
 searchUser :: Text -> Eff es (Maybe User)
@@ -132,16 +149,19 @@ searchUser searchTerm =
     uid <- readMaybe @Int (unpack term)
     L.find (\(User i _) -> uid == i) fakeDatabase
 
+
 viewSearchUsers :: View Users ()
 viewSearchUsers = do
   el "Search for a user by id"
   search SearchUser 250 ~ border 1 . pad 10 @ placeholder "2"
+
 
 viewSearchResults :: Maybe User -> View c ()
 viewSearchResults mu = do
   case mu of
     Nothing -> el ~ italic $ "User not found. No big deal. Doesn't need to be an application error"
     Just u -> viewUserDetails u
+
 
 source :: ModuleSource
 source = $(moduleSource)

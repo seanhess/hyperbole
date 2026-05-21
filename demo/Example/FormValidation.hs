@@ -10,16 +10,20 @@ import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 source :: ModuleSource
 source = $(moduleSource)
 
+
 data Signup = Signup
   deriving (Generic, ViewId)
+
 
 instance HyperView Signup es where
   data Action Signup
     = Submit
     deriving (Generic, ViewAction)
+
 
   update Submit = do
     uf <- formData @(UserForm Identity)
@@ -30,9 +34,11 @@ instance HyperView Signup es where
       then pure $ formView vals
       else pure $ userView uf
 
+
 -- Form Fields
 newtype User = User {username :: Text}
   deriving newtype (FromField)
+
 
 data UserForm f = UserForm
   { user :: Field f User
@@ -42,9 +48,11 @@ data UserForm f = UserForm
   }
   deriving (Generic, FromFormF, GenFields Validated, GenFields FieldName)
 
+
 anyInvalid :: UserForm Validated -> Bool
 anyInvalid u =
   or [isInvalid u.user, isInvalid u.age, isInvalid u.pass1, isInvalid u.pass2]
+
 
 validateForm :: UserForm Identity -> UserForm Validated
 validateForm u =
@@ -55,9 +63,11 @@ validateForm u =
     , pass2 = NotInvalid
     }
 
+
 validateAge :: Int -> Validated Int
 validateAge a =
   validate (a < 20) "User must be at least 20 years old"
+
 
 validateUser :: User -> Validated User
 validateUser (User u) =
@@ -69,12 +79,14 @@ validateUser (User u) =
         else Valid
     ]
 
+
 validatePass :: Text -> Text -> Validated Text
 validatePass p1 p2 =
   mconcat
     [ validate (p1 /= p2) "Passwords did not match"
     , validate (T.length p1 < 8) "Password must be at least 8 chars"
     ]
+
 
 formView :: UserForm Validated -> View Signup ()
 formView val = do
@@ -114,6 +126,7 @@ formView val = do
   valStyle (Invalid _) = Style.invalid
   valStyle Valid = Style.success
   valStyle _ = id
+
 
 userView :: UserForm Identity -> View Signup ()
 userView u = do

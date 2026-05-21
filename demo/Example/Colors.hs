@@ -5,6 +5,7 @@ module Example.Colors where
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 data AppColor
   = White
   | Light
@@ -21,8 +22,10 @@ data AppColor
   | SecondaryLight
   deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 
+
 instance Default AppColor where
   def = White
+
 
 instance ToColor AppColor where
   colorValue White = "#FFF"
@@ -42,20 +45,26 @@ instance ToColor AppColor where
   colorValue Danger = midRed
   colorValue Warning = "#e1c915"
 
+
 lightRed :: HexColor
 lightRed = HexColor "#EC6458"
+
 
 midRed :: HexColor
 midRed = HexColor "#A03F38"
 
+
 darkRed :: HexColor
 darkRed = HexColor "#722C2A"
+
 
 cyan :: HexColor
 cyan = "#0FF"
 
+
 magenta :: HexColor
 magenta = "#E44072"
+
 
 light :: AppColor -> HexColor
 light PrimaryLight = "#a8c3e5"
@@ -64,10 +73,12 @@ light Primary = colorValue PrimaryLight
 light Danger = lightRed
 light c = colorValue c
 
+
 hoverColor :: AppColor -> HexColor
 hoverColor = \case
   White -> colorValue Light
   c -> light c
+
 
 contrastColor :: AppColor -> HexColor
 contrastColor = \case

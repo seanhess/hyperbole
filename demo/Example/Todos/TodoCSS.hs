@@ -11,6 +11,7 @@ import Example.Effects.Todos qualified as Todos
 import Example.Todos.Todo (Action (..), AllTodos (..), TodoForm (..), TodoView (..), pluralize)
 import Web.Hyperbole as Hyperbole
 
+
 {-
 
 To make the CSS version work and overcome the default CSS reset, we tweaked the output slightly via a few style tags here and there:
@@ -50,19 +51,23 @@ page = do
           span' "Go back to the "
           route (Examples OtherExamples) "examples"
 
+
 --- TodosView ----------------------------------------------------------------------------
 
 data CSSTodos = CSSTodos
   deriving (Generic, ViewId)
 
+
 instance (Todos :> es) => HyperView CSSTodos es where
   type Require CSSTodos = '[CSSTodo]
+
 
   -- reuse as the actions from the main TodoMVC example. This isn't a good
   -- example of how to factor well, it's optimized to make the main example
   -- readable. Focus on the views
   newtype Action CSSTodos = MkTodosAction (Action AllTodos)
     deriving newtype (ViewAction)
+
 
   -- Repeated logic from the main Todos example. Do not follow this as an example
   -- of how to reuse views
@@ -90,6 +95,7 @@ instance (Todos :> es) => HyperView CSSTodos es where
         todos <- Todos.filteredTodos filt
         pure $ todosView filt todos
 
+
 todosView :: FilterTodo -> [Todo] -> View CSSTodos ()
 todosView filt todos = do
   header @ class_ "header" $ do
@@ -114,6 +120,7 @@ todosView filt todos = do
 
     statusBar filt todos
 
+
 todoForm :: View CSSTodos ()
 todoForm = do
   let f :: TodoForm FieldName = fieldNames
@@ -129,6 +136,7 @@ todoForm = do
           FIXME: and not diverge too much from the other todo example, I'm leaving as-is.
          -}
         . placeholder "What needs to be done?"
+
 
 statusBar :: FilterTodo -> [Todo] -> View CSSTodos ()
 statusBar filt todos = do
@@ -160,17 +168,21 @@ statusBar filt todos = do
   selectedFilter f =
     if f == filt then class_ "selected" else id
 
+
 --- TodoView ----------------------------------------------------------------------------
 
 data CSSTodo = CSSTodo TodoId
   deriving (Generic, ViewId)
 
+
 instance (Todos :> es) => HyperView CSSTodo es where
   type Require CSSTodo = '[CSSTodos]
+
 
   newtype Action CSSTodo
     = MkTodoAction (Action TodoView)
     deriving newtype (ViewAction)
+
 
   update (MkTodoAction action) =
     case action of
@@ -180,6 +192,7 @@ instance (Todos :> es) => HyperView CSSTodo es where
         TodoForm task <- formData @(TodoForm Identity)
         t <- Todos.setTask task todo
         pure $ todoView filt t
+
 
 todoView :: FilterTodo -> Todo -> View CSSTodo ()
 todoView filt todo = do
@@ -200,6 +213,7 @@ todoView filt todo = do
         target CSSTodos () $ do
           button (MkTodosAction $ Destroy filt todo) @ class_ "destroy" $ ""
 
+
 todoEditView :: FilterTodo -> Todo -> View CSSTodo ()
 todoEditView filt todo = do
   li' @ class_ "editing" $ do
@@ -210,6 +224,7 @@ todoEditView filt todo = do
           . value todo.task
           . autofocus
 
+
 --- Semantic HTML Helpers ----------------------------------------------------------------------------
 --
 -- you can use semantic HTML with atomic-css too! But it is required here for the stylesheet to work
@@ -217,38 +232,50 @@ todoEditView filt todo = do
 div' :: View c () -> View c ()
 div' = tag "div"
 
+
 span' :: View c () -> View c ()
 span' = tag "span"
+
 
 section :: View c () -> View c ()
 section = tag "section"
 
+
 header :: View c () -> View c ()
 header = tag "header"
+
 
 main' :: View c () -> View c ()
 main' = tag "main"
 
+
 h1 :: View c () -> View c ()
 h1 = tag "h1"
+
 
 p :: View c () -> View c ()
 p = tag "p"
 
+
 label' :: View c () -> View c ()
 label' = tag "label"
+
 
 input' :: View c ()
 input' = tag "input" none
 
+
 a :: View c () -> View c ()
 a = tag "a"
+
 
 ul' :: View c () -> View c ()
 ul' = tag "ul"
 
+
 li' :: View c () -> View c ()
 li' = tag "li"
+
 
 footer :: View c () -> View c ()
 footer = tag "footer"

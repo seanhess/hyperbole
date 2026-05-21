@@ -11,6 +11,7 @@ import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 -----------------------------------------------------------
 -- Simple Polling
 -----------------------------------------------------------
@@ -18,12 +19,14 @@ import Web.Hyperbole
 data Poller = Poller
   deriving (Generic, ViewId)
 
+
 instance (Debug :> es) => HyperView Poller es where
   data Action Poller
     = Reload Int
     | Stop
     | Pause Int
     deriving (Generic, ViewAction)
+
 
   -- to stop, return a view without an onLoad
   update (Pause n) = do
@@ -33,15 +36,18 @@ instance (Debug :> es) => HyperView Poller es where
   update (Reload n) = do
     pure $ viewPoll n
 
+
 viewInit :: View Poller ()
 viewInit = do
   row $ do
     button (Reload 1) "Start Polling" ~ btn
 
+
 viewStopped :: View Poller ()
 viewStopped = do
   row $ do
     button (Reload 1) "Restart Polling" ~ btn
+
 
 viewPaused :: Int -> View Poller ()
 viewPaused n = do
@@ -49,6 +55,7 @@ viewPaused n = do
     row $ do
       button (Reload n) "Resume" ~ btn
     viewStatus n
+
 
 viewPoll :: Int -> View Poller ()
 viewPoll n = do
@@ -59,11 +66,13 @@ viewPoll n = do
       button Stop "Stop" ~ btn
     viewStatus n
 
+
 viewStatus :: Int -> View Poller ()
 viewStatus n = do
   el $ do
     text "Polling... "
     text $ pack $ show n
+
 
 source :: ModuleSource
 source = $(moduleSource)

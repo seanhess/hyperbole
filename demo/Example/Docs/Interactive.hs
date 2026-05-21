@@ -3,6 +3,7 @@ module Example.Docs.Interactive where
 import Example.Simple
 import Web.Hyperbole
 
+
 page :: Page es '[Message]
 page = do
   pure $ do

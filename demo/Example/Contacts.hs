@@ -21,6 +21,7 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 page
   :: forall es
    . (Hyperbole :> es, Users :> es, Debug :> es)
@@ -31,15 +32,18 @@ page = do
     example $(moduleSource) $ do
       hyper Contacts $ allContactsView Nothing us
 
+
 -- Contacts ----------------------------------------------
 
 data Contacts = Contacts
   deriving (Generic, ViewId)
 
+
 data Filter
   = Active
   | Inactive
   deriving (Eq, Show, Read, Generic, ToJSON, FromJSON, InputValue)
+
 
 instance (Users :> es, Debug :> es) => HyperView Contacts es where
   data Action Contacts
@@ -48,7 +52,9 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
     | DeleteUser UserId
     deriving (Generic, ViewAction)
 
+
   type Require Contacts = '[InlineContact, NewContact]
+
 
   update = \case
     Reload -> do
@@ -65,6 +71,7 @@ instance (Users :> es, Debug :> es) => HyperView Contacts es where
       Users.delete uid
       us <- Users.all
       pure $ allContactsView Nothing us
+
 
 -- TODO: get the form to close when submitted
 
@@ -96,6 +103,7 @@ allContactsView fil us = col ~ gap 20 $ do
   filterUsers (Just Active) u = u.isActive
   filterUsers (Just Inactive) u = not u.isActive
 
+
 -- New Contact Form / Button ----------------------------------
 -- Note that it is easier to nest hyperviews here because NewContact has sufficiently different state
 --   * It doesn't need to know the users
@@ -105,22 +113,27 @@ allContactsView fil us = col ~ gap 20 $ do
 data NewContact = NewContact
   deriving (Generic, ViewId)
 
+
 instance (Users :> es) => HyperView NewContact es where
   data Action NewContact
     = ShowForm
     | CloseForm
     deriving (Generic, ViewAction)
 
+
   type Require NewContact = '[Contacts]
+
 
   update action =
     case action of
       ShowForm -> pure newContactForm
       CloseForm -> pure newContactButton
 
+
 newContactButton :: View NewContact ()
 newContactButton = do
   button ShowForm ~ btn $ "Add Contact"
+
 
 newContactForm :: View NewContact ()
 newContactForm = do
@@ -131,6 +144,7 @@ newContactForm = do
       space
       button CloseForm ~ btnLight $ "Cancel"
 
+
 -- Reuse Contact View ----------------------------------
 -- We want to use the same view as Example.Contact, but customize the edit view to have a delete button
 -- Note that we re-implement the actions and the handler
@@ -139,6 +153,7 @@ newContactForm = do
 data InlineContact = InlineContact UserId
   deriving (Generic, ViewId)
 
+
 instance (Users :> es, Debug :> es) => HyperView InlineContact es where
   data Action InlineContact
     = Edit
@@ -146,7 +161,9 @@ instance (Users :> es, Debug :> es) => HyperView InlineContact es where
     | Save
     deriving (Generic, ViewAction)
 
+
   type Require InlineContact = '[Contacts]
+
 
   update a = do
     InlineContact uid <- viewId
@@ -162,9 +179,11 @@ instance (Users :> es, Debug :> es) => HyperView InlineContact es where
         Users.save unew
         pure $ contactView unew
 
+
 -- See how we reuse the contactView' from Example.Contact
 contactView :: User -> View InlineContact ()
 contactView = contactView' Edit
+
 
 -- See how we reuse the contactEdit' and contactLoading from Example.Contact
 contactEdit :: User -> View InlineContact ()

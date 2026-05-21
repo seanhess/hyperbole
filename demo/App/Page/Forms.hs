@@ -13,11 +13,13 @@ import Example.FormValidation qualified as FormValidation
 import Example.View.Layout
 import Web.Hyperbole
 
+
 data Sections
   = BasicForms
   | Validation
   | FileUpload
   deriving (Generic, Show, Bounded, Enum, PageAnchor)
+
 
 page :: (Hyperbole :> es) => Page es '[Signup, AddContact, SubmitFiles]
 page = do
@@ -38,4 +40,4 @@ page = do
       markdocs $(embedFile "docs/forms-fileupload.md")
 
       example FormFileUpload.source $ do
-        hyper SubmitFiles $ FormFileUpload.documentFormView
+        hyper SubmitFiles FormFileUpload.documentFormView

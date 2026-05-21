@@ -1,7 +1,7 @@
 module App.Page.HyperboleEffect where
 
-import App.Route as Route hiding (Response, UserId)
 import App.Docs
+import App.Route as Route hiding (Response, UserId)
 import Effectful
 import Example.Errors (Errors (..), Users (..), viewCustom, viewExceptions, viewKnownUsers, viewSearchUsers)
 import Example.Errors qualified as Errors
@@ -9,6 +9,7 @@ import Example.Requests (CheckRequest (..), ControlClient (..), ControlResponse 
 import Example.Requests qualified as Requests
 import Example.View.Layout (layoutSubnav)
 import Web.Hyperbole hiding (Response)
+
 
 data Sections
   = Requests
@@ -18,6 +19,7 @@ data Sections
   | HandleInViews
   | CustomErrorViews
   deriving (Show, Enum, Bounded, PageAnchor)
+
 
 page :: (Hyperbole :> es) => Page es '[CheckRequest, ControlResponse, ControlClient, Errors, Users]
 page = do

@@ -13,17 +13,21 @@ import Effectful.Dispatch.Dynamic
 import System.Random (randomRIO)
 import Web.Hyperbole
 
+
 type TodoId = Text
+
 
 newtype AllTodos = AllTodos (Map TodoId Todo)
   deriving (Generic)
   deriving newtype (ToJSON, FromJSON)
+
 
 instance Session AllTodos where
   sessionKey = "todos"
   cookiePath = Just "/examples" -- share data between both pages
 instance Default AllTodos where
   def = AllTodos mempty
+
 
 data Todo = Todo
   { id :: TodoId
@@ -32,6 +36,7 @@ data Todo = Todo
   }
   deriving (Generic, ToJSON, FromJSON, FromRow, ToRow)
 
+
 data Todos :: Effect where
   LoadAll :: Todos m [Todo]
   Save :: Todo -> Todos m ()
@@ -39,11 +44,14 @@ data Todos :: Effect where
   Create :: Text -> Todos m TodoId
 type instance DispatchOf Todos = 'Dynamic
 
+
 loadAll :: (Todos :> es) => Eff es [Todo]
 loadAll = send LoadAll
 
+
 create :: (Todos :> es) => Text -> Eff es TodoId
 create t = send $ Create t
+
 
 setTask :: (Todos :> es) => Text -> Todo -> Eff es Todo
 setTask task t = do
@@ -51,16 +59,19 @@ setTask task t = do
   send $ Save updated
   pure updated
 
+
 setCompleted :: (Todos :> es) => Bool -> Todo -> Eff es Todo
 setCompleted completed todo = do
   let updated = todo{completed}
   send $ Save updated
   pure updated
 
+
 toggleAll :: (Todos :> es) => [Todo] -> Eff es [Todo]
 toggleAll todos = do
   let shouldComplete = any (\t -> not t.completed) todos
   mapM (setCompleted shouldComplete) todos
+
 
 clearCompleted :: (Todos :> es) => Eff es [Todo]
 clearCompleted = do
@@ -69,9 +80,11 @@ clearCompleted = do
   mapM_ clear completed
   loadAll
 
+
 clear :: (Todos :> es) => Todo -> Eff es ()
 clear todo = do
   send $ Remove todo.id
+
 
 filteredTodos :: (Todos :> es) => FilterTodo -> Eff es [Todo]
 filteredTodos filt =
@@ -83,11 +96,13 @@ filteredTodos filt =
       Active -> not todo.completed
       Completed -> todo.completed
 
+
 data FilterTodo
   = FilterAll
   | Active
   | Completed
   deriving (Eq, Generic, ToJSON, FromJSON)
+
 
 -----------------------------------------------------------------------
 -- Session: store todos in a cookie
@@ -119,6 +134,7 @@ runTodosSession = interpret $ \_ -> \case
   delete :: TodoId -> AllTodos -> AllTodos
   delete todoId (AllTodos m) =
     AllTodos (M.delete todoId m)
+
 
 randomId :: (IOE :> es) => Eff es TodoId
 randomId = do

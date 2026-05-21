@@ -13,6 +13,7 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
+
 page :: (Hyperbole :> es) => Page es '[Languages]
 page = do
   ls <- loadNextLanguages 0
@@ -21,7 +22,9 @@ page = do
     example $(moduleSource) $ do
       hyper (Languages 0) $ languagesView ls
 
+
 type Offset = Int
+
 
 -- fake database load of next N language
 loadNextLanguages :: Offset -> Eff es [ProgrammingLanguage]
@@ -30,21 +33,26 @@ loadNextLanguages offset =
  where
   isInPage (n, _) = n >= offset && n < offset + nextLanguagesPageSize
 
+
 nextLanguagesPageSize :: Int
 nextLanguagesPageSize = 4
 
+
 data Languages = Languages Offset
   deriving (Generic, ViewId)
+
 
 instance HyperView Languages es where
   data Action Languages
     = Load
     deriving (Generic, ViewAction)
 
+
   update Load = do
     Languages offset <- viewId
     ls <- loadNextLanguages offset
     pure $ languagesView ls
+
 
 languagesView :: [ProgrammingLanguage] -> View Languages ()
 languagesView ls = do
@@ -53,6 +61,7 @@ languagesView ls = do
   col ~ pad (TRBL 20 0 0 0) $ do
     nextLanguages ls
 
+
 nextLanguages :: [ProgrammingLanguage] -> View Languages ()
 nextLanguages ls
   | length ls < nextLanguagesPageSize = pure ()
@@ -60,6 +69,7 @@ nextLanguages ls
       Languages off <- viewId
       hyper (Languages (off + nextLanguagesPageSize)) $ do
         button Load ~ btn $ "Load More"
+
 
 languageView :: ProgrammingLanguage -> View Languages ()
 languageView lang = do

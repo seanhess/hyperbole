@@ -17,11 +17,13 @@ import System.FilePath (normalise, (</>))
 import Web.Atomic.CSS
 import Web.Hyperbole.View
 
+
 snippet :: View c () -> View c ()
 snippet cnt = do
   tag' True "pre" ~ bg (HexColor "#F2F2F3") $ do
     tag' True "code" @ class_ "language-haskell" $ do
       cnt
+
 
 codeblock :: Text -> View c ()
 codeblock t =
@@ -35,8 +37,10 @@ codeblock t =
       [ "line-height" :. "1"
       ]
 
+
 rawMulti :: [Text] -> View c ()
 rawMulti = raw . T.stripEnd . T.unlines
+
 
 embedLines :: FilePath -> Int -> Int -> Q Exp
 embedLines path start end = do
@@ -50,16 +54,21 @@ embedLines path start end = do
           $ contents
   lift (T.unpack selected)
 
+
 newtype TopLevelDefinition = TopLevelDefinition Text
   deriving newtype (Show, Eq, IsString)
 
+
 newtype SourceCode = SourceCode {lines :: [Text]}
+
 
 newtype ModuleName = ModuleName Text
   deriving newtype (Show, Eq, IsString)
 
+
 modulePath :: ModuleName -> FilePath
 modulePath (ModuleName mn) = cs $ "demo/" <> T.replace "." "/" mn <> ".hs"
+
 
 {- | A top-level definition as text
 
@@ -69,10 +78,12 @@ embedTopLevel :: ModuleName -> TopLevelDefinition -> Q Exp
 embedTopLevel mn tld = do
   embedSource mn (isTopLevel tld) (isCurrentDefinition tld)
 
+
 embedSource :: ModuleName -> (Text -> Bool) -> (Text -> Bool) -> Q Exp
 embedSource mn isStart isCurrent = do
   e <- embedSource' mn isStart isCurrent
   [|T.unlines $(pure e)|]
+
 
 embedSource' :: ModuleName -> (Text -> Bool) -> (Text -> Bool) -> Q Exp
 embedSource' mn isStart isCurrent = do
@@ -84,18 +95,22 @@ embedSource' mn isStart isCurrent = do
     [] -> fail $ "Missing embed in: " ++ show mn
     _ -> lift lns
 
+
 readSnippet :: FilePath -> TopLevelDefinition -> IO [Text]
 readSnippet path tld = do
   s <- readSourceCode path
   pure $ findTopLevel tld s
 
+
 readSourceCode :: FilePath -> IO SourceCode
 readSourceCode path = SourceCode . T.lines <$> T.readFile path
+
 
 -- returns lines of a top-level definition
 findTopLevel :: TopLevelDefinition -> SourceCode -> [Text]
 findTopLevel tld =
   selectLines (isTopLevel tld) (isCurrentDefinition tld)
+
 
 -- isBlankLine line = T.null $ T.strip line
 
@@ -103,11 +118,13 @@ isCurrentDefinition :: TopLevelDefinition -> Text -> Bool
 isCurrentDefinition tld line =
   isTopLevel tld line || not (isFullyOutdented line)
 
+
 isTopLevel :: TopLevelDefinition -> Text -> Bool
 isTopLevel (TopLevelDefinition def) line =
   if "^" `T.isPrefixOf` def
     then T.isPrefixOf (T.drop 1 def) line
     else T.isPrefixOf def $ T.dropWhile (== ' ') line
+
 
 selectLines :: (Text -> Bool) -> (Text -> Bool) -> SourceCode -> [Text]
 selectLines isStart isCurrent s =
@@ -116,9 +133,11 @@ selectLines isStart isCurrent s =
  where
   isEmpty = T.null
 
+
 dropWhileEnd :: (a -> Bool) -> [a] -> [a]
 dropWhileEnd p as =
   reverse $ dropWhile p $ reverse as
+
 
 isFullyOutdented :: Text -> Bool
 isFullyOutdented line =
@@ -127,12 +146,14 @@ isFullyOutdented line =
     [c] -> not $ isSpace c
     _ -> False
 
+
 -- #EMBED Example.Docs.Interactive instance HyperView Titler
 parseLineEmbed :: Text -> Maybe (ModuleName, TopLevelDefinition)
 parseLineEmbed l = do
   rest <- T.stripPrefix "#EMBED " (T.stripStart l)
   (mn : tld) <- pure $ T.words rest
   pure (ModuleName mn, TopLevelDefinition $ T.unwords tld)
+
 
 -- start with a relative OR absolute path, end up with a path to the file
 -- works with any working directory
@@ -149,6 +170,7 @@ localFile p = do
     | "demo" `L.isSuffixOf` wd = rp
     | otherwise = "demo" </> rp
 
+
 stripDir :: FilePath -> FilePath -> FilePath
 stripDir dir p =
   maybe
@@ -156,8 +178,10 @@ stripDir dir p =
     (dropWhile (== '/'))
     (L.stripPrefix dir p)
 
+
 newtype ModuleSource = ModuleSource FilePath
   deriving newtype (Show, Eq, IsString)
+
 
 moduleSource :: Q Exp
 moduleSource = do
@@ -165,6 +189,7 @@ moduleSource = do
   let path = normalise $ loc_filename loc
   fp <- runIO $ localFile path
   lift fp
+
 
 moduleSourceNamed :: ModuleName -> Q Exp
 moduleSourceNamed mn = do
