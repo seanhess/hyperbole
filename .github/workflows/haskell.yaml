@@ -2,7 +2,7 @@ name: Haskell CI
 
 on:
   push:
-    branches: [ "main", "ci" ]
+    branches: [ "main", "ci-*" ]
   pull_request:
     branches: [ "main" ]
 
@@ -17,10 +17,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: haskell-actions/run-fourmolu@v12
+      - name: Run fourmolu (demo only)
+        uses: haskell-actions/run-fourmolu@v12
         with:
           version: "latest"
+          working-directory: "./demo"
 
+      - name: Run fourmolu (all the others)
+        uses: haskell-actions/run-fourmolu@v12
+        with:
+          version: "latest"
+          pattern: |
+            **/*.hs
+            !demo
+    
       - uses: haskell-actions/hlint-setup@v2
         with:
           version: "3.10"
