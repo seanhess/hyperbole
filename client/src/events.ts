@@ -42,11 +42,8 @@ export function listenBubblingEvent(
   cb: (_target: HyperView, action: string) => void,
 ): void {
   document.addEventListener(event, function (e) {
-    if (!(e.target instanceof HTMLElement)) {
-      console.warn(
-        "listenBubblingEvent received an event with non HTMLElment as EventTarget: %o",
-        e,
-      )
+    if (!(e.target instanceof Element)) {
+      console.warn("listenBubblingEvent received an event with non Elment as EventTarget: %o", e)
       return
     }
     let el = e.target
