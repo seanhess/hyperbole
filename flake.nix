@@ -118,12 +118,11 @@
           ];
         };
 
-        docgen-src = nix-filter.lib {
+        docs-src = nix-filter.lib {
           root = ./docs;
           include = [
             (nix-filter.lib.matchExt "hs")
             (nix-filter.lib.matchExt "md")
-            ./docs/docgen.cabal
           ];
         };
 
@@ -144,7 +143,7 @@
         demo-with-docs-src = pkgs.runCommand "demo" { } ''
           mkdir -p $out/docs
           cp -rL ${demo-src}/. $out/
-          cp -rL ${docgen-src}/. $out/docs/
+          cp -rL ${docs-src}/. $out/docs/
         '';
 
         # Merges library `src` + `demo` sources into `$out`.
@@ -171,7 +170,7 @@
                 hfinal: hprev: {
                   ${packageName} = hfinal.callCabal2nix packageName hyperbole-with-demo-src { };
                   ${demoName} = hfinal.callCabal2nix demoName demo-with-docs-src { };
-                  docgen = hfinal.callCabal2nix "docgen" docgen-src { };
+                  docgen = hfinal.callCabal2nix "docgen" docs-src { };
                   hyperbole-oauth2 = hfinal.callCabal2nix "hyperbole-oauth2" oauth2-src { };
                 }
               )
