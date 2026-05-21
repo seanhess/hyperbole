@@ -288,13 +288,11 @@ export type JSEvent = {
 
 export type MessageType = string
 
-
 export type SplitMessage = {
-  command: string,
-  metas: Meta[],
+  command: string
+  metas: Meta[]
   rest: string[]
 }
-
 
 export function splitMessage(msg: string): SplitMessage {
   let lines = msg.split("\n")
@@ -303,7 +301,7 @@ export function splitMessage(msg: string): SplitMessage {
   // console.log("Split Metadata", lines.length)
   // console.log(" [0]", lines[0])
   // console.log(" [1]", lines[1])
-  let rest = dropWhile(l => l == "", lines.slice(metas.length + 1))
+  let rest = dropWhile((l) => l == "", lines.slice(metas.length + 1))
 
   return { command, metas, rest }
 }
