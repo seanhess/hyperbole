@@ -4,10 +4,8 @@ import Data.Text (pack)
 import Web.Atomic.CSS
 import Web.Hyperbole hiding (button, input)
 
-
 data Dropper = Dropper
   deriving (Generic, ViewId)
-
 
 data Planet
   = Mercury
@@ -16,17 +14,14 @@ data Planet
   | Mars
   deriving (Generic, ToJSON, FromJSON, Eq, Show, InputValue)
 
-
 instance HyperView Dropper es where
   data Action Dropper
     = Select
     deriving (Generic, ViewAction)
 
-
   update Select = do
     mp :: Maybe Planet <- inputValue
     pure $ selectPlanet mp
-
 
 selectPlanet :: Maybe Planet -> View Dropper ()
 selectPlanet mp = do

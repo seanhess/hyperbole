@@ -7,7 +7,6 @@ import Data.String.Interpolate (i)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-
 css :: ByteString
 css =
   [i|
@@ -31,10 +30,8 @@ css =
 }
 |]
 
-
 loadingBars :: View c ()
 loadingBars = el ~ cls "loader" $ none
-
 
 loading :: View c ()
 loading = do

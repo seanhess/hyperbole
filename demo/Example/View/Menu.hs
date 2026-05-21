@@ -11,7 +11,6 @@ import Safe (atMay)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-
 topLevelPages :: [AppRoute]
 topLevelPages =
   [ Intro
@@ -29,12 +28,10 @@ topLevelPages =
   , Examples OtherExamples
   ]
 
-
 nextPage :: AppRoute -> Maybe AppRoute
 nextPage rt = do
   ix <- rt `elemIndex` topLevelPages
   topLevelPages `atMay` (ix + 1)
-
 
 menu :: forall sections c. (PageAnchor sections) => AppRoute -> View c ()
 menu current = do

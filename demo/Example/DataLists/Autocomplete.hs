@@ -20,7 +20,6 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
-
 page :: (Hyperbole :> es) => Page es '[LiveSearch]
 page = do
   pure $ layout (Data Autocomplete) $ do
@@ -28,10 +27,8 @@ page = do
     example $(moduleSource) $ do
       hyper LiveSearch $ liveSearchView allLanguages 0 ""
 
-
 data LiveSearch = LiveSearch
   deriving (Generic, ViewId)
-
 
 instance (IOE :> es) => HyperView LiveSearch es where
   data Action LiveSearch
@@ -39,10 +36,8 @@ instance (IOE :> es) => HyperView LiveSearch es where
     | Select (Maybe ProgrammingLanguage)
     deriving (Generic, ViewAction)
 
-
   -- favor the latest thing typed
   type Concurrency LiveSearch = Replace
-
 
   update (SearchTerm current term) = do
     val <- inputValue
@@ -52,12 +47,10 @@ instance (IOE :> es) => HyperView LiveSearch es where
   update (Select (Just lang)) = do
     pure $ selectedView lang
 
-
 selectedView :: ProgrammingLanguage -> View LiveSearch ()
 selectedView selected = do
   col ~ gap 10 $ do
     Filter.chosenView selected
-
 
 liveSearchView :: [ProgrammingLanguage] -> Int -> Text -> View LiveSearch ()
 liveSearchView langs current term = do
@@ -83,7 +76,6 @@ liveSearchView langs current term = do
     onKeyDown Enter (Select currentSearchLang)
       . onKeyDown ArrowDown (SearchTerm (current + 1) (Just term))
       . onKeyDown ArrowUp (SearchTerm (current - 1) (Just term))
-
 
 searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View LiveSearch ()
 searchPopup shownLangs highlighted = do

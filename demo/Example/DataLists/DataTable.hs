@@ -15,7 +15,6 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
-
 -- DataTable -> do
 --   el "Complex reusable View Functions allow us to "
 
@@ -26,10 +25,8 @@ page = do
     example $(moduleSource) $ do
       hyper Languages $ languagesView Nothing allLanguages
 
-
 data Languages = Languages
   deriving (Generic, ViewId)
-
 
 data SortField
   = SortName
@@ -37,24 +34,20 @@ data SortField
   | SortFamily
   deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 
-
 instance HyperView Languages es where
   data Action Languages
     = SortOn SortField
     deriving (Generic, ViewAction)
 
-
   update (SortOn fld) = do
     let sorted = sortOnField fld allLanguages
     pure $ languagesView (Just fld) sorted
-
 
 sortOnField :: SortField -> [ProgrammingLanguage] -> [ProgrammingLanguage]
 sortOnField = \case
   SortName -> sortOn (.name)
   SortDescription -> sortOn (.description)
   SortFamily -> sortOn (.family)
-
 
 languagesView :: Maybe SortField -> [ProgrammingLanguage] -> View Languages ()
 languagesView fld langs =

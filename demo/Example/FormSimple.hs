@@ -9,25 +9,20 @@ import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-
 source :: ModuleSource
 source = $(moduleSource)
 
-
 data AddContact = AddContact
   deriving (Generic, ViewId)
-
 
 instance HyperView AddContact es where
   data Action AddContact
     = Submit
     deriving (Generic, ViewAction)
 
-
   update Submit = do
     cf <- formData
     pure $ contactView cf
-
 
 data Planet
   = Mercury
@@ -36,14 +31,12 @@ data Planet
   | Mars
   deriving (Generic, FromJSON, ToJSON, Eq, Show, FromField)
 
-
 data Moon
   = Titan
   | Europa
   | Callisto
   | Mimas
   deriving (Generic, ToJSON, FromJSON, Eq, Show, FromField)
-
 
 -- Forms can be pretty simple. Just a type that can be parsed
 data ContactForm = ContactForm
@@ -55,7 +48,6 @@ data ContactForm = ContactForm
   }
   deriving (Generic, FromForm)
 
-
 nameForm :: View AddContact ()
 nameForm = do
   form Submit $ do
@@ -64,7 +56,6 @@ nameForm = do
       label $ do
         text "Contact Name"
         input Username @ placeholder "contact name"
-
 
 -- and a view that displays an input for each field
 formView :: View AddContact ()
@@ -114,7 +105,6 @@ formView = do
       radio val ~ width 32
       text (pack (show val))
 
-
 -- Alternatively, use Higher Kinded Types, and Hyperbole can guarantee the field names are the same
 --
 -- ContactForm' Identity is exactly the same as ContactForm:
@@ -136,7 +126,6 @@ data ContactForm' f = ContactForm'
   }
   deriving (Generic, FromFormF, GenFields FieldName)
 
-
 nameForm' :: View AddContact ()
 nameForm' = do
   let f = fieldNames @ContactForm'
@@ -145,7 +134,6 @@ nameForm' = do
       label $ do
         text "Contact Name"
         input Username @ placeholder "contact name"
-
 
 formView' :: View AddContact ()
 formView' = do
@@ -198,7 +186,6 @@ formView' = do
     label ~ flexRow . gap 10 $ do
       radio val ~ width 32
       text (pack (show val))
-
 
 contactView :: ContactForm -> View AddContact ()
 contactView u = do

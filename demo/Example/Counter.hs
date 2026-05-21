@@ -8,15 +8,12 @@ import Example.Style.Cyber as Style
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
 
-
 page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   pure $ hyper Counter (viewCount 0)
 
-
 data Counter = Counter
   deriving (Generic, ViewId)
-
 
 instance HyperView Counter es where
   data Action Counter
@@ -24,12 +21,10 @@ instance HyperView Counter es where
     | Decrement Int
     deriving (Generic, ViewAction)
 
-
   update (Increment n) = do
     pure $ viewCount (n + 1)
   update (Decrement n) = do
     pure $ viewCount (n - 1)
-
 
 viewCount :: Int -> View Counter ()
 viewCount n = row $ do

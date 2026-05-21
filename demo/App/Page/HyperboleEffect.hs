@@ -10,7 +10,6 @@ import Example.Requests qualified as Requests
 import Example.View.Layout (layoutSubnav)
 import Web.Hyperbole hiding (Response)
 
-
 data Sections
   = Requests
   | Response
@@ -19,7 +18,6 @@ data Sections
   | HandleInViews
   | CustomErrorViews
   deriving (Show, Enum, Bounded, PageAnchor)
-
 
 page :: (Hyperbole :> es) => Page es '[CheckRequest, ControlResponse, ControlClient, Errors, Users]
 page = do

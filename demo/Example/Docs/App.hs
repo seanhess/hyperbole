@@ -12,14 +12,12 @@ import Example.Effects.Users (User, Users (..))
 import Web.Hyperbole
 import Web.Hyperbole.Effect.Response (view)
 
-
 documentHead :: View DocumentHead ()
 documentHead = do
   title "My Website"
   script' scriptEmbed
   style cssEmbed
   script "custom.js"
-
 
 router :: (Hyperbole :> es) => AppRoute -> Eff es Response
 router Messages = runPage Messages.page
@@ -31,9 +29,7 @@ router Main = do
     route (User 1) "User 1"
     route (User 2) "User 2"
 
-
 type UserId = Int
-
 
 data AppRoute
   = Main
@@ -41,16 +37,13 @@ data AppRoute
   | User UserId
   deriving (Eq, Generic)
 
-
 instance Route AppRoute where
   baseRoute = Just Main
-
 
 findUser :: (Hyperbole :> es, Users :> es) => Int -> Eff es User
 findUser uid = do
   mu <- send (LoadUser uid)
   maybe notFound pure mu
-
 
 userPage :: (Hyperbole :> es, Users :> es) => Page es '[]
 userPage = do
@@ -59,25 +52,19 @@ userPage = do
   -- skipped if user not found
   pure $ userView user
 
-
 userView :: User -> View c ()
 userView _ = none
-
 
 app :: Application
 app = liveApp (document documentHead) (routeRequest router)
 
-
 data AppConfig = AppConfig
-
 
 runApp :: (Hyperbole :> es, IOE :> es) => AppConfig -> Eff (Reader AppConfig : Concurrent : es) a -> Eff es a
 runApp config = runConcurrent . runReader config
 
-
 app' :: AppConfig -> Application
 app' config = liveApp (document documentHead) (runApp config $ routeRequest router')
-
 
 router' :: (Hyperbole :> es, Concurrent :> es) => AppRoute -> Eff es Response
 router' Messages = runReader @Text "Secret Message!" $ runPage SideEffects.page

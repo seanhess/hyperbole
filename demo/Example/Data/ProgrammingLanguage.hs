@@ -5,7 +5,6 @@ module Example.Data.ProgrammingLanguage where
 import Data.Text (Text, isInfixOf, toLower)
 import Web.Hyperbole
 
-
 data ProgrammingLanguage = ProgrammingLanguage
   { family :: LanguageFamily
   , name :: Text
@@ -16,12 +15,10 @@ data ProgrammingLanguage = ProgrammingLanguage
 instance Eq ProgrammingLanguage where
   p1 == p2 = p1.name == p2.name
 
-
 data LanguageFamily
   = Functional
   | ObjectOriented
   deriving (Eq, Show, ToJSON, FromJSON, Ord, Generic, InputValue)
-
 
 data TypeFeature
   = Dynamic
@@ -31,11 +28,9 @@ data TypeFeature
   | TypeFamilies
   deriving (Eq, Show, ToJSON, FromJSON, Generic)
 
-
 isMatchLanguage :: Text -> ProgrammingLanguage -> Bool
 isMatchLanguage term p =
   isInfixOf (toLower term) . toLower $ p.name
-
 
 allLanguages :: [ProgrammingLanguage]
 allLanguages =

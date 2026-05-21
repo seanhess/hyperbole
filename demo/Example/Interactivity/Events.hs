@@ -6,12 +6,10 @@ import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole hiding (button, input)
 
-
 -- Try Events --------------------------------------
 
 data TryEvents = TryEvents
   deriving (Generic, ViewId)
-
 
 instance HyperView TryEvents es where
   data Action TryEvents
@@ -19,13 +17,11 @@ instance HyperView TryEvents es where
     | ClearMessage
     deriving (Generic, ViewAction)
 
-
   update SetMessage = do
     t <- inputValue
     pure $ viewEvents t
   update ClearMessage = do
     pure $ viewEvents ""
-
 
 viewEvents :: Text -> View TryEvents ()
 viewEvents t = do
@@ -36,12 +32,10 @@ viewEvents t = do
   input = tag "input"
   button = tag "button"
 
-
 -- Boxes -----------------------------------
 
 data Boxes = Boxes
   deriving (Generic, ViewId)
-
 
 instance HyperView Boxes es where
   data Action Boxes
@@ -49,22 +43,18 @@ instance HyperView Boxes es where
     | ClearBox
     deriving (Generic, ViewAction)
 
-
   -- favor the last action that happens
   type Concurrency Boxes = Replace
-
 
   update (SelectBox n) = do
     pure $ viewBoxes (Just n)
   update ClearBox = do
     pure $ viewBoxes Nothing
 
-
 viewBoxes :: Maybe Int -> View Boxes ()
 viewBoxes mn = do
   boxes mn $ \n -> do
     el ~ box @ onMouseEnter (SelectBox n) . onMouseLeave ClearBox $ text $ pack $ show n
-
 
 boxes :: Maybe Int -> (Int -> View c ()) -> View c ()
 boxes mn boxView = do
@@ -76,7 +66,6 @@ boxes mn boxView = do
       space
     mapM_ boxView ns
 
-
 box :: (Styleable h) => CSS h -> CSS h
 box =
   border 1
@@ -85,7 +74,6 @@ box =
     . hover (bg PrimaryLight)
     . textAlign AlignCenter
 
-
 grid :: (Styleable h) => CSS h -> CSS h
 grid =
   utility
@@ -93,7 +81,6 @@ grid =
     [ "display" :. "grid"
     , "grid-template-columns" :. "repeat(auto-fit, minmax(50px, 1fr))"
     ]
-
 
 double :: (Styleable h) => CSS h -> CSS h
 double =

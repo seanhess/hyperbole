@@ -15,7 +15,6 @@ import Example.View.Layout (layout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-
 data Preferences = Preferences
   { message :: Text
   , color :: AppColor
@@ -23,7 +22,6 @@ data Preferences = Preferences
   deriving (Generic, Show, ToJSON, FromJSON, Session)
 instance Default Preferences where
   def = Preferences "_" White
-
 
 page :: (Hyperbole :> es) => Page es '[Contents]
 page = do
@@ -33,10 +31,8 @@ page = do
       el "We can also persist state in a browser cookie. This is most useful for user-specific preferences and state that should last until they clear their browser cookies"
       col ~ embed $ hyper Contents $ viewContent prefs
 
-
 data Contents = Contents
   deriving (Generic, ViewId)
-
 
 instance HyperView Contents es where
   data Action Contents
@@ -54,14 +50,12 @@ instance HyperView Contents es where
     deleteSession @Preferences
     pure $ viewContent def
 
-
 viewContent :: Preferences -> View Contents ()
 viewContent prefs = do
   col ~ gap 20 $ do
     viewColorPicker prefs.color
     viewMessage prefs.message
     button ClearSession ~ Style.btnLight $ "Clear"
-
 
 viewColorPicker :: AppColor -> View Contents ()
 viewColorPicker clr = do
@@ -73,7 +67,6 @@ viewColorPicker clr = do
       button (SaveColor Danger) ~ (btn' Danger . brd) $ "Danger"
  where
   brd = border $ TRBL 1 0 0 1
-
 
 viewMessage :: Text -> View Contents ()
 viewMessage msg = do

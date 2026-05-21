@@ -8,26 +8,20 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
 
-
 dataRow :: (Styleable a) => CSS a -> CSS a
 dataRow = gap 10 . pad (All $ PxRem dataRowPadding)
-
 
 dataRowPadding :: PxRem
 dataRowPadding = 5
 
-
 bord :: (Styleable a) => CSS a -> CSS a
 bord = border 1 . borderColor Light
-
 
 hd :: View id () -> TableHead id ()
 hd = th ~ pad 4 . bord . bg Light
 
-
 cell :: (Styleable a) => CSS a -> CSS a
 cell = pad 4 . bord
-
 
 dataTable :: (Styleable a) => CSS a -> CSS a
 dataTable =
@@ -35,7 +29,6 @@ dataTable =
     "data-table"
     ".data-table tr:nth-child(even)"
     (declarations (bg Light))
-
 
 sortBtn :: (ViewAction (Action id)) => Text -> Action id -> Bool -> View id ()
 sortBtn lbl click isSelected = do
@@ -47,7 +40,6 @@ sortBtn lbl click isSelected = do
     if isSelected
       then underline
       else id
-
 
 sortColumn :: (ViewAction (Action id)) => View id () -> (dt -> Text) -> TableColumns id dt ()
 sortColumn header cellText = do

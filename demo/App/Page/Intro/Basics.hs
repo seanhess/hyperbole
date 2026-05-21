@@ -16,22 +16,18 @@ import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types (Root (..))
 import Web.Hyperbole.Page (subPage)
 
-
 data Basics
   = GetRunning
   | HtmlViews
   | Interactive
   deriving (Show, Enum, Bounded)
 
-
 instance PageAnchor Basics where
   sectionTitle Interactive = "Interactive HyperViews"
   sectionTitle a = camelTitle a
 
-
   navEntry Interactive = "HyperViews"
   navEntry a = sectionTitle a
-
 
 page :: (Hyperbole :> es) => Page es '[Message, Counter, ViewFunctions.Message]
 page = do

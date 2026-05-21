@@ -11,7 +11,6 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Web.Hyperbole (Hyperbole, notFound)
 
-
 data User = User
   { id :: UserId
   , firstName :: Text
@@ -22,7 +21,6 @@ data User = User
   }
   deriving (Show)
 
-
 -- Load a user AND do next if missing?
 data Users :: Effect where
   LoadUser :: UserId -> Users m (Maybe User)
@@ -32,12 +30,9 @@ data Users :: Effect where
   DeleteUser :: UserId -> Users m ()
   NextId :: Users m UserId
 
-
 type instance DispatchOf Users = 'Dynamic
 
-
 type UserStore = MVar (Map UserId User)
-
 
 runUsersIO
   :: (IOE :> es)
@@ -69,7 +64,6 @@ runUsersIO var = interpret $ \_ -> \case
   modify :: (MonadIO m) => (Map UserId User -> IO (Map UserId User)) -> m ()
   modify f = liftIO $ modifyMVar_ var f
 
-
 initUsers :: (MonadIO m) => m UserStore
 initUsers =
   liftIO $ newMVar $ M.fromList $ map (\u -> (u.id, u)) users
@@ -81,24 +75,19 @@ initUsers =
     , User 4 "Felicia" "Korvus" 84 "" True
     ]
 
-
 find :: (Hyperbole :> es, Users :> es) => Int -> Eff es User
 find uid = do
   mu <- send (LoadUser uid)
   maybe notFound pure mu
 
-
 all :: (Users :> es) => Eff es [User]
 all = send LoadUsers
-
 
 save :: (Users :> es) => User -> Eff es ()
 save = send . SaveUser
 
-
 delete :: (Users :> es) => Int -> Eff es ()
 delete = send . DeleteUser
-
 
 nextId :: (Users :> es) => Eff es Int
 nextId = send NextId

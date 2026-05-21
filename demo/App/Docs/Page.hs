@@ -26,35 +26,28 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Data.URI
 
-
 class PageAnchor n where
   pageAnchor :: n -> Text
   default pageAnchor :: n -> Text
   pageAnchor = T.toLower . T.replace " " "-" . sectionTitle
 
-
   sectionTitle :: n -> Text
   default sectionTitle :: (Show n) => n -> Text
   sectionTitle = camelTitle
-
 
   navEntry :: n -> Text
   default navEntry :: n -> Text
   navEntry = sectionTitle
 
-
   subnav :: [n]
   default subnav :: (Enum n, Bounded n) => [n]
   subnav = [minBound .. maxBound]
 
-
 instance PageAnchor () where
   subnav = []
 
-
 camelTitle :: (Show a) => a -> Text
 camelTitle = cs . toWords . fromHumps . show
-
 
 -- Sections ----------------------------------------------------------------------
 
@@ -66,22 +59,18 @@ sourceLink p =
   sourceUrlBase = [uri|https://github.com/seanhess/hyperbole/blob/main/demo/|]
   sourceUrl = sourceUrlBase ./. p
 
-
 sourceTag :: (Styleable h) => CSS h -> CSS h
 sourceTag =
   pad (XY 8 2) . bg PrimaryLight . color White . hover (bg Primary)
 
-
 example :: ModuleSource -> View c () -> View c ()
 example (ModuleSource e) = example' (path $ cs e)
-
 
 example' :: Path -> View c () -> View c ()
 example' p cnt = do
   el ~ stack . Cyber.font $ do
     col ~ Cyber.embed $ cnt
     sourceLink p ~ sourceTag . popup (TR (-10) 0)
-
 
 -- section :: AppRoute -> View c () -> View c ()
 -- section r = section' (routeTitle r)
@@ -92,7 +81,6 @@ section' t cnt = do
     row $ do
       el ~ bold . fontSize 28 . Cyber.font . Style.uppercase $ text t
     cnt
-
 
 section :: (PageAnchor n) => n -> View c () -> View c ()
 section n =

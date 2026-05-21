@@ -3,13 +3,11 @@ module App.Cache where
 import Network.HTTP.Types (Header)
 import Network.Wai.Middleware.Static
 
-
 clientCache :: IO Options
 clientCache = do
   container <- initCaching PublicStaticCaching
   -- container <- initCaching (CustomCaching customCache)
   pure $ defaultOptions{cacheContainer = container}
-
 
 -- for testing if caching is working
 customCache :: FileMeta -> [Header]

@@ -16,14 +16,12 @@ import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types (Root (..))
 import Web.Hyperbole.Page (subPage)
 
-
 data HyperSectuions
   = IndependentUpdates
   | UniqueViewid
   | Nesting
   | TargetingOtherHyperviews
   deriving (Show, Enum, Bounded, PageAnchor)
-
 
 page :: (Hyperbole :> es) => Page es '[Counter, Message, UniqueViewId.Item, Nesting.ItemList, Targeted, Controls, Tasks]
 page = do

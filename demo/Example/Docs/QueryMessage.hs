@@ -5,7 +5,6 @@ import Data.Text (Text)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-
 page :: (Hyperbole :> es) => Page es '[Message]
 page = do
   prm <- lookupParam "msg"
@@ -13,22 +12,18 @@ page = do
   pure $ do
     hyper Message $ messageView msg
 
-
 data Message = Message
   deriving (Generic, ViewId)
-
 
 instance HyperView Message es where
   data Action Message
     = Louder Text
     deriving (Generic, ViewAction)
 
-
   update (Louder msg) = do
     let new = msg <> "!"
     setParam "msg" new
     pure $ messageView new
-
 
 messageView :: Text -> View Message ()
 messageView m = do

@@ -7,10 +7,8 @@ import Example.Colors
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-
 source :: ModuleSource
 source = $(moduleSource)
-
 
 tooltips :: View c ()
 tooltips = do

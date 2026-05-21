@@ -20,7 +20,6 @@ import Example.View.Loader as Loader
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-
 data Section
   = Concurrency
   | OverlappingRequests
@@ -28,7 +27,6 @@ data Section
   | Polling
   | PushUpdates
   deriving (Show, Eq, Enum, Bounded, PageAnchor)
-
 
 page :: (Hyperbole :> es, Debug :> es) => Page es '[Poller, LazyData, Progress, Push.Tasks, OverlapDrop, OverlapReplace, LazyAll]
 page = do
@@ -68,23 +66,18 @@ page = do
       example Push.source $ do
         hyper Push.Tasks $ Push.taskView 0
 
-
 data LazyAll = LazyAll
   deriving (Generic, ViewId)
-
 
 instance HyperView LazyAll es where
   data Action LazyAll
     = ReloadAll
     deriving (Generic, ViewAction)
 
-
   type Require LazyAll = '[LazyData]
-
 
   update _ = do
     pure viewLazyAll
-
 
 viewLazyAll :: View LazyAll ()
 viewLazyAll = do

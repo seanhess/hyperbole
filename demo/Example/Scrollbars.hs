@@ -9,13 +9,11 @@ import Example.Style.Cyber (btn, btnLight)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-
 test :: IO ()
 test = do
   putStrLn "Starting..."
   run 3000 $ do
     liveApp quickStartDocument (runPage page)
-
 
 page' :: (Hyperbole :> es) => Page es '[Long]
 page' = do
@@ -23,20 +21,16 @@ page' = do
     style "body { height: 100vh; overflow: hidden; } "
     hyper Long (longView Nothing) ~ height (Pct 1)
 
-
 data Long = Long
   deriving (Generic, ViewId)
-
 
 instance HyperView Long es where
   data Action Long
     = Select Text
     deriving (Generic, ViewAction)
 
-
   update (Select t) = do
     pure $ longView (Just t)
-
 
 longView :: Maybe Text -> View Long ()
 longView sel = do
@@ -57,18 +51,14 @@ longView sel = do
       then color White . bold . btn
       else btnLight
 
-
 data Test = Test deriving (Generic, ViewId)
-
 
 instance HyperView Test es where
   data Action Test = Noop
     deriving (Generic, ViewAction)
 
-
   update Noop = do
     pure none
-
 
 page :: Page es '[Test]
 page = pure $ do

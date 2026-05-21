@@ -15,13 +15,11 @@ import Example.Todos.Todo (AllTodos (..), TodoView (..), todosView)
 import Example.View.Layout
 import Web.Hyperbole hiding (Table, query, select, table)
 
-
 -----------------------------------------------------------------------
 -- Database
 -----------------------------------------------------------------------
 
 type DB = SQLite.Connection
-
 
 runTodosSQLite
   :: forall es a
@@ -42,13 +40,11 @@ runTodosSQLite conn = interpret $ \_ -> \case
     liftIO $ execute conn "INSERT INTO todos (id, task, completed) VALUES (?,?,?)" todo
     pure todoId
 
-
 initTodosDatabase :: (MonadIO m) => m DB
 initTodosDatabase = liftIO $ do
   conn <- SQLite.open "todos.sqlite"
   execute_ conn "CREATE TABLE IF NOT EXISTS todos (id TEXT PRIMARY KEY, task TEXT, completed BOOL)"
   pure conn
-
 
 -- Documentation ---------------------------------------------
 
@@ -57,7 +53,6 @@ main = do
   db <- initTodosDatabase
   run 3000 $ do
     liveApp quickStartDocument (runTodosSQLite db $ runPage page)
-
 
 page :: (Todos :> es) => Page es '[AllTodos, TodoView]
 page = do

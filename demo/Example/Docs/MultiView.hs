@@ -4,7 +4,6 @@ import Example.Counter (Counter (..), viewCount)
 import Example.Simple (Message (..), messageView)
 import Web.Hyperbole
 
-
 page :: Page es [Message, Counter]
 page = do
   pure $ do

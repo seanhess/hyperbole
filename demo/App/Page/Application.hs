@@ -12,7 +12,6 @@ import Example.Interactivity.Events as Events
 import Example.View.Layout
 import Web.Hyperbole
 
-
 data Sections
   = LiveApp
   | Document
@@ -20,7 +19,6 @@ data Sections
   | TypeSafeRoutes
   | RunningEffects
   deriving (Eq, Generic, Show, Enum, Bounded, PageAnchor)
-
 
 page :: (Hyperbole :> es) => Page es '[Animate, External.Items, Boxes]
 page = do

@@ -7,12 +7,10 @@ import Example.Docs.MultiView qualified as Counter
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-
 data AppRoute
   = Message -- /message
   | Counter -- /counter
   deriving (Generic, Eq, Route)
-
 
 main = do
   run 3000 $ do
@@ -21,12 +19,10 @@ main = do
   router Message = runPage Message.page
   router Counter = runPage Counter.page
 
-
 menu :: View c ()
 menu = do
   route Message "Link to /message"
   route Counter "Link to /counter"
-
 
 exampleLayout :: View c () -> View c ()
 exampleLayout contents = do
@@ -35,7 +31,6 @@ exampleLayout contents = do
     row $ do
       menu
       contents
-
 
 examplePage :: Page es '[]
 examplePage = do

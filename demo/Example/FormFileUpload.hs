@@ -15,26 +15,21 @@ import Example.Style.Cyber (btn)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
-
 source :: ModuleSource
 source = $(moduleSource)
 
-
 data SubmitFiles = SubmitFiles
   deriving (Generic, ViewId)
-
 
 instance (FileSystem :> es) => HyperView SubmitFiles es where
   data Action SubmitFiles
     = Submit
     deriving (Generic, ViewAction)
 
-
   update Submit = do
     doc :: DocumentForm Identity <- formData
     cnt <- FS.readFile doc.required.filePath
     pure $ submittedView doc cnt
-
 
 data DocumentForm f = DocumentForm
   { name :: Field f Text
@@ -42,7 +37,6 @@ data DocumentForm f = DocumentForm
   , optional :: Field f (Maybe UploadedFile)
   }
   deriving (Generic, FromFormF, GenFields FieldName)
-
 
 documentFormView :: View SubmitFiles ()
 documentFormView = do
@@ -67,7 +61,6 @@ documentFormView = do
 
     submit "Submit" ~ btn
 
-
 submittedView :: DocumentForm Identity -> BL.ByteString -> View SubmitFiles ()
 submittedView doc cnt = do
   el ~ bold . color Success $ "Uploaded!"
@@ -85,7 +78,6 @@ submittedView doc cnt = do
 
   el ~ underline $ "Optional"
   maybe "Not Found" uploadedFileView doc.optional
-
 
 uploadedFileView :: UploadedFile -> View SubmitFiles ()
 uploadedFileView f = do
