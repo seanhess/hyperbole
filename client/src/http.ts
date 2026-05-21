@@ -1,4 +1,4 @@
-import { type ActionMessage } from './action'
+import { type ActionMessage } from "./action"
 import { type Response, type Redirect, parseResponse } from "./response"
 import { type Meta, parseMetas } from "./message"
 
@@ -8,11 +8,11 @@ export async function sendActionHttp(msg: ActionMessage): Promise<Response | Red
   let url = window.location.href
 
   let headers: any = {
-    "Accept": "text/html",
+    Accept: "text/html",
     "Hyp-ViewId": msg.viewId,
     "Hyp-RequestId": msg.requestId,
     "Hyp-Action": msg.action,
-    "Hyp-State": msg.state || "()"
+    "Hyp-State": msg.state || "()",
   }
 
   console.log("sendActionHttp", msg.form)
@@ -22,9 +22,8 @@ export async function sendActionHttp(msg: ActionMessage): Promise<Response | Red
     headers: headers,
     body: msg.form,
     // we never want this to be redirected
-    redirect: "manual"
+    redirect: "manual",
   })
-
 
   let body = await res.text()
 
@@ -48,10 +47,9 @@ export function splitResponse(body: string): SplitResponse {
 }
 
 export type SplitResponse = {
-  metas: Meta[],
+  metas: Meta[]
   rest: string[]
 }
-
 
 // export function documentScriptMeta(doc: Document): Metadata {
 //   const meta = doc.querySelector<HTMLScriptElement>("script#hyp.metadata")

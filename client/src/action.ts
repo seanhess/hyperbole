@@ -26,7 +26,7 @@ export function actionMessage(
   action: EncodedAction,
   state: ViewState | undefined,
   reqId: RequestId,
-  body?: ActionBody
+  body?: ActionBody,
 ): ActionMessage {
   let meta: Meta[] = [
     { key: "Cookie", value: decodeURI(document.cookie) },
@@ -37,8 +37,7 @@ export function actionMessage(
   let value = undefined
   if (body instanceof FormData) {
     form = body
-  }
-  else if (body) {
+  } else if (body) {
     value = body as string
   }
 
@@ -54,10 +53,7 @@ export function renderActionMessage(msg: ActionMessage): string {
 
   header.push("RequestId: " + msg.requestId)
 
-  return [
-    header.join('\n'),
-    message.renderMetas(msg.meta),
-  ].join('\n') + renderInput(msg.value)
+  return [header.join("\n"), message.renderMetas(msg.meta)].join("\n") + renderInput(msg.value)
   // Forms are submitted via fetch() + renderForm(msg.form)
 }
 

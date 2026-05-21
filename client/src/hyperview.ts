@@ -25,13 +25,13 @@ export function enrichHyperViews(
 ): void {
   // enrich all the hyperviews
   node.querySelectorAll<HyperView>("[id]").forEach((element) => {
-    element.runAction = function(action: string, body: ActionBody) {
+    element.runAction = function (action: string, body: ActionBody) {
       return runAction(element, action, body)
     }
 
     element.concurrency = element.dataset.concurrency || "Drop"
 
-    element.cancelActiveRequest = function() {
+    element.cancelActiveRequest = function () {
       if (element.activeRequest && !element.activeRequest?.isCancelled) {
         element.activeRequest.isCancelled = true
       }

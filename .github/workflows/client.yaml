@@ -1,0 +1,30 @@
+name: Client CI
+
+on:
+  push:
+    branches: ["main", "ci"]
+  pull_request:
+
+jobs:
+  lint-format:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format check
+        run: npm run fmt:check
+
+      - name: Lint
+        run: npm run lint

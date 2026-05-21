@@ -10,6 +10,7 @@ docs/
 demo/
 hyperbole-oauth2/
 .dockerignore
+.github/workflows/client.yaml
 .github/workflows/haskell.yaml
 .github/workflows/packcheck.yaml
 .github/workflows/nix.yaml
