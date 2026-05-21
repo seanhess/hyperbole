@@ -1,30 +1,27 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Main where
 
-import Control.Exception (SomeException, try)
 import Data.Char (isAlpha, isSpace)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
-import Distribution.Simple.Utils (copyDirectoryRecursive)
-import Distribution.Verbosity (verbose)
 import System.Directory
 import System.FilePath
-import Web.Hyperbole.Data.URI
--- import Control.Applicative ((<|>))
--- import Web.Hyperbole.Route (matchRoute)
+import System.Environment (getArgs)
 
 
 main :: IO ()
 main = do
-  let tmpDir = "/tmp/hyperbole"
-  copyExtraFilesTo tmpDir
-  expandSourcesTo tmpDir
-  putStrLn $ "COPY RECURSIVE: " <> (tmpDir <> "docs")
-  copyDirectoryRecursive verbose "./docs" (tmpDir </> "docs")
-  copyDirectoryRecursive verbose "./demo" (tmpDir </> "demo")
+  args <- getArgs
+  case args of
+    [original, input, output] -> do
+      src <- readSource input
+      expanded <- expandFile src
+      let linePragma = T.pack $ "{-# LINE 1 \"" ++ original ++ "\" #-}"
+      let final = SourceCode [linePragma] <> expanded
+      T.writeFile output $ T.unlines final.lines
+
+    _ -> error "Usage (Hyperbole Internal Only): docgen src/MyModule.hs /tmp/input/MyModule.hs /build/output/Original.hs"
 
 
 test :: IO ()
@@ -34,34 +31,34 @@ test = do
   mapM_ print lns
 
 
-expandSourcesTo :: FilePath -> IO ()
-expandSourcesTo tmpDir = do
-  allFiles <- relativeSourceFiles "./src"
-  -- mapM_ (putStrLn . ("SOURCE " <>)) allFiles
-  mapM_ (expandAndCopyFileTo tmpDir) allFiles
+-- expandSourcesTo :: FilePath -> IO ()
+-- expandSourcesTo tmpDir = do
+--   allFiles <- relativeSourceFiles "./src"
+--   -- mapM_ (putStrLn . ("SOURCE " <>)) allFiles
+--   mapM_ (expandAndCopyFileTo tmpDir) allFiles
 
 
-copyExtraFilesTo :: FilePath -> IO ()
-copyExtraFilesTo tmpDir = do
-  createDirectoryIfMissing True tmpDir
-  copyFile "./cabal.project" (tmpDir </> "cabal.project")
-  copyFile "./hyperbole.cabal" (tmpDir </> "hyperbole.cabal")
-  copyFile "./README.md" (tmpDir </> "README.md")
-  copyFile "./CHANGELOG.md" (tmpDir </> "CHANGELOG.md")
-  copyFile "./LICENSE" (tmpDir </> "LICENSE")
-  createDirectoryIfMissing True (tmpDir </> "client/dist")
-  copyFile "./client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
-  copyFile "./client/dist/hyperbole.js.map" (tmpDir </> "client/dist/hyperbole.js.map")
-  createDirectoryIfMissing True (tmpDir </> "client/util")
-  copyFile "./client/util/live-reload.js" (tmpDir </> "client/util/live-reload.js")
+-- copyExtraFilesTo :: FilePath -> IO ()
+-- copyExtraFilesTo tmpDir = do
+--   createDirectoryIfMissing True tmpDir
+--   copyFile "./cabal.project" (tmpDir </> "cabal.project")
+--   copyFile "./hyperbole.cabal" (tmpDir </> "hyperbole.cabal")
+--   copyFile "./README.md" (tmpDir </> "README.md")
+--   copyFile "./CHANGELOG.md" (tmpDir </> "CHANGELOG.md")
+--   copyFile "./LICENSE" (tmpDir </> "LICENSE")
+--   createDirectoryIfMissing True (tmpDir </> "client/dist")
+--   copyFile "./client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
+--   copyFile "./client/dist/hyperbole.js.map" (tmpDir </> "client/dist/hyperbole.js.map")
+--   createDirectoryIfMissing True (tmpDir </> "client/util")
+--   copyFile "./client/util/live-reload.js" (tmpDir </> "client/util/live-reload.js")
 
 
-expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
-expandAndCopyFileTo tmpDir pth = do
-  putStrLn $ "EXPANDING " <> pth
-  src <- readSource pth
-  expanded <- expandFile src
-  writeSource tmpDir pth expanded
+-- expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
+-- expandAndCopyFileTo tmpDir pth = do
+--   putStrLn $ "EXPANDING " <> pth
+--   src <- readSource pth
+--   expanded <- expandFile src
+--   writeSource tmpDir pth expanded
 
 
 readSource :: FilePath -> IO SourceCode
@@ -81,26 +78,26 @@ writeSource tmpDir relPath src = do
     dropWhile (== '/') . dropWhile (== '.')
 
 
-relativeSourceFiles :: FilePath -> IO [FilePath]
-relativeSourceFiles dir = do
-  contents <- tryDirectory dir
-  let folders = filter isFolder contents
-  let files = filter isSourceFile contents
-
-  files' <- mapM (relativeSourceFiles . addDir) folders
-
-  pure $ fmap addDir files <> mconcat files'
- where
-  isSourceFile pth = takeExtension pth == ".hs"
-  isFolder pth = takeExtension pth == ""
-  addDir = (dir </>)
-  tryDirectory pth = do
-    res <- try $ listDirectory pth
-    case res of
-      Left (_ :: SomeException) -> do
-        putStrLn $ "SKIPPED" <> pth
-        pure []
-      Right files -> pure files
+-- relativeSourceFiles :: FilePath -> IO [FilePath]
+-- relativeSourceFiles dir = do
+--   contents <- tryDirectory dir
+--   let folders = filter isFolder contents
+--   let files = filter isSourceFile contents
+--
+--   files' <- mapM (relativeSourceFiles . addDir) folders
+--
+--   pure $ fmap addDir files <> mconcat files'
+--  where
+--   isSourceFile pth = takeExtension pth == ".hs"
+--   isFolder pth = takeExtension pth == ""
+--   addDir = (dir </>)
+--   tryDirectory pth = do
+--     res <- try $ listDirectory pth
+--     case res of
+--       Left (_ :: SomeException) -> do
+--         putStrLn $ "SKIPPED" <> pth
+--         pure []
+--       Right files -> pure files
 
 
 data Macro
@@ -111,6 +108,7 @@ data Macro
   -- | Example Path
   deriving (Eq)
 newtype SourceCode = SourceCode {lines :: [Text]}
+  deriving newtype (Monoid, Semigroup)
 instance Show Macro where
   -- show (Example p) = "Example " <> show p
   show (Embed mn def) = "Embed " <> show mn <> " " <> show def
@@ -180,8 +178,8 @@ expandLine line = do
 --       Nothing -> fail $ "Could not find example: " <> cs (pathToText False p)
 --       Just r -> pure r
 
-exampleBaseURI :: URI
-exampleBaseURI = [uri|https://hyperbole.live|]
+-- exampleBaseURI :: URI
+-- exampleBaseURI = [uri|https://hyperbole.live|]
 
 
 modulePath :: ModuleName -> FilePath
@@ -191,7 +189,7 @@ modulePath (ModuleName mn) = cs $ T.replace "." "/" mn <> ".hs"
 expandEmbed :: ModuleName -> Text -> TopLevelDefinition -> IO [Text]
 expandEmbed mn pfx def = do
   let src = modulePath mn
-  putStrLn $ "  embed: " <> src
+  -- putStrLn $ "  embed: " <> src
   source <- T.readFile $ "./demo/" <> src
   expanded <- requireTopLevel def (SourceCode $ T.lines source)
   pure $ fmap markupLine expanded

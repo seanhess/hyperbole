@@ -118,12 +118,11 @@
           ];
         };
 
-        docgen-src = nix-filter.lib {
+        docs-src = nix-filter.lib {
           root = ./docs;
           include = [
             (nix-filter.lib.matchExt "hs")
             (nix-filter.lib.matchExt "md")
-            ./docs/docgen.cabal
           ];
         };
 
@@ -139,13 +138,22 @@
 
         # Merges filtered `demo` + `docs` sources into `$out`.
         # Needed to solve `demo/docs` -> `../docs` symlink issue Nix has before.
-        # Named "demo" so the store path is `/nix/store/<hash>-demo`.
-        # That's what the `demo` expects to resolve source files. Check `demo/App/Docs/Snippet.hs` -> `localFile`
-        demo-docs-src = pkgs.runCommand "demo" { } ''
+        # Name it "demo" to have a store path `/nix/store/<hash>-demo`.
+        # That's what `demo-with-docs-src` expects to resolve source files. Check `demo/App/Docs/Snippet.hs` -> `localFile` 
+        demo-with-docs-src = pkgs.runCommand "demo" { } ''
           mkdir -p $out/docs
           cp -rL ${demo-src}/. $out/
-          cp -rL ${docgen-src}/. $out/docs/
+          cp -rL ${docs-src}/. $out/docs/
         '';
+
+        # Merges library `src` + `demo` sources into `$out`.
+        # Needed for `docgen` preprocessor to resolve `./demo/` relative paths when building the `hyperbole` library.
+        hyperbole-with-demo-src = pkgs.runCommand "hyperbole" { } ''
+          mkdir -p $out/demo
+          cp -rL ${src}/. $out/
+          cp -rL ${demo-src}/. $out/demo/
+        '';
+
 
         ghcVersions = [
           "967"
@@ -160,8 +168,9 @@
             value = (
               pkgs.overriddenHaskellPackages."ghc${ghcVer}".extend (
                 hfinal: hprev: {
-                  ${demoName} = hfinal.callCabal2nix demoName demo-docs-src { };
-                  docgen = hfinal.callCabal2nix "docgen" docgen-src { };
+                  ${packageName} = hfinal.callCabal2nix packageName hyperbole-with-demo-src { };
+                  ${demoName} = hfinal.callCabal2nix demoName demo-with-docs-src { };
+                  docgen = hfinal.callCabal2nix "docgen" docs-src { };
                   hyperbole-oauth2 = hfinal.callCabal2nix "hyperbole-oauth2" oauth2-src { };
                 }
               )
@@ -223,6 +232,8 @@
             ghcid
             pkgs.ghciwatch
             pkgs.hpack
+            # `docgen` is required by `hls`, also by running `nix flake check` to resolve `type docgen`
+            (pkgs.haskell.lib.justStaticExecutables ghcPkgs."ghc${version}".docgen)
           ];
           withHoogle = true;
           doBenchmark = true;
