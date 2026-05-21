@@ -59,7 +59,7 @@ npm run fmt:check
 Haskell:
 
 ```sh
-hlint src test
+hlint .
 fourmolu --mode inplace $(git ls-files '*.hs')
 ```
 
