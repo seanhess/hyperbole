@@ -12,6 +12,22 @@ permissions:
 
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: haskell-actions/run-fourmolu@v12
+        with:
+          version: "latest"
+
+      - uses: haskell-actions/hlint-setup@v2
+        with:
+          version: "3.10"
+
+      - name: Run HLint
+        run: hlint src/ test/
+
   build-cache:
     runs-on: ubuntu-latest
     container:
