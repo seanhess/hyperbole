@@ -7,6 +7,7 @@ module Example.Docs.CSS where
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 example = do
   col $ do
     el ~ h3 $ "My Page"

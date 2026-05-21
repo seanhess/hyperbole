@@ -12,6 +12,7 @@ import Web.Hyperbole.Data.URI
 import Web.Hyperbole.OAuth2 (Config (..), Token (..))
 import Web.Hyperbole.OAuth2 qualified as OAuth2
 
+
 data App
 data AppConfig = AppConfig
   { endpoint :: Endpoint App
@@ -19,6 +20,7 @@ data AppConfig = AppConfig
   , oauth :: OAuth2.Config
   , devMode :: Bool
   }
+
 
 getAppConfigEnv :: (IOE :> es, Environment :> es) => Eff es AppConfig
 getAppConfigEnv = do
@@ -32,11 +34,14 @@ getAppConfigEnv = do
       , devMode = isNothing endpoint -- in dev mode if APP_ENDPOINT is not set (localhost)
       }
 
+
 type Key = String
+
 
 data ConfigError
   = BadEnv Key
   deriving (Show, Exception)
+
 
 lookupEnvEndpoint :: (Environment :> es) => Key -> Eff es (Maybe (Endpoint a))
 lookupEnvEndpoint k = do
@@ -47,6 +52,7 @@ lookupEnvEndpoint k = do
     input <- mstr
     url <- parseURI input
     pure $ Endpoint url
+
 
 -- In a real app this would be read from ENV. See OAuth2.initConfigEnv
 dummyOAuthConfig :: OAuth2.Config

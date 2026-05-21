@@ -18,6 +18,7 @@ import Example.View.Layout (layout)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 page :: (Hyperbole :> es, Concurrent :> es, Reader Room :> es) => Page es '[Content, Chats, NewMessage]
 page = do
   pure $ layout (Examples Chat) $ do
@@ -25,16 +26,21 @@ page = do
     col ~ embed . Cyber.font $ do
       hyper Content $ contentView Nothing
 
+
 type Username = Text
+
 
 data Content = Content
   deriving (Generic, ViewId)
+
 
 instance HyperView Content es where
   data Action Content = Login | Logout
     deriving (Generic, ViewAction)
 
+
   type Require Content = '[Chats, NewMessage]
+
 
   update Login = do
     LoginForm u <- formData
@@ -42,10 +48,12 @@ instance HyperView Content es where
   update Logout =
     pure $ contentView Nothing
 
+
 data LoginForm = LoginForm
   { username :: Text
   }
   deriving (Generic, FromForm)
+
 
 contentView :: Maybe Username -> View Content ()
 contentView mu = do
@@ -65,6 +73,7 @@ contentView mu = do
         hyperState Chats mempty $ chatsLoad u
         hyper (NewMessage u) messageView
 
+
 -- Chat Room -------------------------------------
 
 data Message = Message
@@ -73,20 +82,26 @@ data Message = Message
   }
   deriving (Generic, ToJSON, FromJSON)
 
+
 newtype Room = Room (TChan Message)
 newtype Subscription = Subscription (TChan Message)
+
 
 initChatRoom :: (Concurrent :> es) => Eff es Room
 initChatRoom = Room <$> newBroadcastTChanIO
 
+
 subscribeChatRoom :: (Concurrent :> es) => Room -> Eff es Subscription
 subscribeChatRoom (Room chan) = fmap Subscription <$> atomically $ dupTChan chan
+
 
 waitMessage :: (Concurrent :> es) => Subscription -> Eff es Message
 waitMessage (Subscription chan) = atomically $ readTChan chan
 
+
 sendMessage :: (Concurrent :> es) => Room -> Message -> Eff es ()
 sendMessage (Room chan) msg = atomically $ writeTChan chan msg
+
 
 -- Encoding for message history since starting
 newtype AllMessages = AllMessages [Message]
@@ -102,9 +117,11 @@ data Chats = Chats
 instance ViewId Chats where
   type ViewState Chats = AllMessages
 
+
 instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView Chats es where
   data Action Chats = Stream Username
     deriving (Generic, ViewAction)
+
 
   update (Stream u) = do
     room <- ask
@@ -124,16 +141,20 @@ instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView Chats es 
       -- update the view
       pushUpdate $ chatsView u
 
+
 addMessage :: Message -> AllMessages -> AllMessages
 addMessage msg (AllMessages ms) = AllMessages $ msg : ms
+
 
 allMessages :: View Chats AllMessages
 allMessages = do
   AllMessages ms <- viewState
   pure $ AllMessages $ reverse ms
 
+
 chatsLoad :: Username -> View Chats ()
 chatsLoad user = el @ onLoad (Stream user) 100 $ "..."
+
 
 chatsView :: Username -> View Chats ()
 chatsView _user = do
@@ -145,14 +166,17 @@ chatsView _user = do
         text ": "
         text chat.body
 
+
 --- New Message Form ------------------------------
 
 data NewMessage = NewMessage Username
   deriving (Generic, ViewId)
 
+
 instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView NewMessage es where
   data Action NewMessage = SendMessage
     deriving (Generic, ViewAction)
+
 
   update SendMessage = do
     room <- ask
@@ -162,10 +186,12 @@ instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView NewMessag
     -- NOTE: this doesn't show an update at all, but we are subscribed to the channel and will get a push like everyone else
     pure messageView
 
+
 data MessageForm = MessageForm
   { message :: Text
   }
   deriving (Generic, FromForm)
+
 
 messageView :: View NewMessage ()
 messageView = do

@@ -17,6 +17,7 @@ import Web.Hyperbole
 import Web.Hyperbole.HyperView.Types
 import Web.Hyperbole.Page (subPage)
 
+
 page :: (Hyperbole :> es) => Page es '[Message, Counter]
 page = do
   simple <- subPage Simple.page

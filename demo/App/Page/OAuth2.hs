@@ -23,6 +23,7 @@ import Web.Hyperbole.OAuth2 (Access, OAuth2, Token (..))
 import Web.Hyperbole.OAuth2 qualified as OAuth2
 import Web.Hyperbole.Types.Response (ResponseError (ErrAuth))
 
+
 --------------------------------------------------------------------------------
 -- App Specific Login
 --------------------------------------------------------------------------------
@@ -39,6 +40,7 @@ instance Session UserSession where
   -- we want it to work on any page, not just this one
   cookiePath = Just []
 
+
 openLogin :: (Hyperbole :> es, OAuth2 :> es, Reader AppConfig :> es) => Eff es a
 openLogin = do
   Endpoint appRoot <- (.endpoint) <$> ask @AppConfig
@@ -46,8 +48,10 @@ openLogin = do
   u <- OAuth2.authUrl redirectUrl "email"
   redirect u
 
+
 logout :: (Hyperbole :> es) => Eff es ()
 logout = deleteSession @UserSession
+
 
 -- | Target of the redirect after the user logs in via OAuth2
 handleRedirect :: (Hyperbole :> es, OAuth2 :> es, Reader AppConfig :> es, IOE :> es) => Eff es Response
@@ -58,10 +62,12 @@ handleRedirect = do
   saveSession @UserSession $ UserSession auth info.email
   redirect $ routeUri (Route.Examples Route.OAuth2)
 
+
 data GithubUserInfo = GithubUserInfo
   { email :: Text
   }
   deriving (Generic, FromJSON, Show)
+
 
 -- | Example authenticated request using an oauth access token. in a real app, this should be in an external effect, not IOE
 fetchUserInfo :: (IOE :> es, Reader AppConfig :> es, Hyperbole :> es) => Token Access -> Eff es GithubUserInfo
@@ -75,6 +81,7 @@ fetchUserInfo (Token accessTok) = do
       liftIO $ putStrLn "GOT"
       liftIO $ print info
       pure info
+
 
 --------------------------------------------------------------------------------
 -- Page / Views
@@ -94,8 +101,10 @@ page = do
       example $(moduleSource) $ do
         hyper Contents $ viewContents muser
 
+
 data Contents = Contents
   deriving (Generic, ViewId)
+
 
 instance (OAuth2 :> es, Reader AppConfig :> es) => HyperView Contents es where
   data Action Contents
@@ -103,22 +112,26 @@ instance (OAuth2 :> es, Reader AppConfig :> es) => HyperView Contents es where
     | Login
     deriving (Generic, ViewAction)
 
+
   update Login = do
     openLogin
   update Logout = do
     logout
     pure $ viewContents Nothing
 
+
 viewContents :: Maybe UserSession -> View Contents ()
 viewContents mt = do
   col ~ gap 10 $ do
     maybe viewUnauthorized viewAuthorized mt
+
 
 viewUnauthorized :: View Contents ()
 viewUnauthorized = do
   message "Logged Out!"
   col ~ gap 5 $ do
     button Login "Login" ~ btn
+
 
 viewAuthorized :: UserSession -> View Contents ()
 viewAuthorized user = do
@@ -147,6 +160,7 @@ viewAuthorized user = do
       , "grid-template-columns" :. "max-content auto"
       , "align-items" :. "center"
       ]
+
 
 message :: View c () -> View c ()
 message x = el x ~ pad 10 . Cyber.font . border 1

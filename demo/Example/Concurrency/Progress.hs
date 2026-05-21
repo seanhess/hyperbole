@@ -15,19 +15,23 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.Effect.GenRandom
 
+
 -----------------------------------------------------------
 -- Overlapping Progress Bars
 -----------------------------------------------------------
 
 type PercentPerTick = Int
 
+
 data Progress = Progress TaskId
   deriving (Generic, ViewId)
+
 
 instance (Debug :> es, GenRandom :> es) => HyperView Progress es where
   data Action Progress
     = GoProgress PercentPerTick
     deriving (Generic, ViewAction)
+
 
   update (GoProgress progPerTick) = do
     _ <- tick 0
@@ -43,8 +47,10 @@ instance (Debug :> es, GenRandom :> es) => HyperView Progress es where
         pushUpdate $ viewProgress total
         tick total
 
+
 viewProgressLoad :: PercentPerTick -> View Progress ()
 viewProgressLoad p = el @ onLoad (GoProgress p) 50 $ none
+
 
 viewProgress :: Int -> View Progress ()
 viewProgress prg
@@ -59,6 +65,7 @@ viewProgress prg
     Progress taskId <- viewId
     progressBar pct $ do
       el ~ grow $ text $ "Task" <> pack (show taskId)
+
 
 source :: ModuleSource
 source = $(moduleSource)

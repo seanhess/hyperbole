@@ -10,11 +10,13 @@ import Example.View.Layout (layoutSubnav)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 data Basics
   = ViewFunctions
   | NotComponents
   deriving (Show, Enum, Bounded)
 instance PageAnchor Basics
+
 
 page :: (Hyperbole :> es) => Page es '[Message, Toggler, Progress, Push.Tasks]
 page = do

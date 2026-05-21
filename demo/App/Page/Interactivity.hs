@@ -11,11 +11,13 @@ import Example.Javascript as Javascript
 import Example.View.Layout
 import Web.Hyperbole
 
+
 data Sections
   = Inputs
   | Events
   | Javascript
   deriving (Show, Bounded, Enum, PageAnchor)
+
 
 page :: (Hyperbole :> es) => Page es '[Boxes, JBoxes, Message, TryEvents, Dropper, CustomText]
 page = do

@@ -9,16 +9,19 @@ import Example.Docs.SideEffects as SideEffects
 import Example.View.Layout (layoutSubnav)
 import Web.Hyperbole
 
+
 data EffectsSection
   = Effectful
   | Other
   | Custom
   deriving (Show, Enum, Bounded)
 
+
 instance PageAnchor EffectsSection where
   sectionTitle Other = "Reader and More"
   sectionTitle Custom = "Databases and Custom Effects"
   sectionTitle a = camelTitle a
+
 
 page :: (Hyperbole :> es) => Page es '[Counter, SlowReader, Titler]
 page = do

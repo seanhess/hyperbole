@@ -3,6 +3,7 @@ module App.Style where
 import Example.Colors
 import Web.Atomic.CSS
 
+
 -- btn :: (Styleable h) => CSS h -> CSS h
 -- btn = btn' Primary
 --
@@ -29,24 +30,31 @@ btnLight =
  where
   base = pad (XY 15 8)
 
+
 h1 :: (Styleable h) => CSS h -> CSS h
 h1 = bold . fontSize 32
+
 
 invalid :: (Styleable h) => CSS h -> CSS h
 invalid = color Danger
 
+
 success :: (Styleable h) => CSS h -> CSS h
 success = color Success
+
 
 link :: (Styleable h) => CSS h -> CSS h
 link = color Primary . underline
 
+
 input :: (Styleable h) => CSS h -> CSS h
 input = border 1 . pad 8
+
 
 strikethrough :: (Styleable h) => CSS h -> CSS h
 strikethrough =
   utility "strike" ["text-decoration" :. "line-through"]
+
 
 uppercase :: (Styleable h) => CSS h -> CSS h
 uppercase = utility "upper" ["text-transform" :. "uppercase"]

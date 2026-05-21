@@ -18,11 +18,14 @@ import Paths_demo (version)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 layout :: AppRoute -> View c () -> View c ()
 layout rt = layout' rt (menu @() rt)
 
+
 layoutSubnav :: forall sections c. (PageAnchor sections) => AppRoute -> View c () -> View c ()
 layoutSubnav rt = layout' rt (menu @sections rt)
+
 
 layout' :: AppRoute -> View c () -> View c () -> View c ()
 layout' rt chosenMenu contents =
@@ -45,6 +48,7 @@ layout' rt chosenMenu contents =
 
   menuWidth = 230
   menuHeight = 70
+
 
 -- Navigation --------------------------------------
 
@@ -89,8 +93,10 @@ navigation chosenMenu = do
       , "color" :. "transparent"
       ]
 
+
 onMobile :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c
 onMobile = media (MaxWidth 650)
+
 
 onDesktop :: (Styleable c) => (CSS c -> CSS c) -> CSS c -> CSS c
 onDesktop = media (MinWidth 650)

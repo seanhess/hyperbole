@@ -6,15 +6,18 @@ import Web.Atomic.CSS
 import Web.Hyperbole
 import Web.Hyperbole.HyperView
 
+
 page :: (Hyperbole :> es) => Page es '[Counter]
 page = do
   pure $ do
     hyperState CounterState 10 viewCount
 
+
 data Counter = CounterState
   deriving (Generic)
 instance ViewId Counter where
   type ViewState Counter = Int
+
 
 instance HyperView Counter es where
   data Action Counter
@@ -22,12 +25,14 @@ instance HyperView Counter es where
     | Decrement
     deriving (Generic, ViewAction)
 
+
   update Increment = do
     modify @Int (+ 1)
     pure viewCount
   update Decrement = do
     modify @Int (subtract 1)
     pure viewCount
+
 
 viewCount :: View Counter ()
 viewCount = row $ do

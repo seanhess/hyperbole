@@ -20,6 +20,7 @@ import Example.View.Layout
 import Web.Atomic.CSS
 import Web.Hyperbole as Hyperbole
 
+
 page :: (Todos :> es) => Page es '[AllTodos, TodoView]
 page = do
   todos <- Todos.loadAll
@@ -28,6 +29,7 @@ page = do
       example $(moduleSource) $ do
         hyper AllTodos $ todosView FilterAll todos
 
+
 -- Keep this, it's used for documentation (+ usable via the REPL, see main below)
 simplePage :: (Todos :> es) => Page es '[AllTodos, TodoView]
 simplePage = do
@@ -35,13 +37,16 @@ simplePage = do
   pure $ do
     hyper AllTodos $ todosView FilterAll todos
 
+
 --- AllTodos ----------------------------------------------------------------------------
 
 data AllTodos = AllTodos
   deriving (Generic, ViewId)
 
+
 instance (Todos :> es) => HyperView AllTodos es where
   type Require AllTodos = '[TodoView]
+
 
   data Action AllTodos
     = ClearCompleted
@@ -51,6 +56,7 @@ instance (Todos :> es) => HyperView AllTodos es where
     | SetCompleted FilterTodo Todo Bool
     | Destroy FilterTodo Todo
     deriving (Generic, ViewAction)
+
 
   update action = do
     case action of
@@ -76,6 +82,7 @@ instance (Todos :> es) => HyperView AllTodos es where
         todos <- Todos.filteredTodos filt
         pure $ todosView filt todos
 
+
 todosView :: FilterTodo -> [Todo] -> View AllTodos ()
 todosView filt todos = do
   todoForm filt
@@ -83,6 +90,7 @@ todosView filt todos = do
     forM_ todos $ \todo -> do
       hyper (TodoView todo.id) $ todoView filt todo
   statusBar filt todos
+
 
 statusBar :: FilterTodo -> [Todo] -> View AllTodos ()
 statusBar filt todos = do
@@ -111,12 +119,14 @@ statusBar filt todos = do
   selectedFilter f =
     if f == filt then border 1 else id
 
+
 -- TodoForm ----------------------------------------------------------------------------
 
 data TodoForm f = TodoForm
   { task :: Field f Text
   }
   deriving (Generic, FromFormF, GenFields FieldName)
+
 
 todoForm :: FilterTodo -> View AllTodos ()
 todoForm filt = do
@@ -128,18 +138,22 @@ todoForm filt = do
       field f.task $ do
         input TextInput ~ pad 12 @ placeholder "What needs to be done?" . value ""
 
+
 --- TodoView ----------------------------------------------------------------------------
 
 data TodoView = TodoView TodoId
   deriving (Generic, ViewId)
 
+
 instance (Todos :> es) => HyperView TodoView es where
   type Require TodoView = '[AllTodos]
+
 
   data Action TodoView
     = Edit FilterTodo Todo
     | SubmitEdit FilterTodo Todo
     deriving (Generic, ToJSON, FromJSON, ViewAction)
+
 
   update (Edit filt todo) = do
     pure $ todoEditView filt todo
@@ -147,6 +161,7 @@ instance (Todos :> es) => HyperView TodoView es where
     TodoForm task <- formData @(TodoForm Identity)
     t <- Todos.setTask task todo
     pure $ todoView filt t
+
 
 todoView :: FilterTodo -> Todo -> View TodoView ()
 todoView filt todo = do
@@ -164,6 +179,7 @@ todoView filt todo = do
       ".todo-row:hover > .destroy-btn"
       (declarations (opacity 100))
 
+
 todoEditView :: FilterTodo -> Todo -> View TodoView ()
 todoEditView filt todo = do
   let f = fieldNames @TodoForm
@@ -172,6 +188,7 @@ todoEditView filt todo = do
       field f.task $ do
         input TextInput @ value todo.task . autofocus ~ pad 4
 
+
 pluralize :: Int -> Text -> Text -> Text
 pluralize n singular plural =
   if n == 1
@@ -179,6 +196,7 @@ pluralize n singular plural =
       singular
     else
       plural
+
 
 {-
 You may try this in the REPL for simple tests:

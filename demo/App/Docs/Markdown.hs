@@ -30,13 +30,16 @@ import Web.Hyperbole.HyperView.Input (route)
 import Web.Hyperbole.Route
 import Web.Hyperbole.View
 
+
 markdocs :: Text -> View c ()
 markdocs md = do
   nodeToView $ commonmarkToNode [] $ cs md
 
+
 markdump :: Text -> View c ()
 markdump md = do
   code $ cs $ show $ commonmarkToNode [] $ cs md
+
 
 nodeToView :: Node -> View c ()
 nodeToView (Node _mpos typ childs) = do
@@ -100,8 +103,10 @@ nodeToView (Node _mpos typ childs) = do
       2 -> fontSize 20
       _ -> fontSize 16
 
+
 hackageDocsURI :: URI
 hackageDocsURI = [uri|https://hackage-content.haskell.org/package/hyperbole/docs/Web-Hyperbole.html|]
+
 
 inlineCode :: Text -> View c ()
 inlineCode cd
@@ -115,10 +120,12 @@ inlineCode cd
   hackageSymbolColor :: HexColor
   hackageSymbolColor = "#9e358f"
 
+
 linkSymbolDocs :: Text -> (Text -> String) -> View c ()
 linkSymbolDocs sym frag = do
   link (hackageDocsURI{uriFragment = frag sym}) @ att "target" "_blank" $ do
     tag' True "code" $ text sym
+
 
 typeKeywords :: Set Text
 typeKeywords =
@@ -150,6 +157,7 @@ typeKeywords =
   , "RequestBody"
   , "UploadedFile"
   ]
+
 
 valueKeywords :: Set Text
 valueKeywords =
@@ -195,6 +203,7 @@ valueKeywords =
   , "fileInput"
   ]
 
+
 embedFile :: FilePath -> Q Exp
 embedFile p = do
   addDependentFile p
@@ -202,6 +211,7 @@ embedFile p = do
   exps :: [Exp] <- traverse expandLine lns
   e :: Exp <- listE (fmap pure exps)
   [|T.unlines $(pure e)|]
+
 
 expandLine :: Text -> Q Exp
 expandLine l = do
@@ -213,6 +223,7 @@ expandLine l = do
     Nothing -> do
       t <- expandText l
       lift t
+
 
 expandText :: (MonadFail m) => Text -> m Text
 expandText t = do

@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedLists #-}
-
 module Test.ArgumentSpec where
 
 import Data.Aeson as A

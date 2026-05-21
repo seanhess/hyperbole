@@ -11,6 +11,7 @@ import Example.Style.Cyber (btn', btnLight)
 import Web.Atomic.CSS
 import Web.Hyperbole
 
+
 data Preferences = Preferences
   { message :: Text
   , color :: AppColor
@@ -19,14 +20,17 @@ data Preferences = Preferences
 instance Default Preferences where
   def = Preferences mempty def
 
+
 page :: (Hyperbole :> es) => Page es '[QueryPrefs]
 page = do
   prefs <- query @Preferences
   pure $ do
     hyper QueryPrefs $ viewPreferences prefs
 
+
 data QueryPrefs = QueryPrefs
   deriving (Generic, ViewId)
+
 
 instance HyperView QueryPrefs es where
   data Action QueryPrefs
@@ -44,9 +48,11 @@ instance HyperView QueryPrefs es where
     setQuery @Preferences def
     pure $ viewPreferences def
 
+
 saveColor :: (Hyperbole :> es) => AppColor -> Eff es Preferences
 saveColor clr =
   modifyQuery $ \p -> p{color = clr}
+
 
 viewPreferences :: Preferences -> View QueryPrefs ()
 viewPreferences prefs = do
@@ -54,6 +60,7 @@ viewPreferences prefs = do
     viewColorPicker prefs.color
     viewMessage prefs.message
     button Clear ~ Style.btnLight $ "Clear"
+
 
 viewColorPicker :: AppColor -> View QueryPrefs ()
 viewColorPicker clr = do
@@ -65,6 +72,7 @@ viewColorPicker clr = do
       button (SaveColor Danger) ~ (btn' Danger . brd) $ "Danger"
  where
   brd = border $ TRBL 1 0 0 1
+
 
 viewMessage :: Text -> View QueryPrefs ()
 viewMessage msg = do
