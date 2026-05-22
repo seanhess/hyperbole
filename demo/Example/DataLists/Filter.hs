@@ -10,6 +10,7 @@ import Data.Text (Text, pack)
 import Effectful hiding (Dynamic)
 import Example.Colors
 import Example.Data.ProgrammingLanguage (LanguageFamily (..), ProgrammingLanguage (..), TypeFeature (..), allLanguages, isMatchLanguage)
+import Example.Style.Cyber (btn)
 import Example.View.Icon as Icon
 import Example.View.Inputs (toggleCheckbox)
 import Example.View.Layout
@@ -50,7 +51,7 @@ instance (IOE :> es) => HyperView Languages es where
 
   update = \case
     Select lang -> do
-      pure $ chosenView lang
+      pure $ chosenView lang SetFamily
     SearchTerm -> do
       term <- inputValue
       filters <- modFilters $ \f -> f{term}
@@ -101,7 +102,7 @@ languagesView filters = do
 filtersView :: Filters -> View Languages ()
 filtersView filters = do
   el ~ stack . grow $ do
-    search SearchTerm 250 @ placeholder "filter programming languages" . value filters.term . autofocus ~ border 1 . pad 10
+    search SearchTerm 250 @ onKeyDown Escape SearchTerm . placeholder "filter programming languages" . value filters.term . autofocus ~ border 1 . pad 10
     clearButton SearchTerm filters.term
 
   row $ do
@@ -141,12 +142,14 @@ clearButton clear term =
       "" -> display None
       _ -> id
 
-chosenView :: ProgrammingLanguage -> View c ()
-chosenView lang = do
-  row ~ gap 10 $ do
-    el "You chose:"
-    el $ text lang.name
-  el ~ (if lang.name == "Haskell" then id else display None) $ "You are as wise as you are attractive"
+chosenView :: (ViewAction (Action id)) => ProgrammingLanguage -> Action id -> View id ()
+chosenView lang back = do
+  col ~ gap 10 $ do
+    row ~ gap 10 $ do
+      el "You chose:"
+      el $ text lang.name
+    el ~ (if lang.name == "Haskell" then id else display None) $ "You are as wise as you are attractive"
+    row $ button back ~ btn $ "Back"
 
 resultsTable :: (ViewAction (Action id)) => (ProgrammingLanguage -> Action id) -> [ProgrammingLanguage] -> View id ()
 resultsTable onSelect langs = do
