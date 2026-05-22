@@ -133,9 +133,14 @@ instance InputValue Integer where
 
 
 instance {-# OVERLAPPABLE #-} (InputValue a) => InputValue (Maybe a) where
+  parseInputValue "null" = pure Nothing
   parseInputValue "" = pure Nothing
   parseInputValue t = Just <$> parseInputValue t
 
 
 instance {-# OVERLAPS #-} InputValue (Maybe Text) where
   parseInputValue t = pure $ Just t
+
+
+instance {-# OVERLAPS #-} InputValue (Maybe String) where
+  parseInputValue t = pure $ Just (cs t)
