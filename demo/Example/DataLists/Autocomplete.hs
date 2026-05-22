@@ -76,6 +76,7 @@ liveSearchView langs current term = do
     onKeyDown Enter (Select currentSearchLang)
       . onKeyDown ArrowDown (SearchTerm (current + 1) (Just term))
       . onKeyDown ArrowUp (SearchTerm (current - 1) (Just term))
+      . onKeyDown Escape (Select Nothing)
 
 searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View LiveSearch ()
 searchPopup shownLangs highlighted = do
