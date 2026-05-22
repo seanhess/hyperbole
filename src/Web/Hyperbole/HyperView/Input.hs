@@ -3,7 +3,7 @@
 
 module Web.Hyperbole.HyperView.Input where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON (toJSON), Value (Null))
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import GHC.Generics (Generic)
@@ -55,7 +55,9 @@ option
   -> View (Option id opt) ()
 option opt cnt = do
   os :: Option id opt <- viewId
-  tag "option" @ att "value" (encodeArgument opt) @ selected (os.defaultOption == opt) $ text cnt
+  -- For "null" like arguments such as `Nothing` set `value=""` (but never `value="null"`, which breaks the round-trip)
+  let val = if toJSON opt == Null then "" else encodeArgument opt
+  tag "option" @ att "value" val @ selected (os.defaultOption == opt) $ text cnt
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True
