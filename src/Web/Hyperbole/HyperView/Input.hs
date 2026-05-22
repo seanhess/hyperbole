@@ -55,7 +55,15 @@ option
   -> View (Option id opt) ()
 option opt cnt = do
   os :: Option id opt <- viewId
-  tag "option" @ att "value" (encodeArgument opt) @ selected (os.defaultOption == opt) $ text cnt
+  tag "option" @ att "value" (encodeOption opt) @ selected (os.defaultOption == opt) $ text cnt
+
+
+encodeOption :: (ToJSON opt) => opt -> Text
+encodeOption opt =
+  case encodeArgument opt of
+    -- For options, an empty string makes much more sense than null for empty values
+    "null" -> ""
+    other -> other
 
 
 -- | sets selected = true if the 'dropdown' predicate returns True

@@ -8,9 +8,8 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import GHC.Exts (IsList (..))
 import Skeletest
-import Web.Hyperbole.Data.Argument
 import Web.Hyperbole.HyperView.Forms
-import Web.Hyperbole.HyperView.Input (InputValue (..))
+import Web.Hyperbole.HyperView.Input (InputValue (..), encodeOption)
 import Web.Hyperbole.Types.Request
 
 
@@ -95,14 +94,22 @@ spec = do
       fromForm @Todo [("msg", "hello+world")] `shouldBe` Right (Todo "hello+world")
       fromForm @Todo [("msg", "hello_world")] `shouldBe` Right (Todo "hello_world")
 
-  describe "inputs" $ do
+  describe "options" $ do
     it "decodes option as input" $ do
-      let enc = encodeArgument (Twonit "Hello world" 33)
+      let enc = encodeOption (Twonit "Hello world" 33)
       parseInputValue enc `shouldBe` Right (Twonit "Hello world" 33)
 
     it "decodes option as field" $ do
-      let enc = encodeArgument (Twonit "Hello world" 33)
+      let enc = encodeOption (Twonit "Hello world" 33)
       fromField (Just (FormParam enc)) `shouldBe` Right (Twonit "Hello world" 33)
+
+    it "round trips options: Just" $ do
+      let enc1 = encodeOption (Just $ Onit "Hello world")
+      fromField (Just (FormParam enc1)) `shouldBe` Right (Onit "Hello world")
+
+    it "round trips options: Nothing" $ do
+      let enc2 = encodeOption @(Maybe FancySum) Nothing
+      fromField @(Maybe FancySum) (Just (FormParam enc2)) `shouldBe` Right Nothing
 
 
 data FancySum
