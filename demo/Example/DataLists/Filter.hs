@@ -101,7 +101,7 @@ languagesView filters = do
 filtersView :: Filters -> View Languages ()
 filtersView filters = do
   el ~ stack . grow $ do
-    search SearchTerm 250 @ placeholder "filter programming languages" . value filters.term . autofocus ~ border 1 . pad 10
+    search SearchTerm 250 @ onKeyDown Escape SearchTerm . placeholder "filter programming languages" . value filters.term . autofocus ~ border 1 . pad 10
     clearButton SearchTerm filters.term
 
   row $ do
