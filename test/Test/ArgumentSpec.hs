@@ -6,6 +6,13 @@ import Data.Text (Text)
 import GHC.Generics
 import Skeletest
 import Web.Hyperbole.Data.Argument
+import Web.Hyperbole.HyperView.Input
+
+
+spec :: Spec
+spec = do
+  argumentSpec
+  inputSpec
 
 
 data Tag = A | B
@@ -23,20 +30,22 @@ data Record = Record
   deriving (Generic, ToJSON, FromJSON, Eq)
 
 
-spec :: Spec
-spec = do
+argumentSpec :: Spec
+argumentSpec = do
   describe "ToArgument" $ do
     it "encodes basics as JSON" $ do
       encodeArgument @Text "hello" `shouldBe` "\"hello\""
       encodeArgument @Int 23 `shouldBe` "23"
 
-    it "encodes Maybe as JSON" $ do
-      encodeArgument @(Maybe Int) Nothing `shouldBe` "null"
-      encodeArgument @(Maybe Int) (Just 23) `shouldBe` "23"
-
     it "encodes simple constructors raw" $ do
       encodeArgument A `shouldBe` "A"
       encodeArgument B `shouldBe` "B"
+
+    it "encodes Maybe as JSON" $ do
+      encodeArgument @(Maybe Int) Nothing `shouldBe` "null"
+      encodeArgument @(Maybe Int) (Just 23) `shouldBe` "23"
+      encodeArgument @(Maybe Tag) (Just A) `shouldBe` "A"
+      encodeArgument @(Maybe Tag) Nothing `shouldBe` "null"
 
     it "encodes complex constructors as products" $ do
       encodeArgument T2 `shouldBe` "(T2)"
@@ -60,7 +69,7 @@ spec = do
       encodeArgument r2 `shouldBe` cs (A.encode r2)
       encodeArgument r2 `shouldBe` cs (A.encode r2)
 
-  describe "FromParam" $ do
+  describe "FromArgument" $ do
     it "parses basics" $ do
       decodeArgument @Text "hello" `shouldBe` Right "hello"
       decodeArgument @Int "3" `shouldBe` Right 3
@@ -84,3 +93,29 @@ spec = do
       decodeArgument (encodeArgument T2) `shouldBe` Right T2
       let t = Tag "woo hoo"
       decodeArgument (encodeArgument t) `shouldBe` Right t
+
+    it "round trips Maybe" $ do
+      decodeArgument @(Maybe Int) (encodeArgument @(Maybe Int) Nothing) `shouldBe` Right Nothing
+      decodeArgument @(Maybe Int) (encodeArgument @(Maybe Int) (Just 23)) `shouldBe` Right (Just 23)
+
+    it "round trips Maybe Product" $ do
+      decodeArgument @(Maybe Tag) (encodeArgument @(Maybe Tag) Nothing) `shouldBe` Right Nothing
+      decodeArgument @(Maybe Tag) (encodeArgument @(Maybe Tag) (Just A)) `shouldBe` Right (Just A)
+
+
+data LanguageFamily
+  = Functional
+  | ObjectOriented
+  deriving (Eq, Show, ToJSON, FromJSON, Ord, Generic, InputValue)
+
+
+inputSpec :: Spec
+inputSpec = do
+  describe "InputValue" $ do
+    it "encodes Maybe option" $ do
+      encodeArgument (Just ObjectOriented) `shouldBe` "ObjectOriented"
+
+    it "round trips Maybe option" $ do
+      let enc = encodeArgument @(Maybe LanguageFamily) Nothing
+      parseInputValue "ObjectOriented" `shouldBe` Right (Just ObjectOriented)
+      parseInputValue @(Maybe LanguageFamily) enc `shouldBe` Right Nothing

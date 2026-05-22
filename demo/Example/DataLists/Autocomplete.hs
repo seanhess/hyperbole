@@ -69,12 +69,14 @@ liveSearchView langs current term = do
   shownIfMatches =
     if T.null term || null matchedLanguages then display None else flexCol
 
-  -- TEST: this will clear the user input??? Before, we passed it along, so we could keep it the same as you arrowed around
-  -- that's not good! How can we fix it?
+  nextIndex = min (length matchedLanguages - 1) (current + 1)
+  prevIndex = max 0 (current - 1)
+
   searchKeys =
     onKeyDown Enter (Select currentSearchLang)
-      . onKeyDown ArrowDown (SearchTerm (current + 1) (Just term))
-      . onKeyDown ArrowUp (SearchTerm (current - 1) (Just term))
+      . onKeyDown ArrowDown (SearchTerm nextIndex (Just term))
+      . onKeyDown ArrowUp (SearchTerm prevIndex (Just term))
+      . onKeyDown Escape (Select Nothing)
 
 searchPopup :: [ProgrammingLanguage] -> Maybe ProgrammingLanguage -> View LiveSearch ()
 searchPopup shownLangs highlighted = do
