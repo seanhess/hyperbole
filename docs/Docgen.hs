@@ -6,8 +6,9 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import System.Directory
-import System.FilePath
 import System.Environment (getArgs)
+import System.FilePath
+
 
 main :: IO ()
 main = do
@@ -19,7 +20,6 @@ main = do
       let linePragma = T.pack $ "{-# LINE 1 \"" ++ original ++ "\" #-}"
       let final = SourceCode [linePragma] <> expanded
       T.writeFile output $ T.unlines final.lines
-
     _ -> error "Usage (Hyperbole Internal Only): docgen src/MyModule.hs /tmp/input/MyModule.hs /build/output/Original.hs"
 
 
@@ -36,7 +36,6 @@ test = do
 --   -- mapM_ (putStrLn . ("SOURCE " <>)) allFiles
 --   mapM_ (expandAndCopyFileTo tmpDir) allFiles
 
-
 -- copyExtraFilesTo :: FilePath -> IO ()
 -- copyExtraFilesTo tmpDir = do
 --   createDirectoryIfMissing True tmpDir
@@ -51,14 +50,12 @@ test = do
 --   createDirectoryIfMissing True (tmpDir </> "client/util")
 --   copyFile "./client/util/live-reload.js" (tmpDir </> "client/util/live-reload.js")
 
-
 -- expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
 -- expandAndCopyFileTo tmpDir pth = do
 --   putStrLn $ "EXPANDING " <> pth
 --   src <- readSource pth
 --   expanded <- expandFile src
 --   writeSource tmpDir pth expanded
-
 
 readSource :: FilePath -> IO SourceCode
 readSource pth = do
@@ -97,7 +94,6 @@ writeSource tmpDir relPath src = do
 --         putStrLn $ "SKIPPED" <> pth
 --         pure []
 --       Right files -> pure files
-
 
 data Macro
   = Embed
@@ -178,7 +174,6 @@ expandLine line = do
 
 -- exampleBaseURI :: URI
 -- exampleBaseURI = [uri|https://hyperbole.live|]
-
 
 modulePath :: ModuleName -> FilePath
 modulePath (ModuleName mn) = cs $ T.replace "." "/" mn <> ".hs"
