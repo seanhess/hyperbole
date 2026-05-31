@@ -10,7 +10,6 @@ result
 client/dist/hyperbole.js.LICENSE.txt
 Session.vim
 .cabal.nix
-/package.json
-/package-lock.json
+package-lock.json
 
 *.sqlite

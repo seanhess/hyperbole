@@ -1,0 +1,10 @@
+{
+  "name": "hyperbole-client-types",
+  "version": "0.6.1",
+  "license": "BSD-3-Clause",
+  "exports": {
+    ".": {
+      "types": "./client/dist/index.d.ts"
+    }
+  }
+}
