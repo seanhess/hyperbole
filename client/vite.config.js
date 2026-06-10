@@ -17,6 +17,7 @@ export default {
       formats: ["iife"],
     },
     outDir: "dist",
+    emptyOutDir: false,
     sourcemap: true,
     minify: "oxc",
   },

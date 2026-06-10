@@ -1,9 +1,9 @@
 {
-  "name": "web-ui",
-  "version": "0.6.0",
+  "name": "hyperbole-client",
+  "version": "0.6.1",
   "private": true,
   "description": "Development -----------",
-  "license": "ISC",
+  "license": "BSD-3-Clause",
   "author": "",
   "type": "module",
   "main": "src/index.ts",

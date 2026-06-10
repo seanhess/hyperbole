@@ -1,4 +1,5 @@
-client/*.d.ts
+client/**/*.d.ts
+client/declarations.d.ts
 client/src/
 client/vite.config.js
 client/.oxfmtrc.json
@@ -17,7 +18,6 @@ hyperbole-oauth2/
 .gitignore
 .hlint.yaml
 .packcheck.ignore
-DOCTODO.md
 Dockerfile
 bin/dev
 bin/docgen
@@ -28,3 +28,4 @@ flake.nix
 fourmolu.yaml
 hie.yaml
 package.yaml
+package.json
