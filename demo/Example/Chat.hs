@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Example.Chat where
@@ -30,8 +31,8 @@ type Username = Text
 data Content = Content
   deriving (Generic, ViewId)
 
-instance HyperView Content es where
-  data Action Content = Login | Logout
+instance (Concurrent :> es, Reader Room :> es) => HyperView Content es where
+  data Action Content = Login | Logout Username
     deriving (Generic, ViewAction)
 
   type Require Content = '[Chats, NewMessage]
@@ -39,7 +40,9 @@ instance HyperView Content es where
   update Login = do
     LoginForm u <- formData
     pure $ contentView (Just u)
-  update Logout =
+  update (Logout u) = do
+    room <- ask
+    sendMessage room $ SystemMessage (u <> " has left.")
     pure $ contentView Nothing
 
 data LoginForm = LoginForm
@@ -61,16 +64,18 @@ contentView mu = do
           el "Welcome "
           el ~ bold $ text u
           space
-          button Logout ~ btn $ "logout"
+          button (Logout u) ~ btn $ "logout"
         hyperState Chats mempty $ chatsLoad u
         hyper (NewMessage u) messageView
 
 -- Chat Room -------------------------------------
 
-data Message = Message
-  { sender :: Username
-  , body :: Text
-  }
+data Message
+  = UserMessage
+      { sender :: Username
+      , body :: Text
+      }
+  | SystemMessage Text
   deriving (Generic, ToJSON, FromJSON)
 
 newtype Room = Room (TChan Message)
@@ -109,7 +114,7 @@ instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView Chats es 
     room <- ask
     sub <- subscribeChatRoom room
 
-    sendMessage room $ Message u "I have arrived!"
+    sendMessage room $ SystemMessage (u <> " has arrived.")
 
     forever (streamChats sub)
    where
@@ -138,11 +143,11 @@ chatsView :: Username -> View Chats ()
 chatsView _user = do
   AllMessages chats <- allMessages
   col ~ gap 5 . pad 5 . minHeight 400 . border 1 . bg GrayLight $ do
-    forM_ chats $ \chat -> do
-      el $ do
-        text chat.sender
-        text ": "
-        text chat.body
+    forM_ chats $ \case
+      UserMessage user msg ->
+        el $ text (user <> ": " <> msg)
+      SystemMessage msg ->
+        el ~ italic . color Secondary $ text msg
 
 --- New Message Form ------------------------------
 
@@ -150,14 +155,14 @@ data NewMessage = NewMessage Username
   deriving (Generic, ViewId)
 
 instance (Concurrent :> es, Reader Room :> es, IOE :> es) => HyperView NewMessage es where
-  data Action NewMessage = SendMessage
+  data Action NewMessage = SendUserMessage
     deriving (Generic, ViewAction)
 
-  update SendMessage = do
+  update SendUserMessage = do
     room <- ask
     NewMessage user <- viewId
     MessageForm msg <- formData
-    sendMessage room $ Message user msg
+    sendMessage room $ UserMessage user msg
     -- NOTE: this doesn't show an update at all, but we are subscribed to the channel and will get a push like everyone else
     pure messageView
 
@@ -168,7 +173,7 @@ data MessageForm = MessageForm
 
 messageView :: View NewMessage ()
 messageView = do
-  form SendMessage ~ flexRow . gap 10 $ do
+  form SendUserMessage ~ flexRow . gap 10 $ do
     field "message" $ do
       input TextInput @ placeholder "type your message here" . value "" . autofocus ~ Style.input . grow
     submit "Send" ~ btn
