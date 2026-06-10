@@ -2,11 +2,15 @@ module Example.View.SortableTable where
 
 import Data.Text (Text)
 import Example.Colors
-import Example.Style qualified as Style
 import Example.View.Icon qualified as Icon
 import Web.Atomic.CSS
 import Web.Hyperbole
 import Prelude hiding (even, odd)
+
+data SortDirection
+  = Ascending
+  | Descending
+  deriving (Show, Read, Eq, Generic, ToJSON, FromJSON)
 
 dataRow :: (Styleable a) => CSS a -> CSS a
 dataRow = gap 10 . pad (All $ PxRem dataRowPadding)
@@ -30,16 +34,19 @@ dataTable =
     ".data-table tr:nth-child(even)"
     (declarations (bg Light))
 
-sortBtn :: (ViewAction (Action id)) => Text -> Action id -> Bool -> View id ()
-sortBtn lbl click isSelected = do
-  button click ~ Style.link . flexRow . gap 0 $ do
-    el ~ selectedColumn $ text lbl
-    el ~ width 20 $ Icon.chevronDown
+sortBtn :: (ViewAction (Action id)) => Text -> Action id -> Maybe SortDirection -> View id ()
+sortBtn lbl click mDir =
+  button click ~ sortStyle . flexRow . utility "items-center" ["align-items" :. "center"] . gap 4 $ do
+    el $ text lbl
+    el ~ width 16 $ sortIcon
  where
-  selectedColumn =
-    if isSelected
-      then underline
-      else id
+  sortStyle = case mDir of
+    Nothing -> color Secondary
+    Just _ -> color Primary . underline
+  sortIcon = case mDir of
+    Nothing -> el ~ color SecondaryLight $ Icon.chevronUpDown
+    Just Ascending -> el Icon.chevronDown
+    Just Descending -> el Icon.chevronUp
 
 sortColumn :: (ViewAction (Action id)) => View id () -> (dt -> Text) -> TableColumns id dt ()
 sortColumn header cellText = do
