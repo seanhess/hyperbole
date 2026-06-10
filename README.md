@@ -108,7 +108,7 @@ In the Wild
   <img alt="National Solar Observatory" src="https://nso1.b-cdn.net/wp-content/uploads/2020/03/NSO-logo-orange-text.png" width="400"/>
 </a>
 
-The NSO uses Hyperbole to manage Level 2 Data pipelines for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/). It uses complex user interfaces, workers, databases, and more. [The entire codebase is open source](https://github.com/DKISTDC/level2/). 
+The NSO uses Hyperbole to manage Level 2 Data pipelines for the [DKIST telescope](https://nso.edu/telescopes/dki-solar-telescope/)
 
 
 
