@@ -37,7 +37,6 @@ ADD *.md .
 ADD LICENSE .
 RUN hpack
 RUN hpack demo
-RUN hpack docs
 RUN hpack hyperbole-oauth2
 RUN cabal build demo
 RUN mkdir bin
