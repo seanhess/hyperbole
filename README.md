@@ -15,7 +15,7 @@ Create interactive HTML applications with type-safe serverside Haskell. Inspired
 module Main where
 
 import Data.Text (Text)
-import Web.Atomic.CSS
+import Web.Atomic.CSS (border, (~))
 import Web.Hyperbole
 
 main :: IO ()
@@ -78,6 +78,7 @@ Add hyperbole and text as dependencies to the `.cabal` file:
     build-depends:
         base
       , hyperbole
+      , atomic-css
       , text
 
     default-language: GHC2021
@@ -97,8 +98,8 @@ Learn More
 <!--     <img src="https://github.com/seanhess/hyperbole/raw/main/docs/hackage.svg"> -->
 <!-- </a> -->
 
-* [Local Development](./docs/dev.md)
 * [Comparison with Similar Frameworks](./docs/comparison.md)
+* [Local Development](./docs/dev.md)
 * [Using NIX](./docs/nix.md)
 
 In the Wild

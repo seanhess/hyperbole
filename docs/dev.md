@@ -1,6 +1,9 @@
 Local Development
 =================
 
+
+# JavaScript Client Development
+
 Download and install [NPM](https://nodejs.org/en/download). On a mac, can be installed via homebrew:
 
 ```sh
@@ -38,11 +41,12 @@ cd client
 npm run dev
 ```
 
-Run examples
+
+# Haskell Server Development
+
+Run demo locally. Then visit 
 
 ```
-# demo needs to have demo/static and client/dist as relative paths
-cd <your-path-to>/hyperbole
 cabal run demo
 ```
 
@@ -80,8 +84,16 @@ cabal test
 
 ### File watching
 
-Run tests, then recompile everything on file change and restart examples
+Run tests, then recompile both client and server on file change, then restart demo
 
 ```
 bin/dev
+```
+
+### Haskell Language Server
+
+We use a custom preprocessor to embed compiler-checked examples into Haddock. Everything is automatic with Cabal, but HLS doesn't support it yet. Run this command to get HLS working:
+
+```
+cabal install hyperbole:docgen --overwrite-policy=always
 ```

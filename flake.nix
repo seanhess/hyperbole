@@ -118,13 +118,14 @@
           ];
         };
 
-        docgen-src = nix-filter.lib {
+        docs-hs-src = nix-filter.lib {
           root = ./docs;
-          include = [
-            (nix-filter.lib.matchExt "hs")
-            (nix-filter.lib.matchExt "md")
-            ./docs/docgen.cabal
-          ];
+          include = [ (nix-filter.lib.matchExt "hs") ];
+        };
+
+        docs-md-src = nix-filter.lib {
+          root = ./docs;
+          include = [ (nix-filter.lib.matchExt "md") ];
         };
 
         oauth2-src = nix-filter.lib {
@@ -139,12 +140,30 @@
 
         # Merges filtered `demo` + `docs` sources into `$out`.
         # Needed to solve `demo/docs` -> `../docs` symlink issue Nix has before.
-        # Named "demo" so the store path is `/nix/store/<hash>-demo`.
-        # That's what the `demo` expects to resolve source files. Check `demo/App/Docs/Snippet.hs` -> `localFile`
-        demo-docs-src = pkgs.runCommand "demo" { } ''
+        # Name it "demo" to have a store path `/nix/store/<hash>-demo`.
+        # That's what `demo-with-docs-src` expects to resolve source files. Check `demo/App/Docs/Snippet.hs` -> `localFile`
+        demo-with-docs-src = pkgs.runCommand "demo" { } ''
           mkdir -p $out/docs
           cp -rL ${demo-src}/. $out/
-          cp -rL ${docgen-src}/. $out/docs/
+          cp -rL ${docs-md-src}/. $out/docs/
+        '';
+
+        # Merges `src` + `demo` + `docs` (.hs only) for building the library.
+        hyperbole-with-demo-docs-src = pkgs.runCommand packageName { } ''
+          mkdir -p $out/demo $out/docs
+          cp -rL ${src}/. $out/
+          cp -rL ${demo-src}/. $out/demo/
+          cp -rL ${docs-hs-src}/. $out/docs/
+        '';
+
+        # Minimal sources for building `docgen` executable only.
+        # Same `packageName` ("hyperbole") since it's an executable of the library itself.
+        # and to match the `name` in `hyperbole.cabal`.
+        docgen-exe-src = pkgs.runCommand packageName { } ''
+          mkdir -p $out/docs
+          cp ${./hyperbole.cabal} $out/hyperbole.cabal
+          cp ${./LICENSE} $out/LICENSE
+          cp ${docs-hs-src}/Docgen.hs $out/docs/Docgen.hs
         '';
 
         ghcVersions = [
@@ -159,9 +178,27 @@
             name = "ghc${ghcVer}";
             value = (
               pkgs.overriddenHaskellPackages."ghc${ghcVer}".extend (
-                hfinal: hprev: {
-                  ${demoName} = hfinal.callCabal2nix demoName demo-docs-src { };
-                  docgen = hfinal.callCabal2nix "docgen" docgen-src { };
+                hfinal: hprev:
+                let
+                  # Build `docgen` executable (but no library)
+                  # to break the circular dependency being a preprocessor AND executable of SAME package
+                  docgen-exe = pkgs.haskell.lib.justStaticExecutables (
+                    pkgs.haskell.lib.dontCheck (
+                      pkgs.haskell.lib.overrideCabal (hfinal.callCabal2nix packageName docgen-exe-src { }) (_: {
+                        buildTarget = "docgen";
+                      })
+                    )
+                  );
+                in
+                {
+                  # `docgen-exe` needs to be available in PATH for ALL build phases (incl. `haddock`).
+                  ${packageName} = pkgs.haskell.lib.addBuildTool (hfinal.callCabal2nix packageName
+                    hyperbole-with-demo-docs-src
+                    { }
+                  ) docgen-exe;
+                  # `docgen` is needed in `shell` and `checks` (search for `.docgen` to see it).
+                  docgen = hfinal.${packageName};
+                  ${demoName} = hfinal.callCabal2nix demoName demo-with-docs-src { };
                   hyperbole-oauth2 = hfinal.callCabal2nix "hyperbole-oauth2" oauth2-src { };
                 }
               )
@@ -179,7 +216,7 @@
             hlint.enable = true;
             fourmolu.enable = true;
             hpack.enable = false;
-            nixfmt-rfc-style.enable = true;
+            nixfmt.enable = true;
             flake-checker = {
               enable = true;
               args = [ "--no-telemetry" ];
@@ -224,6 +261,8 @@
             ghcid
             pkgs.ghciwatch
             pkgs.hpack
+            # `docgen` is required by `hls`, also by running `nix flake check` to resolve `type docgen`
+            (pkgs.haskell.lib.justStaticExecutables ghcPkgs."ghc${version}".docgen)
           ];
           withHoogle = true;
           doBenchmark = true;
