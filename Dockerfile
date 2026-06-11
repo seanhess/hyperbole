@@ -32,11 +32,13 @@ ADD ./test ./test
 ADD ./src ./src
 ADD ./demo ./demo
 ADD ./docs ./docs
+ADD ./hyperbole-oauth2 ./hyperbole-oauth2
 ADD *.md .
 ADD LICENSE .
 RUN hpack
 RUN hpack demo
 RUN hpack docs
+RUN hpack hyperbole-oauth2
 RUN cabal build demo
 RUN mkdir bin
 RUN cd demo && export EXEC=$(cabal list-bin demo | tail -n1); cp "$EXEC" /opt/build/bin/demo
