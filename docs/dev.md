@@ -95,5 +95,5 @@ bin/dev
 We use a custom preprocessor to embed compiler-checked examples into Haddock. Everything is automatic with Cabal, but HLS doesn't support it yet. Run this command to get HLS working:
 
 ```
-cabal install docgen:docgen --overwrite-policy=always
+cabal install hyperbole:docgen --overwrite-policy=always
 ```
