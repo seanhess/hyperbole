@@ -1,8 +1,15 @@
 # Revision history for hyperbole
 
-- toActionInput inputs can be in any order in a constructor
-- Web.Hyperbole.Data.Param was unnecessary and removed. Everything uses ToJSON as an intermediate encoding
-- trigger is now pushed to the client instead of deferring, allowing triggers in the middle of long-running actions
+
+## 0.7.0 -- TODO
+
+- Deprecated `toActionInput` in favor of `inputValue` - Instead of partially applying a constructor, inputs are read with a function similar to forms
+- `Web.Hyperbole.Data.Param` was unnecessary and removed. Everything uses ToJSON as an intermediate encoding
+- `trigger` and `pushEvent` now send to the client immediately instead of waiting for the action to finish
+- Added `cookieSecure` option to Session class
+- Accept multipart form file uploads with good default security settings
+- moved OAuth2 to sub-package to allow for dependencies on cryptography libraries
+
 
 ## 0.6.0 -- 2026-01-15
 

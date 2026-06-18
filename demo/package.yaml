@@ -1,5 +1,5 @@
 name:               demo
-version:            0.6.1
+version:            0.7.0
 synopsis:           Interactive HTML apps using type-safe serverside Haskell
 homepage:           https://github.com/seanhess/hyperbole
 github:             seanhess/hyperbole

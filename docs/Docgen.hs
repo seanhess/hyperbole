@@ -23,12 +23,11 @@ main = do
     _ -> error "Usage (Hyperbole Internal Only): docgen src/MyModule.hs /tmp/input/MyModule.hs /build/output/Original.hs"
 
 
-test :: IO ()
-test = do
-  src <- readSource "./src/Web/Hyperbole.hs"
-  SourceCode lns <- expandFile src
-  mapM_ print lns
-
+-- test :: IO ()
+-- test = do
+--   src <- readSource "./src/Web/Hyperbole.hs"
+--   SourceCode lns <- expandFile src
+--   mapM_ print lns
 
 -- expandSourcesTo :: FilePath -> IO ()
 -- expandSourcesTo tmpDir = do

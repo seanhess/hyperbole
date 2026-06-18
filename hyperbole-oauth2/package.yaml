@@ -1,5 +1,5 @@
 name:               hyperbole-oauth2
-version:            0.6.1
+version:            0.7.0
 synopsis:           OAuth2 Support for Hyperbole
 homepage:           https://github.com/seanhess/hyperbole
 github:             seanhess/hyperbole
