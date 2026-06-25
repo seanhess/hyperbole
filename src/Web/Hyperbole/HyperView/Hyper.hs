@@ -28,6 +28,12 @@ hyper
 hyper vid = hyperState vid ()
 
 
+{- | Embed a 'HyperView' into a page or another 'View' with a starting 'ViewState'
+
+@
+#EMBED Example.State.ViewState page
+@
+-}
 hyperState
   :: forall id ctx
    . (HyperViewHandled id ctx, ViewId id, ToJSON (ViewState id), ConcurrencyValue (Concurrency id))

@@ -56,7 +56,7 @@ clearQuery =
   setQuery (mempty :: QueryData)
 
 
-{- | Parse a single query parameter. Return a 400 status if missing or if parsing fails. See 'FromParam'
+{- | Parse a single query parameter. Return a 400 status if missing or if parsing fails. See 'decodeParam'
 
 @
 #EMBED Example.Docs.Params page'
@@ -82,7 +82,7 @@ lookupParam p = do
   QueryData.lookup p <$> queryParams
 
 
-{- | Modify the client's querystring to set a single parameter. See 'ToParam'
+{- | Modify the client's querystring to set a single parameter. See 'encodeParam'
 
 @
 #EMBED Example.Docs.Params instance HyperView Message

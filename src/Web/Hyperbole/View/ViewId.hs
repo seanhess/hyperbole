@@ -14,7 +14,10 @@ import Web.Hyperbole.Data.Encoded as Encoded
 @
 -}
 class ViewId a where
+  -- | Most hyperviews are stateless, but you can track internal state by setting this to something other than `()`
   type ViewState a :: Type
+
+
   type ViewState a = ()
 
 

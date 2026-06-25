@@ -53,6 +53,7 @@ encodeParam a = do
     val -> cs $ A.encode val
 
 
+-- | Decode a parameter from JSON. Uses unquoted strings when possible
 decodeParam :: (FromJSON a) => Text -> Either String a
 decodeParam inp = maybe (Left $ "Could not decode Query Param: " <> cs inp) pure $ do
   A.decode (cs inp) <|> A.decode (cs $ "\"" <> inp <> "\"")
