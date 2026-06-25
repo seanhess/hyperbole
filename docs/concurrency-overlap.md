@@ -4,4 +4,4 @@ However, some user inputs only load data and overlap many times, such as an auto
 
     #EMBED Example.Concurrency.Overlap instance (Debug :> es) => HyperView OverlapReplace
 
-See [[/data/autocomplete]] for a complete example
+Try clicking these buttons multiple times to see how they behave. See [[/data/autocomplete]] for a complete example

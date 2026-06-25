@@ -2,7 +2,7 @@
 
 module Web.Hyperbole.Server.Socket where
 
-import Control.Monad (void)
+import Control.Monad (void, when)
 import Data.Aeson (Value)
 import Data.Bifunctor (first)
 import Data.List qualified as L
@@ -14,7 +14,7 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Effectful
 import Effectful.Concurrent.Async
-import Effectful.Concurrent.STM (TVar, atomically, modifyTVar, readTVar, writeTVar)
+import Effectful.Concurrent.STM (STM, TVar, atomically, modifyTVar, readTVar, writeTVar)
 import Effectful.Dispatch.Dynamic
 import Effectful.Error.Static (throwError_)
 import Effectful.Exception
@@ -41,7 +41,7 @@ data SocketRequest = SocketRequest
   }
 
 
-type RunningActions = Map TargetViewId (Encoded, Async ())
+type RunningActions = Map TargetViewId (Encoded, RequestId, Async ())
 
 
 runHyperboleSocket
@@ -108,26 +108,43 @@ handleRequestSocket opts actions wreq conn eff = do
       clearRunningAction req.requestId req.event
  where
   addRunningAction :: (IOE :> es, Concurrent :> es) => Async () -> RequestId -> Maybe (Event TargetViewId Encoded Value) -> Eff es ()
-  addRunningAction a (RequestId reqId) = \case
+  addRunningAction a reqId = \case
     Nothing -> pure ()
     Just (Event vid act _) -> do
       -- liftIO $ putStrLn $ " [add] (" <> cs reqId <> ") " <> cs clientId.value <> "|" <> show vid
       maold <- atomically $ do
+        -- NOTE: actions is unique per-client, which is why it doesn't require a client id
         m <- readTVar @RunningActions actions
-        writeTVar actions $ M.insert vid (act, a) m
+        writeTVar actions $ M.insert vid (act, reqId, a) m
         pure $ M.lookup vid m
       case maold of
-        Nothing -> pure ()
-        Just (actold, aold) -> do
-          liftIO $ putStrLn $ "CANCEL (" <> cs reqId <> ") " <> cs (encodedToText vid.encoded) <> ": " <> cs (encodedToText actold)
+        Nothing -> do
+          -- liftIO $ putStrLn $ "nocancel " <> show vid
+          pure ()
+        Just (actold, RequestId rold, aold) -> do
+          liftIO $ putStrLn $ "CANCEL (" <> cs rold <> ") " <> cs (encodedToText vid.encoded) <> ": " <> cs (encodedToText actold)
           cancel aold
 
   clearRunningAction :: (IOE :> es, Concurrent :> es) => RequestId -> Maybe (Event TargetViewId Encoded Value) -> Eff es ()
-  clearRunningAction (RequestId _) = \case
+  clearRunningAction reqId = \case
     Nothing -> pure ()
-    Just (Event vid _ _) -> do
-      _ <- atomically $ modifyTVar actions $ M.delete vid
-      pure ()
+    Just (Event vid _ _) -> atomically $ do
+      active <- isActiveRequestId vid reqId
+      when active $ do
+        _ <- modifyTVar actions $ M.delete vid
+        pure ()
+
+  activeRequestId :: TargetViewId -> STM (Maybe RequestId)
+  activeRequestId vid = do
+    m <- readTVar actions
+    pure $ do
+      (_, r, _) <- M.lookup vid m
+      pure r
+
+  isActiveRequestId :: TargetViewId -> RequestId -> STM Bool
+  isActiveRequestId vid reqId = do
+    r <- activeRequestId vid
+    pure $ r == Just reqId
 
   onMessageError :: (IOE :> es) => MessageError -> Eff es a
   onMessageError e = do
