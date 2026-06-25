@@ -97,7 +97,7 @@ library
   build-tool-depends:
       hyperbole:docgen
   build-depends:
-      aeson >=2.1.2.1 && <2.3
+      aeson >=2.1.2.1 && <2.4
     , atomic-css ==0.2.*
     , attoparsec ==0.14.*
     , attoparsec-aeson >=2.1 && <2.3
@@ -111,7 +111,7 @@ library
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2
     , http-client ==0.7.*
-    , http-client-tls ==0.3.*
+    , http-client-tls >=0.3 && <0.5
     , http-types ==0.12.*
     , network >=3.1 && <4
     , network-uri >=2.6.4.1 && <2.7
@@ -147,7 +147,7 @@ executable docgen
       DeriveAnyClass
   ghc-options: -Wall -fdefer-typed-holes
   build-depends:
-      aeson >=2.1.2.1 && <2.3
+      aeson >=2.1.2.1 && <2.4
     , atomic-css ==0.2.*
     , attoparsec ==0.14.*
     , attoparsec-aeson >=2.1 && <2.3
@@ -162,7 +162,7 @@ executable docgen
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2
     , http-client ==0.7.*
-    , http-client-tls ==0.3.*
+    , http-client-tls >=0.3 && <0.5
     , http-types ==0.12.*
     , network >=3.1 && <4
     , network-uri >=2.6.4.1 && <2.7
@@ -211,7 +211,7 @@ test-suite test
   build-tool-depends:
       skeletest:skeletest-preprocessor
   build-depends:
-      aeson >=2.1.2.1 && <2.3
+      aeson >=2.1.2.1 && <2.4
     , atomic-css ==0.2.*
     , attoparsec ==0.14.*
     , attoparsec-aeson >=2.1 && <2.3
@@ -225,7 +225,7 @@ test-suite test
     , file-embed >=0.0.10 && <0.1
     , filepath >=1.4 && <2
     , http-client ==0.7.*
-    , http-client-tls ==0.3.*
+    , http-client-tls >=0.3 && <0.5
     , http-types ==0.12.*
     , hyperbole
     , network >=3.1 && <4
