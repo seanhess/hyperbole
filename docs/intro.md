@@ -5,10 +5,10 @@ Hyperbole allows us to instead write a single Haskell program which runs exclusi
 
 >  Why write HTML and Javascript when you can... not do that? 
 
-There are frameworks that support this in different ways, including [HTMX](https://htmx.org/), [Phoenix LiveView](https://www.phoenixframework.org/), and others. Hyperbole has the following advantages
+There are frameworks that support this in different ways, including [HTMX](https://htmx.org/), [Phoenix LiveView](https://www.phoenixframework.org/), and others. Hyperbole has the following advantages:
 
 1. 100% Haskell
-2. Type safe views, actions, routes, and forms
+2. Type safe views, actions, routes, and more
 3. Elegant interface with little boilerplate
 4. VirtualDOM updates over sockets
 5. Easy to use

@@ -2,13 +2,13 @@ We can access a database using the `IOE` effect, but it is better to describe th
 
     #EMBED Example.Effects.Todos data Todos
 
-To use it we need a `run` function which converts the abstract operations into a specific implementation. We could implement the Todos `Effect` using `Hyperbole` `Session`s.
+To use it we need a `run` function which converts the abstract operations into a specific implementation. For example, we might implement the Todos `Effect` using `Hyperbole` `Session`s.
 
 [[/examples/todos]]
 
     #EMBED Example.Todos.Todo main
 
-Alternatively, we could implement the effect using a database instead.
+Alternatively, we could implement the effect using a database.
 
 [[/examples/todosdb]]
 
