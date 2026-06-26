@@ -6,6 +6,8 @@
 module Web.Hyperbole.HyperView.Forms
   ( FromForm (..)
   , FromFormF (..)
+  , lookupField
+  , parseField
   , FromField (..)
   , GenFields (..)
   , fieldNames
@@ -112,8 +114,15 @@ formData = do
   either parseError pure ef
 
 
-lookupParam :: ParamKey -> Form -> Maybe FormParam
-lookupParam key f = FormParam . cs <$> lookup key f.params <|> FileParam <$> lookup key f.files
+lookupField :: ParamKey -> Form -> Maybe FormParam
+lookupField key f = FormParam . cs <$> lookup key f.params <|> FileParam <$> lookup key f.files
+
+
+parseField :: forall a. (FromField a) => ParamKey -> Form -> Either String a
+parseField key f = do
+  let mt :: Maybe FormParam = lookupField key f
+  a <- first (\err -> cs key <> ": " <> err) $ fromField @a mt
+  pure a
 
 
 -- where
@@ -578,8 +587,7 @@ instance (GFormParse f) => GFormParse (M1 C c f) where
 instance (Selector s, FromField a) => GFormParse (M1 S s (K1 R a)) where
   gFormParse f = do
     let sel = selName (undefined :: M1 S s (K1 R (f a)) p)
-    let mt :: Maybe FormParam = lookupParam (cs sel) f
-    a <- first (\err -> sel <> ": " <> err) $ fromField @a mt
+    a <- parseField (cs sel) f
     pure $ M1 $ K1 a
 
 

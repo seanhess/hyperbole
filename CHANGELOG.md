@@ -13,6 +13,10 @@ Improvements:
 * `Web.Hyperbole.Data.Param` was unnecessary and removed. Everything uses ToJSON and FromJSON as an intermediate encoding
 * moved OAuth2 to sub-package to allow for dependencies on cryptography libraries
 
+Breaking Changes:
+* Actions with input like `search`, `onInput` and `dropdown` should now use an action with no arguments. Get the value using `inputValue` instead
+* `ToParam` and `FromParam` are no longer used. Use the generic implementation of `ToJSON` and `FromJSON` instead
+
 
 ## 0.6.0 -- 2026-01-15
 

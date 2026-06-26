@@ -109,6 +109,8 @@ module Web.Hyperbole
     -- $forms
   , FromForm (..)
   , FromFormF (..)
+  , lookupField
+  , parseField
   , FromField (..)
   , formData
   , GenFields (..)
