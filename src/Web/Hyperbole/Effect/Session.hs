@@ -83,7 +83,10 @@ lookupSession = do
   mck <- Cookie.lookup key <$> sessionCookies
   case mck of
     Nothing -> pure Nothing
-    Just val -> Just <$> parseSession key val
+    Just cook ->
+      case parseCookie cook of
+        Left _ -> pure Nothing
+        Right a -> pure $ Just a
 
 
 {- | Persist datatypes in browser cookies
