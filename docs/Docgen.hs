@@ -1,5 +1,7 @@
 module Main where
 
+import Control.Exception (SomeException, try)
+import Control.Monad (forM_)
 import Data.Char (isAlpha, isSpace)
 import Data.String.Conversions (cs)
 import Data.Text (Text)
@@ -10,56 +12,141 @@ import System.Environment (getArgs)
 import System.FilePath
 
 
+-- Manually run this on the entire repository
+-- main :: IO ()
+-- main = do
+--   args <- getArgs
+--   case args of
+--     [original, input, output] -> do
+--         src <- readSource input
+--         expanded <- expandFile src
+--         let linePragma = T.pack $ "{-# LINE 1 \"" ++ original ++ "\" #-}"
+--         let final = SourceCode [linePragma] <> expanded
+--         T.writeFile output $ T.unlines final.lines
+--     _ -> error "Usage (Hyperbole Internal Only): docgen src/MyModule.hs /tmp/input/MyModule.hs /build/output/Original.hs"
+
 main :: IO ()
 main = do
   args <- getArgs
   case args of
-    [original, input, output] -> do
-      src <- readSource input
-      expanded <- expandFile src
-      let linePragma = T.pack $ "{-# LINE 1 \"" ++ original ++ "\" #-}"
-      let final = SourceCode [linePragma] <> expanded
-      T.writeFile output $ T.unlines final.lines
-    _ -> error "Usage (Hyperbole Internal Only): docgen src/MyModule.hs /tmp/input/MyModule.hs /build/output/Original.hs"
+    [] -> do
+      putStrLn "Docgen: all source"
+      fs <- relativeSourceFiles "./src"
+      mapM_ putStrLn fs
+      pure ()
+    files -> do
+      putStrLn $ "Docgen: " <> show files
+      forM_ files $ \file -> do
+        src <- readSourceCode file
+        src' <- expandFile src
+        T.writeFile file src'.contents
+        pure ()
 
 
--- test :: IO ()
--- test = do
---   src <- readSource "./src/Web/Hyperbole.hs"
---   SourceCode lns <- expandFile src
---   mapM_ print lns
+relativeSourceFiles :: FilePath -> IO [FilePath]
+relativeSourceFiles dir = do
+  contents <- tryDirectory dir
+  let folders = filter isFolder contents
+  let files = filter isSourceFile contents
 
--- expandSourcesTo :: FilePath -> IO ()
--- expandSourcesTo tmpDir = do
---   allFiles <- relativeSourceFiles "./src"
---   -- mapM_ (putStrLn . ("SOURCE " <>)) allFiles
---   mapM_ (expandAndCopyFileTo tmpDir) allFiles
+  files' <- mapM (relativeSourceFiles . addDir) folders
 
--- copyExtraFilesTo :: FilePath -> IO ()
--- copyExtraFilesTo tmpDir = do
---   createDirectoryIfMissing True tmpDir
---   copyFile "./cabal.project" (tmpDir </> "cabal.project")
---   copyFile "./hyperbole.cabal" (tmpDir </> "hyperbole.cabal")
---   copyFile "./README.md" (tmpDir </> "README.md")
---   copyFile "./CHANGELOG.md" (tmpDir </> "CHANGELOG.md")
---   copyFile "./LICENSE" (tmpDir </> "LICENSE")
---   createDirectoryIfMissing True (tmpDir </> "client/dist")
---   copyFile "./client/dist/hyperbole.js" (tmpDir </> "client/dist/hyperbole.js")
---   copyFile "./client/dist/hyperbole.js.map" (tmpDir </> "client/dist/hyperbole.js.map")
---   createDirectoryIfMissing True (tmpDir </> "client/util")
---   copyFile "./client/util/live-reload.js" (tmpDir </> "client/util/live-reload.js")
+  pure $ fmap addDir files <> mconcat files'
+ where
+  isSourceFile pth = takeExtension pth == ".hs"
+  isFolder pth = takeExtension pth == ""
+  addDir = (dir </>)
+  tryDirectory pth = do
+    res <- try $ listDirectory pth
+    case res of
+      Left (_ :: SomeException) -> do
+        putStrLn $ "SKIPPED" <> pth
+        pure []
+      Right files -> pure files
 
--- expandAndCopyFileTo :: FilePath -> FilePath -> IO ()
--- expandAndCopyFileTo tmpDir pth = do
---   putStrLn $ "EXPANDING " <> pth
---   src <- readSource pth
---   expanded <- expandFile src
---   writeSource tmpDir pth expanded
+
+srcDirectory :: FilePath
+srcDirectory = "./src"
+
+
+demoDirectory :: FilePath
+demoDirectory = "./demo"
+
+
+-- expandFile :: SourceCode -> IO SourceCode
+-- expandFile (SourceCode src) =
+--   case T.breakOn "{-$" src of
+--     (end, "") -> pure $ SourceCode end
+--     (start, rest) -> do
+--       let (commentFragment, restInner) = T.breakOn "-}" rest
+--       let next = T.drop 2 restInner -- drop the comment chars
+--       let comment = commentFragment <> "-}"
+--       pure SourceCode start <> next
+
+expandFile :: SourceCode -> IO SourceCode
+expandFile src = do
+  parsed <- parseSource src
+  final <- mconcat <$> mapM expandBlock parsed
+  mapM_ print final
+  pure $ allToSourceCode final
+
+
+expandBlock :: ParsedSource -> IO [ParsedSource]
+expandBlock p =
+  case p of
+    OtherCode t -> pure [OtherCode t]
+    HaddockBlock t -> pure [HaddockBlock t]
+    CommentTarget t -> do
+      haddock <- haddockBlock t
+      pure [CommentTarget t, haddock]
+ where
+  haddockBlock :: Text -> IO ParsedSource
+  haddockBlock t = do
+    let lns = T.lines t
+    out <- mconcat <$> mapM expandLine lns
+    pure $ HaddockBlock $ "\n{- |" <> T.drop 3 (T.unlines out)
+
+
+allToSourceCode :: [ParsedSource] -> SourceCode
+allToSourceCode = mconcat . fmap toSourceCode
+
+
+data ParsedSource
+  = OtherCode Text
+  | CommentTarget Text
+  | HaddockBlock Text
+  deriving (Show, Eq)
+
+
+toSourceCode :: ParsedSource -> SourceCode
+toSourceCode p =
+  case p of
+    OtherCode t -> SourceCode t
+    CommentTarget t -> SourceCode t
+    HaddockBlock t -> SourceCode t
+
+
+parseSource :: SourceCode -> IO [ParsedSource]
+parseSource (SourceCode src) =
+  case T.breakOn commentTargetMarker src of
+    (end, "") -> pure [OtherCode end]
+    (start, rest) -> do
+      -- rest includes {-$
+      let (commentFragment, restInner) = T.breakOn "-}" rest
+          next = T.drop 2 restInner -- drop "-}" from next part
+          comment = commentFragment <> "-}" -- add to the comment block
+      nextSources <- parseSource (SourceCode next)
+      pure $ OtherCode start : CommentTarget comment : nextSources
+
+
+commentTargetMarker :: Text
+commentTargetMarker = "{-$"
+
 
 readSource :: FilePath -> IO SourceCode
 readSource pth = do
   inp <- T.readFile pth
-  pure $ SourceCode $ T.lines inp
+  pure $ SourceCode inp
 
 
 writeSource :: FilePath -> FilePath -> SourceCode -> IO ()
@@ -67,32 +154,11 @@ writeSource tmpDir relPath src = do
   let pth = tmpDir </> cleanRelativeDir relPath
   -- putStrLn $ "WRITE " <> pth <> " " <> show (length src.lines)
   createDirectoryIfMissing True $ takeDirectory pth
-  T.writeFile pth $ T.unlines src.lines
+  T.writeFile pth src.contents
  where
   cleanRelativeDir =
     dropWhile (== '/') . dropWhile (== '.')
 
-
--- relativeSourceFiles :: FilePath -> IO [FilePath]
--- relativeSourceFiles dir = do
---   contents <- tryDirectory dir
---   let folders = filter isFolder contents
---   let files = filter isSourceFile contents
---
---   files' <- mapM (relativeSourceFiles . addDir) folders
---
---   pure $ fmap addDir files <> mconcat files'
---  where
---   isSourceFile pth = takeExtension pth == ".hs"
---   isFolder pth = takeExtension pth == ""
---   addDir = (dir </>)
---   tryDirectory pth = do
---     res <- try $ listDirectory pth
---     case res of
---       Left (_ :: SomeException) -> do
---         putStrLn $ "SKIPPED" <> pth
---         pure []
---       Right files -> pure files
 
 data Macro
   = Embed
@@ -100,7 +166,7 @@ data Macro
   , definition :: TopLevelDefinition
   }
   deriving (Eq)
-newtype SourceCode = SourceCode {lines :: [Text]}
+newtype SourceCode = SourceCode {contents :: Text}
   deriving newtype (Monoid, Semigroup)
 instance Show Macro where
   -- show (Example p) = "Example " <> show p
@@ -115,11 +181,6 @@ newtype TopLevelDefinition = TopLevelDefinition Text
   deriving newtype (Show, Eq)
 
 
-expandFile :: SourceCode -> IO SourceCode
-expandFile (SourceCode lns) =
-  SourceCode . mconcat <$> mapM expandLine lns
-
-
 -- > EMBED Example/Docs/BasicPage.hs page
 expandLine :: Text -> IO [Text]
 expandLine line = do
@@ -127,7 +188,10 @@ expandLine line = do
     Nothing -> do
       pure [line]
     Just (pre, Embed src def) -> do
-      expandEmbed src pre def
+      exists <- doesDirectoryExist demoDirectory
+      if exists
+        then expandEmbed src pre def
+        else pure []
  where
   -- Just (pre, Example src) -> do
   --   expandExample src pre
@@ -154,36 +218,22 @@ expandLine line = do
      in pure (ModuleName mn, TopLevelDefinition $ T.drop 1 def)
 
 
--- look it up as a URI...
-
--- * #EXAMPLE /simple
-
-
--- expandExample :: Path -> Text -> IO [Text]
--- expandExample p prefix = do
---   let pre = if T.null prefix then "▶️ " else prefix
---   r <- appRoute
---   pure [pre <> "[" <> routeTitle r <> "](" <> uriToText (exampleBaseURI ./. p) <> ")"]
---  where
---   appRoute :: IO AppRoute
---   appRoute = do
---     case matchRoute @AppRoute p of
---       Nothing -> fail $ "Could not find example: " <> cs (pathToText False p)
---       Just r -> pure r
-
--- exampleBaseURI :: URI
--- exampleBaseURI = [uri|https://hyperbole.live|]
-
 modulePath :: ModuleName -> FilePath
 modulePath (ModuleName mn) = cs $ T.replace "." "/" mn <> ".hs"
+
+
+readSourceCode :: FilePath -> IO SourceCode
+readSourceCode p = do
+  src <- T.readFile p
+  pure $ SourceCode src
 
 
 expandEmbed :: ModuleName -> Text -> TopLevelDefinition -> IO [Text]
 expandEmbed mn pfx def = do
   let src = modulePath mn
   -- putStrLn $ "  embed: " <> src
-  source <- T.readFile $ "./demo/" <> src
-  expanded <- requireTopLevel def (SourceCode $ T.lines source)
+  source <- readSourceCode $ demoDirectory </> src
+  expanded <- requireTopLevel def source
   pure $ fmap markupLine expanded
  where
   requireTopLevel :: TopLevelDefinition -> SourceCode -> IO [Text]
@@ -258,7 +308,7 @@ highlightTermsLine ln = mconcat $ fmap highlightWord $ T.groupBy isSameTerm ln
 -- returns lines of a top-level definition
 findTopLevel :: TopLevelDefinition -> SourceCode -> [Text]
 findTopLevel (TopLevelDefinition definition) source =
-  let rest = dropWhile (not . isTopLevel) source.lines
+  let rest = dropWhile (not . isTopLevel) $ T.lines source.contents
    in dropWhileEnd isEmpty $ takeWhile isCurrentDefinition rest
  where
   isTopLevel = T.isPrefixOf definition
