@@ -126,3 +126,7 @@ Contributors
 * [Tushar Adhatrao](https://github.com/tusharad)
 * [Benjamin Thomas](https://github.com/benjamin-thomas)
 * [Adithya Obilisetty](https://github.com/adithyaov)
+* [Jens Krause](https://github.com/sectore)
+* [He Zhenxing](https://github.com/hezhenxing)
+* [fanshi1028](https://github.com/fanshi1028)
+* [jkasalt](https://github.com/jkasalt)

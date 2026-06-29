@@ -17,6 +17,12 @@ Breaking Changes:
 * Actions with input like `search`, `onInput` and `dropdown` should now use an action with no arguments. Get the value using `inputValue` instead
 * `ToParam` and `FromParam` are no longer used. Use the generic implementation of `ToJSON` and `FromJSON` instead
 
+Maintenance:
+* NIX support is fully up to date
+* Strict Typescript
+* [Many issues resolved](https://github.com/seanhess/hyperbole/issues?q=is%3Aissue%20state%3Aclosed)
+
+
 
 ## 0.6.0 -- 2026-01-15
 

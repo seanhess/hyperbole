@@ -2,6 +2,19 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE LambdaCase #-}
 
+{- |
+Module:      Web.Hyperbole.OAuth2
+Copyright:   (c) 2024 Sean Hess
+License:     BSD3
+Maintainer:  Sean Hess <seanhess@gmail.com>
+Stability:   experimental
+Portability: portable
+
+OAuth2 support for [Hyperbole](https://hackage.haskell.org/package/hyperbole)
+
+* [hyperbole.live](https://hyperbole.live) - documentation and examples
+* [github](https://github.com/seanhess/hyperbole) - issues and source code
+-}
 module Web.Hyperbole.OAuth2
   ( OAuth2 (..)
   , authUrl
