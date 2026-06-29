@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           hyperbole-oauth2
-version:        0.7.0
+version:        0.7.1
 synopsis:       OAuth2 Support for Hyperbole
 description:    OAuth2 Support for the Hyperbole framework
 category:       Web, Network
