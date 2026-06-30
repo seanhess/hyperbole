@@ -35,9 +35,17 @@ import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 
 
-{- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
+{- $ Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
 
 > #EMBED Example.Docs.BasicPage main
+-}
+
+
+{- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
+
+> main :: IO ()
+> main = do
+>   run 3000 $ liveApp quickStartDocument (runPage page)
 -}
 liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Concurrent, IOE] Response -> Wai.Application
 liveApp doc =
@@ -88,7 +96,7 @@ suppressMessages ex = do
     other -> throwIO other
 
 
-{- | Route URL patterns to different pages
+{- $ Route URL patterns to different pages
 
 
 @
@@ -101,6 +109,37 @@ suppressMessages ex = do
 #EMBED Example.Docs.App router
 
 #EMBED Example.Docs.App app
+@
+-}
+
+
+{- | Route URL patterns to different pages
+
+
+@
+type UserId = Int
+
+data AppRoute
+  = Main
+  | Messages
+  | User UserId
+  deriving (Eq, Generic)
+
+instance 'Route' AppRoute where
+  baseRoute = Just Main
+
+router :: ('Hyperbole' :> es) => AppRoute -> 'Eff' es 'Response'
+router Messages = 'runPage' Messages.page
+router (User cid) = 'runPage' $ Users.page cid
+router Main = do
+  pure $ view $ do
+    'el' \"click a link below to visit a page\"
+    'route' Messages \"Messages\"
+    'route' (User 1) \"User 1\"
+    'route' (User 2) \"User 2\"
+
+app :: Application
+app = 'liveApp' (document documentHead) ('routeRequest' router)
 @
 -}
 routeRequest :: (Hyperbole :> es, Route route) => (route -> Eff es Response) -> Eff es Response

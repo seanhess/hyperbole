@@ -2,7 +2,10 @@ module Main where
 
 import Control.Exception (SomeException, try)
 import Control.Monad (forM_)
+import Data.Attoparsec.Text (Parser)
+import Data.Attoparsec.Text qualified as Atto
 import Data.Char (isAlpha, isSpace)
+import Data.List qualified as L
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
@@ -86,9 +89,26 @@ demoDirectory = "./demo"
 expandFile :: SourceCode -> IO SourceCode
 expandFile src = do
   parsed <- parseSource src
-  final <- mconcat <$> mapM expandBlock parsed
+  expanded <- mconcat <$> mapM expandBlock parsed
+  putStrLn "EXPANDED"
+  putStrLn "============"
+  mapM_ print expanded
+
+  let final = dropOldHaddockBlocks expanded
+  putStrLn "FINAL"
+  putStrLn "============"
   mapM_ print final
-  pure $ allToSourceCode final
+
+  pure $ allToSourceCode $ dropOldHaddockBlocks final
+
+
+dropOldHaddockBlocks :: [ParsedSource] -> [ParsedSource]
+dropOldHaddockBlocks ps =
+  case ps of
+    [] -> []
+    (CommentTarget t : OtherCode newlines : HaddockBlock h1 : OtherCode _ : HaddockBlock _ : rest) ->
+      CommentTarget t : OtherCode newlines : HaddockBlock h1 : rest
+    (ps1 : rest) -> ps1 : dropOldHaddockBlocks rest
 
 
 expandBlock :: ParsedSource -> IO [ParsedSource]
@@ -98,13 +118,13 @@ expandBlock p =
     HaddockBlock t -> pure [HaddockBlock t]
     CommentTarget t -> do
       haddock <- haddockBlock t
-      pure [CommentTarget t, haddock]
+      pure [CommentTarget t, OtherCode "\n\n\n", haddock]
  where
   haddockBlock :: Text -> IO ParsedSource
   haddockBlock t = do
     let lns = T.lines t
     out <- mconcat <$> mapM expandLine lns
-    pure $ HaddockBlock $ "\n{- |" <> T.drop 3 (T.unlines out)
+    pure $ HaddockBlock $ "{- |" <> T.drop 4 (T.dropWhileEnd (== '\n') (T.unlines out))
 
 
 allToSourceCode :: [ParsedSource] -> SourceCode
@@ -127,20 +147,56 @@ toSourceCode p =
 
 
 parseSource :: SourceCode -> IO [ParsedSource]
-parseSource (SourceCode src) =
-  case T.breakOn commentTargetMarker src of
-    (end, "") -> pure [OtherCode end]
-    (start, rest) -> do
-      -- rest includes {-$
-      let (commentFragment, restInner) = T.breakOn "-}" rest
-          next = T.drop 2 restInner -- drop "-}" from next part
-          comment = commentFragment <> "-}" -- add to the comment block
-      nextSources <- parseSource (SourceCode next)
-      pure $ OtherCode start : CommentTarget comment : nextSources
+parseSource (SourceCode src) = do
+  let segs = splitOnKeep "{-" src
+  pure $ concat $ fmap parseCommentBlock segs
+ where
+  -- case breakOn commentTargetMarker src of
+  --   (end, "") -> pure [OtherCode end]
+  --   (start, rest) -> do
+  --     -- rest includes {-$
+  --     let (commentFragment, restInner) = T.breakOn "-}" rest
+  --         next = T.drop 2 restInner -- drop "-}" from next part
+  --         comment = commentFragment <> "-}" -- add to the comment block
+  --     nextSources <- parseSource (SourceCode next)
+  --
+  --     pure $ OtherCode start : CommentTarget comment : nextSources
+
+  parseCommentBlock :: Text -> [ParsedSource]
+  parseCommentBlock t =
+    case breakAfter "-}" t of
+      -- no match, ignore it
+      (end, "") -> [OtherCode end]
+      (comment, rest) ->
+        let pcmt = case T.take 4 comment of
+              "{- $" -> CommentTarget comment
+              "{- |" -> HaddockBlock comment
+              other -> OtherCode other
+         in [pcmt, OtherCode rest]
+
+  -- splitOn but keep the delimiter in the each segment
+  splitOnKeep :: Text -> Text -> [Text]
+  splitOnKeep needle haystack =
+    case T.splitOn needle haystack of
+      [] -> []
+      (start : splits) ->
+        start : fmap (needle <>) splits
+
+  -- breakOn but keep the delimiter in the first segment, not the second
+  breakAfter :: Text -> Text -> (Text, Text)
+  breakAfter needle haystack =
+    case T.breakOn needle haystack of
+      (end, "") -> (end, "")
+      (before, after) ->
+        (before <> needle, T.drop (T.length needle) after)
 
 
 commentTargetMarker :: Text
-commentTargetMarker = "{-$"
+commentTargetMarker = "{- $"
+
+
+haddockMarker :: Text
+haddockMarker = "{- |"
 
 
 readSource :: FilePath -> IO SourceCode
