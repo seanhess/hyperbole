@@ -1,9 +1,8 @@
 module Main where
 
 import Control.Exception (SomeException, try)
-import Control.Monad (forM_, when)
+import Control.Monad (when)
 import Data.Char (isAlpha, isSpace)
-import Data.List qualified as L
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
@@ -31,19 +30,22 @@ import System.FilePath
 main :: IO ()
 main = do
   args <- getArgs
-  case args of
+  files <- case args of
     [] -> do
-      putStrLn "Docgen: all source"
-      fs <- relativeSourceFiles "./src"
-      mapM_ putStrLn fs
-      pure ()
-    files -> do
-      putStrLn $ "Docgen: " <> show files
-      forM_ files $ \file -> do
-        src <- readSourceCode file
-        src' <- expandFile src
-        T.writeFile file src'.contents
-        pure ()
+      putStrLn "Docgen: all sources"
+      relativeSourceFiles "./src"
+    fs -> do
+      pure fs
+
+  mapM_ processFile files
+ where
+  processFile :: FilePath -> IO ()
+  processFile file = do
+    putStrLn $ "Docgen: " <> file
+    src <- readSourceCode file
+    src' <- expandFile src
+    -- T.writeFile file src'.contents
+    pure ()
 
 
 relativeSourceFiles :: FilePath -> IO [FilePath]
@@ -176,14 +178,14 @@ parseSource sourceCode =
       _ -> pure [OtherCode code]
 
   parseAllConcat :: (State SourceCode :> es) => Eff es [a] -> Eff es [a]
-  parseAllConcat p = do
-    as <- p
+  parseAllConcat parser = do
     empty <- isEmpty
-    next <-
-      if empty
-        then pure []
-        else parseAllConcat p
-    pure $ as <> next
+    if empty
+      then pure []
+      else do
+        as <- parser
+        next <- parseAllConcat parser
+        pure $ as <> next
 
   -- only when we know a comment target is there?
   parseCommentTarget :: (State SourceCode :> es) => Eff es [ParsedSource]
@@ -198,50 +200,6 @@ parseSource sourceCode =
   isEmpty = do
     SourceCode src <- get
     pure $ T.null src
-
-  -- parseTarget :: (State SourceCode :> es) => Eff es ParsedSource
-  -- parseTarget = _
-
-  -- case breakOn commentTargetMarker src of
-  --   (end, "") -> pure [OtherCode end]
-  --   (start, rest) -> do
-  --     -- rest includes {-$
-  --     let (commentFragment, restInner) = T.breakOn "-}" rest
-  --         next = T.drop 2 restInner -- drop "-}" from next part
-  --         comment = commentFragment <> "-}" -- add to the comment block
-  --     nextSources <- parseSource (SourceCode next)
-  --
-  --     pure $ OtherCode start : CommentTarget comment : nextSources
-
-  -- -- parses until the end of a comment
-  -- breakComment :: Text -> (Text, Text)
-  -- breakComment = breakAfter "-}"
-
-  -- parseTarget :: Text -> [ParsedSource]
-  -- parseTarget start =
-  --   case breakComment start of
-  --     (end, "") -> [OtherCode end]
-  --     (comment, rest) -> _
-  -- now, we need to keep going!
-  -- let next = T.stripStart rest
-  -- pure ()
-  -- case T.take 4 (T.stripStart rest) of
-  --     "{- |" -> _
-  --     code -> OtherCode rest
-  --  in -- do we have whitespace?
-  --     -- do we have code?
-  --     -- do we have a haddock next?
-  --     -- comment is complete
-  --     -- let pcmt = case T.take 4 comment of
-  --     --       "{- $" -> CommentTarget comment
-  --     --       "{- |" -> HaddockBlock comment
-  --     --       other -> OtherCode other
-  --     [CommentTarget comment, OtherCode rest]
-
-  skipUntil :: (State SourceCode :> es) => Text -> Eff es ()
-  skipUntil match = do
-    _ <- takeUntil match
-    pure ()
 
   takeUntil :: (State SourceCode :> es) => Text -> Eff es Text
   takeUntil match = do
@@ -330,19 +288,6 @@ expandLine line = do
         then expandEmbed src pre def
         else pure []
  where
-  -- Just (pre, Example src) -> do
-  --   expandExample src pre
-
-  parseMacro :: Text -> Maybe (Text, Macro)
-  parseMacro inp = do
-    parseEmbed inp -- <|> parseExample inp
-
-  -- parseExample l = do
-  --   case T.splitOn "#EXAMPLE " l of
-  --     [prefix, src] -> do
-  --       pure (prefix, Example $ path src)
-  --     _ -> Nothing
-
   parseEmbed l = do
     case T.splitOn "#EMBED " l of
       [prefix, info] -> do
@@ -353,6 +298,10 @@ expandLine line = do
   splitSrcDef inp =
     let (mn, def) = T.breakOn " " inp
      in pure (ModuleName mn, TopLevelDefinition $ T.drop 1 def)
+
+  parseMacro :: Text -> Maybe (Text, Macro)
+  parseMacro inp = do
+    parseEmbed inp -- <|> parseExample inp
 
 
 modulePath :: ModuleName -> FilePath
