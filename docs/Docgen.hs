@@ -1,15 +1,15 @@
 module Main where
 
 import Control.Exception (SomeException, try)
-import Control.Monad (forM_)
-import Data.Attoparsec.Text (Parser)
-import Data.Attoparsec.Text qualified as Atto
+import Control.Monad (forM_, when)
 import Data.Char (isAlpha, isSpace)
 import Data.List qualified as L
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
+import Effectful
+import Effectful.State.Static.Local
 import System.Directory
 import System.Environment (getArgs)
 import System.FilePath
@@ -89,27 +89,33 @@ demoDirectory = "./demo"
 expandFile :: SourceCode -> IO SourceCode
 expandFile src = do
   parsed <- parseSource src
+
+  putStrLn "\nPARSED"
+  putStrLn "============"
+  mapM_ print parsed
+
   expanded <- mconcat <$> mapM expandBlock parsed
-  putStrLn "EXPANDED"
+
+  putStrLn "\nEXPANDED"
   putStrLn "============"
   mapM_ print expanded
 
-  let final = dropOldHaddockBlocks expanded
-  putStrLn "FINAL"
-  putStrLn "============"
-  mapM_ print final
+  -- let final = dropOldHaddockBlocks expanded
+  -- putStrLn "\nFINAL"
+  -- putStrLn "============"
+  -- mapM_ print final
 
-  pure $ allToSourceCode $ dropOldHaddockBlocks final
+  -- pure $ allToSourceCode $ dropOldHaddockBlocks final
+  pure $ allToSourceCode expanded
 
 
-dropOldHaddockBlocks :: [ParsedSource] -> [ParsedSource]
-dropOldHaddockBlocks ps =
-  case ps of
-    [] -> []
-    (CommentTarget t : OtherCode newlines : HaddockBlock h1 : OtherCode _ : HaddockBlock _ : rest) ->
-      CommentTarget t : OtherCode newlines : HaddockBlock h1 : rest
-    (ps1 : rest) -> ps1 : dropOldHaddockBlocks rest
-
+-- dropOldHaddockBlocks :: [ParsedSource] -> [ParsedSource]
+-- dropOldHaddockBlocks ps =
+--   case ps of
+--     [] -> []
+--     (CommentTarget t : OtherCode newlines : HaddockBlock h1 : OtherCode _ : HaddockBlock _ : rest) ->
+--       CommentTarget t : OtherCode newlines : HaddockBlock h1 : rest
+--     (ps1 : rest) -> ps1 : dropOldHaddockBlocks rest
 
 expandBlock :: ParsedSource -> IO [ParsedSource]
 expandBlock p =
@@ -124,7 +130,7 @@ expandBlock p =
   haddockBlock t = do
     let lns = T.lines t
     out <- mconcat <$> mapM expandLine lns
-    pure $ HaddockBlock $ "{- |" <> T.drop 4 (T.dropWhileEnd (== '\n') (T.unlines out))
+    pure $ HaddockBlock $ "{- |" <> T.drop 4 (T.dropWhileEnd (== '\n') (T.unlines out)) <> "\n"
 
 
 allToSourceCode :: [ParsedSource] -> SourceCode
@@ -147,10 +153,55 @@ toSourceCode p =
 
 
 parseSource :: SourceCode -> IO [ParsedSource]
-parseSource (SourceCode src) = do
-  let segs = splitOnKeep "{-" src
-  pure $ concat $ fmap parseCommentBlock segs
+parseSource sourceCode =
+  runParser sourceCode parseFile
  where
+  runParser :: SourceCode -> Eff [State SourceCode, IOE] [ParsedSource] -> IO [ParsedSource]
+  runParser src = runEff . evalState src
+
+  parseFile :: (State SourceCode :> es) => Eff es [ParsedSource]
+  parseFile = do
+    ocs <- parseOtherCode
+    aps <- parseAllConcat $ do
+      cmts <- parseCommentTarget
+      next <- parseOtherCode
+      pure $ cmts <> next
+    pure $ ocs <> aps
+
+  parseOtherCode :: (State SourceCode :> es) => Eff es [ParsedSource]
+  parseOtherCode = do
+    code <- takeUntil "{- $"
+    case code of
+      "" -> pure []
+      _ -> pure [OtherCode code]
+
+  parseAllConcat :: (State SourceCode :> es) => Eff es [a] -> Eff es [a]
+  parseAllConcat p = do
+    as <- p
+    empty <- isEmpty
+    next <-
+      if empty
+        then pure []
+        else parseAllConcat p
+    pure $ as <> next
+
+  -- only when we know a comment target is there?
+  parseCommentTarget :: (State SourceCode :> es) => Eff es [ParsedSource]
+  parseCommentTarget = do
+    comment <- takeIncluding "-}"
+    skipWhitespace
+    skipHaddock -- skip any haddock immediately following this
+    skipWhitespace
+    pure [CommentTarget comment]
+
+  isEmpty :: (State SourceCode :> es) => Eff es Bool
+  isEmpty = do
+    SourceCode src <- get
+    pure $ T.null src
+
+  -- parseTarget :: (State SourceCode :> es) => Eff es ParsedSource
+  -- parseTarget = _
+
   -- case breakOn commentTargetMarker src of
   --   (end, "") -> pure [OtherCode end]
   --   (start, rest) -> do
@@ -162,33 +213,63 @@ parseSource (SourceCode src) = do
   --
   --     pure $ OtherCode start : CommentTarget comment : nextSources
 
-  parseCommentBlock :: Text -> [ParsedSource]
-  parseCommentBlock t =
-    case breakAfter "-}" t of
-      -- no match, ignore it
-      (end, "") -> [OtherCode end]
-      (comment, rest) ->
-        let pcmt = case T.take 4 comment of
-              "{- $" -> CommentTarget comment
-              "{- |" -> HaddockBlock comment
-              other -> OtherCode other
-         in [pcmt, OtherCode rest]
+  -- -- parses until the end of a comment
+  -- breakComment :: Text -> (Text, Text)
+  -- breakComment = breakAfter "-}"
 
-  -- splitOn but keep the delimiter in the each segment
-  splitOnKeep :: Text -> Text -> [Text]
-  splitOnKeep needle haystack =
-    case T.splitOn needle haystack of
-      [] -> []
-      (start : splits) ->
-        start : fmap (needle <>) splits
+  -- parseTarget :: Text -> [ParsedSource]
+  -- parseTarget start =
+  --   case breakComment start of
+  --     (end, "") -> [OtherCode end]
+  --     (comment, rest) -> _
+  -- now, we need to keep going!
+  -- let next = T.stripStart rest
+  -- pure ()
+  -- case T.take 4 (T.stripStart rest) of
+  --     "{- |" -> _
+  --     code -> OtherCode rest
+  --  in -- do we have whitespace?
+  --     -- do we have code?
+  --     -- do we have a haddock next?
+  --     -- comment is complete
+  --     -- let pcmt = case T.take 4 comment of
+  --     --       "{- $" -> CommentTarget comment
+  --     --       "{- |" -> HaddockBlock comment
+  --     --       other -> OtherCode other
+  --     [CommentTarget comment, OtherCode rest]
 
-  -- breakOn but keep the delimiter in the first segment, not the second
-  breakAfter :: Text -> Text -> (Text, Text)
-  breakAfter needle haystack =
-    case T.breakOn needle haystack of
-      (end, "") -> (end, "")
-      (before, after) ->
-        (before <> needle, T.drop (T.length needle) after)
+  skipUntil :: (State SourceCode :> es) => Text -> Eff es ()
+  skipUntil match = do
+    _ <- takeUntil match
+    pure ()
+
+  takeUntil :: (State SourceCode :> es) => Text -> Eff es Text
+  takeUntil match = do
+    SourceCode input <- get
+    let (before, after) = T.breakOn match input
+    put $ SourceCode after
+    pure before
+
+  takeIncluding :: (State SourceCode :> es) => Text -> Eff es Text
+  takeIncluding match = do
+    SourceCode input <- get
+    let (before, after) = T.breakOn match input
+    put $ SourceCode $ T.drop (T.length match) after
+    -- only add it back to the before if we had a match
+    case after of
+      "" -> pure before
+      _ -> pure $ before <> match
+
+  skipWhitespace :: (State SourceCode :> es) => Eff es ()
+  skipWhitespace = do
+    modify (\(SourceCode t) -> SourceCode $ T.stripStart t)
+
+  skipHaddock :: (State SourceCode :> es) => Eff es ()
+  skipHaddock = do
+    SourceCode src <- get
+    when ("{- |" `T.isPrefixOf` src) $ do
+      _ <- takeIncluding "-}"
+      pure ()
 
 
 commentTargetMarker :: Text
