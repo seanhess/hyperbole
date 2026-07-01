@@ -1,7 +1,7 @@
 # Revision history for hyperbole
 
 
-## 0.7.1 -- 2026-07.01
+## 0.7.1 -- 2026-07-01
 
 Features:
 * Accept multipart form file uploads with good default security settings
