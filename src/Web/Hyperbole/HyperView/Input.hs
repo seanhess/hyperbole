@@ -15,10 +15,19 @@ import Web.Hyperbole.Route (Route (..), routeUri)
 import Web.Hyperbole.View
 
 
-{- | \<button\> HTML tag which sends the action when pressed
+{- ! \<button\> HTML tag which sends the action when pressed
 
 @
 #EMBED Example.Simple messageView
+@
+-}
+
+{- | \<button\> HTML tag which sends the action when pressed
+
+@
+messageView :: Text -> 'View' Message ()
+messageView msg = do
+  'button' (Louder msg) ~ border 1 $ text msg
 @
 -}
 button :: (ViewAction (Action id)) => Action id -> View id () -> View id ()
@@ -26,10 +35,22 @@ button action cnt = do
   tag "button" cnt @ onClick action
 
 
-{- | Type-safe dropdown. Sends (opt -> Action id) when selected. The default will be selected.
+{- ! Type-safe dropdown. Sends (opt -> Action id) when selected. The default will be selected.
 
 @
 #EMBED Example.DataLists.Filter familyDropdown
+@
+-}
+
+{- | Type-safe dropdown. Sends (opt -> Action id) when selected. The default will be selected.
+
+@
+familyDropdown :: Filters -> 'View' Languages ()
+familyDropdown filters =
+  dropdown SetFamily filters.family ~ border 1 . pad 10 $ do
+    option Nothing \"Any\"
+    option (Just ObjectOriented) \"Object Oriented\"
+    option (Just Functional) \"Functional\"
 @
 -}
 dropdown
@@ -83,10 +104,20 @@ instance (ToJSON id, ToJSON opt, FromJSON id, FromJSON opt) => ViewId (Option id
   type ViewState (Option id opt) = ViewState id
 
 
-{- | A live search field. Set a DelayMs to avoid hitting the server on every keystroke
+{- ! A live search field. Set a DelayMs to avoid hitting the server on every keystroke
 
 @
 #EMBED Example.Errors viewSearchUsers
+@
+-}
+
+{- | A live search field. Set a DelayMs to avoid hitting the server on every keystroke
+
+@
+viewSearchUsers :: 'View' Users ()
+viewSearchUsers = do
+  'el' \"Search for a user by id\"
+  search SearchUser 250 ~ border 1 . pad 10 @ placeholder \"2\"
 @
 -}
 search :: (ViewAction (Action id)) => Action id -> DelayMs -> View id ()

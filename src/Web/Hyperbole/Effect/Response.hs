@@ -45,12 +45,30 @@ respondErrorView msg vw = do
   send $ RespondNow $ Err $ ErrCustom $ ServerError msg $ renderBody vw
 
 
-{- | Abort execution and respond with 404 Not Found
+{- ! Abort execution and respond with 404 Not Found
 
 @
 #EMBED Example.Docs.App findUser
 
 #EMBED Example.Docs.App userPage
+@
+-}
+
+
+{- | Abort execution and respond with 404 Not Found
+
+@
+findUser :: ('Hyperbole' :> es, Users :> es) => Int -> 'Eff' es User
+findUser uid = do
+  mu <- send (LoadUser uid)
+  maybe notFound pure mu
+
+userPage :: ('Hyperbole' :> es, Users :> es) => 'Page' es '[]
+userPage = do
+  user <- findUser 100
+
+  -- skipped if user not found
+  pure $ userView user
 @
 -}
 notFound :: (Hyperbole :> es) => Eff es a

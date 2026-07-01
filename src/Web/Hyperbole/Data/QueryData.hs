@@ -145,10 +145,28 @@ fromQueryData q =
     (cs prm, Just $ cs pval)
 
 
-{- | Decode a type from a 'QueryData'. Missing fields are set to 'Data.Default.def'
+{- ! Decode a type from a 'QueryData'. Missing fields are set to 'Data.Default.def'
 
 @
 #EMBED Example.Docs.Encoding data Filters
+@
+
+>>> parseQuery $ QueryData.parse "active=true&search=asdf"
+Right (Filters True "asdf")
+
+>>> parseQuery $ QueryData.parse "search=asdf"
+Right (Filters False "asdf")
+-}
+
+
+{- | Decode a type from a 'QueryData'. Missing fields are set to 'Data.Default.def'
+
+@
+data Filters = Filters
+  { active :: Bool
+  , term :: Text
+  }
+  deriving (Generic, Eq, 'FromQuery', 'ToQuery')
 @
 
 >>> parseQuery $ QueryData.parse "active=true&search=asdf"
@@ -167,10 +185,33 @@ instance FromQuery QueryData where
   parseQuery = pure
 
 
-{- | A page can store state in the browser 'query' string. ToQuery and 'FromQuery' control how a datatype is encoded to a full query string
+{- ! A page can store state in the browser 'query' string. ToQuery and 'FromQuery' control how a datatype is encoded to a full query string
 
 @
 #EMBED Example.Docs.Encoding data Filters
+@
+
+>>> QueryData.render $ toQuery $ Filter True "asdf"
+"active=true&search=asdf"
+
+If the value of a field is the same as 'Default', it will be omitted from the query string
+
+>>> QueryData.render $ toQuery $ Filter True ""
+"active=true"
+
+>>> QueryData.render $ toQuery $ Filter False ""
+""
+-}
+
+
+{- | A page can store state in the browser 'query' string. ToQuery and 'FromQuery' control how a datatype is encoded to a full query string
+
+@
+data Filters = Filters
+  { active :: Bool
+  , term :: Text
+  }
+  deriving (Generic, Eq, 'FromQuery', 'ToQuery')
 @
 
 >>> QueryData.render $ toQuery $ Filter True "asdf"

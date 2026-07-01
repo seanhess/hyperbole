@@ -11,9 +11,16 @@ import Web.Hyperbole.View
 data Document = Document
 
 
-{- | 'liveApp' requires a function which turns an html fragment into an entire html document. Use this to import javascript, css, etc. Use 'quickStartDocument' to get going quickly
+{- ! 'liveApp' requires a function which turns an html fragment into an entire html document. Use this to import javascript, css, etc. Use 'quickStartDocument' to get going quickly
 
 > #EMBED Example.Docs.App app
+-}
+
+
+{- | 'liveApp' requires a function which turns an html fragment into an entire html document. Use this to import javascript, css, etc. Use 'quickStartDocument' to get going quickly
+
+> app :: Application
+> app = liveApp (document documentHead) (routeRequest router)
 -}
 document :: View DocumentHead () -> BL.ByteString -> BL.ByteString
 document docHead cnt =
@@ -29,13 +36,29 @@ document docHead cnt =
 </html>|]
 
 
-{- | Create a custom \<head\> to use with 'document'. Remember to include at least `scriptEmbed`!
+{- ! Create a custom \<head\> to use with 'document'. Remember to include at least `scriptEmbed`!
 
 > import Web.Hyperbole (scriptEmbed, cssEmbed)
 >
 > #EMBED Example.Docs.App documentHead
 >
 > #EMBED Example.Docs.App app
+-}
+
+
+{- | Create a custom \<head\> to use with 'document'. Remember to include at least `scriptEmbed`!
+
+> import Web.Hyperbole (scriptEmbed, cssEmbed)
+>
+> documentHead :: View DocumentHead ()
+> documentHead = do
+>   title "My Website"
+>   script' scriptEmbed
+>   style cssEmbed
+>   script "custom.js"
+>
+> app :: Application
+> app = liveApp (document documentHead) (routeRequest router)
 -}
 data DocumentHead = DocumentHead
   deriving (Generic, ViewId)

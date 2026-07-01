@@ -76,10 +76,25 @@ import Web.Hyperbole.View
 type ParamKey = BS.ByteString
 
 
-{- | Simple types that be decoded from form data
+{- ! Simple types that be decoded from form data
 
 @
 #EMBED Example.FormSimple data ContactForm
+@
+-}
+
+
+{- | Simple types that be decoded from form data
+
+@
+data ContactForm = ContactForm
+  { name :: Text
+  , age :: Int
+  , isFavorite :: Bool
+  , planet :: Planet
+  , moon :: Moon
+  }
+  deriving (Generic, FromForm)
 @
 -}
 class FromForm (form :: Type) where
@@ -88,10 +103,24 @@ class FromForm (form :: Type) where
   fromForm f = to <$> gFormParse f
 
 
-{- | A Higher-Kinded type that can be parsed from a 'Form'
+{- ! A Higher-Kinded type that can be parsed from a 'Form'
 
 @
 #EMBED Example.FormValidation data UserForm
+@
+-}
+
+
+{- | A Higher-Kinded type that can be parsed from a 'Form'
+
+@
+data UserForm f = UserForm
+  { user :: Field f User
+  , age :: Field f Int
+  , pass1 :: Field f Text
+  , pass2 :: Field f Text
+  }
+  deriving (Generic, FromFormF, GenFields Validated, GenFields FieldName)
 @
 -}
 class FromFormF (f :: (Type -> Type) -> Type) where
@@ -133,7 +162,7 @@ parseField key f = do
 -- GEN FIELDS: Generate a type from selector names
 ------------------------------------------------------------------------------
 
-{- | Generate a Higher Kinded record with all selectors filled with default values. See 'GenField'
+{- ! Generate a Higher Kinded record with all selectors filled with default values. See 'GenField'
 
 @
 #EMBED Example.FormValidation data UserForm
@@ -143,17 +172,61 @@ parseField key f = do
 #EMBED Example.Contacts newContactForm
 @
 -}
+
+
+{- | Generate a Higher Kinded record with all selectors filled with default values. See 'GenField'
+
+@
+data UserForm f = UserForm
+  { user :: Field f User
+  , age :: Field f Int
+  , pass1 :: Field f Text
+  , pass2 :: Field f Text
+  }
+  deriving (Generic, FromFormF, GenFields Validated, GenFields FieldName)
+@
+
+@
+newContactForm :: 'View' NewContact ()
+newContactForm = do
+  row ~ pad 10 . gap 10 . border 1 $ do
+    target Contacts () $ do
+      contactForm AddUser (genFields :: ContactForm Maybe)
+    col $ do
+      space
+      'button' CloseForm ~ btnLight $ \"Cancel\"
+@
+-}
 class GenFields f (form :: (Type -> Type) -> Type) where
   genFields :: form f
   default genFields :: (Generic (form f), GFieldsGen (Rep (form f))) => form f
   genFields = to gFieldsGen
 
 
-{- | Generate FieldNames for a form
+{- ! Generate FieldNames for a form
 
 > #EMBED Example.Todos.Todo data TodoForm
 >
 > #EMBED Example.Todos.Todo todoForm
+-}
+
+
+{- | Generate FieldNames for a form
+
+> data TodoForm f = TodoForm
+>   { task :: Field f Text
+>   }
+>   deriving (Generic, FromFormF, GenFields FieldName)
+>
+> todoForm :: FilterTodo -> View AllTodos ()
+> todoForm filt = do
+>   let f :: TodoForm FieldName = fieldNames
+>   row ~ border 1 $ do
+>     el ~ pad 8 $ do
+>       button (ToggleAll filt) Icon.chevronDown ~ width 32 . hover (color Primary)
+>     form SubmitTodo ~ grow $ do
+>       field f.task $ do
+>         input TextInput ~ pad 12 @ placeholder "What needs to be done?" . value ""
 -}
 fieldNames :: forall form. (GenFields FieldName form) => form FieldName
 fieldNames = genFields
@@ -186,10 +259,63 @@ newtype FormFields id = FormFields id
   deriving newtype (ViewId)
 
 
-{- | Type-safe \<form\>. Calls (Action id) on submit
+{- ! Type-safe \<form\>. Calls (Action id) on submit
 
 @
 #EMBED Example.FormSimple formView
+@
+-}
+
+
+{- | Type-safe \<form\>. Calls (Action id) on submit
+
+@
+formView :: 'View' AddContact ()
+formView = do
+  form Submit ~ gap 15 . pad 10 . flexCol $ do
+    'el' ~ Style.h1 $ \"Add Contact\"
+
+    -- Make sure these names match the field names used by FormParse / formData
+    field \"name\" $ do
+      label $ do
+        text \"Contact Name\"
+        input Username @ placeholder \"contact name\" ~ Style.input
+
+    field \"age\" $ do
+      label $ do
+        text \"Age\"
+        input Number @ placeholder \"age\" . value \"0\" ~ Style.input
+
+    field \"isFavorite\" $ do
+      label $ do
+        row ~ gap 10 $ do
+          checkbox False ~ width 32
+          text \"Favorite?\"
+
+    col ~ gap 5 $ do
+      'el' $ text \"Planet\"
+      field \"planet\" $ do
+        radioGroup Earth $ do
+          planet Mercury
+          planet Venus
+          planet Earth
+          planet Mars
+
+    field \"moon\" $ do
+      label $ do
+        text \"Moon\"
+        select Callisto ~ Style.input $ do
+          option Titan \"Titan\"
+          option Europa \"Europa\"
+          option Callisto \"Callisto\"
+          option Mimas \"Mimas\"
+
+    submit \"Submit\" ~ btn
+ where
+  planet val =
+    label ~ flexRow . gap 10 $ do
+      radio val ~ width 32
+      text (pack (show val))
 @
 -}
 form :: (ViewAction (Action id)) => Action id -> View (FormFields id) () -> View id ()
@@ -331,7 +457,7 @@ textarea mDefaultText = do
 -- VALIDATION
 ------------------------------------------------------------------------------
 
-{- | Validation results for a 'Form'. See 'validate'
+{- ! Validation results for a 'Form'. See 'validate'
 
 @
 #EMBED Example.FormValidation data UserForm
@@ -339,6 +465,33 @@ textarea mDefaultText = do
 #EMBED Example.FormValidation validateForm
 
 #EMBED Example.FormValidation validateAge
+@
+-}
+
+
+{- | Validation results for a 'Form'. See 'validate'
+
+@
+data UserForm f = UserForm
+  { user :: Field f User
+  , age :: Field f Int
+  , pass1 :: Field f Text
+  , pass2 :: Field f Text
+  }
+  deriving (Generic, FromFormF, GenFields Validated, GenFields FieldName)
+
+validateForm :: UserForm Identity -> UserForm Validated
+validateForm u =
+  UserForm
+    { user = validateUser u.user
+    , age = validateAge u.age
+    , pass1 = validatePass u.pass1 u.pass2
+    , pass2 = NotInvalid
+    }
+
+validateAge :: Int -> Validated Int
+validateAge a =
+  validate (a < 20) \"User must be at least 20 years old\"
 @
 -}
 data Validated a = Invalid Text | NotInvalid | Valid
@@ -395,10 +548,20 @@ invalidText v = do
     _ -> none
 
 
-{- | specify a check for a 'Validation'
+{- ! specify a check for a 'Validation'
 
 @
 #EMBED Example.FormValidation validateAge
+@
+-}
+
+
+{- | specify a check for a 'Validation'
+
+@
+validateAge :: Int -> Validated Int
+validateAge a =
+  validate (a < 20) \"User must be at least 20 years old\"
 @
 -}
 validate :: Bool -> Text -> Validated a

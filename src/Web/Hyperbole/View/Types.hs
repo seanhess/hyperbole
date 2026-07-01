@@ -19,10 +19,20 @@ import Web.Hyperbole.View.ViewId
 
 -- View ------------------------------------------------------------
 
-{- | 'View's are HTML fragments with a 'context'
+{- ! 'View's are HTML fragments with a 'context'
 
 @
 #EMBED Example.Docs.BasicPage helloWorld
+@
+-}
+
+
+{- | 'View's are HTML fragments with a 'context'
+
+@
+helloWorld :: 'View' context ()
+helloWorld =
+  'el' \"Hello World\"
 @
 -}
 newtype View c a = View {html :: Eff '[Reader (c, ViewState c)] (Html a)}
@@ -117,12 +127,31 @@ instance Styleable (View c a) where
     pure $ modCSS f h
 
 
-{- | Access the 'viewId' in a 'View' or 'update'
+{- ! Access the 'viewId' in a 'View' or 'update'
 
 @
 #EMBED Example.Concurrency.LazyLoading data LazyData
 
 #EMBED Example.Concurrency.LazyLoading instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
+@
+-}
+
+
+{- | Access the 'viewId' in a 'View' or 'update'
+
+@
+data LazyData = LazyData TaskId
+  deriving (Generic, 'ViewId')
+
+instance (Debug :> es, GenRandom :> es) => 'HyperView' LazyData es where
+  data 'Action' LazyData
+    = Details
+    deriving (Generic, 'ViewAction')
+
+  'update' Details = do
+    LazyData taskId <- 'viewId'
+    task <- pretendLoadTask taskId
+    pure $ viewTaskDetails task
 @
 -}
 class HasViewId m view where

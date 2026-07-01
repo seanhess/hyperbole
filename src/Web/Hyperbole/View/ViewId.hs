@@ -7,10 +7,19 @@ import GHC.Generics
 import Web.Hyperbole.Data.Encoded as Encoded
 
 
-{- | A unique identifier for a 'HyperView'
+{- ! A unique identifier for a 'HyperView'
 
 @
 #EMBED Example.Simple data Message
+@
+-}
+
+
+{- | A unique identifier for a 'HyperView'
+
+@
+data Message = Message1 | Message2
+  deriving (Generic, 'ViewId')
 @
 -}
 class ViewId a where

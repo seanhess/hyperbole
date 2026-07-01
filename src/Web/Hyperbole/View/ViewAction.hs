@@ -7,10 +7,25 @@ import GHC.Generics
 import Web.Hyperbole.Data.Encoded as Encoded
 
 
-{- | Define every action possible for a given 'HyperView'
+{- ! Define every action possible for a given 'HyperView'
 
 @
 #EMBED Example.Simple instance HyperView Message
+@
+-}
+
+
+{- | Define every action possible for a given 'HyperView'
+
+@
+instance 'HyperView' Message es where
+  data 'Action' Message
+    = Louder Text
+    deriving (Generic, 'ViewAction')
+
+  'update' (Louder msg) = do
+    let new = msg <> \"!\"
+    pure $ messageView new
 @
 -}
 class ViewAction a where

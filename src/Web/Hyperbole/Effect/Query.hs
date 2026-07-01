@@ -16,12 +16,30 @@ import Web.Hyperbole.Types.Response
 import Prelude
 
 
-{- | Parse querystring from the 'Request' into a datatype. See 'FromQuery'
+{- ! Parse querystring from the 'Request' into a datatype. See 'FromQuery'
 
 @
 #EMBED Example.Docs.Params data Filters
 
 #EMBED Example.Docs.Params page
+@
+-}
+
+
+{- | Parse querystring from the 'Request' into a datatype. See 'FromQuery'
+
+@
+data Filters = Filters
+  { search :: Text
+  }
+  deriving ('ToQuery', 'FromQuery', Generic)
+
+page :: ('Hyperbole' :> es) => 'Page' es '[Todos]
+page = do
+  filters <- query @Filters
+  todos <- loadTodos filters
+  pure $ do
+    'hyper' Todos $ todosView todos
 @
 -}
 query :: (FromQuery a, Hyperbole :> es) => Eff es a
@@ -32,10 +50,27 @@ query = do
     Right a -> pure a
 
 
-{- | Update the client's querystring to an encoded datatype. See 'ToQuery'
+{- ! Update the client's querystring to an encoded datatype. See 'ToQuery'
 
 @
 #EMBED Example.Docs.Params instance HyperView Todos
+@
+-}
+
+
+{- | Update the client's querystring to an encoded datatype. See 'ToQuery'
+
+@
+instance 'HyperView' Todos es where
+  data 'Action' Todos
+    = SetSearch Text
+    deriving (Generic, 'ViewAction')
+
+  'update' (SetSearch term) = do
+    let filters = Filters term
+    setQuery filters
+    todos <- loadTodos filters
+    pure $ todosView todos
 @
 -}
 setQuery :: (ToQuery a, Hyperbole :> es) => a -> Eff es ()
@@ -56,10 +91,22 @@ clearQuery =
   setQuery (mempty :: QueryData)
 
 
-{- | Parse a single query parameter. Return a 400 status if missing or if parsing fails. See 'decodeParam'
+{- ! Parse a single query parameter. Return a 400 status if missing or if parsing fails. See 'decodeParam'
 
 @
 #EMBED Example.Docs.Params page'
+@
+-}
+
+
+{- | Parse a single query parameter. Return a 400 status if missing or if parsing fails. See 'decodeParam'
+
+@
+page' :: ('Hyperbole' :> es) => 'Page' es '[Message]
+page' = do
+  msg <- param \"message\"
+  pure $ do
+    'hyper' Message $ messageView msg
 @
 -}
 param :: (FromJSON a, Hyperbole :> es) => Param -> Eff es a
@@ -70,11 +117,20 @@ param p = do
     Right a -> pure a
 
 
-{- | Parse a single parameter from the query string if available
-
+{- ! Parse a single parameter from the query string if available
 
 @
 #EMBED Example.Docs.SideEffects page
+@
+-}
+
+
+{- | Parse a single parameter from the query string if available
+
+@
+page :: ('Hyperbole' :> es, Concurrent :> es, Reader Text :> es) => 'Page' es '[SlowReader]
+page = do
+  pure $ 'hyper' SlowReader $ messageView \"...\"
 @
 -}
 lookupParam :: (FromJSON a, Hyperbole :> es) => Param -> Eff es (Maybe a)
@@ -82,10 +138,25 @@ lookupParam p = do
   QueryData.lookup p <$> queryParams
 
 
-{- | Modify the client's querystring to set a single parameter. See 'encodeParam'
+{- ! Modify the client's querystring to set a single parameter. See 'encodeParam'
 
 @
 #EMBED Example.Docs.Params instance HyperView Message
+@
+-}
+
+
+{- | Modify the client's querystring to set a single parameter. See 'encodeParam'
+
+@
+instance 'HyperView' Message es where
+  data 'Action' Message
+    = SetMessage Text
+    deriving (Generic, 'ViewAction')
+
+  'update' (SetMessage msg) = do
+    'setParam' \"message\" msg
+    pure $ messageView msg
 @
 -}
 setParam :: (ToJSON a, Hyperbole :> es) => Param -> a -> Eff es ()

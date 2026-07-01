@@ -21,10 +21,22 @@ eventName :: Text -> Name
 eventName t = "data-on" <> t
 
 
-{- | Send the action after N milliseconds. Can be used to implement lazy loading or polling.
+{- ! Send the action after N milliseconds. Can be used to implement lazy loading or polling.
 
 @
 #EMBED Example.Concurrency.LazyLoading viewTaskLoad
+@
+-}
+
+
+{- | Send the action after N milliseconds. Can be used to implement lazy loading or polling.
+
+@
+viewTaskLoad :: 'View' LazyData ()
+viewTaskLoad = do
+  -- 100ms after rendering, get the details
+  'el' @ onLoad Details 100 ~ bg GrayLight . textAlign AlignCenter $ do
+    text \"...\"
 @
 -}
 onLoad :: (ViewAction (Action id), Attributable a) => Action id -> DelayMs -> Attributes a -> Attributes a
@@ -109,10 +121,21 @@ dataTarget :: (ViewId id, Attributable a) => id -> Attributes a -> Attributes a
 dataTarget = att "data-target" . encodedToText . toViewId
 
 
-{- | Allow inputs to trigger actions for a different view
+{- ! Allow inputs to trigger actions for a different view
 
 @
 #EMBED Example.Trigger targetView
+@
+-}
+
+
+{- | Allow inputs to trigger actions for a different view
+
+@
+targetView :: 'View' Controls ()
+targetView = do
+  target Targeted () $ do
+    'button' (SetMessage \"Targeted!\") ~ btn $ \"Target SetMessage\"
 @
 -}
 target :: forall id ctx. (HyperViewHandled id ctx, ViewId id) => id -> ViewState id -> View id () -> View ctx ()

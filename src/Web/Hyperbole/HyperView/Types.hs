@@ -16,7 +16,7 @@ import Web.Hyperbole.View (View (..), ViewAction, ViewId (..), none)
 
 -- HyperView --------------------------------------------
 
-{- | HyperViews are interactive subsections of a 'Page'
+{- ! HyperViews are interactive subsections of a 'Page'
 
 Create an instance with a unique view id type and a sum type describing the actions the HyperView supports. The View Id can contain context (a database id, for example)
 
@@ -24,6 +24,26 @@ Create an instance with a unique view id type and a sum type describing the acti
 #EMBED Example.Simple data Message
 
 #EMBED Example.Simple instance HyperView Message es where
+@
+-}
+
+
+{- | HyperViews are interactive subsections of a 'Page'
+
+Create an instance with a unique view id type and a sum type describing the actions the HyperView supports. The View Id can contain context (a database id, for example)
+
+@
+data Message = Message1 | Message2
+  deriving (Generic, 'ViewId')
+
+instance 'HyperView' Message es where
+  data 'Action' Message
+    = Louder Text
+    deriving (Generic, 'ViewAction')
+
+  'update' (Louder msg) = do
+    let new = msg <> \"!\"
+    pure $ messageView new
 @
 -}
 class (ViewId id, ViewAction (Action id), ConcurrencyValue (Concurrency id)) => HyperView id es where

@@ -13,10 +13,23 @@ import Web.Hyperbole.View (View, runViewContext, tag)
 import Web.Hyperbole.View.ViewId
 
 
-{- | Embed a 'HyperView' into a page or another 'View'
+{- ! Embed a 'HyperView' into a page or another 'View'
 
 @
 #EMBED Example.Docs.Interactive page
+@
+-}
+
+
+{- | Embed a 'HyperView' into a page or another 'View'
+
+@
+page :: 'Page' es '[Message]
+page = do
+  pure $ do
+    'el' \"Unchanging Header\"
+    'hyper' Message1 $ messageView \"Hello\"
+    'hyper' Message2 $ messageView \"World\"
 @
 -}
 hyper
@@ -28,10 +41,21 @@ hyper
 hyper vid = hyperState vid ()
 
 
-{- | Embed a 'HyperView' into a page or another 'View' with a starting 'ViewState'
+{- ! Embed a 'HyperView' into a page or another 'View' with a starting 'ViewState'
 
 @
 #EMBED Example.State.ViewState page
+@
+-}
+
+
+{- | Embed a 'HyperView' into a page or another 'View' with a starting 'ViewState'
+
+@
+page :: ('Hyperbole' :> es) => 'Page' es '[Counter]
+page = do
+  pure $ do
+    hyperState CounterState 10 viewCount
 @
 -}
 hyperState

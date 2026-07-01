@@ -20,12 +20,26 @@ import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 
 
-{- | Configure a data type to persist in the 'session' as a cookie. These are type-indexed, so only one of each can exist in the session
+{- ! Configure a data type to persist in the 'session' as a cookie. These are type-indexed, so only one of each can exist in the session
 
 @
 #EMBED Example.Docs.Sessions data Preferences
 
 #EMBED Example.Docs.Sessions instance Default Preferences
+@
+-}
+
+
+{- | Configure a data type to persist in the 'session' as a cookie. These are type-indexed, so only one of each can exist in the session
+
+@
+data Preferences = Preferences
+  { color :: AppColor
+  }
+  deriving (Generic, ToJSON, FromJSON, 'Session')
+
+instance Default Preferences where
+  def = Preferences White
 @
 -}
 class Session a where
@@ -60,7 +74,7 @@ class Session a where
     A.eitherDecode (cs bs)
 
 
-{- | Load data from a browser cookie. If it doesn't exist, the 'Default' instance is used
+{- ! Load data from a browser cookie. If it doesn't exist, the 'Default' instance is used
 
 @
 #EMBED Example.Docs.Sessions data Preferences
@@ -68,6 +82,25 @@ class Session a where
 #EMBED Example.Docs.Sessions instance Default Preferences
 
 #EMBED Example.Docs.Sessions page
+@
+-}
+
+
+{- | Load data from a browser cookie. If it doesn't exist, the 'Default' instance is used
+
+@
+data Preferences = Preferences
+  { color :: AppColor
+  }
+  deriving (Generic, ToJSON, FromJSON, 'Session')
+
+instance Default Preferences where
+  def = Preferences White
+
+page :: ('Hyperbole' :> es) => 'Page' es '[Content]
+page = do
+  prefs <- session @Preferences
+  pure $ 'el' ~ bg prefs.color $ \"Custom Background\"
 @
 -}
 session :: (Session a, Default a, Hyperbole :> es) => Eff es a
@@ -89,7 +122,7 @@ lookupSession = do
         Right a -> pure $ Just a
 
 
-{- | Persist datatypes in browser cookies
+{- ! Persist datatypes in browser cookies
 
 @
 #EMBED Example.Docs.Sessions data Preferences
@@ -97,6 +130,30 @@ lookupSession = do
 #EMBED Example.Docs.Sessions instance Default Preferences
 
 #EMBED Example.Docs.Sessions instance HyperView Content
+@
+-}
+
+
+{- | Persist datatypes in browser cookies
+
+@
+data Preferences = Preferences
+  { color :: AppColor
+  }
+  deriving (Generic, ToJSON, FromJSON, 'Session')
+
+instance Default Preferences where
+  def = Preferences White
+
+instance 'HyperView' Content es where
+  data 'Action' Content
+    = SetColor AppColor
+    deriving (Generic, 'ViewAction')
+
+  'update' (SetColor clr) = do
+    let prefs = Preferences clr
+    saveSession prefs
+    pure $ 'el' ~ bg prefs.color $ \"Custom Background\"
 @
 -}
 saveSession :: forall a es. (Session a, Hyperbole :> es) => a -> Eff es ()
