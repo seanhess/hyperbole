@@ -1,7 +1,7 @@
 # Revision history for hyperbole
 
 
-## 0.7.1 -- 2026-06-29
+## 0.7.1 -- 2026-07.01
 
 Features:
 * Accept multipart form file uploads with good default security settings
@@ -12,6 +12,7 @@ Improvements:
 * Deprecated `toActionInput` in favor of `inputValue` - Instead of partially applying a constructor, inputs are read with a function similar to forms
 * `Web.Hyperbole.Data.Param` was unnecessary and removed. Everything uses ToJSON and FromJSON as an intermediate encoding
 * moved OAuth2 to sub-package to allow for dependencies on cryptography libraries
+* Embedded Haddock docs will work even in projects that depend on hyperbole 
 
 Breaking Changes:
 * Actions with input like `search`, `onInput` and `dropdown` should now use an action with no arguments. Get the value using `inputValue` instead
