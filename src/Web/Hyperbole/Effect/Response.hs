@@ -54,7 +54,6 @@ respondErrorView msg vw = do
 @
 -}
 
-
 {- | Abort execution and respond with 404 Not Found
 
 @

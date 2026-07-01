@@ -14,7 +14,6 @@ import Web.Hyperbole.Data.Encoded as Encoded
 @
 -}
 
-
 {- | Define every action possible for a given 'HyperView'
 
 @

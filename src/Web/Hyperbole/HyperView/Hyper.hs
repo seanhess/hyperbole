@@ -20,7 +20,6 @@ import Web.Hyperbole.View.ViewId
 @
 -}
 
-
 {- | Embed a 'HyperView' into a page or another 'View'
 
 @
@@ -47,7 +46,6 @@ hyper vid = hyperState vid ()
 #EMBED Example.State.ViewState page
 @
 -}
-
 
 {- | Embed a 'HyperView' into a page or another 'View' with a starting 'ViewState'
 

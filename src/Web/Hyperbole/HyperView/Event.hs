@@ -28,7 +28,6 @@ eventName t = "data-on" <> t
 @
 -}
 
-
 {- | Send the action after N milliseconds. Can be used to implement lazy loading or polling.
 
 @
@@ -127,7 +126,6 @@ dataTarget = att "data-target" . encodedToText . toViewId
 #EMBED Example.Trigger targetView
 @
 -}
-
 
 {- | Allow inputs to trigger actions for a different view
 

@@ -158,7 +158,6 @@ Right (Filters True "asdf")
 Right (Filters False "asdf")
 -}
 
-
 {- | Decode a type from a 'QueryData'. Missing fields are set to 'Data.Default.def'
 
 @
@@ -202,7 +201,6 @@ If the value of a field is the same as 'Default', it will be omitted from the qu
 >>> QueryData.render $ toQuery $ Filter False ""
 ""
 -}
-
 
 {- | A page can store state in the browser 'query' string. ToQuery and 'FromQuery' control how a datatype is encoded to a full query string
 

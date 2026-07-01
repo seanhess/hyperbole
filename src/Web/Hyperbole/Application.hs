@@ -40,7 +40,6 @@ import Web.Hyperbole.Types.Response
 > #EMBED Example.Docs.BasicPage main
 -}
 
-
 {- | Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
 
 > main :: IO ()
@@ -110,7 +109,6 @@ suppressMessages ex = do
 #EMBED Example.Docs.App app
 @
 -}
-
 
 {- | Route URL patterns to different pages
 

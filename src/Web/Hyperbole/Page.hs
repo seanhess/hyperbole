@@ -17,7 +17,6 @@ import Web.Hyperbole.View (View)
 @
 -}
 
-
 {- | An application is divided into multiple [Pages](#g:pages). Each page module should have a 'Page' function, which returns a root 'View'
 
 @
@@ -40,7 +39,6 @@ type Page es (views :: [Type]) = Eff (Reader (Root views) : es) (View (Root view
 #EMBED Example.Docs.BasicPage page
 @
 -}
-
 
 {- | Run a 'Page' and return a 'Response'
 

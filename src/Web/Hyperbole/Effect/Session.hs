@@ -29,7 +29,6 @@ import Web.Hyperbole.Types.Response
 @
 -}
 
-
 {- | Configure a data type to persist in the 'session' as a cookie. These are type-indexed, so only one of each can exist in the session
 
 @
@@ -85,7 +84,6 @@ class Session a where
 @
 -}
 
-
 {- | Load data from a browser cookie. If it doesn't exist, the 'Default' instance is used
 
 @
@@ -132,7 +130,6 @@ lookupSession = do
 #EMBED Example.Docs.Sessions instance HyperView Content
 @
 -}
-
 
 {- | Persist datatypes in browser cookies
 

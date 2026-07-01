@@ -19,7 +19,6 @@ import Web.Hyperbole.View (toAction, toViewId)
 @
 -}
 
-
 {- | Trigger an action for an arbitrary 'HyperView'
 
 @
@@ -55,7 +54,6 @@ function listenServerEvents() {
 @
 -}
 
-
 {- | Dispatch a custom javascript event. This is emitted on the current hyper view and bubbles up to the document
 
 @
@@ -88,7 +86,6 @@ pushEvent nm a = do
 #EMBED Example.Docs.Client page
 @
 -}
-
 
 {- | Set the document title
 

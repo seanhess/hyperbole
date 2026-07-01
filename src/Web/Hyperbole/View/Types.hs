@@ -26,7 +26,6 @@ import Web.Hyperbole.View.ViewId
 @
 -}
 
-
 {- | 'View's are HTML fragments with a 'context'
 
 @
@@ -135,7 +134,6 @@ instance Styleable (View c a) where
 #EMBED Example.Concurrency.LazyLoading instance (Debug :> es, GenRandom :> es) => HyperView LazyData es where
 @
 -}
-
 
 {- | Access the 'viewId' in a 'View' or 'update'
 

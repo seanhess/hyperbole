@@ -14,7 +14,6 @@ import Web.Hyperbole.Data.Encoded as Encoded
 @
 -}
 
-
 {- | A unique identifier for a 'HyperView'
 
 @

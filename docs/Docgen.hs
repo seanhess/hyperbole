@@ -126,7 +126,7 @@ expandBlock p =
     HaddockBlock t -> pure [HaddockBlock t]
     CommentTarget t -> do
       haddock <- haddockBlock t
-      pure [CommentTarget t, OtherCode "\n\n\n", haddock]
+      pure [CommentTarget t, OtherCode "\n\n", haddock]
  where
   haddockBlock :: Text -> IO ParsedSource
   haddockBlock t = do

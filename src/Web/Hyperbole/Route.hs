@@ -38,7 +38,6 @@ import Prelude hiding (dropWhile)
 /user/9
 -}
 
-
 {- | Derive this class to use a sum type as a route. Constructors and Selectors map intuitively to url patterns
 
 @

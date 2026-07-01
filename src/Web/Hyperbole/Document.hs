@@ -16,7 +16,6 @@ data Document = Document
 > #EMBED Example.Docs.App app
 -}
 
-
 {- | 'liveApp' requires a function which turns an html fragment into an entire html document. Use this to import javascript, css, etc. Use 'quickStartDocument' to get going quickly
 
 > app :: Application
@@ -44,7 +43,6 @@ document docHead cnt =
 >
 > #EMBED Example.Docs.App app
 -}
-
 
 {- | Create a custom \<head\> to use with 'document'. Remember to include at least `scriptEmbed`!
 

@@ -27,7 +27,6 @@ Create an instance with a unique view id type and a sum type describing the acti
 @
 -}
 
-
 {- | HyperViews are interactive subsections of a 'Page'
 
 Create an instance with a unique view id type and a sum type describing the actions the HyperView supports. The View Id can contain context (a database id, for example)
