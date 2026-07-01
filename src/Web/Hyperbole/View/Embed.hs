@@ -13,6 +13,7 @@ import Data.FileEmbed
 import Web.Atomic.CSS.Reset qualified as Atomic
 
 
+-- | Required Javascript for Hyperbole to work. Remember to include it in your 'document'. It is included in the `quickStart`s
 scriptEmbed :: ByteString
 scriptEmbed = $(embedFile "client/dist/hyperbole.js")
 

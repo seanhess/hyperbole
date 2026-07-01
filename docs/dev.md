@@ -89,11 +89,3 @@ Run tests, then recompile both client and server on file change, then restart de
 ```
 bin/dev
 ```
-
-### Haskell Language Server
-
-We use a custom preprocessor to embed compiler-checked examples into Haddock. Everything is automatic with Cabal, but HLS doesn't support it yet. Run this command to get HLS working:
-
-```
-cabal install hyperbole:docgen --overwrite-policy=always
-```

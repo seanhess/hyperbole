@@ -35,14 +35,14 @@ button action cnt = do
   tag "button" cnt @ onClick action
 
 
-{- ! Type-safe dropdown. Sends (opt -> Action id) when selected. The default will be selected.
+{- ! Type-safe dropdown. Sends the action when selected. The default will be selected on load.
 
 @
 #EMBED Example.DataLists.Filter familyDropdown
 @
 -}
 
-{- | Type-safe dropdown. Sends (opt -> Action id) when selected. The default will be selected.
+{- | Type-safe dropdown. Sends the action when selected. The default will be selected on load.
 
 @
 familyDropdown :: Filters -> 'View' Languages ()

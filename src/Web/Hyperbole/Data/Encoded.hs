@@ -31,8 +31,10 @@ instance Monoid ConName where
 {- | Human Readable top-level encoding for ViewAction and ViewId
 For simple Sum and Product types it is equivalent to the Show/Read instance
 
+@
 MyConstructor 1 2 3
 OtherConstructor "hello" 2
+@
 -}
 data Encoded = Encoded ConName [Argument]
   deriving (Show, Eq, Ord)

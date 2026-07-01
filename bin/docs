@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cabal run docgen
+cabal haddock

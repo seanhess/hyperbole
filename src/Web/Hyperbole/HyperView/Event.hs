@@ -63,7 +63,7 @@ onMouseLeave = event "mouseleave"
 
 WARNING: a short delay can result in poor performance. It is not recommended to set the 'value' of the input
 
-> input (onInput OnSearch) 250 id
+> input @ (onInput Search 250)
 -}
 onInput :: (ViewAction (Action id), Attributable a) => Action id -> DelayMs -> Attributes a -> Attributes a
 onInput a delay = do
