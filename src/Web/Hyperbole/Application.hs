@@ -35,7 +35,7 @@ import Web.Hyperbole.Types.Request
 import Web.Hyperbole.Types.Response
 
 
-{- $ Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
+{- ! Turn one or more 'Page's into a Wai Application. Respond using both HTTP and WebSockets
 
 > #EMBED Example.Docs.BasicPage main
 -}
@@ -96,8 +96,7 @@ suppressMessages ex = do
     other -> throwIO other
 
 
-{- $ Route URL patterns to different pages
-
+{- ! Route URL patterns to different pages
 
 @
 #EMBED Example.Docs.App type UserId
@@ -114,7 +113,6 @@ suppressMessages ex = do
 
 
 {- | Route URL patterns to different pages
-
 
 @
 type UserId = Int

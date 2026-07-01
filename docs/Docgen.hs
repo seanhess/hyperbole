@@ -44,7 +44,7 @@ main = do
     putStrLn $ "Docgen: " <> file
     src <- readSourceCode file
     src' <- expandFile src
-    -- T.writeFile file src'.contents
+    T.writeFile file src'.contents
     pure ()
 
 
@@ -92,15 +92,15 @@ expandFile :: SourceCode -> IO SourceCode
 expandFile src = do
   parsed <- parseSource src
 
-  putStrLn "\nPARSED"
-  putStrLn "============"
-  mapM_ print parsed
+  -- putStrLn "\nPARSED"
+  -- putStrLn "============"
+  -- mapM_ print parsed
 
   expanded <- mconcat <$> mapM expandBlock parsed
 
-  putStrLn "\nEXPANDED"
-  putStrLn "============"
-  mapM_ print expanded
+  -- putStrLn "\nEXPANDED"
+  -- putStrLn "============"
+  -- mapM_ print expanded
 
   -- let final = dropOldHaddockBlocks expanded
   -- putStrLn "\nFINAL"
@@ -172,7 +172,7 @@ parseSource sourceCode =
 
   parseOtherCode :: (State SourceCode :> es) => Eff es [ParsedSource]
   parseOtherCode = do
-    code <- takeUntil "{- $"
+    code <- takeUntil commentTargetMarker
     case code of
       "" -> pure []
       _ -> pure [OtherCode code]
@@ -190,7 +190,7 @@ parseSource sourceCode =
   -- only when we know a comment target is there?
   parseCommentTarget :: (State SourceCode :> es) => Eff es [ParsedSource]
   parseCommentTarget = do
-    comment <- takeIncluding "-}"
+    comment <- takeIncluding commentEnd
     skipWhitespace
     skipHaddock -- skip any haddock immediately following this
     skipWhitespace
@@ -225,13 +225,17 @@ parseSource sourceCode =
   skipHaddock :: (State SourceCode :> es) => Eff es ()
   skipHaddock = do
     SourceCode src <- get
-    when ("{- |" `T.isPrefixOf` src) $ do
-      _ <- takeIncluding "-}"
+    when (haddockMarker `T.isPrefixOf` src) $ do
+      _ <- takeIncluding commentEnd
       pure ()
 
 
 commentTargetMarker :: Text
-commentTargetMarker = "{- $"
+commentTargetMarker = "{- !"
+
+
+commentEnd :: Text
+commentEnd = "-}"
 
 
 haddockMarker :: Text
