@@ -20,7 +20,7 @@ hyperbole-oauth2/
 .packcheck.ignore
 Dockerfile
 bin/dev
-bin/docgen
+bin/docs
 bin/release
 cabal.project
 flake.lock
