@@ -69,4 +69,3 @@ instance IsString FormParam where
 
 newtype RequestId = RequestId Text
   deriving (Show, Eq)
-
