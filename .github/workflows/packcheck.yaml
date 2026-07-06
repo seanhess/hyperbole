@@ -130,6 +130,7 @@ jobs:
             runner: ubuntu-latest
             pack_options: >-
               DISABLE_SDIST_BUILD=n
+              DISABLE_SDIST_GIT_CHECK=y
 
           # - name: ci
           #   command: hlint
