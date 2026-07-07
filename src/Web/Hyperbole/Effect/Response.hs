@@ -48,9 +48,9 @@ respondErrorView msg vw = do
 {- ! Abort execution and respond with 404 Not Found
 
 @
-#EMBED Example.Docs.App findUser
+!EMBED Example.Docs.App findUser
 
-#EMBED Example.Docs.App userPage
+!EMBED Example.Docs.App userPage
 @
 -}
 

@@ -79,7 +79,7 @@ type ParamKey = BS.ByteString
 {- ! Simple types that be decoded from form data
 
 @
-#EMBED Example.FormSimple data ContactForm
+!EMBED Example.FormSimple data ContactForm
 @
 -}
 
@@ -105,7 +105,7 @@ class FromForm (form :: Type) where
 {- ! A Higher-Kinded type that can be parsed from a 'Form'
 
 @
-#EMBED Example.FormValidation data UserForm
+!EMBED Example.FormValidation data UserForm
 @
 -}
 
@@ -163,11 +163,11 @@ parseField key f = do
 {- ! Generate a Higher Kinded record with all selectors filled with default values. See 'GenField'
 
 @
-#EMBED Example.FormValidation data UserForm
+!EMBED Example.FormValidation data UserForm
 @
 
 @
-#EMBED Example.Contacts newContactForm
+!EMBED Example.Contacts newContactForm
 @
 -}
 
@@ -202,9 +202,9 @@ class GenFields f (form :: (Type -> Type) -> Type) where
 
 {- ! Generate FieldNames for a form
 
-> #EMBED Example.Todos.Todo data TodoForm
+> !EMBED Example.Todos.Todo data TodoForm
 >
-> #EMBED Example.Todos.Todo todoForm
+> !EMBED Example.Todos.Todo todoForm
 -}
 
 {- | Generate FieldNames for a form
@@ -258,7 +258,7 @@ newtype FormFields id = FormFields id
 {- ! Type-safe \<form\>. Calls (Action id) on submit
 
 @
-#EMBED Example.FormSimple formView
+!EMBED Example.FormSimple formView
 @
 -}
 
@@ -455,11 +455,11 @@ textarea mDefaultText = do
 {- ! Validation results for a 'Form'. See 'validate'
 
 @
-#EMBED Example.FormValidation data UserForm
+!EMBED Example.FormValidation data UserForm
 
-#EMBED Example.FormValidation validateForm
+!EMBED Example.FormValidation validateForm
 
-#EMBED Example.FormValidation validateAge
+!EMBED Example.FormValidation validateAge
 @
 -}
 
@@ -545,7 +545,7 @@ invalidText v = do
 {- ! specify a check for a 'Validation'
 
 @
-#EMBED Example.FormValidation validateAge
+!EMBED Example.FormValidation validateAge
 @
 -}
 

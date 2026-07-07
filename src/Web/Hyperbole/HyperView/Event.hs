@@ -24,7 +24,7 @@ eventName t = "data-on" <> t
 {- ! Send the action after N milliseconds. Can be used to implement lazy loading or polling.
 
 @
-#EMBED Example.Concurrency.LazyLoading viewTaskLoad
+!EMBED Example.Concurrency.LazyLoading viewTaskLoad
 @
 -}
 
@@ -123,7 +123,7 @@ dataTarget = att "data-target" . encodedToText . toViewId
 {- ! Allow inputs to trigger actions for a different view
 
 @
-#EMBED Example.Trigger targetView
+!EMBED Example.Trigger targetView
 @
 -}
 

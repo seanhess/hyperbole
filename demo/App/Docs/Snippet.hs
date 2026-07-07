@@ -127,10 +127,10 @@ isFullyOutdented line =
     [c] -> not $ isSpace c
     _ -> False
 
--- #EMBED Example.Docs.Interactive instance HyperView Titler
+-- !EMBED Example.Docs.Interactive instance HyperView Titler
 parseLineEmbed :: Text -> Maybe (ModuleName, TopLevelDefinition)
 parseLineEmbed l = do
-  rest <- T.stripPrefix "#EMBED " (T.stripStart l)
+  rest <- T.stripPrefix "!EMBED " (T.stripStart l)
   (mn : tld) <- pure $ T.words rest
   pure (ModuleName mn, TopLevelDefinition $ T.unwords tld)
 

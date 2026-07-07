@@ -293,7 +293,7 @@ expandLine line = do
         else pure []
  where
   parseEmbed l = do
-    case T.splitOn "#EMBED " l of
+    case T.splitOn "!EMBED " l of
       [prefix, info] -> do
         (mn, definition) <- splitSrcDef $ T.dropWhile (== ' ') info
         pure (prefix, Embed mn definition)

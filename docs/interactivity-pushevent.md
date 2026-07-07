@@ -2,7 +2,7 @@
 
 The server can push a Javascript event to be dispatched on a `HyperView`
 
-    #EMBED Example.Javascript update AlertMe
+    !EMBED Example.Javascript update AlertMe
 
 ```
 function listenServerEvents() {

@@ -15,7 +15,7 @@ import Web.Hyperbole.View (toAction, toViewId)
 {- ! Trigger an action for an arbitrary 'HyperView'
 
 @
-#EMBED Example.Trigger instance HyperView Controls
+!EMBED Example.Trigger instance HyperView Controls
 @
 -}
 
@@ -41,7 +41,7 @@ trigger vid act = do
 {- ! Dispatch a custom javascript event. This is emitted on the current hyper view and bubbles up to the document
 
 @
-#EMBED Example.Javascript instance HyperView Message
+!EMBED Example.Javascript instance HyperView Message
 @
 
 @
@@ -83,7 +83,7 @@ pushEvent nm a = do
 {- ! Set the document title
 
 @
-#EMBED Example.Docs.Client page
+!EMBED Example.Docs.Client page
 @
 -}
 

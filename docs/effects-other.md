@@ -4,12 +4,12 @@ The following `HyperView` uses a `Reader` to get a message set at the applicatio
 
     {-# LANGUAGE UndecidableInstances #-}
     
-    #EMBED Example.Docs.SideEffects page
+    !EMBED Example.Docs.SideEffects page
 
-    #EMBED Example.Docs.SideEffects data SlowReader
+    !EMBED Example.Docs.SideEffects data SlowReader
 
-    #EMBED Example.Docs.SideEffects instance (Concurrent
+    !EMBED Example.Docs.SideEffects instance (Concurrent
 
 Then make sure to add the effect when you run your application or page
 
-    #EMBED Example.Docs.SideEffects app
+    !EMBED Example.Docs.SideEffects app

@@ -10,7 +10,7 @@ import Web.Hyperbole.Data.Encoded as Encoded
 {- ! A unique identifier for a 'HyperView'
 
 @
-#EMBED Example.Simple data Message
+!EMBED Example.Simple data Message
 @
 -}
 

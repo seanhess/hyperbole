@@ -19,9 +19,9 @@ import Prelude
 {- ! Parse querystring from the 'Request' into a datatype. See 'FromQuery'
 
 @
-#EMBED Example.Docs.Params data Filters
+!EMBED Example.Docs.Params data Filters
 
-#EMBED Example.Docs.Params page
+!EMBED Example.Docs.Params page
 @
 -}
 
@@ -52,7 +52,7 @@ query = do
 {- ! Update the client's querystring to an encoded datatype. See 'ToQuery'
 
 @
-#EMBED Example.Docs.Params instance HyperView Todos
+!EMBED Example.Docs.Params instance HyperView Todos
 @
 -}
 
@@ -92,7 +92,7 @@ clearQuery =
 {- ! Parse a single query parameter. Return a 400 status if missing or if parsing fails. See 'decodeParam'
 
 @
-#EMBED Example.Docs.Params page'
+!EMBED Example.Docs.Params page'
 @
 -}
 
@@ -117,7 +117,7 @@ param p = do
 {- ! Parse a single parameter from the query string if available
 
 @
-#EMBED Example.Docs.SideEffects page
+!EMBED Example.Docs.SideEffects page
 @
 -}
 
@@ -137,7 +137,7 @@ lookupParam p = do
 {- ! Modify the client's querystring to set a single parameter. See 'encodeParam'
 
 @
-#EMBED Example.Docs.Params instance HyperView Message
+!EMBED Example.Docs.Params instance HyperView Message
 @
 -}
 

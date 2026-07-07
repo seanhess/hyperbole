@@ -18,7 +18,7 @@ import Web.Hyperbole.View
 {- ! \<button\> HTML tag which sends the action when pressed
 
 @
-#EMBED Example.Simple messageView
+!EMBED Example.Simple messageView
 @
 -}
 
@@ -38,7 +38,7 @@ button action cnt = do
 {- ! Type-safe dropdown. Sends the action when selected. The default will be selected on load.
 
 @
-#EMBED Example.DataLists.Filter familyDropdown
+!EMBED Example.DataLists.Filter familyDropdown
 @
 -}
 
@@ -107,7 +107,7 @@ instance (ToJSON id, ToJSON opt, FromJSON id, FromJSON opt) => ViewId (Option id
 {- ! A live search field. Set a DelayMs to avoid hitting the server on every keystroke
 
 @
-#EMBED Example.Errors viewSearchUsers
+!EMBED Example.Errors viewSearchUsers
 @
 -}
 

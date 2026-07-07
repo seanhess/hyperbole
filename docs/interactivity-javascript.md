@@ -1,6 +1,6 @@
 Include custom js on a page with the script tag on only the page where it is needed, or globally via your `document` function
 
-    #EMBED Example.Javascript page
+    !EMBED Example.Javascript page
 
 
 

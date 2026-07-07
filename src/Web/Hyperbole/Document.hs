@@ -13,7 +13,7 @@ data Document = Document
 
 {- ! 'liveApp' requires a function which turns an html fragment into an entire html document. Use this to import javascript, css, etc. Use 'quickStartDocument' to get going quickly
 
-> #EMBED Example.Docs.App app
+> !EMBED Example.Docs.App app
 -}
 
 {- | 'liveApp' requires a function which turns an html fragment into an entire html document. Use this to import javascript, css, etc. Use 'quickStartDocument' to get going quickly
@@ -39,9 +39,9 @@ document docHead cnt =
 
 > import Web.Hyperbole (scriptEmbed, cssEmbed)
 >
-> #EMBED Example.Docs.App documentHead
+> !EMBED Example.Docs.App documentHead
 >
-> #EMBED Example.Docs.App app
+> !EMBED Example.Docs.App app
 -}
 
 {- | Create a custom \<head\> to use with 'document'. Remember to include at least `scriptEmbed`!

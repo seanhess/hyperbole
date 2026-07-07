@@ -148,7 +148,7 @@ fromQueryData q =
 {- ! Decode a type from a 'QueryData'. Missing fields are set to 'Data.Default.def'
 
 @
-#EMBED Example.Docs.Encoding data Filters
+!EMBED Example.Docs.Encoding data Filters
 @
 
 >>> parseQuery $ QueryData.parse "active=true&search=asdf"
@@ -187,7 +187,7 @@ instance FromQuery QueryData where
 {- ! A page can store state in the browser 'query' string. ToQuery and 'FromQuery' control how a datatype is encoded to a full query string
 
 @
-#EMBED Example.Docs.Encoding data Filters
+!EMBED Example.Docs.Encoding data Filters
 @
 
 >>> QueryData.render $ toQuery $ Filter True "asdf"

@@ -2,5 +2,5 @@ We can add as many `HyperView`s to a `Page` as we want. Each will update indepen
 
 Let's add a `Counter` and two Message `HyperView`s to the same page
 
-    #EMBED Example.Docs.MultiView page
+    !EMBED Example.Docs.MultiView page
 

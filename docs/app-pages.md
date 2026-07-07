@@ -4,4 +4,4 @@ The idea is that an application is divided into _independent_ `Page`s, which com
 
 We suggest you create a module for each `Page`, each with its own `page` function
 
-    #EMBED Example.Docs.MultiView page
+    !EMBED Example.Docs.MultiView page

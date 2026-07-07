@@ -23,9 +23,9 @@ import Web.Hyperbole.Types.Response
 {- ! Configure a data type to persist in the 'session' as a cookie. These are type-indexed, so only one of each can exist in the session
 
 @
-#EMBED Example.Docs.Sessions data Preferences
+!EMBED Example.Docs.Sessions data Preferences
 
-#EMBED Example.Docs.Sessions instance Default Preferences
+!EMBED Example.Docs.Sessions instance Default Preferences
 @
 -}
 
@@ -76,11 +76,11 @@ class Session a where
 {- ! Load data from a browser cookie. If it doesn't exist, the 'Default' instance is used
 
 @
-#EMBED Example.Docs.Sessions data Preferences
+!EMBED Example.Docs.Sessions data Preferences
 
-#EMBED Example.Docs.Sessions instance Default Preferences
+!EMBED Example.Docs.Sessions instance Default Preferences
 
-#EMBED Example.Docs.Sessions page
+!EMBED Example.Docs.Sessions page
 @
 -}
 
@@ -123,11 +123,11 @@ lookupSession = do
 {- ! Persist datatypes in browser cookies
 
 @
-#EMBED Example.Docs.Sessions data Preferences
+!EMBED Example.Docs.Sessions data Preferences
 
-#EMBED Example.Docs.Sessions instance Default Preferences
+!EMBED Example.Docs.Sessions instance Default Preferences
 
-#EMBED Example.Docs.Sessions instance HyperView Content
+!EMBED Example.Docs.Sessions instance HyperView Content
 @
 -}
 

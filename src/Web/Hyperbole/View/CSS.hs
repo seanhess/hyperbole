@@ -6,7 +6,7 @@ import Web.Atomic.CSS
 {- ! Apply CSS only when a request is in flight. See [Example.Page.Contact](https://docs.hyperbole.live/contacts/1)
 
 @
-#EMBED Example.Contact contactEditView
+!EMBED Example.Contact contactEditView
 @
 -}
 
