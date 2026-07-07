@@ -20,7 +20,7 @@ jobs:
       - name: Run fourmolu (demo only)
         uses: haskell-actions/run-fourmolu@v12
         with:
-          version: "latest"
+          version: "0.19.0.0"
           working-directory: "./demo"
           pattern: |
             **/*.hs
@@ -30,7 +30,7 @@ jobs:
       - name: Run fourmolu (all the others)
         uses: haskell-actions/run-fourmolu@v12
         with:
-          version: "latest"
+          version: "0.19.0.0"
           pattern: |
             **/*.hs
             !demo
