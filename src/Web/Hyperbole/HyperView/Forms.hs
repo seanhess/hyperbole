@@ -148,8 +148,7 @@ lookupField key f = FormParam . cs <$> lookup key f.params <|> FileParam <$> loo
 parseField :: forall a. (FromField a) => ParamKey -> Form -> Either String a
 parseField key f = do
   let mt :: Maybe FormParam = lookupField key f
-  a <- first (\err -> cs key <> ": " <> err) $ fromField @a mt
-  pure a
+  first (\err -> cs key <> ": " <> err) $ fromField @a mt
 
 
 -- where
