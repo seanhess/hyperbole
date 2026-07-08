@@ -84,6 +84,7 @@ queryString = cs . renderQuery True
 
 newtype Path = Path {segments :: [Segment]}
   deriving (Show, Eq)
+  deriving newtype (Monoid, Semigroup)
 instance IsList Path where
   type Item Path = Segment
   fromList = Path . filter (not . T.null)
