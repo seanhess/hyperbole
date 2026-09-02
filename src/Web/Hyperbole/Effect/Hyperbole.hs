@@ -30,15 +30,15 @@ data Hyperbole :: Effect where
 type instance DispatchOf Hyperbole = 'Dynamic
 
 
-data Remote
-  = RemoteAction TargetViewId Encoded
-  | RemoteEvent Text Value
-
-
-runHyperboleLocal :: Request -> Eff (Error Response : State Client : Writer [Remote] : es) Response -> Eff es (Response, Client, [Remote])
+runHyperboleLocal :: Request -> Eff (Error Response : State Client : Writer [Remote] : es) Response -> Eff es RespondWith
 runHyperboleLocal req eff = do
-  ((eresp, client'), rmts) <- runWriter @[Remote] . runState (emptyClient req.requestId) . runErrorNoCallStack @Response $ eff
-  pure (either id id eresp, client', rmts)
+  ((eresp, client), remotes) <- runWriter @[Remote] . runState (emptyClient req.requestId) . runErrorNoCallStack @Response $ eff
+  pure $
+    RespondWith
+      { response = either id id eresp
+      , client
+      , remotes
+      }
  where
   emptyClient :: RequestId -> Client
   emptyClient requestId =

@@ -57,6 +57,10 @@ data Form = Form
   , files :: [FileParam]
   }
   deriving (Show)
+instance Monoid Form where
+  mempty = Form mempty mempty
+instance Semigroup Form where
+  Form p1 f1 <> Form p2 f2 = Form (p1 <> p2) (f1 <> f2)
 
 
 data FormParam

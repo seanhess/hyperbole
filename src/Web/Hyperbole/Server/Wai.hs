@@ -51,8 +51,8 @@ handleRequestWai options req respond actions = do
   withPostBody options.parseRequestBody req $ \params files -> do
     rq <- either throwIO pure $ do
       fromWaiRequest req (Form params files)
-    (res, client, rmts) <- runHyperboleWai rq actions
-    liftIO $ sendResponse options rq client res rmts respond
+    rw <- runHyperboleWai rq actions
+    liftIO $ sendResponse options rq rw respond
 
 
 -- | Run the 'Hyperbole' effect to get a response
@@ -60,7 +60,7 @@ runHyperboleWai
   :: (IOE :> es)
   => Request
   -> Eff (Hyperbole : es) Response
-  -> Eff es (Response, Client, [Remote])
+  -> Eff es RespondWith
 runHyperboleWai req = reinterpret (runHyperboleLocal req) $ \_ -> \case
   GetRequest -> do
     pure req
@@ -82,10 +82,10 @@ runHyperboleWai req = reinterpret (runHyperboleLocal req) $ \_ -> \case
     tell [RemoteEvent name dat]
 
 
-sendResponse :: ServerOptions -> Request -> Client -> Response -> [Remote] -> (Wai.Response -> IO ResponseReceived) -> IO Wai.ResponseReceived
-sendResponse options req client res remotes respond = do
-  let metas = requestMetadata req <> responseMetadata req.path client remotes
-  respond $ response metas res
+sendResponse :: ServerOptions -> Request -> RespondWith -> (Wai.Response -> IO ResponseReceived) -> IO Wai.ResponseReceived
+sendResponse options req res respond = do
+  let metas = requestMetadata req <> responseMetadata req.path res.client res.remotes
+  respond $ response metas res.response
  where
   response :: Metadata -> Response -> Wai.Response
   response metas = \case
@@ -93,10 +93,10 @@ sendResponse options req client res remotes respond = do
       -- don't send headers
       respondError (errStatus err) [] metas $ options.serverError err
     (Response (ViewUpdate _ vw)) -> do
-      respondHtml status200 (clientHeaders client) $ renderViewResponse metas vw
+      respondHtml status200 (clientHeaders res.client) $ renderViewResponse metas vw
     (Redirect u) -> do
       let url = uriToText u
-      let hs = ("Location", cs url) : clientHeaders client
+      let hs = ("Location", cs url) : clientHeaders res.client
       respondHtml status200 hs $ renderViewResponse metas $ Body $ renderLazyByteString $ do
         script'
           [i|window.location = '#{uriToText u}'|]

@@ -50,7 +50,7 @@ runHyperboleSocket
   -> Connection
   -> Request
   -> Eff (Hyperbole : es) Response
-  -> Eff es (Response, Client, [Remote])
+  -> Eff es RespondWith
 runHyperboleSocket _opts conn req = reinterpret (runHyperboleLocal req) $ \_ -> \case
   GetRequest -> do
     pure req
@@ -93,9 +93,9 @@ handleRequestSocket opts actions wreq conn eff = do
           case res2 of
             Left e -> liftIO $ putStrLn $ "Socket Error while sending previous error to client: " <> show e
             Right _ -> pure ()
-        Right (resp, clnt, rmts) -> do
-          let meta = requestMetadata req <> responseMetadata req.path clnt rmts
-          case resp of
+        Right r -> do
+          let meta = requestMetadata req <> responseMetadata req.path r.client r.remotes
+          case r.response of
             (Response (ViewUpdate _ vw)) -> do
               sendResponse conn meta vw
             (Err err) -> sendError conn meta (opts.serverError err)

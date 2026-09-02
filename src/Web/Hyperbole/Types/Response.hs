@@ -9,6 +9,7 @@ import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Web.Hyperbole.Data.Encoded (Encoded)
 import Web.Hyperbole.Data.URI (URI)
+import Web.Hyperbole.Types.Client
 import Web.Hyperbole.Types.Event
 
 
@@ -16,6 +17,18 @@ newtype Body = Body BL.ByteString
 
 
 data ViewUpdate = ViewUpdate {viewId :: TargetViewId, body :: Body}
+
+
+data RespondWith = RespondWith
+  { response :: Response
+  , client :: Client
+  , remotes :: [Remote]
+  }
+
+
+data Remote
+  = RemoteAction TargetViewId Encoded
+  | RemoteEvent Text Value
 
 
 -- | A processed response for the client, which might be a 'ResponseError'

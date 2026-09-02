@@ -10,12 +10,14 @@ module Web.Hyperbole.Server.Options
 
 import Data.Aeson (Value)
 import Data.ByteString.Lazy qualified as BL
+import Data.Default (Default (..))
 import Data.String.Conversions (cs)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Network.Wai.Parse as Wai (ParseRequestBodyOptions, defaultParseRequestBodyOptions)
 import Web.Atomic.CSS
 import Web.Hyperbole.Data.Encoded (Encoded, encodedToText)
+import Web.Hyperbole.Document (quickStartDocument)
 import Web.Hyperbole.Types.Event
 import Web.Hyperbole.Types.Response
 import Web.Hyperbole.View
@@ -26,6 +28,15 @@ data ServerOptions = ServerOptions
   , serverError :: ResponseError -> ServerError
   , parseRequestBody :: ParseRequestBodyOptions
   }
+
+
+instance Default ServerOptions where
+  def =
+    ServerOptions
+      { toDocument = quickStartDocument
+      , serverError = defaultError
+      , parseRequestBody = defaultParseRequestBodyOptions
+      }
 
 
 defaultErrorMessage :: ResponseError -> Text

@@ -16,6 +16,7 @@ module Web.Hyperbole.Application
 import Control.Exception
 import Control.Monad (forever)
 import Data.ByteString.Lazy qualified as BL
+import Data.Default (def)
 import Effectful
 import Effectful.Concurrent.Async
 import Effectful.Concurrent.STM (TVar)
@@ -48,12 +49,7 @@ import Web.Hyperbole.Types.Response
 -}
 liveApp :: (BL.ByteString -> BL.ByteString) -> Eff '[Hyperbole, Concurrent, IOE] Response -> Wai.Application
 liveApp doc =
-  liveAppWith $
-    ServerOptions
-      { toDocument = doc
-      , serverError = defaultError
-      , parseRequestBody = defaultParseRequestBodyOptions
-      }
+  liveAppWith $ def{toDocument = doc}
 
 
 -- | Run a Hyperbole application, customizing both the document and the format of server errors
